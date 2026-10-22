@@ -71,6 +71,23 @@ def check_weather(weights: pd.DataFrame, daily: pd.DataFrame, zones: gpd.GeoData
     ]
 
 
+def check_ndvi(obs: pd.DataFrame) -> list[Check]:
+    m = obs["ndvi_mean"].dropna()
+    bad = (~m.between(-1, 1)).sum()
+    return [Check("C13 NDVI within −1..1", bad == 0, f"{bad} out of range" if bad else f"{len(obs)} rows")]
+
+
+def check_weather_coverage(weights: pd.DataFrame, daily: pd.DataFrame, min_share: float = 0.8) -> Check:
+    """≥ 80 % of zones must get a temperature on the latest day (architecture doc §10)."""
+    if daily.empty:
+        return Check("C14 weather covers ≥ 80 % of zones on latest day", False, "no weather rows")
+    latest = daily["date"].max()
+    reporting = set(daily.loc[(daily["date"] == latest) & daily["tmean_c"].notna(), "fmisid"])
+    covered = weights[weights.fmisid.isin(reporting)].zone_id.nunique()
+    share = covered / max(weights.zone_id.nunique(), 1)
+    return Check("C14 weather covers ≥ 80 % of zones on latest day", share >= min_share, f"{share:.0%} on {latest}")
+
+
 def run_file_checks(out_dir: Path, area: PilotArea) -> list[Check]:
     results: list[Check] = []
     zp = out_dir / "zones.parquet"
@@ -81,6 +98,10 @@ def run_file_checks(out_dir: Path, area: PilotArea) -> list[Check]:
     if (out_dir / "zone_species.parquet").exists():
         results += check_zone_species(pd.read_parquet(out_dir / "zone_species.parquet"), zones)
     if (out_dir / "zone_weather_weights.parquet").exists():
-        results += check_weather(pd.read_parquet(out_dir / "zone_weather_weights.parquet"),
-                                 pd.read_parquet(out_dir / "weather_station_daily.parquet"), zones)
+        weights = pd.read_parquet(out_dir / "zone_weather_weights.parquet")
+        daily = pd.read_parquet(out_dir / "weather_station_daily.parquet")
+        results += check_weather(weights, daily, zones)
+        results.append(check_weather_coverage(weights, daily))
+    if (out_dir / "ndvi_obs.parquet").exists():
+        results += check_ndvi(pd.read_parquet(out_dir / "ndvi_obs.parquet"))
     return results

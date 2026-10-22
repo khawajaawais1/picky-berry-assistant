@@ -1,169 +1,159 @@
-# Project context — Picky, the Berry Picker Assistant
+# Project context — Picky, the Berry Picker Assistant (BPA)
 
-> Read this first. It is the one-page brief for everyone on Team Picky (and for any AI
-> assistant you paste it into). Source of truth for details: the **Feature 6.2 Deep Dive**
-> doc and the **MVP Architecture** doc. Where numbers differ, the deep dive wins.
+> **Read this first.** One-page brief for everyone on Team Picky, and for any AI assistant
+> you paste it into. Details live in the source docs below; where they disagree, the
+> **feature deep dive wins for its feature**, then the **MVP Architecture doc**, then this file.
 
-## 1. The product in one paragraph
+| Source of truth | Link |
+|---|---|
+| MVP Architecture & Tech Stack (all 9 core features) | https://claude.ai/artifact/EnkBHuaL7DENBFutQMPEqw |
+| Feature 6.2 Deep Dive – Live Site Map | https://claude.ai/artifact/5crUR5hVSYNFmu1GrDujp7 |
+| Feature catalogue (all 20 features, status) | [docs/features/README.md](docs/features/README.md) |
+| Architecture summary | [docs/architecture.md](docs/architecture.md) |
+| Timeline & sprints | [docs/sprints.md](docs/sprints.md) |
+| Decisions (ADRs) | [docs/decisions/](docs/decisions/) |
 
-A mobile app for berry pickers in Finland. A picker opens it and sees, on a map of the
-forests around them, how good each zone is for a chosen berry **right now**: a **yield score
-0–100**, a **confidence level** (high / medium / low), a **ripeness stage**, and a
-plain-words reason why. Pilot area: 60 × 60 km around **Jyväskylä**. Species:
-**bilberry, lingonberry, cloudberry, crowberry**.
+## 1. The product
 
-## 2. What we are building first: Feature 6.2 — Live Site Map
+A mobile app + cloud service that helps people in Finland find good wild-berry spots
+at the right time. Pickers see a **live zone map** with a **yield score (0–100)**,
+**confidence** and **ripeness**; the phone **detects visits** by GPS; pickers give
+**feedback** that is **trust-weighted**; a **yield model** and **ontology rules** send
+**explainable push alerts**; it all works **offline** and **privacy-first**.
+Later, pickers can sell surplus to buyers in a **marketplace** (desired extra).
 
-Sprints 1–2, **22 Oct – 17 Nov 2026**. It is the app's home screen; every later feature
-(visit detection, feedback, alerts) plugs into it.
+* **Users:** picker (core), buyer (marketplace extra), admin.
+* **Pilot:** 60 × 60 km around Jyväskylä. **Species:** bilberry, lingonberry, cloudberry, crowberry.
+* **Course:** TIES4570 CSDP, University of Jyväskylä. Design & implementation due
+  **17 Dec 2026** (final demo); final defense **14 Jan 2027**.
 
-**User stories**
+## 2. Twenty functions in three levels
 
-1. Coloured zones around my location within 3 s of opening the app.
-2. Pick a berry → the colours change to that species.
-3. Tap a zone → score, confidence, ripeness, last update, and why.
-4. "Near me" list: best 10 zones within my radius.
-5. Offline in the forest → last downloaded scores with a "last updated" label.
-6. At a glance: is this score a guess (low confidence) or backed by reports?
+**9 core (MVP — all designed in the architecture doc)**
 
-**Definition of done (A1–A8)**
+| ID | Feature | Lead owner |
+|----|---------|-----------|
+| 6.1 | Accounts and roles | Hassan |
+| 6.2 | Live site map with yield score & confidence | Awais · Hassan · Salman · Remon |
+| 6.3 | GPS visit detection (arrive / pick / leave) | Salman · Hassan |
+| 6.4 | Feedback (rating + photo) | Hassan · Salman |
+| 6.5 | Validation and trust weighting | Hassan |
+| 6.6 | Yield prediction | Remon · Awais |
+| 6.7 | Reasoning and explainable push alerts | Asmer · Sabih |
+| 6.8 | Analytics (median stay time, trends) | Hassan · Sayeem |
+| 6.9 | Offline mode and privacy | Salman · Hassan |
 
-| # | Criterion |
-|---|-----------|
-| A1 | Map loads in < 3 s on 4G; `GET /zones` p95 < 300 ms for a 20 × 20 km view |
-| A2 | Every forest zone has a score for every species, even with zero reports |
-| A3 | 5 colour bands; low confidence shown faded/hatched; legend always visible |
-| A4 | Zone sheet: score, confidence, ripeness, updated time, ≥ 2 reasons |
-| A5 | Species switch re-colours the map in < 1 s |
-| A6 | Offline: map, zones and last scores work in airplane mode |
-| A7 | Scores refresh daily at 07:00 and within 5 min of a new trusted report |
-| A8 | iOS 16+ and Android 10+ |
+**5 desired extras (after core is stable):** E1 marketplace with escrow · E2 video analysis
+& fraud checks · E3 rewards, tiers, badge · E4 safety route back & SOS · E5 admin &
+verification tools.
 
-Not in 6.2: visit detection, feedback forms, push alerts (they are their own features).
+**6 future (not in the course scope, but the design leaves a door open):** F1 LLM assistant
+(FI/EN) · F2 Planner & multi-agent backend · F3 Linked Data · F4 drone & wild-bee data ·
+F5 cognitive zone judgement · F6 growing beyond Finland (microservices/Kubernetes).
 
-## 3. Who owns what
+Full table with modules, sprints and status: [docs/features/README.md](docs/features/README.md).
 
-| Person | Area | Repo folder | Key deliverables (D#) |
-|--------|------|-------------|-----------------------|
-| **Sayeem** | Repo, CI, QA, progress | root, `.github/` | D1 repo + branch rules, D2 dev setup, A1–A8 test runs |
-| **Awais** | Data engineering | `data/` | D3 pilot bbox, D10 zones, D11 zone_species, D13 weather + GDD, D14 NDVI, D18 basemap |
-| **Hassan** | Backend | `backend/` | D4 DB image, D5 FastAPI, D7 OpenAPI, D15 jobs, D17 reports, D21 auth |
-| **Salman** | Mobile app | `app/` | D9 Expo + MapLibre build, map screen, zone sheet, offline |
-| **Remon** | Scoring / ML | `ml/` | D16 phenology baseline → `zone_scores_current` |
-| **Asmer** | Domain / ontology | `ontology/` | D6 species vocabulary, D11 rules review, D12 phenology |
-| **Sabih** | Design + cloud | `docker/`, Figma | D8 Figma, D19 object storage, D20 VM + HTTPS |
+## 3. Team
 
-Every dependency has a **stub** so nobody waits on anybody — see `docs/dependency-checklist.md`.
+| Person | Role | Owns in the build | Repo folder |
+|--------|------|-------------------|-------------|
+| **Mohammad Sayeem Sadat Hossain** (Sayeem) | PM, QA & Speaker | Repo, CI, integration, test plan, demo, homework reports | root, `.github/`, `docs/` |
+| **Md Salman Hossan Prottoy** (Salman / Prottoy) | Frontend & Archivarius | React Native app (iOS + Android): map, visits, feedback, dashboard | `app/` |
+| **Rakibul Hasan Remon** | ML Engineer | YOLO on WildBe, yield prediction, model store | `ml/`, `backend/…/prediction` |
+| **Awais Amir** | Data Engineer | FMI weather, Sentinel-2 NDVI, zones, map tiles, pipelines | `data/`, `backend/…/ingest` |
+| **Hassan Haider Syed** | Backend | FastAPI, PostgreSQL + PostGIS, accounts, zones, visits, feedback, trust | `backend/` |
+| **Syed Ali Asmer** | Domain Research & Tech Lead | Berry ontology, knowledge graph (rdflib), alert rules | `ontology/`, `backend/…/reasoning` |
+| **Syed Sabih Ahmed Zaidi** | Frontend, Cloud & UI/UX | Figma designs, Docker, cloud deploy, Firebase push, media | `docker/`, `deploy/`, `backend/…/media` |
 
-## 4. How it fits together
+How we work: each person owns one layer, so nobody blocks anybody in the first weeks;
+every dependency has a **stub**; weekly 15-min check-in; blockers in the team chat the same day.
+
+## 4. Architecture in one picture
 
 ```
- OSM forest/mire ─┐
- Luke MS-NFI ─────┤  data/ (Awais)                       ml/ + backend/            app/ (Salman)
- FMI weather ─────┼─► zones · zone_species ──► ScoringService (07:00 daily ──► GET /api/v1/zones ──► MapLibre map
- Sentinel-2 NDVI ─┤   weather_daily · ndvi     + 5 min after a report)        /zones/{id} …        zone sheet
- Protomaps ───────┘   finland.pmtiles ─────────► zone_scores_current ─────────────────────────────► basemap from
-                                                 (one row per zone × species)                      object storage
+React Native app (Expo, MapLibre, SQLite outbox, geofences, FCM)
+        │  HTTPS, JSON / GeoJSON / JSON-LD, JWT (picker · admin · buyer)
+        ▼
+Caddy ─► FastAPI modular monolith — ONE Docker image, 10 modules:
+         accounts · zones · visits · feedback · trust · prediction ·
+         reasoning · analytics · ingest · media     (+ jobs: APScheduler + Postgres queue)
+        │
+        ▼
+PostgreSQL 17 + PostGIS + h3   ·   S3 bucket (photos, tiles, models, backups)
+rdflib ontology + SPARQL rules (files in git)   ·   YOLO (ONNX) + XGBoost models
+        ▲
+External (free): FMI weather · Sentinel-2 (Copernicus) · OSM / Protomaps / NLS · Firebase FCM · WildBe
 ```
 
-* **Scoring and serving are split.** Background jobs write `zone_scores_current`; the API
-  only reads it, so a map request is one indexed query. The map never computes a score
-  while a user waits.
-* **The basemap never touches the API.** The app reads the PMTiles file straight from
-  object storage.
+Rules that keep it simple and cheap (≈ €485/yr): one VM in the EU, one backend image,
+no Kubernetes, no Redis/Celery, modules talk only through each other's `service.py`.
+Summary: [docs/architecture.md](docs/architecture.md).
 
-## 5. The score (Remon + Hassan, deep dive §7)
+## 5. Daily data → score → alert loop
 
-For every zone × species:
+```
+05:30 ingest_weather (FMI)  ─┐
+06:00 ingest_ndvi (S2)      ─┼─► 07:00 predict_yield (every zone × species)
+       reports + visits     ─┘        └─► fuse with trust-weighted reports → zone_scores
+                                          └─► run_reasoning (SPARQL rules) → throttle → FCM push
+```
 
-1. **Ripeness** from growing-degree days (base 5 °C since 1 April) vs. species thresholds →
-   `off_season · unripe · ripening · ripe · past`.
-2. **Model score** `S_model = 100 · suitability · f_season · f_ndvi`
-   (f_season: 0.2 / 0.6 / 1.0 / 0.3 / 0; f_ndvi = clip(1 + 2·NDVI anomaly, 0.7, 1.3)).
-3. **Report score** from the last 21 days: rating (1–5★ → 0–100), weighted by reporter
-   trust × e^(−age/4 days) × (1 if tied to a visit, else 0.5). `N_eff` = sum of weights.
-4. **Fusion** `score = α·S_reports + (1 − α)·S_model`, α = N_eff / (N_eff + 3).
-5. **Confidence** (first match wins): high if N_eff ≥ 3, or N_eff ≥ 1 and model band ≤ 25;
-   medium if N_eff ≥ 1, or model band ≤ 35; else low. The v1 baseline band is fixed at 50,
-   so baseline-only zones are always low. Weather older than 7 days drops it one level;
-   off-season zones show grey "Out of season".
+Score = α·S_reports + (1−α)·S_model with α = N_eff / (N_eff + 3). Every score and alert
+stores **why**, so the app can explain it in plain words. Details: architecture doc §6.2
+and the 6.2 deep dive §7.
 
-All constants live in one `scoring_config.py`, are unit-tested, and get tuned in the
-November user tests.
+## 6. Timeline
 
-## 6. Data (Awais — `data/`)
+| When | What |
+|------|------|
+| Wed 21 Oct 2026, 18:00 | HW5 progress report (Moodle, group Picky) |
+| Sprint 1 · 21 Oct – 3 Nov | Foundations — everyone's first deliverable (see [docs/sprints.md](docs/sprints.md)) |
+| Sprint 2 · 4 – 17 Nov | Core: live map, visit detection, feedback, trust, yield model v1 |
+| Sprint 3 · 18 Nov – 1 Dec | Reasoning & alerts, analytics, offline, privacy; marketplace starts |
+| Sprint 4 · 2 – 17 Dec | User tests in Jyväskylä, fixes, extras, cloud deploy, **final demo 17 Dec** |
+| Weeks 49–50 | Thesis consultation with Prof. Vagan Terziyan |
+| 14 Jan 2027 | Final defense |
 
-| Output | Table | What it is |
-|--------|-------|------------|
-| Zones | `zones` | H3 resolution-8 hexagons (≈ 0.57 km² here) that are ≥ 40 % forest or mire. Stable ids. |
-| Habitat fit | `zone_species` | Suitability 0–1 per zone × species from forest type (rules reviewed by Asmer) |
-| Weather | `weather_station_daily` + `zone_weather_weights` → view `weather_daily` | FMI daily obs, GDD, inverse-distance weighted to zones |
-| Vegetation | `ndvi_obs` → view `ndvi_zone_latest` | Sentinel-2 NDVI per dekad + anomaly vs. 2021–2025 |
-| Basemap | `finland.pmtiles` + `style.json` | Protomaps vector tiles, max zoom 14 |
-| Stub | `data/test_zones.geojson` | 50 fake zones in the exact API shape — use it now |
+## 7. Conventions (everyone)
 
-Contract for consumers: `docs/data-contract.md`. Runbook: `data/README.md`.
+* **Feature ids** everywhere: branches `feat/6.3-geofence-visits`, PR titles `[6.3] …`, issues labelled `feature:6.3`.
+* **Coordinates:** store/serve EPSG:4326; measure in **EPSG:3067** (ETRS-TM35FIN).
+* **Ids:** UUID everywhere; client-generated UUIDs are idempotency keys; zone id = uuid5(H3 index).
+* **Species codes:** `bilberry`, `lingonberry`, `cloudberry`, `crowberry`.
+* **API:** `/api/v1`, OpenAPI-first, errors as RFC 9457 problem JSON, the app's client is generated from OpenAPI.
+* **Privacy:** raw GPS tracks never leave the phone; the server only knows zone + duration.
+* **Secrets** only in `.env` (git-ignored). **Big files** (`.pbf`, `.pmtiles`, `.tif`, `.parquet`, model weights, images) go to object storage, not git.
+* **Strings** FI + EN from day one. **Accessibility:** colour is never the only signal.
+* **Decisions** that change a doc go into `docs/decisions/` as a short ADR.
 
-## 7. API (Hassan — deep dive §5)
+How to contribute (branches, PRs, definition of done, starting a new feature): [CONTRIBUTING.md](CONTRIBUTING.md).
 
-| Endpoint | Returns |
-|----------|---------|
-| `GET /api/v1/species` | 4 species, names, colours, season windows |
-| `GET /api/v1/zones?bbox=w,s,e,n&species=&zoom=` | GeoJSON zones with score, confidence, ripeness, updated_at (bbox ≤ 50 × 50 km; zoom < 10 → H3 res-6 parents) |
-| `GET /api/v1/zones/near?lat=&lng=&radius_km=10&species=&limit=10` | Ranked "Near me" list |
-| `GET /api/v1/zones/{id}` | Zone detail, all species |
-| `GET /api/v1/zones/{id}/explanation?species=&lang=fi` | 2–4 plain-words reasons |
-| `GET /api/v1/zones/{id}/history?species=&days=30` | Daily score for the sparkline |
-| `GET /api/v1/zones/snapshot?bbox=&since=` | Gzipped offline package |
+## 8. Licences to keep in mind
 
-Responses are gzip + ETag/304; cache 5 min.
+WildBe dataset is **CC BY-NC 4.0** (non-commercial, cite the paper) and Ultralytics YOLO is
+**AGPL-3.0** — both fine for the course, both must be replaced before any paid launch.
+OSM data is ODbL, FMI open data CC BY 4.0. Full list: [docs/licences.md](docs/licences.md).
 
-## 8. Tech stack
+## 9. Open decisions (sprint 1)
 
-* **App:** Expo (dev client + EAS), TypeScript, `@maplibre/maplibre-react-native`, TanStack Query, Zustand, expo-sqlite + drizzle, i18next (FI/EN), Sentry.
-* **Backend:** FastAPI, Pydantic v2, SQLAlchemy 2 async + asyncpg + GeoAlchemy2, Alembic, APScheduler.
-* **Database:** Postgres 17 + PostGIS 3.5 + h3-pg (`docker-compose.dev.yml`).
-* **Data:** Python 3.12, geopandas, shapely, pyproj, h3 v4, rasterio, sentinelhub; go-pmtiles CLI.
-* **Testing:** pytest, Jest + RN Testing Library, Maestro (E2E), k6 (load), Prism (API mock).
-* Everything is free and open source. Pin exact versions; no upgrades mid-sprint.
+* Cloud provider: Hetzner Helsinki vs. CSC cPouta — Sabih
+* GDD ripeness thresholds per species, with sources — Asmer
+* Pilot bbox (proposed in `data/config/pilot_area.yaml`) and H3 res 8 vs. 9 — Awais + Hassan
+* Visit thresholds (10 min dwell, 5 min exit) — Salman, after the first field test
+* Domain name, store accounts (Apple Developer for TestFlight), task board (GitHub Projects) — Sayeem
+* Zone count is ≈ 4–5k, not 3–4k: H3 res-8 cells are ≈ 0.57 km² at 62° N — re-check payload budgets — Hassan
 
-## 9. Build plan
-
-| Week | Dates | Goal |
-|------|-------|------|
-| 1 | 22–28 Oct | Remove blockers: repo, dev setup, DB image, OpenAPI, Expo + MapLibre build, pilot bbox, basemap, Figma |
-| 2 | 29 Oct – 3 Nov | Map with stub data (Sprint 1 demo): real zones + weather in DB, `/zones` live, baseline scores |
-| 3 | 4–10 Nov | Real data end to end: job runner, report fusion, explanations, NDVI, zone sheet, deploy |
-| 4 | 11–17 Nov | Offline, polish, A1–A8 acceptance, first forest walk test |
-
-## 10. Conventions
-
-* **Coordinates:** store and serve EPSG:4326; measure areas/distances in **EPSG:3067** (ETRS-TM35FIN).
-* **Ids:** zone id = uuid5 of its H3 index, so it never changes between rebuilds.
-* **Species codes:** `bilberry`, `lingonberry`, `cloudberry`, `crowberry` (lower-case, English).
-* **Branches:** `feat/<D#>-short-name`, `fix/…`, `data/…`; PR + 1 review + green CI into `main`.
-* **Secrets:** only in `.env` (git-ignored); copy from `.env.example`.
-* **Big files** (`*.pbf`, `*.pmtiles`, `*.tif`, `*.parquet`) never go in git → object storage.
-* **Strings:** FI + EN from day one (`i18n/fi.json`, `i18n/en.json`).
-* **Accessibility:** colour is never the only signal; colour-blind-safe palette; touch targets ≥ 44 pt.
-
-## 11. Open questions
-
-* Final colour palette and low-confidence style (hatch vs. fade) — Sabih
-* H3 resolution 8 vs. 9 for a picker's sense of a "spot" — decide after the first walk test — Awais + Salman
-* Show unsuitable species as score 0 or hide them? Proposal: hide — Asmer
-* Public report list in the zone sheet: show from 3 reporters or hide in MVP? — Sayeem
-* Zone count is ~4–5k, not 3.5k (smaller hexagons at this latitude) — re-check payload budgets — Hassan
-
-## 12. Glossary
+## 10. Glossary
 
 | Term | Meaning |
 |------|---------|
-| Zone | One H3 res-8 hexagon of forest or mire, the unit everything is scored on |
+| Zone | One H3 res-8 hexagon of forest or mire — the unit everything is scored on |
+| Yield score | 0–100: how good a zone is for a species right now |
+| Confidence | high / medium / low — how much evidence backs the score |
 | GDD | Growing-degree days: Σ max(0, daily mean °C − 5) since 1 April; drives ripeness |
-| NDVI | Vegetation greenness from Sentinel-2; anomaly = this year vs. 2021–2025 average |
-| N_eff | Effective number of reports after trust/age/visit weighting |
-| Dekad | 10-day period: 1–10, 11–20, 21–end of month |
-| MS-NFI | Luke's Multi-Source National Forest Inventory rasters (tree species, site fertility) |
-| PMTiles | Single-file vector tile archive the app reads directly from storage |
-| Stub | Temporary stand-in so work isn't blocked (each D# has one) |
+| NDVI | Satellite greenness (Sentinel-2); anomaly = this year vs. 2021–2025 |
+| N_eff | Effective number of reports after trust × recency × visit weighting |
+| Trust | Per-user reputation 0–1 (Beta), starts at 0.5 |
+| Outbox | Phone-side queue of writes made offline, synced later with idempotency keys |
+| Stub | Temporary stand-in so nobody is blocked |
+| ADR | Architecture Decision Record — one short file per decision in `docs/decisions/` |

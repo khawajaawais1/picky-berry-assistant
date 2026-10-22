@@ -33,6 +33,17 @@ cannot occur there (proposal: hide on the map – open question for Asmer).
 
 `zone_id → period_start, ndvi_mean, ndvi_anomaly`. No row → use anomaly 0.
 
+## ingest_runs → Hassan (job runner, admin page), Sayeem (QA)
+
+One row per loaded source per run: `source, started_at, finished_at, status (ok|failed), rows, error, details`.
+A failed run keeps yesterday's data.
+
+## zone_features (planned, sprint 2–3) → Remon (6.6)
+
+zone × species × day: `gdd_since_apr1, precip_30d, frost_days_flowering, ndvi_latest, ndvi_anomaly,
+doy, forest_type, reports_7d, last_year_score` — reports columns come from Hassan's tables.
+Columns to be agreed with Remon before building.
+
 ## Basemap (D18) → Salman, Sabih
 
 `finland.pmtiles` (Protomaps schema, maxzoom 14) in bucket `tiles/`, plus `style.json`

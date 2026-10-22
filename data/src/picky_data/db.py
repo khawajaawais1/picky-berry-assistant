@@ -116,10 +116,31 @@ def load_stations(eng, stations: pd.DataFrame) -> int:
     return len(stations)
 
 
+def record_run(eng, source: str, status: str, rows: int | None = None, error: str | None = None,
+               details: dict | None = None) -> None:
+    """One row in ingest_runs per loaded source (the backend's job runner reads these)."""
+    import json as _json
+
+    from sqlalchemy import text
+
+    with eng.begin() as conn:
+        conn.execute(text("""
+            INSERT INTO ingest_runs (source, finished_at, status, rows, error, details)
+            VALUES (:s, now(), :st, :r, :e, CAST(:d AS jsonb))"""),
+            {"s": source, "st": status, "r": rows, "e": error, "d": _json.dumps(details or {})})
+
+
 def load_all(out_dir: Path) -> dict[str, int]:
-    """Load whatever outputs exist in data/out/ in dependency order."""
+    """Load whatever outputs exist in data/out/ in dependency order; log each in ingest_runs."""
     eng = engine()
     apply_ddl(eng)
+    counts = _load_all(eng, out_dir)
+    for source, n in counts.items():
+        record_run(eng, source, "ok", n)
+    return counts
+
+
+def _load_all(eng, out_dir: Path) -> dict[str, int]:
     counts = {"species": load_species(eng)}
     if (out_dir / "zones.parquet").exists():
         counts["zones"] = load_zones(eng, gpd.read_parquet(out_dir / "zones.parquet"))

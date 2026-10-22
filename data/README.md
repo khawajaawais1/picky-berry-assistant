@@ -1,7 +1,10 @@
-# data/ — Awais's pipelines for Feature 6.2 (Live Site Map)
+# data/ — Awais's data pipelines (features 6.2, 6.6 and later)
 
-Everything the map needs before a score can exist: the pilot area, the zones, which berries
-can grow in each zone, weather + growing-degree days, NDVI, and the basemap.
+Everything the scores need before they can exist: the pilot area, the zones, which berries
+can grow in each zone, weather + growing-degree days, NDVI, and the basemap. Built first for
+feature 6.2 (Live Site Map); feature 6.6 (Yield prediction) reads the same tables.
+The backend's `ingest` module runs the daily jobs by importing this package
+([ADR 0004](../docs/decisions/0004-data-package-and-ingest-module.md)).
 
 | D#  | Deliverable                                   | Command                         | Stub until ready                    |
 |-----|-----------------------------------------------|---------------------------------|-------------------------------------|
@@ -11,7 +14,7 @@ can grow in each zone, weather + growing-degree days, NDVI, and the basemap.
 | D13 | FMI daily weather + GDD per zone, 2021–2026   | `picky-data weather`            | `--stub-one-station` (Jyväskylä airport) |
 | D14 | NDVI per zone + anomaly                       | `picky-data ndvi`               | `picky-data ndvi --stub` (anomaly = 0) |
 | D18 | Basemap PMTiles + MapLibre style              | `picky-data basemap`            | public demo style (local dev only)  |
-| —   | Data checks (C1–C12)                          | `picky-data check [--db]`       |                                     |
+| —   | Data checks (C1–C14)                          | `picky-data check [--db]`       |                                     |
 | —   | Load into Postgres                            | `picky-data load`               |                                     |
 
 ## 1. One-time setup (Windows)
@@ -64,11 +67,15 @@ picky-data check --db
 picky-data ndvi --start 2021-05-01 --months 5,6,7,8,9
 ```
 
-Daily (07:00, before scoring – Hassan's job runner calls these):
+Daily, before the 07:00 `predict_yield` job (architecture doc §5 — `ingest_weather` 05:30,
+`ingest_ndvi` 06:00; Hassan's job runner calls these through `backend/app/modules/ingest`):
 
 ```bash
-picky-data weather --start <today-14d> && picky-data ndvi --start <today-20d> && picky-data load
+picky-data weather --start <today-14d> && picky-data load      # 05:30
+picky-data ndvi --start <today-20d> && picky-data load         # 06:00
 ```
+
+Every `load` writes one row per source to `ingest_runs`.
 
 ## 4. Outputs (`data/out/`, git-ignored → object storage)
 
@@ -92,12 +99,26 @@ Checks: `sql/900_data_checks.sql` + `src/picky_data/checks.py`.
 * **Zone ids are deterministic** (uuid5 of the H3 id) so the app's offline cache, reports and score history survive rebuilds.
 * **Mire wins over forest** where OSM polygons overlap (wooded bogs are cloudberry land).
 * **Weather is stored per station + IDW weights, not per zone × day.** 6 years × 4–5k zones × 365 days would be ~10M rows; the `weather_daily` view gives the same per-zone numbers from ~10k station-days per year.
-* **FMI via plain WFS + requests.** `fmiopendata` 0.5.0 fails to build on current setuptools/Python 3.12+.
-* **NDVI via Process API tiles + local zonal stats**, not one Statistical API call per zone (≈ 9 requests per dekad instead of ~5,000). Dekads (1–10, 11–20, 21–end) keep bins identical across years, leap years included.
+* **FMI via plain WFS + requests** ([ADR 0005](../docs/decisions/0005-fmi-plain-wfs.md)). `fmiopendata` 0.5.0 fails to build on current setuptools/Python 3.12+.
+* **NDVI via Process API tiles + local zonal stats** ([ADR 0006](../docs/decisions/0006-ndvi-process-api-tiles.md)), not one Statistical API call per zone (≈ 9 requests per dekad instead of ~5,000). Dekads (1–10, 11–20, 21–end) keep bins identical across years, leap years included.
+* **Weather per station + IDW view** ([ADR 0007](../docs/decisions/0007-weather-per-station-idw.md)).
+* **Quality ranges** (architecture doc §10): temperatures outside −50..+40 °C → NaN, precipitation ≥ 0, NDVI within −1..1, ≥ 80 % of zones must get weather on the latest day.
 * **Missing NDVI → anomaly 0** (deep dive §13), windows with < 20 % clear pixels count as missing.
 
 ## 6. Tests
 
-`pytest` – 25 tests: pilot square, H3 coverage maths, end-to-end zone build on a synthetic Geofabrik zip,
-zone_species rules, GDD (season start, gaps, yearly reset), FMI XML parsing, IDW, NDVI zonal stats + anomaly,
-and the shape of the test zones (matches the API's `ZoneProps`).
+`pytest` – 28 tests: pilot square, H3 coverage maths, end-to-end zone build on a synthetic Geofabrik zip,
+zone_species rules, GDD (season start, gaps, yearly reset), FMI XML parsing, temperature ranges, IDW,
+NDVI zonal stats + anomaly, data checks, and the shape of the test zones (matches the API's `ZoneProps`).
+
+## 7. Roadmap — what data/ delivers to each feature
+
+| Feature | Deliverable | Sprint | Status |
+|---------|-------------|--------|--------|
+| 6.2 Live map | Pilot area, zones, zone_species, weather + GDD, NDVI, basemap | 1–2 | ✅ code + tests · ⬜ real run |
+| 6.2 / 6.6 | `ingest_runs` bookkeeping + daily jobs wired into `backend/…/ingest` | 2 | ✅ table · ⬜ job wiring (needs D15) |
+| 6.6 Yield prediction | FMI 7-day forecast rows (`is_forecast`) | 2 | ⬜ |
+| 6.6 Yield prediction | `zone_features` (zone × species × day): gdd_since_apr1, precip_30d, frost days during flowering, ndvi_latest, ndvi_anomaly, doy, forest type — agreed with Remon | 2–3 | ⬜ |
+| 6.6 Yield prediction | Historical seasons 2021–2025 backfill for training + baseline comparison | 2 | ⬜ (CLI ready) |
+| 6.9 Offline | Offline basemap packs / pilot PMTiles for the app | 3 | ✅ CLI · ⬜ upload to bucket |
+| F4 Drone & wild-bee data | New ingest pipeline → extra `zone_features` columns | future | — |

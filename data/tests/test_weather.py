@@ -114,3 +114,23 @@ def test_zone_weather_renormalises_missing_station():
     assert zw.tmean_c == pytest.approx(10.0)
     assert zw.precip_mm == pytest.approx(2.0)
     assert zw.gdd_since_apr1 == pytest.approx(510.0)
+
+
+def test_temperature_quality_range():
+    from picky_data.weather.fmi import clean_daily
+
+    d = pd.DataFrame({"fmisid": [1, 1], "date": [date(2025, 7, 1), date(2025, 7, 2)],
+                      "tmean_c": [55.0, 18.0], "tmin_c": [-70.0, 10.0], "tmax_c": [20.0, 25.0],
+                      "precip_mm": [0.0, 0.0], "snow_cm": [0.0, 0.0]})
+    c = clean_daily(d)
+    assert np.isnan(c.tmean_c.iloc[0]) and np.isnan(c.tmin_c.iloc[0]) and c.tmean_c.iloc[1] == 18.0
+
+
+def test_weather_coverage_check():
+    from picky_data.checks import check_weather_coverage
+
+    w = pd.DataFrame({"zone_id": ["a", "b", "c", "d", "e"], "fmisid": [1, 1, 1, 1, 2], "weight": [1.0] * 5})
+    d = pd.DataFrame({"fmisid": [1, 2], "date": [date(2025, 7, 1)] * 2, "tmean_c": [15.0, np.nan]})
+    assert check_weather_coverage(w, d).ok                       # 4/5 = 80 %
+    d.loc[0, "tmean_c"] = np.nan
+    assert not check_weather_coverage(w, d).ok

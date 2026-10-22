@@ -1,6 +1,6 @@
-# Dependency checklist — Feature 6.2 (mirror of §3 of the deep dive)
+# Dependency checklist — Feature 6.2 Live Site Map (mirror of §3 of the 6.2 deep dive)
 
-Status as of 22 Oct 2026. Awais's rows reflect what is in this repo.
+Status as of 22 Oct 2026. Awais's rows reflect what is in this repo. Each later core feature gets its own checklist inside its deep dive (see features/TEMPLATE.md §2).
 
 | ID | Dependency | Owner | Status |
 |----|------------|-------|--------|

@@ -63,3 +63,10 @@ def test_anomaly_vs_baseline():
 def test_stub():
     s = stub_obs(pd.DataFrame({"id": ["a", "b"]}))
     assert (s.ndvi_anomaly == 0).all() and len(s) == 2
+
+
+def test_ndvi_range_check():
+    from picky_data.checks import check_ndvi
+
+    assert check_ndvi(pd.DataFrame({"ndvi_mean": [0.5, np.nan, -0.2]}))[0].ok
+    assert not check_ndvi(pd.DataFrame({"ndvi_mean": [1.4]}))[0].ok

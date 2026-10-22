@@ -45,6 +45,19 @@ CREATE TABLE IF NOT EXISTS zone_species (
   PRIMARY KEY (zone_id, species)
 );
 
+-- Pipeline bookkeeping (architecture doc §7/§10) ----------------------------
+CREATE TABLE IF NOT EXISTS ingest_runs (
+  id          bigserial PRIMARY KEY,
+  source      text NOT NULL,            -- zones | zone_species | weather | ndvi | …
+  started_at  timestamptz NOT NULL DEFAULT now(),
+  finished_at timestamptz,
+  status      text NOT NULL,            -- running | ok | failed
+  rows        integer,
+  error       text,
+  details     jsonb NOT NULL DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS ingest_runs_source_ix ON ingest_runs (source, started_at DESC);
+
 -- D13 – weather: stations + daily obs; per-zone values come from IDW weights --
 CREATE TABLE IF NOT EXISTS weather_stations (
   fmisid   integer PRIMARY KEY,

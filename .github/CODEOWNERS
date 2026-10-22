@@ -1,0 +1,18 @@
+# Replace names with GitHub usernames once the repo exists (Sayeem).
+# The last matching pattern wins.
+*                       @sayeem
+/docs/                  @sayeem
+/.github/               @sayeem
+/app/                   @salman
+/backend/               @hassan
+/backend/app/modules/prediction/  @remon @hassan
+/backend/app/modules/reasoning/   @asmer @hassan
+/backend/app/modules/ingest/      @awais @hassan
+/backend/app/modules/media/       @sabih @hassan
+/ml/                    @remon
+/data/                  @awais
+/ontology/              @asmer
+/docker/                @sabih @hassan
+/deploy/                @sabih
+/docs/data-contract.md  @awais
+/docs/privacy.md        @hassan

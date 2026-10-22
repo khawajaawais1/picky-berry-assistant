@@ -35,6 +35,7 @@ STATIONS_QUERY = "fmi::ef::stations"
 PARAMS = {"tday": "tmean_c", "tmin": "tmin_c", "tmax": "tmax_c", "rrday": "precip_mm", "snow": "snow_cm"}
 COLUMNS = ["fmisid", "date", *PARAMS.values()]
 STATION_COLUMNS = ["fmisid", "name", "lat", "lon"]
+TEMP_RANGE_C = (-50.0, 40.0)   # outside → treated as a sensor error (NaN)
 
 
 def _local(tag: str) -> str:
@@ -116,8 +117,9 @@ def clean_daily(daily: pd.DataFrame) -> pd.DataFrame:
         daily[c] = pd.to_numeric(daily[c], errors="coerce")
     for c in ("precip_mm", "snow_cm"):                 # FMI: -1 means "none observed"
         daily.loc[daily[c] < 0, c] = 0.0
-    bad = (daily["tmean_c"] < -60) | (daily["tmean_c"] > 45)
-    daily.loc[bad, "tmean_c"] = np.nan
+    for c in ("tmean_c", "tmin_c", "tmax_c"):          # architecture doc §10 quality range
+        bad = (daily[c] < TEMP_RANGE_C[0]) | (daily[c] > TEMP_RANGE_C[1])
+        daily.loc[bad, c] = np.nan
     daily["fmisid"] = daily["fmisid"].astype(int)
     return daily.drop_duplicates(["fmisid", "date"]).sort_values(["fmisid", "date"]).reset_index(drop=True)
 
