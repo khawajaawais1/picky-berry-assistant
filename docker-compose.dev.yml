@@ -1,0 +1,37 @@
+# Local dev stack: Postgres 17 + PostGIS 3.5 + h3-pg (D4) and MinIO (D19).
+# Usage:  docker compose -f docker-compose.dev.yml up -d --build
+services:
+  db:
+    build: ./docker/postgres
+    image: picky/postgis-h3:17-3.5
+    container_name: picky-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-picky}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-picky}
+      POSTGRES_DB: ${POSTGRES_DB:-picky}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-picky}"]
+      interval: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    container_name: picky-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-picky}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-picky-dev-secret}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+
+volumes:
+  pgdata:
+  miniodata:

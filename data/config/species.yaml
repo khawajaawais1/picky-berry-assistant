@@ -1,0 +1,23 @@
+# D6 stub – 4 hard-coded codes until Asmer + Hassan agree the vocabulary.
+# IRIs are placeholders; Asmer replaces them with the ontology IRIs.
+species:
+  - code: bilberry
+    latin: Vaccinium myrtillus
+    name_fi: mustikka
+    name_en: bilberry
+    iri: "https://picky.example/onto#Bilberry"
+  - code: lingonberry
+    latin: Vaccinium vitis-idaea
+    name_fi: puolukka
+    name_en: lingonberry
+    iri: "https://picky.example/onto#Lingonberry"
+  - code: cloudberry
+    latin: Rubus chamaemorus
+    name_fi: lakka (hilla)
+    name_en: cloudberry
+    iri: "https://picky.example/onto#Cloudberry"
+  - code: crowberry
+    latin: Empetrum nigrum
+    name_fi: variksenmarja
+    name_en: crowberry
+    iri: "https://picky.example/onto#Crowberry"

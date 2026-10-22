@@ -1,0 +1,45 @@
+# D3 – Pilot area (owner: Awais). PROPOSAL until agreed by the team.
+# 60 x 60 km square in ETRS-TM35FIN (EPSG:3067), centred on Jyväskylä
+# (62.2426 N, 25.7473 E), snapped to whole kilometres so every tool agrees.
+name: jyvaskyla-pilot
+crs_metric: "EPSG:3067"
+
+bbox_3067:            # authoritative: [xmin, ymin, xmax, ymax] in metres
+  - 405000
+  - 6872000
+  - 465000
+  - 6932000
+
+# Derived WGS84 envelope (outer bounds of the square above) – for APIs that want lon/lat.
+bbox_wgs84:           # [west, south, east, north]
+  - 25.1553
+  - 61.9685
+  - 26.3323
+  - 62.5174
+
+zones:
+  h3_resolution: 8               # ≈ 0.57 km² per cell at Jyväskylä (H3's 0.74 km² is a global mean); 9 is the open question after the first walk test
+  min_forest_fraction: 0.40      # keep a cell if ≥ 40 % is forest or mire
+  zoomed_out_parent_resolution: 6
+  expected_count: [3000, 6300]   # sanity range for checks: the square holds 6,271 res-8 cells; lakes + fields drop ~25–40 %
+
+basemap:
+  # Protomaps daily builds: https://maps.protomaps.com/builds/
+  source: "https://build.protomaps.com/20261020.pmtiles"
+  finland_bbox_wgs84: [19.0, 59.5, 31.6, 70.1]
+  maxzoom: 14
+
+weather:
+  season_start: "04-01"          # GDD accumulation starts 1 April
+  gdd_base_c: 5.0
+  backfill_from: "2021-01-01"
+  stub_station_fmisid: 101339    # Jyväskylä lentoasema – used when a zone has no nearer station
+  station_search_buffer_km: 40   # look for stations this far outside the bbox
+  idw_power: 2
+  idw_max_stations: 3
+
+ndvi:
+  resolution_m: 20
+  composite: dekad               # 1–10, 11–20, 21–end of month: same bins every year (leap-safe)
+  baseline_years: [2021, 2022, 2023, 2024, 2025]
+  max_cloud_cover: 60

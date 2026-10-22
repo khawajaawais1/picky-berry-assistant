@@ -1,0 +1,39 @@
+# secrets
+.env
+*.env.local
+data/config/secrets.yaml
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# node / expo
+node_modules/
+.expo/
+dist/
+web-build/
+
+# data artefacts (large or reproducible) – keep in object storage, not git
+data/raw/
+data/out/
+data/cache/
+*.pbf
+*.pmtiles
+*.tif
+*.tiff
+*.parquet
+*.gpkg
+!data/tests/fixtures/*.geojson
+
+# editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
