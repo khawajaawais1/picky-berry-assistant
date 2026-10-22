@@ -1,0 +1,18 @@
+node_modules/
+dist/
+# the harness's second export, built with EXPO_PUBLIC_APP_ENV=production
+dist-production/
+coverage/
+test-results/
+playwright-report/
+.expo/
+web-build/
+ios/
+android/
+package-lock.json
+*.png
+*.svg
+
+# Prose documentation is reviewed by humans, not reformatted by a tool. Code,
+# config and JSON stay formatted. See ADR-008.
+*.md

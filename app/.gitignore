@@ -1,0 +1,58 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+# dependencies
+node_modules/
+
+# Expo / Metro
+.expo/
+web-build/
+expo-env.d.ts
+.metro-health-check*
+
+# generated native projects (continuous native generation — never hand-edited)
+/ios
+/android
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# environment files — public client config only; recreate from .env.example
+.env
+.env.local
+.env*.local
+!.env.example
+
+# logs and tooling output
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+coverage/
+
+# build output
+dist/
+# `npm run apk` saves the downloaded EAS artifact here, named after the app
+*.apk
+# the harness's second export, built with EXPO_PUBLIC_APP_ENV=production
+dist-production/
+
+# browser harness output (Playwright)
+test-results/
+playwright-report/
+
+# Local secrets for tooling (e.g. a read-only Figma token). Never commit these.
+.secrets/
+
+# Claude Code: project settings are committed, machine-local overrides are not
+.claude/settings.local.json
+
+# typescript
+*.tsbuildinfo

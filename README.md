@@ -55,9 +55,10 @@ picky-berry-assistant/
 
 | Folder | Status |
 |--------|--------|
+| `app/` | ✅ Expo app: every v1 design screen, 108 suites / 1075 tests, layout + accessibility CI; MapLibre on real zones next ([`app/README.md`](app/README.md)) |
 | `data/` | ✅ Pipelines for 6.2 + 25 tests; 50 stub zones ready to use |
 | `docker/` | 🟡 Drafted; needs a first build on a laptop |
-| `app/`, `backend/`, `ml/`, `ontology/`, `deploy/` | ⬜ Planned layout in each README; owners start in sprint 1 |
+| `backend/`, `ml/`, `ontology/`, `deploy/` | ⬜ Planned layout in each README; owners start in sprint 1 |
 
 Sprint plan and first deliverables (due 3 Nov): [docs/sprints.md](docs/sprints.md).
 
@@ -83,6 +84,9 @@ picky-data --help
 
 **Working before real data exists:** `data/test_zones.geojson` has 50 zones around Laajavuori in the
 exact `GET /api/v1/zones?species=bilberry` shape — use it for app mocks, Prism and API tests.
+
+The app is the `app/` folder; its own commands run from there (`cd app && npm ci && npm start`),
+and its gate is [`.github/workflows/mobile.yml`](.github/workflows/mobile.yml).
 
 ## Architecture at a glance
 

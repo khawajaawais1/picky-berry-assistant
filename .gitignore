@@ -37,3 +37,7 @@ data/cache/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# the app commits its recommended VS Code settings (app/.vscode/)
+!app/.vscode/
+!app/.vscode/**
