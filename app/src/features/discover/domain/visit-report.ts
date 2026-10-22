@@ -18,7 +18,7 @@ import { SPECIES, type Species } from './species';
  * The species the frame's own two chips name, in its order (nodes 5:23281 and 5:23283).
  *
  * These are the two chips the screen draws first; the frame's third chip is “More”, whose
- * content is `REPORT_SPECIES_MORE`.
+ * content is `REPORT_SPECIES_MORE` — cloudberry and crowberry.
  */
 export const REPORT_SPECIES = ['lingonberry', 'bilberry'] as const;
 
@@ -26,9 +26,10 @@ export const REPORT_SPECIES = ['lingonberry', 'bilberry'] as const;
  * What the frame's third chip (“More”) holds: the rest of the app's species vocabulary
  * (`domain/species.ts`), in the vocabulary's own order.
  *
- * The design names exactly three berries — the three its filter chips set out (node 5:22959) —
- * so “More” is not an index the app lacks: it is the vocabulary the app can already name,
- * revealed. Nothing here is a species the app has no word for, which is what lets the chip
+ * The design names three berries in its own chips (node 5:22959); the app's vocabulary adds the
+ * pilot's fourth, crowberry, so “More” reveals two rather than one. It is still not an index
+ * the app lacks: it is the vocabulary the app can already name, revealed. Nothing here is a
+ * species the app has no word for, which is what lets the chip
  * claim a role instead of being drawn as a label nothing opens (AGENTS.md §11.2).
  */
 export const REPORT_SPECIES_MORE: readonly Species[] = SPECIES.filter(

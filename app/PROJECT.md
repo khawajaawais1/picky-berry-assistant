@@ -292,7 +292,8 @@ not. [ADR-051](docs/adr/ADR-051-the-team-mvp-plan-becomes-the-apps-target.md) re
   day the owner names;
 - the plan's **visit state machine** (20 nearest geofences refreshed every 2 km, 10-minute dwell,
   5-minute grace, a local notification for feedback);
-- the plan's four species (adding **crowberry** to the three the app has).
+- the plan's four species: **crowberry** was added to the app on 2026-10-22 as the fourth code,
+  appended after the frame's three so the design's chip order is unchanged.
 
 **This changes nothing that is built today**: the screens keep working while the transport, the
 local database and the map are built behind them, and the Figma frames still decide what a screen
@@ -1171,9 +1172,10 @@ Done — **the parts of frames 07, 10 and 13 that only needed a decision, not a 
 (2026-10-10, asked for as “the rest of the screens”):
 
 - **frame 10's third species chip (“More”)** is no longer a missing index. The design names
-  exactly three berries — the three frame 06's own filter chips set out — so the chip reveals the
-  app's whole species vocabulary (`REPORT_SPECIES_MORE`), and a report about any of the three can
-  be saved. Nothing was invented: the vocabulary is the design's, and the chip is a disclosure
+  three berries in its own chips; the app's vocabulary is those three plus the pilot's crowberry,
+  so the chip reveals the rest of it (`REPORT_SPECIES_MORE`), and a report about any of the four
+  can be saved. Nothing was invented: the vocabulary is the design's plus the team's fourth
+  species code, and the chip is a disclosure
   that disappears once the row holds every species it can name.
 - **frame 07's “Save zone”** is a real bookmark: the frame's own 54 px tile writes the zone to
   the picker's plan on this device and takes it back out (ADR-024), shows its state as a shape
@@ -1619,7 +1621,8 @@ runs in the app**: nothing can use a fix yet, so the app reads nothing at all.
    current, and since 2026-10-10 one app shell renders it over those nine screens, each mapped
    to the route that exists (`src/app/(app)/_layout.tsx`, ADR-022). What the owner has not yet
    answered is the shape inside it — one stack or four (open question 22). Screen 06 is now
-   complete apart from one control: its search field, its three species chips, its map/list
+   complete apart from one control: its search field, its species chips (the frame's three plus
+   the pilot's crowberry), its map/list
    toggle, the zone list behind it and its download glyph are built and really filter (the map
    draws only the zones the two controls leave, the list holds the same ones, and a line says
    how many are left). What is **not** built is its **recentre control**, because the map does
@@ -1710,10 +1713,10 @@ fix when a frame draws one (ADR-021).
 18. **Screen 10 (Post-visit feedback) is built in part.** The report is real — its fields, its
    five-way rating, its validation and the write to the device — and since 2026-10-09 it is
    **listed back** on screens 11 and 13, which is what makes the queue a record rather than a
-   promise. Its third species chip **“More”** is real since 2026-10-10: the design names exactly
-   three berries — the three its own filter chips set out — so the chip reveals the app's whole
-   species vocabulary instead of opening an index that does not exist, and a report about any of
-   the   three can be saved. One part of the frame is still not built: the **“Add a berry photo”
+   promise. Its third species chip **“More”** is real since 2026-10-10: the design names three
+   berries in its own chips, and since 2026-10-22 the app's vocabulary carries the pilot's fourth
+   (crowberry), so the chip reveals the rest of the vocabulary instead of opening an index that
+   does not exist, and a report about any of the four can be saved. One part of the frame is still not built: the **“Add a berry photo”
    row** (the owner deferred evidence media on 2026-10-09: it needs an image picker, camera
    permissions and its own security rules, decision 17). The visit it reports on is the design's
    own sample (`DEMO_VISIT_WINDOW` and the demo zone), so its header carries the “SEASON DEMO”

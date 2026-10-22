@@ -14,9 +14,11 @@ export type SpeciesChipsProps = {
 };
 
 /**
- * Frame 06's species chips (node 5:22959): three 36 px pills, the frame's own three berries,
- * the chosen one filled with the accent colour and the others on the surface behind the
- * palette's border — the metrics the design's chips carry on every screen.
+ * Frame 06's species chips (node 5:22959): 36 px pills, the chosen one filled with the accent
+ * colour and the others on the surface behind the palette's border — the metrics the design's
+ * chips carry on every screen. The frame draws three berries (lingonberry, bilberry,
+ * cloudberry); the pilot's fourth, crowberry, is the domain list's, so the row renders one
+ * chip more than the frame without changing the order of the design's three.
  *
  * One chip can be on, two can, or none, which is why these are checkboxes and not the
  * mutually exclusive `ChoiceChips` the onboarding screens use: filtering by lingonberry and

@@ -308,9 +308,11 @@ picker's marker) must lie *inside* that zone's polygon.
 
 **The frame's two controls are built as filters, and they change what the map draws.** The search
 field (node `5:22955`: 342x50, control radius, the surface behind the border, 14 px inset, the
-15/21 promise) searches a **place or a zone** — the frame's own words — and the three species
-chips (node `5:22959`: the 36 px pill of every screen, the chosen one filled with the accent) keep
-the zones reported for any of the species chosen. `domain/zone-filter.ts` answers both questions
+15/21 promise) searches a **place or a zone** — the frame's own words — and the species chips
+(node `5:22959`: the 36 px pill of every screen, the chosen one filled with the accent) keep the
+zones reported for any of the species chosen. The frame draws three chips; the app renders the
+pilot's fourth berry, crowberry, after them (2026-10-22), so the row is one chip wider than the
+design. `domain/zone-filter.ts` answers both questions
 as a pure function; the screen holds what was typed and which chips are on. What the result is
 visible as: the map draws one polygon, one label and one badge **per zone still in play** (a
 filtered-out zone leaves nothing behind, because a label left on the map is a zone the app claims

@@ -291,9 +291,13 @@ export const fi: Record<TranslationKey, string> = {
   'report.species.label': 'Raportin laji',
   'report.species.lingonberry': 'Puolukka',
   'report.species.bilberry': 'Mustikka',
-  // Lakka on the frame's third berry: frame 06's filter chips offer it, and frame 10's third
-  // chip reveals it (ks. kaksi seuraavaa avainta).
+  // Lakka on frame 06's third chip; frame 10's third chip reveals it (ks. kaksi seuraavaa
+  // avainta).
   'report.species.cloudberry': 'Lakka',
+  // Pilotin neljäs laji (CONTEXT.md §7 repositorion juuressa). Kehys ei piirrä sille omaa
+  // siruaan, joten se seuraa suunnittelun kolmea sekä suodattimessa että ruudun 10 “Lisää”-
+  // valinnan takana.
+  'report.species.crowberry': 'Variksenmarja',
   // Frame 10's third chip: the visible word is the frame's own, the accessible name says what
   // the press does.
   'report.species.more': 'Lisää',

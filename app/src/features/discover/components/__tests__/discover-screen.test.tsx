@@ -162,6 +162,21 @@ describe('DiscoverScreen', () => {
     expect(screen.queryByText('· Z14')).not.toBeOnTheScreen();
   });
 
+  it('offers the pilot’s fourth berry, and filters by it like any other', async () => {
+    await render(<DiscoverScreen />);
+
+    const crowberry = screen.getByRole('checkbox', { name: 'Crowberry' });
+    expect(crowberry).not.toBeChecked();
+
+    await fireEvent.press(crowberry);
+
+    // A fourth chip that draws but does not filter would be decoration: no demo zone is
+    // reported for crowberry, so the map is left with nothing to show.
+    expect(screen.getByRole('checkbox', { name: 'Crowberry' })).toBeChecked();
+    expect(screen.queryByText('Z09')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Z21')).not.toBeOnTheScreen();
+  });
+
   it('keeps a zone reported for two berries, and drops a chip that is turned off again', async () => {
     await render(<DiscoverScreen />);
 

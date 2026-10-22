@@ -49,10 +49,11 @@ export type PostVisitFeedbackScreenProps = {
  * default** — the picker can save without touching the row, so the design's answer, “Good”, is
  * where it starts.
  *
- * The frame's third species chip, **“More”**, is real: the design names exactly three berries —
- * the same three its filter chips set out — so pressing it reveals the rest of the vocabulary the
- * app can name (`REPORT_SPECIES_MORE`) rather than opening an index it does not have. It is a
- * disclosure, so it announces itself as one and disappears once the row holds every species.
+ * The frame's third species chip, **“More”**, is real: the design names three berries in its own
+ * chips, and the app's vocabulary adds the pilot's fourth (crowberry), so pressing it reveals
+ * the rest of the vocabulary the app can name (`REPORT_SPECIES_MORE`) rather than opening an
+ * index it does not have. It is a disclosure, so it announces itself as one and disappears once
+ * the row holds every species.
  *
  * Saving is real: `onSave` writes the report to the device's queue (`src/services/report-queue`)
  * and a failed write is reported on the screen. The report is the picker's own data and is

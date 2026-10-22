@@ -80,6 +80,10 @@ describe('PostVisitFeedbackScreen', () => {
     expect(
       screen.getByRole('radio', { name: 'Cloudberry' }).props.accessibilityState,
     ).toMatchObject({ checked: false });
+    // The pilot's fourth berry is behind the same chip: the app can report on it too.
+    expect(screen.getByRole('radio', { name: 'Crowberry' }).props.accessibilityState).toMatchObject(
+      { checked: false },
+    );
     expect(screen.getByRole('radio', { name: 'Lingonberry' })).toBeOnTheScreen();
     // Nothing is left to reveal, so the disclosure is gone rather than claiming another press.
     expect(screen.queryByRole('button', { name: 'Show all species' })).not.toBeOnTheScreen();

@@ -327,9 +327,11 @@ export const en = {
   'report.species.label': 'Species of this report',
   'report.species.lingonberry': 'Lingonberry',
   'report.species.bilberry': 'Bilberry',
-  // The third berry the app can name: frame 06's filter chips offer it, and frame 10's third
-  // chip reveals it (see the two keys below).
+  // Frame 06's third chip; frame 10's third chip reveals it (see the two keys below).
   'report.species.cloudberry': 'Cloudberry',
+  // The pilot's fourth species (CONTEXT.md §7 at the repository root). The frame draws no chip
+  // for it, so it follows the design's three in the filter and behind screen 10's “More”.
+  'report.species.crowberry': 'Crowberry',
   // Frame 10's third chip, which reveals the vocabulary rather than opening an index the app
   // does not have. The visible word is the frame's own; the accessible name states what the
   // press does, because “More” alone names nothing a screen reader can act on.

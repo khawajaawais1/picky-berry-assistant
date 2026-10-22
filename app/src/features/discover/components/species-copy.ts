@@ -9,14 +9,16 @@ import type { Species } from '../domain/species';
  * report's species is called.
  *
  * It sits beside the other discover copy (`zone-state-copy.ts`, `report-copy.ts`) and covers
- * **the vocabulary, not one frame's chips**: the app can name three berries, while frame 10
+ * **the vocabulary, not one frame's chips**: the app can name four berries, while frame 10
  * offers two of them and frame 06 three (frame 07's third chip is “More”, an index the app
- * does not have — see docs/design-source.md).
+ * does not have — see docs/design-source.md). The fourth is the pilot's crowberry, appended
+ * by the domain list rather than drawn by the frame.
  */
 export const SPECIES_LABEL_KEY: Record<Species, TranslationKey> = {
   lingonberry: 'report.species.lingonberry',
   bilberry: 'report.species.bilberry',
   cloudberry: 'report.species.cloudberry',
+  crowberry: 'report.species.crowberry',
 };
 
 /**

@@ -97,9 +97,9 @@ _Avoid_: OSM, OpenStreetMap (that is the data's source, not the surface), tile s
 **Species code**:
 The four berries the pilot scores, in the spelling the backend and the data pipelines use:
 `bilberry`, `lingonberry`, `cloudberry`, `crowberry` ([`../CONTEXT.md`](../CONTEXT.md) §7). The
-app's own chips name three of them — the frame draws lingonberry, bilberry and cloudberry — so
-`crowberry` is a known gap between the design's screen and the pilot's species list
-(`docs/plans/team-mvp-plan.md` §6), not a second vocabulary.
+app names all four; the frame draws three (lingonberry, bilberry and cloudberry), so the app's
+chips and screen 10's “More” render `crowberry` after the design's three rather than inside them
+— the same vocabulary, one screen wider than the design.
 _Avoid_: berry type, variety, plant, crop, blueberry (a different fruit, and not a code)
 
 ## People and surfaces
