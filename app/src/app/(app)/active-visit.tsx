@@ -1,7 +1,6 @@
-import { router } from 'expo-router';
+import { router, useCanGoBack } from 'expo-router';
 
 import { ActiveVisitScreen } from '@/features/discover';
-
 /**
  * Screen 09 · Core picker · Active visit (Figma node `5:23185`).
  *
@@ -11,9 +10,11 @@ import { ActiveVisitScreen } from '@/features/discover';
  * actually pushed onto a stack.
  */
 export default function ActiveVisitRoute() {
+  const canGoBack = useCanGoBack();
+
   return (
     <ActiveVisitScreen
-      onBack={router.canGoBack() ? () => router.back() : undefined}
+      onBack={canGoBack ? () => router.back() : undefined}
       onEnd={() => router.push('/post-visit-feedback')}
     />
   );

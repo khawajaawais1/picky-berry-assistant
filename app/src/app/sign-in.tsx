@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useCanGoBack } from 'expo-router';
 
 import { OnboardingSignInScreen } from '@/features/onboarding';
 import { sessionPort } from '@/services/session';
@@ -23,9 +23,11 @@ import { sessionPort } from '@/services/session';
  * and a returning user is not inside the app until the credential is accepted.
  */
 export default function SignInRoute() {
+  const canGoBack = useCanGoBack();
+
   return (
     <OnboardingSignInScreen
-      onBack={router.canGoBack() ? () => router.back() : undefined}
+      onBack={canGoBack ? () => router.back() : undefined}
       onCreateAccount={() => router.push('/create-account')}
       onForgotPassword={() => router.push('/forgot-password')}
       onSignIn={async ({ email, password }) => {

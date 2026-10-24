@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useCanGoBack } from 'expo-router';
 
 import { AccountSecurityScreen } from '@/features/privacy';
 import { signOut } from '@/services/sign-out';
@@ -24,9 +24,11 @@ import { signOut } from '@/services/sign-out';
  * frame 01's own link does.
  */
 export default function AccountSecurityRoute() {
+  const canGoBack = useCanGoBack();
+
   return (
     <AccountSecurityScreen
-      onBack={router.canGoBack() ? () => router.back() : undefined}
+      onBack={canGoBack ? () => router.back() : undefined}
       onSignIn={() => router.push('/sign-in')}
       onSignOut={async () => {
         await signOut();

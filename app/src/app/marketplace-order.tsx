@@ -1,7 +1,6 @@
-import { router } from 'expo-router';
+import { router, useCanGoBack } from 'expo-router';
 
 import { MarketOrderScreen } from '@/features/marketplace';
-
 /**
  * Screen 18 · Planned marketplace · Checkout and order status (Figma node `5:23935`).
  *
@@ -11,9 +10,11 @@ import { MarketOrderScreen } from '@/features/marketplace';
  * act claims no role (AGENTS.md §11.2, and PROJECT.md records the gap).
  */
 export default function MarketOrderRoute() {
+  const canGoBack = useCanGoBack();
+
   return (
     <MarketOrderScreen
-      onBack={router.canGoBack() ? () => router.back() : undefined}
+      onBack={canGoBack ? () => router.back() : undefined}
       onMessageSeller={() => router.push('/marketplace-chat')}
     />
   );

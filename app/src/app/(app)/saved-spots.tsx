@@ -1,8 +1,7 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useCanGoBack, useLocalSearchParams } from 'expo-router';
 
 import { appEnvironment } from '@/config/env';
 import { CommunityMapPrototype, SavedSpotsScreen, communityMapReading } from '@/features/discover';
-
 /**
  * The picker's own saved plan, the screen frame 14's “Saved spots” row opens (Figma node
  * `5:23613`'s row; the screen behind it was never drawn — ADR-030).
@@ -30,6 +29,7 @@ import { CommunityMapPrototype, SavedSpotsScreen, communityMapReading } from '@/
  * ship.
  */
 export default function SavedSpotsRoute() {
+  const canGoBack = useCanGoBack();
   const params = useLocalSearchParams<{ variant?: string }>();
   const reading =
     appEnvironment() === 'production'
@@ -40,7 +40,7 @@ export default function SavedSpotsRoute() {
 
   return (
     <SavedSpotsScreen
-      onBack={router.canGoBack() ? () => router.back() : undefined}
+      onBack={canGoBack ? () => router.back() : undefined}
       onBrowseZones={() => router.navigate('/discover')}
       onOpenZone={(zoneId, species) =>
         router.push({

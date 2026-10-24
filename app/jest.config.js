@@ -1,6 +1,11 @@
 /** @type {import('jest').Config} */
 module.exports = {
   preset: 'jest-expo',
+  // Reanimated 4.7 and Worklets ship native and web implementations; Jest must resolve the web
+  // one. Without this, importing Reanimated initialises `JSReanimated`, whose CSS event hook
+  // throws, and every suite that loads NativeWind's setup dies before its first test. This is the
+  // testing setup Reanimated 4.x documents.
+  resolver: 'react-native-reanimated/jest/resolver',
   // Compiles global.css once per run; jest.setup.ts registers the result (see there).
   globalSetup: '<rootDir>/jest.global-setup.js',
   // `className` is compiled by NativeWind, whose runtime needs Reanimated mocked and

@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useCanGoBack, useLocalSearchParams } from 'expo-router';
 
 import { appEnvironment } from '@/config/env';
 import {
@@ -8,7 +8,6 @@ import {
   communityMapReading,
   isSpecies,
 } from '@/features/discover';
-
 /**
  * Screen 07 · Core picker · Zone details (Figma node `5:23032`).
  *
@@ -36,6 +35,7 @@ import {
  * **production** build ignores the parameter entirely, so no stray prototype can ship.
  */
 export default function ZoneDetailsRoute() {
+  const canGoBack = useCanGoBack();
   const params = useLocalSearchParams<{ species?: string; variant?: string; zone?: string }>();
   const reading =
     appEnvironment() === 'production'
@@ -46,7 +46,7 @@ export default function ZoneDetailsRoute() {
 
   return (
     <ZoneDetailsScreen
-      onBack={router.canGoBack() ? () => router.back() : undefined}
+      onBack={canGoBack ? () => router.back() : undefined}
       onNavigate={() => router.push('/route-to-zone')}
       onSeeReports={() => router.push('/zone-reports')}
       species={isSpecies(params.species) ? params.species : PILOT_ZONE_SPECIES}

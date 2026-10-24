@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useCanGoBack } from 'expo-router';
 
 import { YourDataScreen } from '@/features/privacy';
 import { shareText } from '@/services/share-text';
@@ -18,10 +18,9 @@ import { shareText } from '@/services/share-text';
  * (AGENTS.md §11.2).
  */
 export default function YourDataRoute() {
+  const canGoBack = useCanGoBack();
+
   return (
-    <YourDataScreen
-      onBack={router.canGoBack() ? () => router.back() : undefined}
-      onShare={shareText}
-    />
+    <YourDataScreen onBack={canGoBack ? () => router.back() : undefined} onShare={shareText} />
   );
 }

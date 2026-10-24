@@ -1,7 +1,6 @@
-import { router } from 'expo-router';
+import { router, useCanGoBack } from 'expo-router';
 
 import { TermsPrivacyScreen } from '@/features/privacy';
-
 /**
  * The screen frame 14's “Terms & privacy” row opens (Figma node `5:23688`; the screen behind it was
  * never drawn — ADR-039).
@@ -14,9 +13,11 @@ import { TermsPrivacyScreen } from '@/features/privacy';
  * not claim a role (AGENTS.md §11.2).
  */
 export default function TermsPrivacyRoute() {
+  const canGoBack = useCanGoBack();
+
   return (
     <TermsPrivacyScreen
-      onBack={router.canGoBack() ? () => router.back() : undefined}
+      onBack={canGoBack ? () => router.back() : undefined}
       onOpenYourData={() => router.push('/your-data')}
     />
   );

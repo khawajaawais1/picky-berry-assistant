@@ -1,7 +1,6 @@
-import { router } from 'expo-router';
+import { router, useCanGoBack } from 'expo-router';
 
 import { ZoneReportsScreen } from '@/features/discover';
-
 /**
  * The list behind frame 07's “See all 11” — **the design never drew it** (ADR-044).
  *
@@ -13,5 +12,7 @@ import { ZoneReportsScreen } from '@/features/discover';
  * which keeps a deep link from drawing a control that cannot act.
  */
 export default function ZoneReportsRoute() {
-  return <ZoneReportsScreen onBack={router.canGoBack() ? () => router.back() : undefined} />;
+  const canGoBack = useCanGoBack();
+
+  return <ZoneReportsScreen onBack={canGoBack ? () => router.back() : undefined} />;
 }

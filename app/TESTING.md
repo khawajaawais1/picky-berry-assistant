@@ -52,15 +52,20 @@ a test is impossible to lose when its module moves. Recorded in ADR-004.
 
 | Tool | Version | Notes |
 | ---- | ------- | ----- |
-| Jest | 29.x | `jest-expo` 57 preset, `clearMocks: true` |
+| Jest | 30.x | `jest-expo` 58 preset, `clearMocks: true` |
 | React Native Testing Library | 14.x | `render`, `fireEvent` and `renderHook` are **async** — always `await` them |
-| @types/jest | 29.5.x | pinned to match Jest (`tsconfig` sets `"types": ["jest"]`) |
+| @types/jest | 30.0.x | pinned to match Jest (`tsconfig` sets `"types": ["jest"]`) |
 | Playwright | 1.63.0 (**exact**) | Browser harness (§12). Its browser build is version-locked, so the version is exact rather than a range. One-time `npx playwright install chromium` |
 
 `jest.config.js` mirrors the tsconfig `@/*` alias with `moduleNameMapper`; keep
-the two in sync. `jest.setup.ts` mocks `react-native-safe-area-context` with the
-library's own test mock and enables the RNTL matchers. Nothing else may be
-globally mocked: hiding failures with broad mocks is forbidden.
+the two in sync. It also resolves Reanimated 4 through the library's own Jest
+resolver, so the native CSS-event hook is never initialised in a test.
+`jest.setup.ts` mocks `react-native-safe-area-context` with the library's own test
+mock, supplies the private `AssetRegistry` stub that `expo-asset` 58 reads through
+the `react-native` index (jest-expo's own mock still targets the wrapper;
+[expo/expo#51834](https://github.com/expo/expo/issues/51834)), and enables the RNTL
+matchers. Nothing else may be globally mocked: hiding failures with broad mocks is
+forbidden.
 
 ### Tailwind in tests
 

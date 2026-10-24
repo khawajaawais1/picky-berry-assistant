@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useCanGoBack } from 'expo-router';
 
 import { OnboardingForgotPasswordScreen } from '@/features/onboarding';
 import { passwordResetAvailability, sessionPort } from '@/services/session';
@@ -19,12 +19,13 @@ import { passwordResetAvailability, sessionPort } from '@/services/session';
  * there is one working way in.
  */
 export default function ForgotPasswordRoute() {
+  const canGoBack = useCanGoBack();
   const availability = passwordResetAvailability();
 
   return (
     <OnboardingForgotPasswordScreen
       availability={availability}
-      onBack={router.canGoBack() ? () => router.back() : undefined}
+      onBack={canGoBack ? () => router.back() : undefined}
       onRequestReset={
         availability === 'unavailable'
           ? undefined

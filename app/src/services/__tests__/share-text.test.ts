@@ -17,7 +17,9 @@ describe('shareText', () => {
   });
 
   it('hands the copy over exactly as it was built', async () => {
-    const share = jest.spyOn(Share, 'share').mockResolvedValue({ action: Share.sharedAction });
+    const share = jest
+      .spyOn(Share, 'share')
+      .mockResolvedValue({ action: Share.sharedAction, activityType: undefined });
     const copy = '{"format":"picky.personal-data.v1"}';
 
     await shareText(copy, 'Your data');
@@ -27,13 +29,17 @@ describe('shareText', () => {
   });
 
   it('reports that the platform shared it', async () => {
-    jest.spyOn(Share, 'share').mockResolvedValue({ action: Share.sharedAction });
+    jest
+      .spyOn(Share, 'share')
+      .mockResolvedValue({ action: Share.sharedAction, activityType: undefined });
 
     await expect(shareText('{}', 'Your data')).resolves.toBe('shared');
   });
 
   it('reports that the user closed the sheet without choosing', async () => {
-    jest.spyOn(Share, 'share').mockResolvedValue({ action: Share.dismissedAction });
+    jest
+      .spyOn(Share, 'share')
+      .mockResolvedValue({ action: Share.dismissedAction, activityType: undefined });
 
     await expect(shareText('{}', 'Your data')).resolves.toBe('dismissed');
   });

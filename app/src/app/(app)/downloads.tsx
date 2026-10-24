@@ -1,7 +1,6 @@
-import { router } from 'expo-router';
+import { router, useCanGoBack } from 'expo-router';
 
 import { OfflineSyncScreen } from '@/features/offline';
-
 /**
  * Screen 13 · Account and offline · Downloads (Figma node `5:23530`).
  *
@@ -16,5 +15,7 @@ import { OfflineSyncScreen } from '@/features/offline';
  * nowhere to go back to.
  */
 export default function DownloadsRoute() {
-  return <OfflineSyncScreen onBack={router.canGoBack() ? () => router.back() : undefined} />;
+  const canGoBack = useCanGoBack();
+
+  return <OfflineSyncScreen onBack={canGoBack ? () => router.back() : undefined} />;
 }

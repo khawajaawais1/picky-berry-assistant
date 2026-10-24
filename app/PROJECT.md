@@ -246,18 +246,18 @@ Current, as implemented:
 
 | Area            | Choice                                                      |
 | --------------- | ----------------------------------------------------------- |
-| Mobile          | React Native 0.86.3 + Expo SDK 57.0.27, Expo Router 57       |
+| Mobile          | React Native 0.88.0 + Expo SDK 58.0.19, Expo Router 58       |
 | Language        | TypeScript 6.0.3, `strict`, path alias `@/*` → `src/*`       |
-| Runtime         | React 19.2.3, Hermes, new architecture                      |
+| Runtime         | React 19.3.0, Hermes, new architecture                      |
 | Package manager | npm (lockfile committed at `app/package-lock.json`)         |
 | Tooling         | ESLint 9 flat config (`eslint-config-expo`), Prettier 3, `tsc --noEmit` |
-| Testing         | Jest 29 via `jest-expo` 57, React Native Testing Library 14  |
+| Testing         | Jest 30 via `jest-expo` 58, React Native Testing Library 14  |
 | CI              | GitHub Actions — `../.github/workflows/mobile.yml`, path-filtered to `app/**`, with `working-directory: app` |
 | Backend         | The monorepo's sibling folder `../backend/` — one FastAPI modular monolith, PostgreSQL 17 + PostGIS + h3, S3/MinIO, FCM (Hassan); not serving the app yet |
 | Identity        | The account row is the API's; Firebase Authentication issues the credential (email + password; phone deferred). The API verifies ID tokens against Google's public keys (ADR-054) |
 | Design source   | Figma file “Picky” (`SFDhkQO0SDmWshHxpF6O7o`), reached through its remote MCP server via the project-scope `figma@claude-plugins-official` plugin (ADR-016). Inventory: [docs/design-source.md](docs/design-source.md) |
-| Localization    | Finnish + English, Swedish later, chosen by the OS per-app language setting. `expo-localization` 57.0.2 + typed catalogues in `src/services/i18n/` (ADR-017) |
-| Connectivity    | `expo-network` 57.0.2, read only to state the device's own network state (ADR-025); nothing about the connection is stored or sent |
+| Localization    | Finnish + English, Swedish later, chosen by the OS per-app language setting. `expo-localization` 58.0.5 + typed catalogues in `src/services/i18n/` (ADR-017) |
+| Connectivity    | `expo-network` 58.0.4, read only to state the device's own network state (ADR-025); nothing about the connection is stored or sent |
 | Device data     | `AsyncStorage` values, versioned and read strictly: the consent record, the saved plan, the report queue and the map's zone cache (`picky.zones-cache.v1`); no database yet |
 
 Backend technologies, as the team's architecture document fixes them: Python/FastAPI
@@ -328,9 +328,9 @@ Verified on 2026-10-24 in this repository:
 | Linting                                      | `npm run lint`                   | pass (0 errors, 12 warnings in four files, 2026-10-24) |
 | Formatting                                   | `npm run format:check`           | pass   |
 | Unit/component tests                         | `npm test`                       | 118 suites, 1187 tests, pass (2026-10-24) |
-| Layout in both languages and both text sizes, plus the app shell (each route's destination, the swap between them, and no bar on onboarding), the built consent controls' states, the chip rows' `aria-checked`, **the accessibility tree of every route the app has (25 today) and of the state each press in the journeys leaves behind** (role, accessible name and declared state on every control, and the walk's own probe), the discover flow's destinations, the walk-through to the queued report listed back, the sign-up → account row → saved plan → account surface → notice → the copy → sign-out journey, **a screen read while its own action is in flight** (screen 10's save, with the app's storage given a device's timing), and — against a second `EXPO_PUBLIC_APP_ENV=production` export — that a shipped build accepts no credential, mounts no prototype on every route either prototype's readings borrow, and redirects the development-only field-test route | `npm run test:layout` | 200 checks in the development export and 4 in the production one, pass (2026-10-24) |
-| Expo dependency/config health                | `npm run doctor`                 | 21/21 checks pass (2026-10-24; the SDK 57 patch releases were taken by `npx expo install --fix` on 2026-10-21: `expo` 57.0.31 and its seven peers) |
-| Production bundle builds                     | `npx expo export --platform ios` | pass (Hermes bundle, 5.6 MB, 2026-10-24) |
+| Layout in both languages and both text sizes, plus the app shell (each route's destination, the swap between them, and no bar on onboarding), the built consent controls' states, the chip rows' `aria-checked`, **the accessibility tree of every route the app has (25 today) and of the state each press in the journeys leaves behind** (role, accessible name and declared state on every control, and the walk's own probe), the discover flow's destinations, the walk-through to the queued report listed back, the sign-up → account row → saved plan → account surface → notice → the copy → sign-out journey, **a screen read while its own action is in flight** (screen 10's save, with the app's storage given a device's timing), and — against a second `EXPO_PUBLIC_APP_ENV=production` export — that a shipped build accepts no credential, mounts no prototype on every route either prototype's readings borrow, and redirects the development-only field-test route | `npm run test:layout` | 211 checks in the development export and 4 in the production one, pass (2026-10-24) |
+| Expo dependency/config health                | `npm run doctor`                 | 20/20 checks pass (2026-10-24, after the SDK 58 upgrade: `expo` 58.0.19, React Native 0.88.0, React 19.3.0 and Expo Router 58.0.26) |
+| Production bundle builds                     | `npx expo export --platform ios` | pass (Hermes bundle, 5.8 MB, 2026-10-24) |
 | Android bundle builds                        | `npx expo export --platform android` | pass (Hermes bundle, 5.8 MB, 2026-10-24) |
 | Android demo APK                             | `npm run build:android:demo` (EAS) | built from this tree 2026-10-21 (see Deployment) |
 | Dev server + web render (browser, no console errors) | `npm start` + browser    | pass   |
@@ -2381,8 +2381,9 @@ is still unset, so an iOS build needs that decision first).
 | `preview` | **APK, internal distribution**, `EXPO_PUBLIC_APP_ENV=preview` | The demo build shared with testers: download link, sideload, no dev server |
 | `production` | AAB (Play Store), `EXPO_PUBLIC_APP_ENV=production` | Not ready: the production gate is deliberate (ADR-027) |
 
-The first demo APK was built from this tree on 2026-10-21, **before** the SDK 57 patch bump below; a fresh
-`npm run build:android:demo` produces the artifact that matches the current lockfile
+The first demo APK was built from this tree on 2026-10-21, **before** the SDK 58 upgrade; the
+build page below is that pre-upgrade artifact. A fresh `npm run build:android:demo` produces an APK
+that matches the current lockfile
 ([build page](https://expo.dev/accounts/salmanprottoy/projects/picky-mobile-app/builds/80d8b8a2-d15a-4dd1-8989-b8dc6411ed95),
 `fi.picky.app`, version 0.1.0, version code 1, v2-signed, arm64-v8a/armeabi-v7a/x86/x86_64):
 <https://expo.dev/artifacts/eas/h4rx_uaBL3CG66dmkbrwqT-BrxmvJ727r7-sQSNJNh8.apk>.

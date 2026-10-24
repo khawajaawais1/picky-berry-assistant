@@ -5,6 +5,8 @@
  * the mock the library ships for tests. Keep this file limited to environment
  * setup — never hide real failures with broad mocks.
  */
+import path from 'node:path';
+
 import { registerCSS, setupAllComponents } from 'react-native-css-interop/test';
 
 import '@testing-library/react-native';
@@ -41,4 +43,19 @@ jest.mock('expo-network', () => ({ useNetworkState: () => ({}) }));
 jest.mock('@react-native-async-storage/async-storage', () =>
   // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports, so the mock must be required lazily inside the factory.
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
+);
+
+/**
+ * SDK 58's `expo-asset` reads `AssetRegistry` from the `react-native` index, whose getter loads
+ * `react-native/src/private/assets/AssetRegistry` directly. jest-expo 58.0.12 still mocks only
+ * `react-native/asset-registry`, the wrapper, so the transformer's stub asset id never reaches
+ * `Asset.fromModule` and every icon render fails with `Module "1" is missing from the asset
+ * registry`. This is the workaround from expo/expo#51834; remove it when a later jest-expo mocks
+ * the private module itself.
+ */
+jest.doMock(
+  require.resolve('react-native/src/private/assets/AssetRegistry', {
+    paths: [path.dirname(require.resolve('react-native/package.json'))],
+  }),
+  () => ({ AssetRegistry: jest.requireMock('react-native/asset-registry') }),
 );

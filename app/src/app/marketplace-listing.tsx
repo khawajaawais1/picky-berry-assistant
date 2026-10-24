@@ -1,7 +1,6 @@
-import { router } from 'expo-router';
+import { router, useCanGoBack } from 'expo-router';
 
 import { MarketListingScreen } from '@/features/marketplace';
-
 /**
  * Screen 16 · Planned marketplace · Listing detail (Figma node `5:23832`).
  *
@@ -11,9 +10,11 @@ import { MarketListingScreen } from '@/features/marketplace';
  * control that cannot act.
  */
 export default function MarketListingRoute() {
+  const canGoBack = useCanGoBack();
+
   return (
     <MarketListingScreen
-      onBack={router.canGoBack() ? () => router.back() : undefined}
+      onBack={canGoBack ? () => router.back() : undefined}
       onContactSeller={() => router.push('/marketplace-chat')}
       onOpenOrder={() => router.push('/marketplace-order')}
     />

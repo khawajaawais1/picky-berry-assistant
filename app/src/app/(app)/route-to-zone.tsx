@@ -1,7 +1,6 @@
-import { router } from 'expo-router';
+import { router, useCanGoBack } from 'expo-router';
 
 import { RouteToZoneScreen } from '@/features/discover';
-
 /**
  * Screen 08 · Core picker · Route to zone (Figma node `5:23106`).
  *
@@ -13,9 +12,11 @@ import { RouteToZoneScreen } from '@/features/discover';
  * actually pushed onto a stack.
  */
 export default function RouteToZoneRoute() {
+  const canGoBack = useCanGoBack();
+
   return (
     <RouteToZoneScreen
-      onBack={router.canGoBack() ? () => router.back() : undefined}
+      onBack={canGoBack ? () => router.back() : undefined}
       onCancel={() => (router.canGoBack() ? router.back() : router.replace('/zone-details'))}
       onStart={() => router.push('/active-visit')}
     />

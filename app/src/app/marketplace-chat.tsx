@@ -1,7 +1,6 @@
-import { router } from 'expo-router';
+import { router, useCanGoBack } from 'expo-router';
 
 import { MarketChatScreen } from '@/features/marketplace';
-
 /**
  * Screen 17 · Planned marketplace · Seller chat (Figma node `5:23883`).
  *
@@ -10,9 +9,11 @@ import { MarketChatScreen } from '@/features/marketplace';
  * it (PROJECT.md records it).
  */
 export default function MarketChatRoute() {
+  const canGoBack = useCanGoBack();
+
   return (
     <MarketChatScreen
-      onBack={router.canGoBack() ? () => router.back() : undefined}
+      onBack={canGoBack ? () => router.back() : undefined}
       onOpenOrder={() => router.push('/marketplace-order')}
     />
   );
