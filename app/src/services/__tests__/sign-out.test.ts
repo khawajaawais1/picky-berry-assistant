@@ -19,6 +19,8 @@ import { signOut } from '../sign-out';
  * functions (`src/services/report-queue.ts`, `src/services/privacy-consent.ts`,
  * `src/services/saved-zones.ts`); this is where that promise is kept.
  */
+const LEGACY_CONSENT_KEY = 'picky.privacy-consent.v1';
+
 const REPORT = {
   amountText: '1.3 kg',
   minutes: 52,
@@ -62,6 +64,17 @@ describe('signing out', () => {
       savedZones: [],
       session: null,
     });
+  });
+
+  it('removes the retired consent record an older build left behind', async () => {
+    await AsyncStorage.setItem(
+      LEGACY_CONSENT_KEY,
+      JSON.stringify({ backgroundTracking: true, decidedAt: '2026-10-09T12:00:00.000Z' }),
+    );
+
+    await signOut();
+
+    await expect(AsyncStorage.getItem(LEGACY_CONSENT_KEY)).resolves.toBeNull();
   });
 
   it('keeps the session when a record could not be deleted, so nothing half-leaves', async () => {

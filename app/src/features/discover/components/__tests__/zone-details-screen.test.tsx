@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import { themes, typography } from '@/constants/theme';
 import { QueryProvider } from '@/services/query-client';
@@ -232,6 +232,40 @@ describe('ZoneDetailsScreen', () => {
       disabled: true,
       selected: false,
     });
+
+    jest.restoreAllMocks();
+  });
+
+  it('does not offer a second press while the save is still being written', async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    jest.spyOn(AsyncStorage, 'setItem').mockImplementationOnce(async () => {
+      await gate;
+    });
+
+    await render(<ZoneDetailsScreen />);
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'Save zone' }));
+    });
+
+    // The write owns the plan until it answers: a second press would decide from a saved
+    // state the first press has not recorded yet.
+    expect(screen.getByTestId('zone-details-save').props.accessibilityState).toMatchObject({
+      disabled: true,
+      selected: false,
+    });
+
+    release();
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: 'Remove zone from saved zones' }).props
+          .accessibilityState,
+      ).toMatchObject({ disabled: false, selected: true }),
+    );
 
     jest.restoreAllMocks();
   });
