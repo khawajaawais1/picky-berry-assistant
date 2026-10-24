@@ -138,6 +138,10 @@ export const fi: Record<TranslationKey, string> = {
   'discover.map.loading': 'Ladataan alueita…',
   'discover.map.unavailable': 'Alueita ei voitu lukea',
   'discover.map.empty': 'Ei näytettäviä alueita',
+  // Expo Go does not contain MapLibre's native binary, so the map explains the build it needs
+  // rather than taking the app down at import time.
+  'discover.map.requiresDevelopmentBuild':
+    'Kartta ei ole käytettävissä tässä versiossa. Käytä kehitysversiota nähdäksesi sen.',
   'discover.score.label': 'Sadon pisteet',
   'discover.score.lowConfidence': 'Vaaleat alueet ovat epävarmoja',
   'discover.zone.a11y': 'Alue {id}, {state}',

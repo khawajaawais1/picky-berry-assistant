@@ -79,8 +79,8 @@ first needed.
   backend serves zones.
 - The app bundles that file (`assets/data/test-zones.json`) and draws it with MapLibre on the
   device, the same rings on the web export ([ADR-053](docs/adr/ADR-053-the-discover-map-is-real-geography.md)).
-  MapLibre is not in Expo Go: seeing screen 06 on a device needs a development build
-  (`npx expo run:ios` / `eas build --profile development`). There is no basemap yet
+  MapLibre is not in Expo Go: screen 06 still opens there, but its map area says the map needs a
+  development build (`npx expo run:ios` / `eas build --profile development`). There is no basemap yet
   ([ADR-031](docs/adr/ADR-031-a-real-basemap-osm-derived-tiles-we-host.md)); frames 08–09 still
   draw the design's map (ADR-021).
 

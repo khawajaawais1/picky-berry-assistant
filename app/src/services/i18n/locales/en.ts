@@ -151,6 +151,11 @@ export const en = {
   'discover.map.loading': 'Loading zones…',
   'discover.map.unavailable': 'Zones could not be read',
   'discover.map.empty': 'No zones to show',
+  // Expo Go has no MapLibre native binary (ADR-031). The map says so instead of letting the
+  // package's import-time native-module lookup take the app down; the rest of the screen — the
+  // card, the list and the filters — still reads the same zones.
+  'discover.map.requiresDevelopmentBuild':
+    'The map isn’t available in this build. Use a development build to see it.',
   // What the five colours mean. The ranges themselves are numbers rather than copy, so they
   // are written by the legend; these two lines are the words a reader needs.
   'discover.score.label': 'Yield score',

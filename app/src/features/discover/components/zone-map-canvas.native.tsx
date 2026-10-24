@@ -1,15 +1,14 @@
-import {
-  Camera,
-  GeoJSONSource,
-  Layer,
-  Map,
-  type FillLayerSpecification,
-  type LineLayerSpecification,
-  type StyleSpecification,
+import type {
+  FillLayerSpecification,
+  LineLayerSpecification,
+  StyleSpecification,
 } from '@maplibre/maplibre-react-native';
 import { useMemo } from 'react';
+import { View } from 'react-native';
 
+import { AppText } from '@/components/atoms';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { useTranslation } from '@/services/i18n';
 
 import {
   ZONE_CONFIDENT_OPACITY,
@@ -19,6 +18,7 @@ import {
 import { zoneBounds } from '../domain/zone-map-projection';
 import { zoneFeatureCollection } from '../domain/zone-source';
 
+import { loadMapLibre } from './map-libre';
 import type { ZoneMapCanvasProps } from './zone-map-canvas-props';
 
 /** The map is the whole canvas; one object, so a parent render does not hand the native view a new style. */
@@ -26,6 +26,9 @@ const CANVAS_STYLE = { flex: 1 } as const;
 
 /** Space kept around the framed zones, in screen pixels. */
 const CAMERA_PADDING = { top: 24, right: 24, bottom: 24, left: 24 } as const;
+
+/** The native package is absent from Expo Go; see `map-libre.ts` for why this is not an import. */
+const mapLibre = loadMapLibre();
 
 /**
  * The device's map: **MapLibre React Native**, on real coordinates (ADR-031's renderer,
@@ -52,6 +55,7 @@ const CAMERA_PADDING = { top: 24, right: 24, bottom: 24, left: 24 } as const;
  */
 export function ZoneMapCanvas({ label, zones }: ZoneMapCanvasProps) {
   const { colors } = useAppTheme();
+  const { t } = useTranslation();
 
   const ground = useMemo<StyleSpecification>(
     () => ({
@@ -113,8 +117,20 @@ export function ZoneMapCanvas({ label, zones }: ZoneMapCanvasProps) {
     return bounds === null ? null : [bounds[0], bounds[1], bounds[2], bounds[3]];
   }, [zones]);
 
+  if (mapLibre === null) {
+    return (
+      <View className="flex-1 items-center justify-center px-section" testID="zone-map-unavailable">
+        <AppText tone="muted" variant="bodySmall">
+          {t('discover.map.requiresDevelopmentBuild')}
+        </AppText>
+      </View>
+    );
+  }
+
+  const { Camera, GeoJSONSource, Layer, Map: MapView } = mapLibre;
+
   return (
-    <Map
+    <MapView
       // The map is content, not decoration: it is how the screen shows the zones, so it
       // carries a text alternative (WCAG 1.1.1, known issue 35) and the label is passed to
       // the platform's own accessibility props.
@@ -140,6 +156,6 @@ export function ZoneMapCanvas({ label, zones }: ZoneMapCanvasProps) {
         <Layer id="zone-fill" paint={fill} source="pilot-zones" type="fill" />
         <Layer id="zone-line" paint={line} source="pilot-zones" type="line" />
       </GeoJSONSource>
-    </Map>
+    </MapView>
   );
 }
