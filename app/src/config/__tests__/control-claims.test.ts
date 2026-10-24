@@ -103,7 +103,7 @@ const LEDGER: readonly LedgerEntry[] = [
     why: 'The radio group a *real* choice is drawn with (frame 11’s period chips), where a chip that cannot change anything is `Chip` and claims nothing.',
   },
   {
-    file: 'src/components/molecules/core-navigation.tsx',
+    file: 'src/components/organisms/core-navigation.tsx',
     offers: { pressable: 1, role: 2 },
     why: 'The four destinations of the app shell, each a `tab` with its selected state, wired to `router.navigate`.',
   },

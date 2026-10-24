@@ -1,7 +1,7 @@
 import { Slot, usePathname, useRouter, type Href } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
-import { CoreNavigation, type CoreNavKey } from '@/components/molecules';
+import { CoreNavigation, type CoreNavKey } from '@/components/organisms';
 import { useAppTheme } from '@/hooks/use-app-theme';
 
 /**

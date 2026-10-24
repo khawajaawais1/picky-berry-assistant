@@ -1,6 +1,6 @@
 # ADR-003 — Atomic Design for UI composition
 
-- **Status:** Accepted
+- **Status:** Accepted. **Status note (2026-10-24):** `organisms/` now holds the app shell's `CoreNavigation`; the layering rule below is unchanged.
 - **Date:** 2026-10-08
 - **Deciders:** Project owner (bootstrap specification §8)
 
@@ -25,7 +25,7 @@ atoms → molecules → organisms → templates → screens (src/app/**)
 
 - `atoms/`: `AppText`, `AppButton` — typography, colour tone, accessibility states.
 - `molecules/`: `Card`, `InfoRow` — group atoms into a reusable unit.
-- `organisms/`: not yet populated; feature-level composite UI.
+- `organisms/`: composite sections of the interface — currently the app shell's `CoreNavigation`.
 - `templates/`: `Screen` — owns safe area, background, content width and heading.
 - Feature UI lives in `features/<feature>/components/` and composes shared
   layers; data and callbacks come in as props.

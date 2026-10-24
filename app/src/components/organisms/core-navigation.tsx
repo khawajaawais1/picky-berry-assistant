@@ -68,9 +68,12 @@ export type CoreNavigationProps = ViewProps & {
  * frame names and the current one marked by a 60x32 tinted pill behind its glyph and a semibold
  * accent label.
  *
- * It sits in `molecules/` with the rest of the shared UI rather than in `templates/`: it is a
- * piece the shell composes, not a page. It knows the design's labels and glyphs, and knows no
- * routes — the caller decides where a destination leads.
+ * It sits in `organisms/` because that is what it is in Atomic Design's own terms: a group of
+ * atoms and molecules (a glyph, a label and a tinted pill, repeated four times) that forms one
+ * section of the interface. It is not a `molecule/` (which groups atoms into one reusable unit)
+ * and not a `template/` (which lays out a page): it is a piece the shell composes. It knows the
+ * design's labels and glyphs, and knows no routes — the caller decides where a destination
+ * leads.
  *
  * Both heights are floors, not fixed boxes: at the largest system text size a label as long as
  * Finnish “Hälytykset” needs more than the frame's 51 px item, and a bar that kept the design's
