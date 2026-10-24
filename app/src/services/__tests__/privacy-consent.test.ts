@@ -108,12 +108,17 @@ describe('the stored consent record', () => {
     });
   });
 
-  it('is removed when the user leaves, without leaving the key behind', async () => {
+  it('is removed when the user leaves, without leaving either key behind', async () => {
     await recordPrivacyConsent(true);
+    await AsyncStorage.setItem(
+      LEGACY_STORAGE_KEY,
+      JSON.stringify({ backgroundTracking: true, decidedAt: '2026-10-09T12:00:00.000Z' }),
+    );
 
     await clearPrivacyConsent();
 
     await expect(readPrivacyConsent()).resolves.toBeNull();
     await expect(AsyncStorage.getItem(CONSENT_STORAGE_KEY)).resolves.toBeNull();
+    await expect(AsyncStorage.getItem(LEGACY_STORAGE_KEY)).resolves.toBeNull();
   });
 });

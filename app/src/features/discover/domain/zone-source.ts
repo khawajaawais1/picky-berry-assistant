@@ -17,12 +17,12 @@ import { scoreBand } from './zone-score-band';
  * - **Every field is validated at the boundary.** This payload is external input
  *   (SECURITY.md §4): a ring the app cannot draw, a score it cannot band, or an identifier
  *   it cannot print is dropped, and a document that is not a feature collection is **no
- *   zones at all**. Half a payload's zones would be a map that lies by omission.
+ *   zones at all**. A feature the app cannot read is dropped on its own, so one broken polygon
+ *   does not take the readable zones with it.
  * - **Nothing unknown is carried on.** A field the app does not draw is not echoed onto the
  *   zone, so a component cannot start depending on something the contract never promised. The
  *   one metadata field the map does draw — `updated_at`, the instant the scores were computed —
  *   is carried, and only when it is an instant the app can read.
-
  *
  * The score a zone carries is the one for the species the caller asked about — the contract
  * is `GET /zones?species=…` — even though the stub also ships all four species' scores.

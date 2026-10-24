@@ -288,8 +288,15 @@ function DetailsView({
   const { colors } = useAppTheme();
   const { locale, t } = useTranslation();
   const details = DEMO_ZONE_DETAILS;
-  const { error: saveError, isSaved, loading: savingLoading, toggle } = useSavedZones();
+  const {
+    busy: savingZone,
+    error: saveError,
+    isSaved,
+    loading: savingLoading,
+    toggle,
+  } = useSavedZones();
   const saved = isSaved(read.zoneId);
+  const saveDisabled = savingLoading || savingZone;
 
   return (
     <Screen
@@ -491,10 +498,11 @@ function DetailsView({
             // saved zone says what its next press does instead (AGENTS.md §11.2).
             accessibilityLabel={t(saved ? 'discover.details.save.saved' : 'discover.details.save')}
             accessibilityRole="button"
-            // The bookmark is not a state the app has read yet while the record is loading,
-            // and a control that cannot act may not claim one.
-            accessibilityState={{ disabled: savingLoading, selected: saved }}
-            disabled={savingLoading}
+            // The bookmark claims no state while the record is loading, and it stops acting
+            // while a write is in flight: a second press against the same render would decide
+            // from a plan the first press has already changed.
+            accessibilityState={{ disabled: saveDisabled, selected: saved }}
+            disabled={saveDisabled}
             onPress={() => {
               // The berry is the one the screen is reading, not the pilot default: the plan opens
               // the layer the picker was looking at (ADR-061).

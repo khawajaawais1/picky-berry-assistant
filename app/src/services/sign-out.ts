@@ -18,9 +18,9 @@ import { sessionPort } from './session';
  * device is the picker's, and nothing is deleted that the app did not write.
  *
  * What signing out deliberately does **not** do is decide how the app knows a session: the shell
- * does not gate on one yet, and there is still no sign-in screen (PROJECT.md, known issue 23). So
- * this ends the session and clears the device; what a signed-out user sees next is the flow's
- * business, which is why the caller decides where to go rather than this module navigating.
+ * does not gate on one yet (PROJECT.md, known issue 23). So this ends the session and clears the
+ * device; what a signed-out user sees next is the flow's business, which is why the caller decides
+ * where to go rather than this module navigating.
  */
 export async function signOut(): Promise<void> {
   await clearSavedZones();

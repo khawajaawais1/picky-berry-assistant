@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import {
   clearSavedZones,
@@ -33,6 +33,11 @@ export type SavedZonesState = {
   loading: boolean;
   /** True when the device would not let the app read or write the record. */
   error: boolean;
+  /**
+   * True while a toggle's write is in flight. A control that can be pressed twice must not
+   * act twice on the plan it read before the first press changed it.
+   */
+  busy: boolean;
   /** Whether one zone is in the plan, as the screen's own control asks. */
   isSaved: (zoneId: string) => boolean;
   /** Saves the zone under the berry it is being read on, or removes it if it is saved. */
@@ -45,6 +50,10 @@ export function useSavedZones(): SavedZonesState {
   const [zones, setZones] = useState<SavedZone[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [busy, setBusy] = useState(false);
+  // A ref as well as the state: the guard has to hold in the same tick as the first press,
+  // before React has painted the disabled control that would stop the second one.
+  const pending = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -74,6 +83,11 @@ export function useSavedZones(): SavedZonesState {
 
   const toggle = useCallback(
     async (zoneId: string, speciesId: string) => {
+      if (pending.current) return;
+
+      pending.current = true;
+      setBusy(true);
+
       const saved = zones.some((zone) => zone.zoneId === zoneId);
 
       try {
@@ -86,6 +100,9 @@ export function useSavedZones(): SavedZonesState {
         await readSavedZones()
           .then(setZones)
           .catch(() => setZones([]));
+      } finally {
+        pending.current = false;
+        setBusy(false);
       }
     },
     [zones],
@@ -101,5 +118,5 @@ export function useSavedZones(): SavedZonesState {
     }
   }, []);
 
-  return { clear, error, isSaved, loading, toggle, zones };
+  return { busy, clear, error, isSaved, loading, toggle, zones };
 }

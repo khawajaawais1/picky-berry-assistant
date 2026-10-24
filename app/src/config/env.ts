@@ -137,21 +137,6 @@ export function parseEnvironment(
 }
 
 /**
- * The environment this build was made for.
- *
- * `EXPO_PUBLIC_APP_ENV` is read in this module and nowhere else (AGENTS.md §5), and this is
- * the accessor for code that needs that one answer rather than a whole validated config. An
- * unset value is `development`, which is what a local run is — and a value the build could not
- * substitute reads as unset, which is why the read in `declaredPublicEnv` has to stay literal.
- *
- * A value that is not one of the three is **not** read as a permissive environment: it is a
- * misconfiguration that `loadConfig` reports, and a caller that decides something on the
- * strength of this answer gets the strictest environment instead of a typo's licence. The
- * callers are `verifyCode` in the session seam, where the strict answer is what keeps a stand-in
- * for a missing account service out of a shipped build (ADR-027), and the sign-in prototype's
- * gate on the `/create-account` route.
- */
-/**
  * The public variables as the bundle actually carries them.
  *
  * Every value is read as a **literal** `process.env.EXPO_PUBLIC_<NAME>` member expression,
@@ -186,6 +171,20 @@ export function firebaseApiKey(source: PublicEnvSource = declaredPublicEnv()): s
   return key ? key : null;
 }
 
+/**
+ * The environment this build was made for.
+ *
+ * `EXPO_PUBLIC_APP_ENV` is read in this module and nowhere else (AGENTS.md §5), and this is
+ * the accessor for code that needs that one answer rather than a whole validated config. An
+ * unset value is `development`, which is what a local run is — and a value the build could not
+ * substitute reads as unset, which is why the read in `declaredPublicEnv` has to stay literal.
+ *
+ * A value that is not one of the three is **not** read as a permissive environment: it is a
+ * misconfiguration that `loadConfig` reports, and a caller that decides something on the
+ * strength of this answer gets the strictest environment instead of a typo's licence. The
+ * session stand-in, the create-account and sign-in screens, the password-reset availability
+ * check, the development-only prototype routes and the field-test route all rely on that.
+ */
 export function appEnvironment(source: PublicEnvSource = declaredPublicEnv()): AppEnvironment {
   const result = parseEnvironment(source[PUBLIC_ENV_VARS.appEnvironment]);
 

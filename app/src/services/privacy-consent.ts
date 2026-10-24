@@ -132,7 +132,13 @@ export async function recordPrivacyConsent(
   return consent;
 }
 
-/** Deletes the record: the user's way out, and what signing out calls. */
+/**
+ * Deletes the record: the user's way out, and what signing out calls.
+ *
+ * Both keys go, not only the current one. The retired key holds a shape the app refuses to
+ * read and cannot show, but unreadable data is still data the user asked to remove — leaving
+ * it behind would make the deletion path depend on a later read happening first.
+ */
 export async function clearPrivacyConsent(): Promise<void> {
-  await AsyncStorage.removeItem(CONSENT_STORAGE_KEY);
+  await AsyncStorage.multiRemove([CONSENT_STORAGE_KEY, LEGACY_CONSENT_STORAGE_KEY]);
 }

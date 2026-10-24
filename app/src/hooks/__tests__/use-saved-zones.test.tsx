@@ -70,6 +70,34 @@ describe('useSavedZones', () => {
     await expect(readSavedZones()).resolves.toEqual([]);
   });
 
+  it('does not run a second toggle while the first write is in flight', async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const setItem = jest.spyOn(AsyncStorage, 'setItem').mockImplementationOnce(async () => {
+      await gate;
+    });
+
+    const { result } = await renderHook(() => useSavedZones());
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      const first = result.current.toggle('Z09', 'bilberry');
+      const second = result.current.toggle('Z14', 'bilberry');
+
+      release();
+      await Promise.all([first, second]);
+    });
+
+    // The second press is not a second decision: the first write already owns the plan.
+    expect(setItem).toHaveBeenCalledTimes(1);
+    expect(result.current.zones.map((zone) => zone.zoneId)).toEqual(['Z09']);
+    expect(result.current.busy).toBe(false);
+
+    jest.restoreAllMocks();
+  });
+
   it('shows what is stored when the device refuses the write, and says so', async () => {
     await saveZone('Z14', 'bilberry');
     jest.spyOn(AsyncStorage, 'setItem').mockRejectedValueOnce(new Error('storage is full'));
