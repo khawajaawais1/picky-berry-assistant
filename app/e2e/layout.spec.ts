@@ -1,6 +1,5 @@
 import { expect, test, type Browser, type Page, type TestInfo } from '@playwright/test';
 
-import { EXAMPLE_EMAIL } from '../src/features/onboarding/domain/example-values';
 import { interpolate } from '../src/services/i18n/interpolate';
 import { en, type TranslationKey } from '../src/services/i18n/locales/en';
 import { fi } from '../src/services/i18n/locales/fi';
@@ -61,10 +60,9 @@ type CopyRule = {
   key: TranslationKey;
   maxLines?: number;
   /**
-   * The values the screen fills into the sentence's `{placeholders}`. Screen 04's is the
-   * design's own example address — what the route falls back to when no sign-up is in
-   * flight, which is how the harness opens it. Without it the measurement would look for
-   * the literal `{destination}` and call a screen that renders the address it names broken.
+   * The values the screen fills into the sentence's `{placeholders}`. Without one the
+   * measurement would look for the literal placeholder and call a screen that renders its
+   * value broken.
    *
    * A value may be another catalogue key (`{ key }`) rather than a literal, which is how a
    * sentence built around a translated fragment — screen 07's wind in its weather line — is
@@ -97,26 +95,7 @@ type Screen = {
    * test covers that one).
    */
   seed?: Record<string, string>;
-  /**
-   * A screen whose state cannot be opened by URL, reached the way a picker reaches it.
-   *
-   * Screen 04's phone state is the case: which identifier the code is for is held in the process
-   * rather than in a route parameter, because an address or a number in a URL would end up in a
-   * history and in whatever reads it (`src/features/onboarding/domain/pending-verification.ts`).
-   * A cold start therefore cannot be told which state to draw, so the harness walks screen 03's
-   * phone path instead — the same steps a person takes — and the locale's own copy selects the
-   * controls, because the run measures Finnish as well as English.
-   */
-  open?: (page: Page, locale: Locale) => Promise<void>;
 };
-
-/**
- * The number screen 03 is filled with to reach screen 04's phone state: the app's own example
- * shape rather than a real one (the catalogue's examples are the design's “Aino Korhonen” and
- * “aino@example.fi”, and a phone state needs a number). Nothing is sent anywhere — no transport
- * exists — and the screen prints it exactly as typed, which is what the run looks for.
- */
-const PHONE_DESTINATION = '+358 40 123 4567';
 
 /**
  * The core navigation bar's four labels, as frames 06–14 draw them: one line each, inside a 90 px
@@ -177,9 +156,28 @@ const SCREENS: readonly Screen[] = [
       // The app's own sentence, so it carries the lines its wording needs in the wider language
       // (Finnish takes three; measured 2026-10-11) rather than the one line a frame would draw.
       { what: 'the supporting line', key: 'onboarding.signIn.supporting', maxLines: 3 },
-      { what: 'the identifier label', key: 'onboarding.signIn.identifier' },
+      { what: 'the email label', key: 'onboarding.signIn.email' },
+      { what: 'the password label', key: 'onboarding.signIn.password' },
       { what: 'the primary action label', key: 'onboarding.signIn.action' },
       { what: 'the create-account action', key: 'onboarding.signIn.createAccount' },
+    ],
+  },
+  {
+    // The password-reset request (ADR-062). **The design never drew it**: the sign-in screen is
+    // app-drawn too, and no frame carries a reset journey. Every string below is the app's own,
+    // so the large-text run is what holds it to “nothing is lost”; the confirmation is reached by
+    // pressing through in `e2e/accessibility.spec.ts`, not by a fresh load.
+    name: '01c · Onboarding · Reset password',
+    path: '/forgot-password',
+    anchor: 'onboarding.forgotPassword.eyebrow',
+    copy: [
+      { what: 'the eyebrow', key: 'onboarding.forgotPassword.eyebrow' },
+      { what: 'the screen title', key: 'onboarding.forgotPassword.title' },
+      { what: 'the heading', key: 'onboarding.forgotPassword.heading' },
+      { what: 'the supporting line', key: 'onboarding.forgotPassword.supporting', maxLines: 3 },
+      { what: 'the email label', key: 'onboarding.signIn.email' },
+      { what: 'the primary action label', key: 'onboarding.forgotPassword.action' },
+      { what: 'the sign-in action', key: 'onboarding.signIn.title' },
     ],
   },
   {
@@ -191,8 +189,6 @@ const SCREENS: readonly Screen[] = [
       { what: 'the screen title', key: 'onboarding.createAccount.title' },
       { what: 'the heading', key: 'onboarding.createAccount.heading' },
       { what: 'the supporting line', key: 'onboarding.createAccount.supporting', maxLines: 2 },
-      { what: 'the email chip', key: 'onboarding.createAccount.mode.email' },
-      { what: 'the phone chip', key: 'onboarding.createAccount.mode.phone' },
       { what: 'the name label', key: 'onboarding.createAccount.field.name' },
       { what: 'the identifier label', key: 'onboarding.createAccount.field.email' },
       { what: 'the password label', key: 'onboarding.createAccount.field.password' },
@@ -203,73 +199,8 @@ const SCREENS: readonly Screen[] = [
       { what: 'the sign-in action', key: 'onboarding.createAccount.signIn' },
       { what: 'the privacy note title', key: 'onboarding.createAccount.privacy.title' },
       { what: 'the privacy note body', key: 'onboarding.createAccount.privacy.body', maxLines: 2 },
-      // `field.phone` is deliberately absent: the frame draws the email state, and the
-      // phone state reuses the chip's copy, which is measured above.
-    ],
-  },
-  {
-    name: '04 · Onboarding · Verification',
-    path: '/verify-email',
-    anchor: 'onboarding.verification.eyebrow',
-    copy: [
-      { what: 'the eyebrow', key: 'onboarding.verification.eyebrow' },
-      { what: 'the screen title', key: 'onboarding.verification.title' },
-      { what: 'the heading', key: 'onboarding.verification.heading' },
-      // The frame lays the sentence naming the address out over two lines (342x40).
-      {
-        what: 'the supporting line',
-        key: 'onboarding.verification.supporting',
-        maxLines: 2,
-        values: { destination: EXAMPLE_EMAIL },
-      },
-      { what: 'the code field label', key: 'onboarding.verification.codeLabel' },
-      // The frame lays the expiry note out over two lines as well.
-      { what: 'the expiry note', key: 'onboarding.verification.expiry', maxLines: 2 },
-      { what: 'the primary action label', key: 'onboarding.verification.action' },
-      { what: 'the change-address action', key: 'onboarding.verification.changeEmail' },
-      { what: 'the phone note title', key: 'onboarding.verification.phoneNote.title' },
-      { what: 'the phone note body', key: 'onboarding.verification.phoneNote.body', maxLines: 2 },
-      // The frame's two resend strings are deliberately absent, in both their states: asking
-      // for another code is the row's whole meaning, and the route behind this screen supplies
-      // no transport to send one, so the row — action and wait alike — is not drawn (ADR-048,
-      // docs/demo-and-stand-ins.md §7). Both states are held in the unit tests, where a caller
-      // that can send a code is passed in and a clock can be advanced.
-    ],
-  },
-  {
-    // Screen 04's **other state**: the frame (`5:22840`) draws the email one, and screen 03 offers
-    // both identifiers, so a phone destination reads the number's own words for the two strings
-    // that name the account's identifier (ADR-049 §3.1–§3.2, assumed by the repository on
-    // 2026-10-13 — the decision records the departure and the owner's answer supersedes it).
-    //
-    // It is the second state of a measured screen rather than a screen of its own, and it is
-    // reached the way a picker reaches it (`open`), because the destination lives in the process
-    // and not in a URL. There are no frame line counts for its two new strings: the frame draws no
-    // phone state, so the run at the largest text size is what holds them to “nothing is lost”, the
-    // way the app-drawn screens' entries are.
-    name: '04b · Onboarding · Verification (phone destination)',
-    path: '/verify-email',
-    anchor: 'onboarding.verification.titlePhone',
-    open: openPhoneVerification,
-    copy: [
-      { what: 'the eyebrow', key: 'onboarding.verification.eyebrow' },
-      { what: 'the screen title', key: 'onboarding.verification.titlePhone' },
-      { what: 'the heading', key: 'onboarding.verification.heading' },
-      // The frame's two-line sentence, naming the number this run typed rather than the design's
-      // example address: the string is the frame's, the destination is the state's.
-      {
-        what: 'the supporting line',
-        key: 'onboarding.verification.supporting',
-        maxLines: 2,
-        values: { destination: PHONE_DESTINATION },
-      },
-      { what: 'the code field label', key: 'onboarding.verification.codeLabel' },
-      { what: 'the expiry note', key: 'onboarding.verification.expiry', maxLines: 2 },
-      { what: 'the primary action label', key: 'onboarding.verification.action' },
-      { what: 'the change-identifier action', key: 'onboarding.verification.changePhone' },
-      // The frame's foot card is deliberately absent: it asks whether the reader signed up by phone
-      // **instead**, which is the email journey's question and would ask this one about itself
-      // (ADR-049 §3.3). The resend row is absent for the reason the email state's is (ADR-048 §4).
+      // The frame's email/phone chips are deliberately absent: the form is email-only, because
+      // phone sign-in is deferred and screen 04 is retired (ADR-054 §5, ADR-059).
     ],
   },
   {
@@ -315,6 +246,14 @@ const SCREENS: readonly Screen[] = [
       // no lake layer and no tile scale — and the three state words are replaced by the five
       // band legend's two lines. Every one of them is a single line on the screen.
       { what: 'the place name on the map', key: 'discover.map.place' },
+      // The app's own line under the map: the payload's oldest timestamp, printed in the
+      // language's date form. The frame draws no freshness line, so one line is the app's own
+      // limit rather than the design's.
+      {
+        what: 'the last-updated line',
+        key: 'discover.map.updated',
+        values: { date: { en: '3 August 2026', fi: '3.8.2026' } },
+      },
       { what: 'the legend’s heading', key: 'discover.score.label' },
       { what: 'the legend’s low-confidence line', key: 'discover.score.lowConfidence' },
       // The card reads the ZoneSource's first zone now: its own name and the berry the chips
@@ -376,7 +315,7 @@ const SCREENS: readonly Screen[] = [
       // The chip is the map legend's word for the same zone, which is the point: the two
       // screens describe one zone one way (node 5:23063, “Unpicked”).
       { what: 'the state chip', key: 'discover.legend.unpicked' },
-      { what: 'the ripeness chip', key: 'discover.details.ripeness.ripe' },
+      { what: 'the ripeness chip', key: 'discover.ripeness.ripe' },
       // The frame's species row (node `5:23047`): what this zone is reported for, each chip one
       // line inside its 36 px pill — including the two berries the design names.
       { what: 'the first species chip', key: 'report.species.lingonberry', maxLines: 1 },
@@ -912,29 +851,41 @@ const SCREENS: readonly Screen[] = [
     // (`saved-spots-screen.test.tsx`).
     seed: {
       'picky.saved-zones.v1': JSON.stringify([
-        { savedAt: '2026-08-26T09:00:00.000Z', zoneId: 'Z14' },
-        { savedAt: '2026-08-27T09:00:00.000Z', zoneId: 'Z09' },
-        { savedAt: '2026-08-28T09:00:00.000Z', zoneId: 'Z21' },
+        {
+          savedAt: '2026-08-26T09:00:00.000Z',
+          speciesId: 'bilberry',
+          zoneId: 'cc0e7929-de9f-516a-9049-7a25a1a6d092',
+        },
+        {
+          savedAt: '2026-08-27T09:00:00.000Z',
+          speciesId: 'bilberry',
+          zoneId: 'a2f83130-4d9a-5133-ba7e-83444d71e848',
+        },
+        {
+          savedAt: '2026-08-28T09:00:00.000Z',
+          speciesId: 'bilberry',
+          zoneId: '55a2cccb-eca3-5455-885b-72ad2a0129c4',
+        },
       ]),
     },
     copy: [
       { what: 'the eyebrow', key: 'privacy.savedSpots.eyebrow' },
       { what: 'the screen title', key: 'privacy.savedSpots.title' },
-      // The rows are `ZoneRow`, the same row frame 06's list draws, so their three lines are the
-      // same strings and are listed here too: this screen is where they are drawn now.
+      // The rows are the source's own (`ZoneSourceRow`), resolved through the same port frame 06
+      // reads since ADR-060, so their strings and values are the map's first zone.
       {
         what: 'a plan row’s title',
-        key: 'discover.card.title',
-        values: { species: { key: 'report.species.lingonberry' }, zone: '14' },
+        key: 'discover.card.zoneTitle',
+        values: { species: { key: 'report.species.bilberry' }, zone: 'Laajavuori 1' },
       },
-      { what: 'a plan row’s state chip', key: 'discover.legend.unpicked', maxLines: 1 },
+      { what: 'a plan row’s ripeness chip', key: 'discover.ripeness.past', maxLines: 1 },
       {
         what: 'a plan row’s yield chip',
         key: 'discover.list.yield',
         maxLines: 1,
-        values: { max: '100', score: '78' },
+        values: { max: '100', score: '53' },
       },
-      { what: 'another row’s state chip', key: 'discover.legend.recentlyPicked', maxLines: 1 },
+      { what: 'another row’s ripeness chip', key: 'discover.ripeness.ripe', maxLines: 1 },
       // `privacy.savedSpots.empty`, `privacy.savedSpots.browse` and
       // `privacy.savedSpots.readFailed` are deliberately absent: the first two are the state a
       // seeded plan is not in, and the third is a failure the design never draws. The unit test is
@@ -1364,36 +1315,6 @@ const SCREENS: readonly Screen[] = [
   },
 ];
 
-/**
- * Screen 03 as a phone sign-up, the way into screen 04's phone state.
- *
- * Every control is selected by the locale's own copy, so the same journey runs in Finnish: a
- * label looked up in the English catalogue would fail the Finnish run rather than measure it.
- * The name and the password are the app's own examples, and nothing here is sent anywhere.
- */
-async function openPhoneVerification(page: Page, locale: Locale): Promise<void> {
-  await page.goto('/create-account');
-
-  await page
-    .getByRole('radio', { name: locale.catalogue['onboarding.createAccount.mode.phone'] })
-    .click();
-  await page
-    .getByRole('textbox', { name: locale.catalogue['onboarding.createAccount.field.name'] })
-    .fill('Aino Korhonen');
-  await page
-    .getByRole('textbox', { name: locale.catalogue['onboarding.createAccount.field.phone'] })
-    .fill(PHONE_DESTINATION);
-  await page
-    .getByRole('textbox', { name: locale.catalogue['onboarding.createAccount.field.password'] })
-    .fill('berries1234');
-  await page
-    .getByRole('checkbox', { name: locale.catalogue['onboarding.createAccount.consent'] })
-    .click();
-  await page
-    .getByRole('button', { name: locale.catalogue['onboarding.createAccount.action'] })
-    .click();
-}
-
 /** Each screen is opened in its own context: language, viewport and colour scheme are
  *  properties of the browser, which is how the app receives them from a device. */
 async function openScreen(browser: Browser, screen: Screen, locale: Locale) {
@@ -1410,11 +1331,7 @@ async function openScreen(browser: Browser, screen: Screen, locale: Locale) {
     }, screen.seed);
   }
 
-  if (screen.open) {
-    await screen.open(page, locale);
-  } else {
-    await page.goto(screen.path);
-  }
+  await page.goto(screen.path);
 
   return { context, page };
 }

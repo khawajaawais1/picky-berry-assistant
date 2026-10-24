@@ -94,39 +94,18 @@ test.describe('the consent controls in the built web app', () => {
 });
 
 /**
- * The chip rows: screen 03's identifier pair and frame 10's picker answers, checked in the built
- * web export for the reason the consent controls above are.
+ * The chip rows: frame 10's picker answers, checked in the built web export for the reason the
+ * consent controls above are.
  *
  * `ChoiceChips` carried `accessibilityState` alone, which is the spelling iOS and Android read;
  * on this target that left a chosen chip with nothing but its fill colour saying so. It was found
  * through the sign-in prototype's variant B, which is the same component, and the fix is the
  * second spelling the checkbox already used. Jest cannot hold this case: React Native folds
  * `aria-checked` into `accessibilityState` before the host element exists, so the attribute is
- * only ever there in a browser.
+ * only ever there in a browser. Screen 03's email/phone pair was the other reader and retired with
+ * the phone flow (ADR-059).
  */
 test.describe('the chip rows in the built web app', () => {
-  test('states which identifier is chosen, and the field the choice moves', async ({ page }) => {
-    await page.goto('/create-account');
-
-    const email = page.getByRole('radio', { name: 'Email' });
-    const phone = page.getByRole('radio', { name: 'Phone number' });
-    await expect(email).toHaveAttribute('aria-checked', 'true');
-    await expect(phone).toHaveAttribute('aria-checked', 'false');
-    await expect(page.getByRole('textbox', { name: 'Email address' })).toBeVisible();
-
-    await phone.click();
-
-    // The state moves with the selection rather than being set once, and the screen really is
-    // in the mode the chip claims: the field behind it is the phone one.
-    await expect(email).toHaveAttribute('aria-checked', 'false');
-    await expect(phone).toHaveAttribute('aria-checked', 'true');
-    await expect(page.getByRole('textbox', { name: 'Phone number' })).toBeVisible();
-
-    // The chosen chip and the field the choice swapped in, read together afterwards: a radio group
-    // whose selection reaches the tree and a field whose name reaches it are two different promises.
-    await expectTreeReadable(page, '/create-account, with the phone number chosen');
-  });
-
   test('states which answer is chosen in the picker’s rating rows', async ({ page }) => {
     await page.goto('/post-visit-feedback');
 
@@ -241,46 +220,6 @@ test.describe('the onboarding links in the built web app', () => {
     // The notice as one arrives at it from screen 03's link, rather than as the walk finds it: the
     // same screen, read on the way a person gets there.
     await expectTreeReadable(page, '/terms-privacy, reached from screen 03’s terms link');
-  });
-});
-
-/**
- * Screen 04's **phone state**, in the built app: the state the frame does not draw.
- *
- * It belongs in a browser because the branch is the route's decision rather than the screen's — the
- * screen is handed the kind of destination the flow is holding (ADR-049 §3), and only a real walk
- * through screen 03 can say that the number a picker typed arrives on the code screen under the
- * number's own words. The unit test holds the screen's two states; this holds the wiring that
- * chooses between them, and reads the tree of the state that only exists after the press.
- */
-test.describe('screen 04 on a phone destination in the built web app', () => {
-  test('carries a number from screen 03 into the number’s own words', async ({ page }) => {
-    await page.goto('/create-account');
-
-    await page.getByRole('radio', { name: 'Phone number' }).click();
-    await page.getByLabel('Your name').fill('Aino Korhonen');
-    await page.getByRole('textbox', { name: 'Phone number' }).fill('+358 40 123 4567');
-    // By role rather than by label, for the reason the account journey gives: the field's own
-    // “Show password” control carries the word in its accessible name too.
-    await page.getByRole('textbox', { name: 'Password' }).fill('berries1234');
-    await page.getByRole('checkbox', { name: /I agree to the Terms/ }).click();
-    await page.getByRole('button', { name: 'Create account' }).click();
-
-    await expect(page).toHaveURL(/\/verify-email$/);
-
-    // The number, not the frame's address: the title and the only way back to the field follow the
-    // identifier the flow is holding (ADR-049 §3.1–§3.2, assumed by the repository on 2026-10-13).
-    await expect(page.getByText('Verify your number', { exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Change phone number' })).toBeVisible();
-    await expect(page.getByText('Verify your email', { exact: true })).toHaveCount(0);
-    await expect(page.getByText('Change email address', { exact: true })).toHaveCount(0);
-    // The frame's foot card asks whether the reader signed up by phone *instead* — the email
-    // journey's question, so this state does not draw it (ADR-049 §3.3).
-    await expect(page.getByTestId('verification-phone-note')).toHaveCount(0);
-    // And the destination is named where the frame names it, as the picker typed it.
-    await expect(page.getByText('Enter the 6-digit code for +358 40 123 4567.')).toBeVisible();
-
-    await expectTreeReadable(page, '/verify-email, reached from screen 03 as a phone sign-up');
   });
 });
 
@@ -670,7 +609,7 @@ test.describe('the visit flow in the built web app', () => {
 
 /**
  * The account and the picker's own plan, end to end in the built app: the sign-up the app really
- * performs (screen 03's form, screen 04's stand-in code, the session that comes out of it), the
+ * performs (screen 03's form and the session that comes out of it), the
  * settings screen reading that session back as **whose settings these are** (ADR-029), the
  * **saved plan** frame 14's row opens (ADR-030), and **sign out** deleting what this device holds
  * (`src/services/sign-out.ts`).
@@ -681,11 +620,11 @@ test.describe('the visit flow in the built web app', () => {
  * at all (the layout harness opens a freshly loaded export, which holds no session).
  */
 /**
- * The journey the design never drew (ADR-034): frame 01's own sign-in link, one identifier, the
- * code screen the sign-up already walks, and then **into the app** rather than on to screen 05 —
- * a returning user is not signing up. Nothing else can hold this: the destination after the code
- * is the route's decision, and the account row's fallback for a nameless session is a sentence
- * about what the app knows, so both are asserted where a person would meet them.
+ * The journey the design never drew (ADR-034): frame 01's own sign-in link, the email + password
+ * the account has (ADR-054, ADR-059), and then **into the app** rather than on to screen 05 — a
+ * returning user is not signing up. Nothing else can hold this: the destination after the
+ * credential is the route's decision, and the account row's fallback for a nameless session is a
+ * sentence about what the app knows, so both are asserted where a person would meet them.
  */
 test.describe('signing in, in the built web app', () => {
   test('leaves frame 01 through its own link and lands in the app with no name invented', async ({
@@ -695,13 +634,12 @@ test.describe('signing in, in the built web app', () => {
     await page.getByRole('button', { name: 'Already have an account? Sign in' }).click();
     await expect(page).toHaveURL(/\/sign-in$/);
 
-    // Reading A's one field (ADR-034), and the code screen the app already has (ADR-027's
-    // stand-in accepts `000000` outside a shipped build).
-    await page.getByRole('textbox', { name: 'Email or phone' }).fill('aino@example.fi');
-    await page.getByRole('button', { name: 'Continue with a code' }).click();
-    await expect(page).toHaveURL(/\/verify-email$/);
-    await page.getByLabel('Verification code').fill('000000');
-    await page.getByRole('button', { name: 'Verify & continue' }).click();
+    // The account's own credential: an address and a password. The stand-in behind the port
+    // accepts them and verifies nothing, which is recorded on the seam and refused in a shipped
+    // build (ADR-054 §8, ADR-059).
+    await page.getByRole('textbox', { name: 'Email address' }).fill('aino@example.fi');
+    await page.getByRole('textbox', { name: 'Password' }).fill('berries1234');
+    await page.getByRole('button', { name: 'Sign in' }).click();
 
     // Into the app, not on to screen 05: nothing here asked whether the user was signing up.
     await expect(page).toHaveURL(/\/discover$/);
@@ -725,12 +663,40 @@ test.describe('signing in, in the built web app', () => {
   });
 });
 
+test.describe('resetting a password, in the built web app', () => {
+  test('asks for a reset link and says no email was sent in a test build', async ({ page }) => {
+    await page.goto('/sign-in');
+    await page.getByRole('button', { name: 'Forgot password?' }).click();
+    await expect(page).toHaveURL(/\/forgot-password$/);
+
+    // The request half only: the address goes to the port, and the provider owns the link, the
+    // token and the new-password page the app never draws (ADR-054, ADR-062).
+    await page.getByRole('textbox', { name: 'Email address' }).fill('aino@example.fi');
+    await page.getByRole('button', { name: 'Request reset link' }).click();
+
+    // Accepted, with no delivery claimed: the stand-in sends nothing, and the test-build note says
+    // so in the same breath as the confirmation (ADR-048's rule applied to reset).
+    await expect(page.getByText('Reset request accepted.')).toBeVisible();
+    await expect(page.getByText('aino@example.fi', { exact: false })).toBeVisible();
+    await expect(page.getByTestId('forgot-password-test-note')).toContainText(
+      'no reset email is sent',
+    );
+    await expectTreeReadable(page, '/forgot-password, with the confirmation');
+
+    // The way on is the sign-in screen this journey came from — the provider's page is where a
+    // new password is set, and it is not part of this app.
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    await expect(page).toHaveURL(/\/sign-in$/);
+  });
+});
+
 test.describe('the account and the plan in the built web app', () => {
   test('signs up, draws the account it holds, lists the plan, and signs out for real', async ({
     page,
   }) => {
-    // Screen 03, filled the way its own rules ask (a name, an identifier, eight characters with a
-    // number, and the consent row as the affirmative action it is).
+    // Screen 03, filled the way its own rules ask (a name, an address, eight characters with a
+    // number, and the consent row as the affirmative action it is). The press creates the account
+    // and acquires its session in one call; screen 04's code is retired (ADR-059).
     await page.goto('/create-account');
     await page.getByLabel('Your name').fill('Aino Korhonen');
     await page.getByLabel('Email address').fill('aino@example.fi');
@@ -741,10 +707,7 @@ test.describe('the account and the plan in the built web app', () => {
     await page.getByRole('checkbox', { name: /I agree to the Terms/ }).click();
     await page.getByRole('button', { name: 'Create account' }).click();
 
-    // Screen 04 with the stand-in code (ADR-027), and the session the port issues for it.
-    await expect(page).toHaveURL(/\/verify-email$/);
-    await page.getByLabel('Verification code').fill('000000');
-    await page.getByRole('button', { name: 'Verify & continue' }).click();
+    // The account's session now exists, and the flow continues to screen 05.
     await expect(page).toHaveURL(/\/location-consent$/);
 
     // Screen 05's consent, and the way on into the app: the flow's own route, so the session
@@ -773,14 +736,20 @@ test.describe('the account and the plan in the built web app', () => {
       QUEUE_KEY,
     );
 
-    // The plan, written the way the device's store holds it: screen 06's card is a reading over
-    // the source zones now, so it no longer opens screen 07 (which still describes the demo
-    // zone). The bookmark's own write is covered above, by the zone screen's test.
+    // The plan, written the way the device's store holds it, so the settings row has a count and
+    // the list behind it has a row. What the bookmark writes is covered by the zone screen's own
+    // tests; this journey is about the account surface reading the same record.
     await page.evaluate(
       (key) =>
         localStorage.setItem(
           key,
-          JSON.stringify([{ savedAt: '2026-08-28T09:00:00.000Z', zoneId: 'Z14' }]),
+          JSON.stringify([
+            {
+              savedAt: '2026-08-28T09:00:00.000Z',
+              speciesId: 'lingonberry',
+              zoneId: 'cc0e7929-de9f-516a-9049-7a25a1a6d092',
+            },
+          ]),
         ),
       'picky.saved-zones.v1',
     );
@@ -807,9 +776,24 @@ test.describe('the account and the plan in the built web app', () => {
 
     await page.getByRole('button', { name: 'Saved spots' }).click();
     await expect(page).toHaveURL(/\/saved-spots$/);
-    await expect(page.getByTestId('saved-spot-row-Z14')).toContainText('Zone 14 · Lingonberry');
+    // The plan is on the zone source now (ADR-060), and the record remembers the berry it was
+    // saved under (ADR-061): the row carries the source zone's own name and that berry, not the
+    // identifier the record holds and not the map's last chip.
+    await expect(
+      page.getByTestId('saved-spot-row-cc0e7929-de9f-516a-9049-7a25a1a6d092'),
+    ).toContainText('Laajavuori 1 · Lingonberry');
 
     await expectTreeReadable(page, '/saved-spots, opened from the settings row');
+
+    // And the row opens that zone's details again, with the same zone and berry the row showed.
+    await page.getByRole('button', { name: 'Open zone Laajavuori 1 details' }).click();
+    await expect(page).toHaveURL(/\/zone-details\?/);
+    await expect(page).toHaveURL(/zone=cc0e7929-de9f-516a-9049-7a25a1a6d092/);
+    await expect(page).toHaveURL(/species=lingonberry/);
+    await expect(page.getByText('Laajavuori 1')).toBeVisible();
+    // The zone's own score timestamp, the same field the map prints: the details screen keeps
+    // the answer's age rather than the moment it was opened.
+    await expect(page.getByTestId('zone-details-updated')).toHaveText('Last updated 3 August 2026');
 
     // Back to the settings screen through the bar (these screens are the Profile destination), and
     // then into the two remaining rows frame 14 draws and no frame draws screens for (ADR-039).
@@ -821,11 +805,9 @@ test.describe('the account and the plan in the built web app', () => {
     await page.getByRole('button', { name: 'Account & security' }).click();
     await expect(page).toHaveURL(/\/account-security$/);
     await expect(page.getByTestId('account-security-row')).toContainText('Aino Korhonen');
-    await expect(page.getByText('An hour from the moment the code was accepted.')).toBeVisible();
+    await expect(page.getByText('An hour from the moment you sign in.')).toBeVisible();
     await expect(
-      page.getByText('No password is stored, so there is none to change, reset or leak.', {
-        exact: false,
-      }),
+      page.getByText('The app keeps no password of its own', { exact: false }),
     ).toBeVisible();
 
     await expectTreeReadable(page, '/account-security, opened from the settings row');

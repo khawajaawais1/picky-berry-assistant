@@ -25,8 +25,9 @@ import { join, relative } from 'node:path';
  *    check is a **hand-written `Pressable`**: its role is a literal in the JSX, so its handler
  *    cannot be read from here — those sites are the screen's own test and the browser's
  *    accessibility-tree walk (`e2e/a11y-tree.ts`).
- * 4. **The resend row's rule from ADR-048 holds**: the frame's resend row renders only where a
- *    caller can send a code.
+ * 4. **Screen 04 is gone, and its controls with it**: the code field, the resend row and the
+ *    verification screen left the ledger when the screen retired (ADR-059). A new control site
+ *    fails this file until someone records what it does.
  *
  * What it is **not**: a runtime check. It reads source text, so it cannot see whether a handler
  * prop arrived as `undefined`, whether an inline handler does anything, or what a press looks like
@@ -44,7 +45,6 @@ const PRIMITIVES = {
   button: /<AppButton/g,
   chips: /<ChoiceChips/g,
   checkbox: /<AppCheckbox/g,
-  codeField: /<CodeField(?![A-Za-z])/g,
   formField: /<FormField(?![A-Za-z])/g,
   link: /<Link(?![A-Za-z])/g,
   pressable: /<Pressable/g,
@@ -103,11 +103,6 @@ const LEDGER: readonly LedgerEntry[] = [
     why: 'The radio group a *real* choice is drawn with (frame 11’s period chips), where a chip that cannot change anything is `Chip` and claims nothing.',
   },
   {
-    file: 'src/components/molecules/code-field.tsx',
-    offers: { textInput: 1 },
-    why: 'Screen 04’s six-cell code field, with the cells hidden from assistive technology.',
-  },
-  {
     file: 'src/components/molecules/core-navigation.tsx',
     offers: { pressable: 1, role: 2 },
     why: 'The four destinations of the app shell, each a `tab` with its selected state, wired to `router.navigate`.',
@@ -155,7 +150,7 @@ const LEDGER: readonly LedgerEntry[] = [
   {
     file: 'src/features/discover/components/saved-spots-screen.tsx',
     offers: { textAction: 1 },
-    why: 'The empty plan’s way to the map; the rows are `ZoneRow`s, which are readings for a zone the app has no details for, and the screen removes nothing at all.',
+    why: 'The empty plan’s way to the map; the rows are `ZoneSourceRow`s, which the route gives a destination (the saved zone’s details), and the screen removes nothing at all.',
   },
   {
     file: 'src/features/discover/components/season-insights-screen.tsx',
@@ -178,6 +173,11 @@ const LEDGER: readonly LedgerEntry[] = [
     why: 'The design’s demo card, kept for the community-map prototype: it is a control only where the caller has somewhere to go, and without a handler it returns the drawing, with no role and no chevron.',
   },
   {
+    file: 'src/features/discover/components/zone-card.tsx',
+    offers: { pressable: 1, role: 1 },
+    why: 'Frame 06’s card hands its zone and score layer to frame 07; it is a control only where the route supplies that destination, and without a handler it returns the drawing, with no role and no chevron.',
+  },
+  {
     file: 'src/features/discover/components/zone-details-screen.tsx',
     offers: { button: 1, pressable: 2, role: 2 },
     why: 'Navigate and Save zone act on this device, the bookmark waits while the record is read, and “See all 11” opens the zone’s own report list (ADR-044).',
@@ -191,6 +191,11 @@ const LEDGER: readonly LedgerEntry[] = [
     file: 'src/features/discover/components/zone-row.tsx',
     offers: { pressable: 1, role: 1 },
     why: 'A list row that is a control only for a zone the app has a detail screen for, so it can never open the wrong zone’s numbers.',
+  },
+  {
+    file: 'src/features/discover/components/zone-source-row.tsx',
+    offers: { pressable: 1, role: 1 },
+    why: 'Frame 06’s list row, and the saved plan’s row since ADR-060: it is a control only where the caller supplies a destination (the plan does for a resolved zone; the map’s list does not), and without one it returns the card with no role and no chevron.',
   },
   {
     file: 'src/features/discover/components/design-zone-map.tsx',
@@ -242,13 +247,12 @@ const LEDGER: readonly LedgerEntry[] = [
     offers: {
       button: 1,
       checkbox: 1,
-      chips: 1,
       formField: 3,
       pressable: 1,
       role: 1,
       textAction: 2,
     },
-    why: 'The name, address and password fields, the submit (gated by its own rules), the consent checkbox, the email/phone chips, the terms link, the way to sign in and the show-password control — all of them local.',
+    why: 'The name, address and password fields, the submit (gated by its own rules and the account seam), the consent checkbox, the terms link, the way to sign in and the show-password control — all of them local. The frame’s email/phone chips are gone with the phone flow (ADR-059).',
   },
   {
     file: 'src/features/onboarding/components/location-consent-screen.tsx',
@@ -261,14 +265,14 @@ const LEDGER: readonly LedgerEntry[] = [
     why: 'The sign-in readings, including variants with a password, biometrics and a forgotten password — controls that exist nowhere in the app, mounted only outside a production build. The one hand-written `Pressable` is the eye glyph that reveals the password: it claims `button` because it acts, which is what the accessibility walk of the readings required of it (`e2e/accessibility.spec.ts`, §7 of the audit). Their copy is still outside the copy scan, deliberately.',
   },
   {
-    file: 'src/features/onboarding/components/sign-in-screen.tsx',
-    offers: { button: 1, formField: 1, textAction: 1 },
-    why: 'The identifier is carried to the code screen and the way to create an account opens it; the action claims what the press does rather than a delivery (ADR-048).',
+    file: 'src/features/onboarding/components/forgot-password-screen.tsx',
+    offers: { button: 1, formField: 1, textAction: 3 },
+    why: 'The address is handed to the account seam’s reset request, “Start over” returns to the form, and the way to sign in is drawn in both states (one at a time, counted twice in source); the action goes inert where nothing can answer it, and the confirmation says no email was sent outside production (ADR-062).',
   },
   {
-    file: 'src/features/onboarding/components/verification-screen.tsx',
-    offers: { button: 1, codeField: 1, textAction: 2 },
-    why: 'Verify hands the code to the account seam and goes inert where nothing can answer it; the resend row is drawn only for a caller that can send (ADR-048 §4), and Change address returns to the form.',
+    file: 'src/features/onboarding/components/sign-in-screen.tsx',
+    offers: { button: 1, formField: 2, pressable: 1, role: 1, textAction: 2 },
+    why: 'The email and password are handed to the account seam, the show-password control acts on the field, “Forgot password?” opens the reset request (ADR-062), and the way to create an account opens screen 03; the action goes inert where nothing can answer it (ADR-054, ADR-059).',
   },
   {
     file: 'src/features/onboarding/components/welcome-screen.tsx',
@@ -462,17 +466,5 @@ describe('the controls the app offers', () => {
 
       expect([file, text.includes(source)]).toEqual([file, true]);
     }
-  });
-
-  it('draws the frame’s resend row only where a caller can send a code', () => {
-    // ADR-048 §4: asking for another code is the row's whole meaning, so with no transport the row
-    // — action and wait alike — is absent rather than counting down to a press that cannot act.
-    const screen = readFileSync(
-      join(SRC, 'features/onboarding/components/verification-screen.tsx'),
-      'utf8',
-    );
-
-    expect(screen.includes('onResend !== undefined &&')).toBe(true);
-    expect(screen.includes('onResend === undefined ? 0 : RESEND_COOLDOWN_SECONDS')).toBe(true);
   });
 });

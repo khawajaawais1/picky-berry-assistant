@@ -131,7 +131,7 @@ const COPY: Record<string, readonly string[]> = {
   'sign-in:A': [
     'Sign in with a code.',
     'We send six digits to your email or phone. No password to remember — and none to leak.',
-    'Continues to screen 04’s six-cell code field, which is already built and measured.',
+    'Proposes the code step ADR-059 retired when the credential became email + password.',
     'I don’t have an account yet',
   ],
   // Visible text only: the chips' group label (“How you signed up”) and the field placeholders are

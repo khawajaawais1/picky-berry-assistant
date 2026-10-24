@@ -114,7 +114,7 @@ const FAMILIES: readonly Family[] = [
     recorded: [
       {
         key: 'privacy.account.verifiedEmail',
-        why: 'Frame 14’s own row label, drawn from the session’s identifier; only the stand-in code verified anything (known issue 27).',
+        why: 'Frame 14’s own row label, drawn from the session’s identifier; nothing verifies an address now that screen 04 is retired (known issue 27).',
       },
       {
         key: 'privacy.account.verifiedPhone',
@@ -273,31 +273,15 @@ const FAMILIES: readonly Family[] = [
   {
     id: 'identifier-is-an-address',
     subject: 'an address as the account’s own identifier, where the flow offers a number too',
-    // The vocabulary of naming **the account's identifier as an address**. It is anchored on the
-    // screen's words about the account rather than on the word “email”, because the bare word is
-    // not the claim: screen 03's own chip says “Email” as the *choice* being made, and the honest
-    // lines name both identifiers (“your email or phone”, “sähköpostiasi tai puhelintasi”) and so
-    // name neither. Added on 2026-10-13, the day [ADR-049](../../../docs/adr/ADR-049-screen-04s-phone-states-and-the-words-that-follow-them.md)
-    // §7 asked for it: the pass of 2026-10-12 could see these strings and had no vocabulary for
-    // them, because it was written for claims about a message being sent rather than about which
-    // identifier the account has. **The copy followed the same day** (ADR-049 §3, the repository's
-    // assumed answer): both keys below are drawn only when the destination is an address, and a
-    // number's own words are `onboarding.verification.titlePhone` and `.changePhone`, which name no
-    // address and so match nothing here. One direction stays a **named gap** in the audit rather
-    // than vocabulary here: the mirror (a number named where the account may hold an address, which
-    // no shipped string does).
+    // The vocabulary of naming **the account's identifier as an address**. It was written for
+    // screen 04's two states (ADR-049 §3, ADR-049 §7), whose title and way back named an address
+    // or a number. **The flow offers an address only since 2026-10-24** — phone sign-in is
+    // deferred (ADR-054 §5) and screen 04 is retired (ADR-059) — so no shipped string can make the
+    // claim this family reads. The family stays with an empty ledger, asserted empty below, so a
+    // re-cut that reintroduces a code or a phone state has to meet it again.
     pattern:
       /(verify|confirm|check) your (email|address)|change (your )?(email|address)|signed up by (an )?email|by email instead|vahvista sähköposti|vaihda sähköposti|sähköpostiosoitteesi/i,
-    recorded: [
-      {
-        key: 'onboarding.verification.title',
-        why: 'The frame’s own title (node `5:22840`), kept whole and now drawn **only** when the destination is an address — a number gets `titlePhone` instead (ADR-049 §3.1, assumed 2026-10-13 at the owner’s instruction, superseded by the owner’s own answer; PROJECT.md open question 20).',
-      },
-      {
-        key: 'onboarding.verification.changeEmail',
-        why: 'The frame’s own way back to the identifier, kept whole and drawn only for an address — a number gets `changePhone` (ADR-049 §3.2, the same assumed answer); the route’s `onChangeDestination` leads to the form either way.',
-      },
-    ],
+    recorded: [],
   },
   {
     id: 'a-settings-step-the-app-never-takes',
@@ -523,6 +507,7 @@ describe('the claims the copy makes', () => {
     expect(cleared.map((family) => family.id)).toEqual([
       'background-capture',
       'a-message-the-app-sent',
+      'identifier-is-an-address',
       'a-settings-step-the-app-never-takes',
     ]);
 
@@ -538,8 +523,8 @@ describe('the claims the copy makes', () => {
     // shipped — the consent screen promised background capture for a fortnight while the app read a
     // position in the foreground only (ADR-047), and seven strings named a code the app had sent
     // while nothing in the app sends one (ADR-048) — a third's is the label that shipped until
-    // 2026-10-13 (screen 05's action, ADR-050), and the fourth's are the strings that **ship
-    // today** (the frame's own words on screen 04, ADR-049). Every original is planted here — not
+    // 2026-10-13 (screen 05's action, ADR-050), and the fourth's are screen 04's own words, which
+    // retired on 2026-10-24 (ADR-059). Every original is planted here — not
     // added to a catalogue, since the point is that the vocabulary catches it — so a reverted string
     // of a cleared family, a rewording of a shipped one, or a fresh translation, in either language,
     // fails the scan above instead of shipping.

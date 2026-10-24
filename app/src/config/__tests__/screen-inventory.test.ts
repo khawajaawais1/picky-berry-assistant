@@ -138,16 +138,18 @@ describe('the screen inventory', () => {
     expect(inFile.length).toBe(18);
   });
 
-  it('names a route that exists for every frame except the one out of scope', () => {
+  it('names a route that exists for every frame except the one out of scope and the one retired', () => {
     const rows = frameRows(section(markdown, '## Screen status'));
     const routeOf = (cells: string[]) =>
       /`(src\/app\/[^`]+\.tsx)`/.exec(cells.join('|'))?.[1] ?? null;
 
-    // Frame 02 is design exploration only (PROJECT.md assumption 1), so it is the one row that may
-    // name no route. Any second row without one is a frame whose screen either does not exist or
-    // was forgotten, which is the case this test exists for.
+    // Frame 02 is design exploration only (PROJECT.md assumption 1), and frame 04 is retired: its
+    // credential is screen 03's email + password, so the code screen has no route (ADR-059). Any
+    // third row without one is a frame whose screen either does not exist or was forgotten, which
+    // is the case this test exists for.
     expect(rows.filter(({ cells }) => routeOf(cells) === null).map(({ frame }) => frame)).toEqual([
       '02',
+      '04',
     ]);
 
     const missing = rows.flatMap(({ cells, frame }) => {
