@@ -52,6 +52,31 @@ jobs:
       - name: Expo dependency and config health
         run: npx --yes expo-doctor
 
+  native:
+    name: Native bundle exports
+    # The web export cannot see a platform-specific module or transform failure. This job
+    # builds the JavaScript bundle each native target actually ships; it is still not a
+    # device run (TESTING.md §10).
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Export the iOS and Android bundles
+        run: npm run build:native
+        env:
+          EXPO_NO_TELEMETRY: "1"
+
   layout:
     name: Layout, text sizes, built-artifact states and the accessibility tree
     # Only when the fast gate is green: measuring a broken build wastes a browser

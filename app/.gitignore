@@ -43,6 +43,8 @@ dist/
 *.apk
 # the harness's second export, built with EXPO_PUBLIC_APP_ENV=production
 dist-production/
+# native JavaScript bundles from `npm run build:native` (never shipped from git)
+dist-native/
 
 # browser harness output (Playwright)
 test-results/

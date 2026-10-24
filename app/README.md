@@ -35,17 +35,19 @@ npm start                # then press i / a / w, or scan the QR code
 ```bash
 npm run verify           # format check + typecheck + lint + tests
 npm run doctor           # expo-doctor dependency/config health
+npm run build:native     # export the iOS and Android JavaScript bundles
 ```
 
-Current state (measured in `app/` on 2026-10-24): typecheck, lint and format are clean and Jest
-passes **118 suites / 1187 tests**; `npm run test:layout` measures every built screen in both
+Current state (measured in `app/` on 2026-10-25): typecheck, lint and format are clean and Jest
+passes **119 suites / 1,191 tests**; `npm run test:layout` measures every built screen in both
 languages and at both text sizes, over the same screens, the app shell's destinations and the
-built flow from the walk through the report to the queued row; an iOS production bundle builds
-(`npx expo export --platform ios`).
+built flow from the walk through the report to the queued row; `npm run build:native` exports
+the iOS and Android bundles.
 
 CI is [`.github/workflows/mobile.yml`](../.github/workflows/mobile.yml) at the repository
-root: it runs the same gate for changes under `app/**` on `main` and on every pull
-request, and it only verifies — it never deploys or publishes.
+root: it runs the same gate, the Playwright layout/accessibility harness and the native bundle
+exports for changes under `app/**` on `main` and on every pull request, and it only verifies —
+it never deploys or publishes.
 
 ## Layout
 

@@ -166,12 +166,15 @@ request touching `app/**`: `npm ci` → `typecheck` → `lint` →
 bypassed. A second job, **Layout in both languages and text sizes**, then installs a browser
 and runs `npm run test:layout`, which builds and serves two static web exports one after the other
 — the development one and a `EXPO_PUBLIC_APP_ENV=production` one (§12); it needs the first job
-green, so a broken build does not pay for a browser download. Device E2E is still not part of CI:
-when Maestro is added it will run on a build artifact rather than on every pull request.
+green, so a broken build does not pay for a browser download. A third job, **Native bundle
+exports**, runs `npm run build:native` after the fast gate: it exports the iOS and Android
+JavaScript bundles, which catches a platform-specific module or transform failure the web export
+cannot see. It is a bundle check, not a device run. Device E2E is still not part of CI: when
+Maestro is added it will run on a build artifact rather than on every pull request.
 
 ## 11. Current state
 
-118 suites, 1187 tests, all passing (2026-10-24), plus 200 browser checks in the development
+119 suites, 1,191 tests, all passing (2026-10-25), plus 200 browser checks in the development
 export (211 when the harness's own 11 measurement probes are counted) and 4 in the production one
 (`npm run test:layout`, §12, last measured 2026-10-24). Every app-drawn
 screen the design never drew is measured there — the sign-in screen, frame 14's two destinations,
@@ -226,8 +229,8 @@ since names its own suites in [PROJECT.md](PROJECT.md)'s “Current work”:
 | Zone containment (point-in-polygon, degenerates, overlaps, and the resolution rule a caller supplies when a point is in two zones) | `src/features/visits/domain/__tests__/zone-containment.test.ts` |
 | Visit lifecycle (dwell, grace, segments, day span, replay) | `src/features/visits/domain/__tests__/visit-lifecycle.test.ts` |
 
-Not covered by tests: the route layer, the native bundle build (verified manually
-with `npx expo export --platform ios`), and runtime behaviour on a device. Layout is
+Not covered by tests: the route layer and runtime behaviour on a device. The native bundle
+is exported in CI (`npm run build:native`), but no device or simulator runs it. Layout is
 measured in a browser rather than on a device (§12), so a platform font difference
 remains a manual check.
 
