@@ -37,8 +37,8 @@ npm run verify           # format check + typecheck + lint + tests
 npm run doctor           # expo-doctor dependency/config health
 ```
 
-Current state (measured in `app/` on 2026-10-22): typecheck, lint and format are clean and Jest
-passes **108 suites / 1075 tests**; `npm run test:layout` measures every built screen in both
+Current state (measured in `app/` on 2026-10-24): typecheck, lint and format are clean and Jest
+passes **118 suites / 1187 tests**; `npm run test:layout` measures every built screen in both
 languages and at both text sizes, over the same screens, the app shell's destinations and the
 built flow from the walk through the report to the queued row; an iOS production bundle builds
 (`npx expo export --platform ios`).

@@ -3,6 +3,10 @@
 Two models, trained offline on free GPUs (Colab / Kaggle / JYU), shipped as versioned files.
 Design: architecture doc §9.
 
+**Status (2026-10-24): nothing here is built yet.** There is no training code, exported model, model
+card or `requirements.txt`; the table below is the plan, and every score the app shows comes from
+the committed zone stub. [../docs/architecture.md](../docs/architecture.md) is the status of record.
+
 | Model | Purpose | Data | Output | Target |
 |-------|---------|------|--------|--------|
 | YOLO11n (→ 11s if needed) | Berry species + count in feedback photos (6.4, 6.5) | WildBe (HF `FBK-TeV/WildBe`, 3,516 images, 4 classes) + team phone photos | ONNX (opset 17) + model_card.md | mAP@50 ≥ 0.6 on WildBe test |

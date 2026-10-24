@@ -4,6 +4,11 @@ The shared vocabulary (species, zones, visits, reports, ripeness) and the home o
 rules. Postgres stays the system of record; each reasoning run builds a small in-memory rdflib
 graph. Design: architecture doc §8.
 
+**Status (2026-10-24): nothing here exists yet.** There are no `.ttl` files, `.rq` rules, JSON-LD
+context or rdflib code — only this plan. The species list and zone-species rules the ontology would
+formalise live as YAML in `../data/config/`, marked unverified. [../docs/architecture.md](../docs/architecture.md)
+is the status of record.
+
 ## Suggested layout
 ```
 ontology/

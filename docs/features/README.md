@@ -1,30 +1,39 @@
 # Feature catalogue
 
 All 20 functions from the HW4 design, in three levels. Each **core** feature gets a deep
-dive before it is built (copy [TEMPLATE.md](TEMPLATE.md) to `docs/features/<id>-<slug>.md`).
+dive before the service behind it is built (copy [TEMPLATE.md](TEMPLATE.md) to
+`docs/features/<id>-<slug>.md`).
 Update the **Status** column in the same PR that changes a feature.
 
 Status: ⬜ not started · 📝 deep dive written · 🟡 in progress · ✅ done (acceptance criteria pass on staging)
+
+**Status names its layer.** The app is built ahead of the services, so a row marked
+**app 🟡** has screens that exist and run on device records or the committed zone stub, while
+the API, model or pipeline behind them stays **⬜**. The app's own record of which screen each
+frame became is [app/docs/design-source.md](../../app/docs/design-source.md); what each
+screen can honestly claim is [app/PROJECT.md](../../app/PROJECT.md). Those screens were built
+from the Figma frames **before** this catalogue's deep dives for 6.1, 6.3, 6.4 and 6.7–6.9; the
+deep dive is still the gate before the service behind a screen is built.
 
 ## Core (MVP) — architecture doc §6
 
 | ID | Feature | Backend module(s) | App screens | Lead · co-owners | Sprint | Deep dive | Status |
 |----|---------|-------------------|-------------|------------------|--------|-----------|--------|
-| 6.1 | Accounts and roles (picker, admin; buyer reserved) | `accounts` | Login / register, consent | Hassan · Salman, Sabih | 1–2 | — | ⬜ |
-| 6.2 | Live site map with yield score & confidence | `zones`, `prediction`, `ingest` | Map home, zone sheet, near me | Awais, Hassan, Salman, Remon · Asmer, Sabih | 1–2 | [6.2-live-site-map.md](6.2-live-site-map.md) | 📝 data/ 🟡 |
-| 6.3 | GPS visit detection (arrive / pick / leave) | `visits` | Active visit | Salman · Hassan | 2 | — | ⬜ |
-| 6.4 | Feedback (rating, amount, photo) | `feedback`, `media` | Feedback | Hassan · Salman, Sabih, Remon (YOLO) | 2 | — | ⬜ |
+| 6.1 | Accounts and roles (picker, admin; buyer reserved) | `accounts` | Login / register, consent | Hassan · Salman, Sabih | 1–2 | — | 🟡 app screens (stand-in session) · API ⬜ |
+| 6.2 | Live site map with yield score & confidence | `zones`, `prediction`, `ingest` | Map home, zone sheet, near me | Awais, Hassan, Salman, Remon · Asmer, Sabih | 1–2 | [6.2-live-site-map.md](6.2-live-site-map.md) | 📝 deep dive · 🟡 app screens on the zone stub · data 🟡 · API ⬜ |
+| 6.3 | GPS visit detection (arrive / pick / leave) | `visits` | Active visit | Salman · Hassan | 2 | — | 🟡 app tracker + screen (no zone list, so no caller) · API ⬜ |
+| 6.4 | Feedback (rating, amount, photo) | `feedback`, `media` | Feedback | Hassan · Salman, Sabih, Remon (YOLO) | 2 | — | 🟡 app feedback screen + device queue (no transport) · API ⬜ |
 | 6.5 | Validation and trust weighting | `trust` | — (shows in scores) | Hassan · Remon | 2 | — | ⬜ |
 | 6.6 | Yield prediction (phenology baseline → XGBoost) | `prediction`, `ingest` | Zone sheet (why) | Remon · Awais | 2–3 | — | ⬜ |
-| 6.7 | Reasoning and explainable push alerts | `reasoning` | Alerts inbox | Asmer · Sabih (FCM), Hassan | 3 | — | ⬜ |
-| 6.8 | Analytics (median stay time, trends) | `analytics` | My stats, admin page | Hassan · Sayeem | 3 | — | ⬜ |
-| 6.9 | Offline mode and privacy (GDPR) | `accounts`, all | Profile & privacy, offline area | Salman · Hassan | 3 | — | ⬜ |
+| 6.7 | Reasoning and explainable push alerts | `reasoning` | Alerts inbox | Asmer · Sabih (FCM), Hassan | 3 | — | 🟡 app alerts screen (design sample) · API ⬜ |
+| 6.8 | Analytics (median stay time, trends) | `analytics` | My stats, admin page | Hassan · Sayeem | 3 | — | 🟡 app season screen (design sample) · API ⬜ |
+| 6.9 | Offline mode and privacy (GDPR) | `accounts`, all | Profile & privacy, offline area | Salman · Hassan | 3 | — | 🟡 app privacy/offline screens, device records only · API ⬜ |
 
 ## Desired extras — after core is stable (architecture doc §16 hooks)
 
 | ID | Feature | Hook already in the MVP | Sprint | Status |
 |----|---------|------------------------|--------|--------|
-| E1 | Marketplace with escrow (listings, orders, chat, ratings, disputes) | `buyer` role, new `marketplace` module, payments behind a service interface (test mode) | 3–4 | ⬜ |
+| E1 | Marketplace with escrow (listings, orders, chat, ratings, disputes) | `buyer` role, new `marketplace` module, payments behind a service interface (test mode) | 3–4 | 🟡 app screens (demo listings, test-mode order) · escrow/payments ⬜ |
 | E2 | Video analysis & fraud checks | media pipeline + job queue; `reports.flags` | 4 | ⬜ |
 | E3 | Rewards, tiers, badge | trust + visit/report history stored | 4 | ⬜ |
 | E4 | Safety: route back & SOS | phone keeps the GPS track locally → offline route back | 4 | ⬜ |

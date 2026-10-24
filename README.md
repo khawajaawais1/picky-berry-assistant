@@ -18,17 +18,22 @@ Species: bilberry, lingonberry, cloudberry, crowberry · Final demo **17 Dec 202
 9 core features (MVP), 5 desired extras, 6 future developments.
 Full catalogue with owners, modules, sprints and status: **[docs/features/README.md](docs/features/README.md)**.
 
+Status names the layer, because the app is built ahead of the services: **app 🟡** means the
+screens exist and run on device records or the committed zone stub, while the API, model or
+pipeline behind them is still **⬜**. ✅ still means the feature's acceptance criteria pass on
+staging, which none does.
+
 | ID | Core feature | Sprint | Status |
 |----|-------------|--------|--------|
-| 6.1 | Accounts and roles | 1–2 | ⬜ |
-| 6.2 | Live site map with yield score & confidence | 1–2 | 📝 deep dive · data pipelines 🟡 |
-| 6.3 | GPS visit detection | 2 | ⬜ |
-| 6.4 | Feedback (rating + photo) | 2 | ⬜ |
+| 6.1 | Accounts and roles | 1–2 | 🟡 app screens (stand-in session) · API ⬜ |
+| 6.2 | Live site map with yield score & confidence | 1–2 | 📝 deep dive · 🟡 app screens on the zone stub · data 🟡 · API ⬜ |
+| 6.3 | GPS visit detection | 2 | 🟡 app tracker + screen (no zone list, so no caller) · API ⬜ |
+| 6.4 | Feedback (rating + photo) | 2 | 🟡 app feedback screen + device queue (no transport) · API ⬜ |
 | 6.5 | Validation and trust weighting | 2 | ⬜ |
 | 6.6 | Yield prediction | 2–3 | ⬜ |
-| 6.7 | Reasoning and explainable push alerts | 3 | ⬜ |
-| 6.8 | Analytics | 3 | ⬜ |
-| 6.9 | Offline mode and privacy | 3 | ⬜ |
+| 6.7 | Reasoning and explainable push alerts | 3 | 🟡 app alerts screen (design sample) · API ⬜ |
+| 6.8 | Analytics | 3 | 🟡 app season screen (design sample) · API ⬜ |
+| 6.9 | Offline mode and privacy | 3 | 🟡 app privacy/offline screens, device records only · API ⬜ |
 
 Extras: E1 marketplace with escrow · E2 video analysis & fraud checks · E3 rewards · E4 safety route back & SOS · E5 admin tools.
 
@@ -55,10 +60,10 @@ picky-berry-assistant/
 
 | Folder | Status |
 |--------|--------|
-| `app/` | ✅ Expo app: every v1 design screen, 108 suites / 1075 tests, layout + accessibility CI; MapLibre on real zones next ([`app/README.md`](app/README.md)) |
-| `data/` | ✅ Pipelines for 6.2 + 25 tests; 50 stub zones ready to use |
-| `docker/` | 🟡 Drafted; needs a first build on a laptop |
-| `backend/`, `ml/`, `ontology/`, `deploy/` | ⬜ Planned layout in each README; owners start in sprint 1 |
+| `app/` | ✅ Expo app: every v1 design screen, 118 suites / 1187 tests, layout + accessibility CI; MapLibre draws the pilot stub's zones — a basemap and the zone service are next ([`app/README.md`](app/README.md)) |
+| `data/` | ✅ Pipelines for 6.2 + 28 tests; 50 stub zones committed; the real backfill and bucket upload are not run |
+| `docker/` | 🟡 Postgres 17 + PostGIS + h3 image and dev compose defined; no CI build |
+| `backend/`, `ml/`, `ontology/`, `deploy/` | ⬜ Planned layout in each README; no code in any of them yet |
 
 Sprint plan and first deliverables (due 3 Nov): [docs/sprints.md](docs/sprints.md).
 
@@ -95,6 +100,10 @@ trust, prediction, reasoning, analytics, ingest, media + job queue) → PostgreS
 S3 bucket, rdflib ontology, YOLO/XGBoost models ← FMI, Sentinel-2, OSM/Protomaps, Firebase FCM.
 One EU VM, ≈ €485/yr. Details: [docs/architecture.md](docs/architecture.md) and the
 [MVP Architecture doc](https://claude.ai/artifact/EnkBHuaL7DENBFutQMPEqw).
+
+**That chain is the target design.** Only the app and the `data/` package exist today: the app runs
+on device records and the committed zone stub, and there is no API, bucket, ontology or model in
+the repository. [docs/architecture.md](docs/architecture.md) keeps the per-layer status.
 
 ## Tech stack
 

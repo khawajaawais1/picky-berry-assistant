@@ -4,6 +4,11 @@ One EU VM (Hetzner Helsinki or CSC cPouta — decide in sprint 1) running docker
 three containers: the backend image, Postgres/PostGIS/h3 and Caddy (automatic HTTPS).
 Photos, tiles, models and backups go to an S3-compatible bucket. Design: architecture doc §14.
 
+**Status (2026-10-24): nothing here exists yet** — no VM, domain, `docker-compose.prod.yml`,
+`Caddyfile`, backup script or deploy workflow. The only deployment artifact in the repository is
+the local [`../docker-compose.dev.yml`](../docker-compose.dev.yml).
+[../docs/architecture.md](../docs/architecture.md) is the status of record.
+
 Files to add here (sprint 3, D20):
 * `docker-compose.prod.yml` — `api` (ghcr.io/…/bpa-backend:${TAG}), `db` (built from `../docker/postgres`), `caddy`
 * `Caddyfile` — `api.<domain>` → `api:8000`

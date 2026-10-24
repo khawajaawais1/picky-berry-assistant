@@ -9,6 +9,18 @@ The windows, processors and lawful bases below are decided in the app's ADRs —
 [ADR-054](../app/docs/adr/ADR-054-the-account-belongs-to-the-api.md) (identity). Where this table
 and those ADRs differ, the ADRs win; changing a number here means changing them.
 
+**Status today (2026-10-24): the app is the only part that handles any of this, and it sends
+nothing.** What exists is on the device: the consent record, saved zones, the report queue and the
+stand-in session. No account, visit, report, photo, token or coordinate is stored anywhere else,
+and there is no backend, bucket, Sentry project or push sender. So every **Where stored** cell in
+the table below says where the record **will** live once the service exists, not a place that holds
+it now. The one exception is the optional Firebase password-reset request: when
+`EXPO_PUBLIC_FIREBASE_API_KEY` is configured, the address the picker types is sent to Identity
+Toolkit to ask for a reset link, and no reset token is kept ([ADR-062](../app/docs/adr/ADR-062-password-reset-belongs-to-the-provider.md)). The checklist under the table is therefore the state of the
+service as a whole — nearly all of it is still to do, and the foreground consent it names is the
+part the app already records and states on the device
+([ADR-020](../app/docs/adr/ADR-020-record-consent-on-device.md)).
+
 ## Records of processing
 
 | Data | Purpose | Lawful basis | Where stored | Retention | Feature |
