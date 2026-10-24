@@ -329,9 +329,9 @@ Verified on 2026-10-24 in this repository:
 | Formatting                                   | `npm run format:check`           | pass   |
 | Unit/component tests                         | `npm test`                       | 118 suites, 1187 tests, pass (2026-10-24) |
 | Layout in both languages and both text sizes, plus the app shell (each route's destination, the swap between them, and no bar on onboarding), the built consent controls' states, the chip rows' `aria-checked`, **the accessibility tree of every route the app has (25 today) and of the state each press in the journeys leaves behind** (role, accessible name and declared state on every control, and the walk's own probe), the discover flow's destinations, the walk-through to the queued report listed back, the sign-up → account row → saved plan → account surface → notice → the copy → sign-out journey, **a screen read while its own action is in flight** (screen 10's save, with the app's storage given a device's timing), and — against a second `EXPO_PUBLIC_APP_ENV=production` export — that a shipped build accepts no credential, mounts no prototype on every route either prototype's readings borrow, and redirects the development-only field-test route | `npm run test:layout` | 200 checks in the development export and 4 in the production one, pass (2026-10-24) |
-| Expo dependency/config health                | `npm run doctor`                 | 21/21 checks pass (2026-10-21, after `npx expo install --fix` took the SDK 57 patch releases: `expo` 57.0.31 and its seven peers) |
-| Production bundle builds                     | `npx expo export --platform ios` | pass (Hermes bundle produced) |
-| Android bundle builds                        | `npx expo export --platform android` | pass (Hermes bundle, 2026-10-21) |
+| Expo dependency/config health                | `npm run doctor`                 | 21/21 checks pass (2026-10-24; the SDK 57 patch releases were taken by `npx expo install --fix` on 2026-10-21: `expo` 57.0.31 and its seven peers) |
+| Production bundle builds                     | `npx expo export --platform ios` | pass (Hermes bundle, 5.6 MB, 2026-10-24) |
+| Android bundle builds                        | `npx expo export --platform android` | pass (Hermes bundle, 5.8 MB, 2026-10-24) |
 | Android demo APK                             | `npm run build:android:demo` (EAS) | built from this tree 2026-10-21 (see Deployment) |
 | Dev server + web render (browser, no console errors) | `npm start` + browser    | pass   |
 
