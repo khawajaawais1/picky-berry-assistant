@@ -72,15 +72,15 @@ when the two disagree, and what has to be decided before the app is rebuilt to m
 ## Consequences
 
 - **New dependencies, all to be installed with `npx expo install` and, where they carry native code,
-  as a development build**: `@maplibre/maplibre-react-native` (not in Expo Go),
-  `expo-task-manager` + background location, TanStack Query (+ a persistence layer), Drizzle +
+  as a development build**: `@maplibre/maplibre-react-native` (not in Expo Go), TanStack Query (+ a
+  persistence layer), Drizzle +
   `expo-sqlite`, Zustand, the generated API client. Every one of them is a new native module in the
   demo APK.
 - **New personal-data decisions arrive with the code**, and each is a recorded decision before the
-  field exists (AGENTS.md §11.1): an account with an email and a password on the team's backend, a
-  **background** location permission, per-species feedback ratings and amounts, and photos uploaded
-  to object storage. The plan's own constraint — “raw GPS tracks stay on the phone” — is compatible
-  with ADR-010 and is the line to hold.
+  field exists (AGENTS.md §11.1): an account with an email and a password (ADR-054), a foreground
+  position read — background capture is out of scope for v1 (ADR-056) — per-species feedback ratings
+  and amounts, and photos uploaded to object storage. The plan's own constraint — “raw GPS tracks
+  stay on the phone” — is compatible with ADR-010 and is the line to hold.
 - **The app's own guarantees still apply to every new screen**: Finnish and English copy from the
   catalogue, the contrast pair asserted, touch targets at 44 px, the largest text size measured, and
   no control that claims an action it cannot perform.
@@ -92,6 +92,13 @@ when the two disagree, and what has to be decided before the app is rebuilt to m
 
 ## Status
 
-**Proposed.** Adopted as the app's target direction by the owner's instruction of 2026-10-22; the
-four items in §4 are open, and the first build step waits on them. When the owner answers, this ADR
-either becomes Accepted (and the answers move into their own records) or is superseded.
+**Proposed.** Adopted as the app's target direction by the owner's instruction of 2026-10-22.
+
+**Partially answered (2026-10-23).** The identity item is answered by
+[ADR-054](ADR-054-the-account-belongs-to-the-api.md) (the API owns the account, Firebase issues the
+credential) and the background-permission item by
+[ADR-056](ADR-056-background-capture-is-out-of-scope.md) (foreground only for v1); the drawn map's
+retirement is settled for screen 06 by [ADR-053](ADR-053-the-discover-map-is-real-geography.md).
+Where the consequences below name `expo-task-manager` and a background location permission, ADR-056
+replaces them. Still open: the two meanings of *yield score*, and which of the built screens the
+MVP keeps.

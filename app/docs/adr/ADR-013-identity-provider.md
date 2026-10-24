@@ -1,6 +1,11 @@
 # ADR-013 — Firebase Authentication as the field-user identity provider
 
-- **Status:** Accepted
+> **Superseded on 2026-10-23 by [ADR-054](ADR-054-the-account-belongs-to-the-api.md).** The
+> account is now the team API's record and Firebase issues the credential; decisions 2–5 below
+> (token verification, identity-never-privilege, no stored credentials) carry forward. The
+> reasoning is kept as history.
+
+- **Status:** Superseded by [ADR-054](ADR-054-the-account-belongs-to-the-api.md)
 - **Date:** 2026-10-08
 - **Deciders:** Project owner
 

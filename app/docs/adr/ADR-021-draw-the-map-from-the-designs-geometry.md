@@ -1,6 +1,6 @@
 # ADR-021 — The core map is drawn from the design's own geometry, not by a map provider
 
-- **Status:** Accepted (the provider-free stance below is scoped to this drawn map; a real basemap is ADR-031)
+- **Status:** Accepted for frames 08–09; **superseded for screen 06 by [ADR-053](ADR-053-the-discover-map-is-real-geography.md)** (2026-10-22). The provider-free stance below is scoped to this drawn map; the real basemap is ADR-031.
 - **Date:** 2026-10-09
 - **Deciders:** Project owner
 

@@ -1,6 +1,11 @@
 # ADR-014 — Retention: 12 months, then delete
 
-- **Status:** Accepted (subject to data-protection review before production)
+> **Superseded on 2026-10-23 by [ADR-055](ADR-055-retention-and-processors.md).** The twelve-month
+> window is restated unchanged; backups, crash reports, processors, lawful basis and the
+> data-subject rights — the three items below left open and the governance around them — are
+> decided there. The reasoning is kept as history.
+
+- **Status:** Superseded by [ADR-055](ADR-055-retention-and-processors.md)
 - **Date:** 2026-10-08
 - **Deciders:** Project owner
 

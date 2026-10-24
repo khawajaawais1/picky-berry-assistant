@@ -1,8 +1,9 @@
 # ADR-047 — The consent says what the app does, and the background half goes to the owner
 
-- **Status:** **Accepted in part (2026-10-12).** §1 is decided and built; §2 is the project owner's
-  decision and is still `> _pending_`, so the ADR becomes `Accepted` when §2 is answered or
-  explicitly deferred.
+- **Status:** **Accepted in part (2026-10-12); §2 answered on 2026-10-23 by
+  [ADR-056](ADR-056-background-capture-is-out-of-scope.md).** §1 is decided and built and stands
+  unchanged; §2 is superseded — background capture is out of scope for v1. The slots below are kept
+  as the checklist a future ADR would answer.
 - **Deciders:** the project owner (2026-10-12) asked for the consent screen's promise to be
   reconciled with what the app does — say clearly that capture is foreground-only, and put the
   background-permission decision to them. §1 is this repository's answer; §2 is theirs.
@@ -53,45 +54,50 @@ budget and a lawful basis, and the owner has not been asked (PROJECT.md open que
    four questions AGENTS.md §11 asks. The safe direction is to ask again: the app does not read it
    as consent, and no position is read until a fresh decision is stored.
 
-### §2 — The background half is the owner's decision (pending)
+### §2 — The background half is the owner's decision (answered 2026-10-23)
+
+> **Answered “no” by [ADR-056](ADR-056-background-capture-is-out-of-scope.md):** v1 captures in
+> the foreground only. §2.4–§2.5 are answered by [ADR-055](ADR-055-retention-and-processors.md);
+> the slots below are kept as the checklist a future ADR would answer, not as open questions.
 
 Each slot below names what an answer changes. Nothing here is built, and nothing here defaults.
 
-**2.1 · Does Picky ever capture in the background at all?** `> _pending_` — the branch that decides
-every other slot. Yes moves most of the list below into scope; no closes it and means the frames'
-promise is answered by *removing* it from the design, not by building it.
-*Changes in code:* a second consent purpose (or a stated non-feature), the copy in both languages,
-and the frames' own rows — the switch on frame 14, the benefit on screen 05.
+**2.1 · Does Picky ever capture in the background at all?** `> _no (ADR-056)_` — the branch that
+decides every other slot. **No** closes it, and means the frames' promise is answered by *removing*
+it from the design, not by building it.
+*Changes in code:* a stated non-feature rather than a second consent purpose; the copy in both
+languages, which already says the limit; and the frames' own rows — the switch on frame 14, the
+benefit on screen 05 — recorded as departures for v1.
 
-**2.2 · If yes: which platform permissions and declarations ship?** `> _pending_` — the iOS
-“Always” usage string (`NSLocationAlwaysAndWhenInUseUsageDescription`), the location background
-mode, Android's `ACCESS_BACKGROUND_LOCATION` and a foreground service with its own notification,
-each with a store declaration and, in the EU, a justification Apple and Google review.
-*Changes in code:* `app.json`'s plugin switches and the guard that currently fails if any of them
-appears; a second consent control; the notice's record list.
+**2.2 · If yes: which platform permissions and declarations ship?** `> _closed, nothing ships_` —
+the iOS “Always” usage string (`NSLocationAlwaysAndWhenInUseUsageDescription`), the location
+background mode, Android's `ACCESS_BACKGROUND_LOCATION` and a foreground service with its own
+notification, each with a store declaration and, in the EU, a justification Apple and Google
+review. None is asked; the guard test is what keeps it so.
+*Changes in code:* `app.json`'s plugin switches and the guard that fails if any of them appears — the
+guard stays as the enforcement of the “no”.
 
-**2.3 · If yes: the watch's cadence and accuracy.** `> _pending_` — how often a fix is read, how far
-between fixes, and what the battery may cost. The app asks for `Accuracy.High` today and nothing
-else, and that choice is recorded as its own (docs/demo-and-stand-ins.md, class D4).
-*Changes in code:* the watch options in `src/services/location/expo-source.ts`, the tracker's
-policy, and the demo inventory's D4 row.
+**2.3 · If yes: the watch's cadence and accuracy.** `> _closed, foreground only_` — how often a fix
+is read, how far between fixes, and what the battery may cost. The app asks for `Accuracy.High`
+today and nothing else, and that choice is recorded as its own (docs/demo-and-stand-ins.md, class
+D4). The foreground watch is unchanged.
+*Changes in code:* the watch options in `src/services/location/expo-source.ts` and the tracker's
+policy — untouched by this answer.
 
-**2.4 · The lawful basis for reading a position.** `> _pending_` — consent, or something else, for
-which purpose, for how long, and what the privacy notice says (PROJECT.md open question 15; the
-notice is owed before any release that reads a position at all).
+**2.4 · The lawful basis for reading a position.** `> _answered: consent (ADR-055)_` — consent for
+tracking, separate from accepting the terms and withdrawable on its own; the notice is still owed
+before any release that reads a position at all (PROJECT.md open question 15).
 *Changes in code:* the notice and the consent's own wording; nothing in the read path.
 
-**2.5 · What may be kept, and for how long.** `> _pending_` — whether a visit derived from a fix is
-stored, where, and against ADR-014's 12 months; today the app keeps nothing, and the seam's own
-answer is that a fix is replaced by the next one.
+**2.5 · What may be kept, and for how long.** `> _answered: a visit, its segments and one centroid, 12 months; no raw sample (ADR-055)_` —
+whether a visit derived from a fix is stored, where, and against the twelve months. Today the app
+keeps nothing, and the seam's own answer is that a fix is replaced by the next one.
 *Changes in code:* the visit tracker's persistence (none exists), and the notice's record list.
 
-**2.6 · Where this decision is asked.** `> _pending_` — no questionnaire asks it yet: the four
-documents sent on 2026-10-11 (sign-in, community map, zone service, backend) are closed at 58 slots,
-and this ADR is where the background half waits. If the owner wants it inside a send, the slot moves
-to a fifth document the reconciliation in
-[questionnaire-reconciliation.test.ts](../../src/config/__tests__/questionnaire-reconciliation.test.ts)
-then holds.
+**2.6 · Where this decision is asked.** `> _closed: answered by the owner, no questionnaire_` — no
+questionnaire asked it: the four documents sent on 2026-10-11 (sign-in, community map, zone service,
+backend) were closed at 58 slots, and this ADR is where the background half waited. A future
+“yes” would need its own ADR on the same slots, not a reopened send.
 
 ## Alternatives considered
 

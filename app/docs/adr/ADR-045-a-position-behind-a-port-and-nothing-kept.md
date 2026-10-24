@@ -113,7 +113,8 @@ and nothing about it is kept.**
   away.
 - **The frames' recentre control and the design's promise of a background-tracked visit are the two
   visible things still owed**, each with its own missing piece named (a map with geography; a
-  background permission decision).
+  background permission decision — answered “no” for v1 by
+  [ADR-056](ADR-056-background-capture-is-out-of-scope.md) on 2026-10-23).
 - **`Accuracy.High` is the app's own choice** (the platform's default, `Balanced`, is ~100 m, which
   would put a picker in a zone they are not in), awaiting confirmation with the cadence question —
   recorded in `docs/demo-and-stand-ins.md` as class D rather than presented as a requirement.
