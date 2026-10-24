@@ -72,7 +72,9 @@ ships no zone list at all.**
   dedupes on, and a real UUID is what the SDK provides.
 - **Finalise expired visits on a timer inside this hook.** Not built: a visit finalises on the next
   sample, and a consumer that wants time-driven finalisation (`finalizeExpired`) supplies its own
-  tick — adding a ticker here would be a cadence decision nobody has made (ADR-045's class D4).
+  tick — adding a ticker here would still be a cadence decision, now recorded as
+  [ADR-063](ADR-063-the-watch-has-a-cadence-and-an-accuracy-budget.md), which deliberately puts no
+  ticker in this hook.
 
 ## Consequences
 

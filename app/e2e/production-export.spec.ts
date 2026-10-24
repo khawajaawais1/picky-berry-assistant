@@ -75,4 +75,15 @@ test.describe('the production export', () => {
 
     await expect(page.getByRole('button', { name: 'Next variant' })).toHaveCount(0);
   });
+
+  test('keeps the location-watch field test out of a shipped build', async ({ page }) => {
+    // ADR-063: the instrument exists to measure the watch's cadence and battery cost on a tester's
+    // own phone. It is not a screen a picker may meet, so a shipped bundle has no route to it: the
+    // route redirects to the front door, and the screen (with its battery reads) never mounts.
+    await page.goto('/field-test');
+
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByTestId('field-test-screen')).toHaveCount(0);
+    await expect(page.getByText('Location watch field test')).toHaveCount(0);
+  });
 });

@@ -3,7 +3,8 @@
 - **Status:** **Accepted in part (2026-10-12); §2 answered on 2026-10-23 by
   [ADR-056](ADR-056-background-capture-is-out-of-scope.md).** §1 is decided and built and stands
   unchanged; §2 is superseded — background capture is out of scope for v1. The slots below are kept
-  as the checklist a future ADR would answer.
+  as the checklist a future ADR would answer; §2.3's foreground budget is answered by
+  [ADR-063](ADR-063-the-watch-has-a-cadence-and-an-accuracy-budget.md) (2026-10-24).
 - **Deciders:** the project owner (2026-10-12) asked for the consent screen's promise to be
   reconciled with what the app does — say clearly that capture is foreground-only, and put the
   background-permission decision to them. §1 is this repository's answer; §2 is theirs.
@@ -77,12 +78,12 @@ review. None is asked; the guard test is what keeps it so.
 *Changes in code:* `app.json`'s plugin switches and the guard that fails if any of them appears — the
 guard stays as the enforcement of the “no”.
 
-**2.3 · If yes: the watch's cadence and accuracy.** `> _closed, foreground only_` — how often a fix
-is read, how far between fixes, and what the battery may cost. The app asks for `Accuracy.High`
-today and nothing else, and that choice is recorded as its own (docs/demo-and-stand-ins.md, class
-D4). The foreground watch is unchanged.
-*Changes in code:* the watch options in `src/services/location/expo-source.ts` and the tracker's
-policy — untouched by this answer.
+**2.3 · If yes: the watch's cadence and accuracy.** `> _answered for the foreground, 2026-10-24 — ADR-063_`
+— high accuracy, a fix at most once a minute and only after 50 m of movement, foreground only;
+the background branch of the slot stays closed by ADR-056. ADR-063 keeps the previous `High`
+choice and records the battery-versus-boundary trade-off (docs/demo-and-stand-ins.md, class D4).
+*Changes in code:* `POSITION_WATCH_BUDGET` and the watch options in
+`src/services/location/expo-source.ts`; the tracker's policy is untouched.
 
 **2.4 · The lawful basis for reading a position.** `> _answered: consent (ADR-055)_` — consent for
 tracking, separate from accepting the terms and withdrawable on its own; the notice is still owed

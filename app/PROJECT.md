@@ -327,8 +327,8 @@ Verified on 2026-10-24 in this repository:
 | Type checking                                | `npm run typecheck`              | pass   |
 | Linting                                      | `npm run lint`                   | pass (0 errors, 12 warnings in four files, 2026-10-24) |
 | Formatting                                   | `npm run format:check`           | pass   |
-| Unit/component tests                         | `npm test`                       | 112 suites, 1109 tests, pass (2026-10-24) |
-| Layout in both languages and both text sizes, plus the app shell (each route's destination, the swap between them, and no bar on onboarding), the built consent controls' states, the chip rows' `aria-checked`, **the accessibility tree of every one of the app's 23 routes and of the state each press in the journeys leaves behind** (role, accessible name and declared state on every control, and the walk's own probe), the discover flow's destinations, the walk-through to the queued report listed back, the sign-up → account row → saved plan → account surface → notice → the copy → sign-out journey, **a screen read while its own action is in flight** (screen 10's save, with the app's storage given a device's timing), and — against a second `EXPO_PUBLIC_APP_ENV=production` export — that a shipped build accepts no credential and mounts no prototype, on every route either prototype's readings borrow | `npm run test:layout` | 200 checks in the development export and 3 in the production one, pass (2026-10-24) |
+| Unit/component tests                         | `npm test`                       | 118 suites, 1187 tests, pass (2026-10-24) |
+| Layout in both languages and both text sizes, plus the app shell (each route's destination, the swap between them, and no bar on onboarding), the built consent controls' states, the chip rows' `aria-checked`, **the accessibility tree of every route the app has (25 today) and of the state each press in the journeys leaves behind** (role, accessible name and declared state on every control, and the walk's own probe), the discover flow's destinations, the walk-through to the queued report listed back, the sign-up → account row → saved plan → account surface → notice → the copy → sign-out journey, **a screen read while its own action is in flight** (screen 10's save, with the app's storage given a device's timing), and — against a second `EXPO_PUBLIC_APP_ENV=production` export — that a shipped build accepts no credential, mounts no prototype on every route either prototype's readings borrow, and redirects the development-only field-test route | `npm run test:layout` | 200 checks in the development export and 4 in the production one, pass (2026-10-24) |
 | Expo dependency/config health                | `npm run doctor`                 | 21/21 checks pass (2026-10-21, after `npx expo install --fix` took the SDK 57 patch releases: `expo` 57.0.31 and its seven peers) |
 | Production bundle builds                     | `npx expo export --platform ios` | pass (Hermes bundle produced) |
 | Android bundle builds                        | `npx expo export --platform android` | pass (Hermes bundle, 2026-10-21) |
@@ -1115,8 +1115,10 @@ corrected for what it could not.
   Android foreground service, and the guard `src/config/__tests__/location-permissions.test.ts`
   fails if any of them appears in `app.json`, because a permission is a one-word edit away from
   existing. The copy no longer promises what this list forbids: the consent, frame 14's switch and
-  the screens that repeat them say “while the app is open” (ADR-047 §1), and the background half —
-  the permissions, the cadence and what may ever be kept — is ADR-047 §2, the owner's decision.
+  the screens that repeat them say “while the app is open” (ADR-047 §1), and the other half was
+  put to the owner as ADR-047 §2: no background capture for v1 ([ADR-056](docs/adr/ADR-056-background-capture-is-out-of-scope.md)),
+  retention in [ADR-055](docs/adr/ADR-055-retention-and-processors.md), and the foreground budget
+  in [ADR-063](docs/adr/ADR-063-the-watch-has-a-cadence-and-an-accuracy-budget.md).
 - **The join to the visit domain is drawn**: `features/visits/domain/position-presence.ts` turns a
   containment answer into the tracker's samples, closing what was left before opening what was
   entered. The domain still has no caller in a screen, which is now the only thing missing between a
@@ -2353,6 +2355,7 @@ text alternative naming what it shows, not fifty accessible zone names.
 | [ADR-060](docs/adr/ADR-060-the-saved-plan-reads-the-zone-source.md) | The saved plan reads the zone source: the record's identifiers resolve against the same `ZoneSource` answer frame 06 and screen 07 read (for the pilot berry, since the record stores a place and not a layer), so a saved zone shows its name and opens its details again; the record's order and its unknown ids survive, an identifier the source does not answer to is named and claims no role, there is no fallback to `DEMO_ZONES`, both reads must finish before an id is called unknown, and screen 07's no-id demo is the bare URL's alone | Accepted (2026-10-24; supersedes ADR-030 decisions 3 and 6 and ADR-058 decision 6's saved-plan half; amended by ADR-061) |
 | [ADR-061](docs/adr/ADR-061-the-saved-zone-remembers-its-berry.md) | The saved zone remembers its berry: the bookmark writes the score layer screen 07 is reading, the record keeps it as an additive optional field under `picky.saved-zones.v1` (a pre-widening plan shows the pilot layer rather than an invented one), the plan asks the source once per saved berry and resolves each row from its own answer, a pending berry hides the rows and a failed one is stated while answered layers list, and the row and the details it opens use the saved berry together | Accepted (2026-10-24; extends ADR-060 decision 4 and ADR-024, amends ADR-024 decision 1's per-zone shape) |
 | [ADR-062](docs/adr/ADR-062-password-reset-belongs-to-the-provider.md) | Password reset asks the provider, and the app keeps no token: `/sign-in` gains “Forgot password?”, an app-drawn request screen keeps the sign-in framing, `SessionPort.requestPasswordReset` is the one new operation, the provider sends the email and hosts the new-password page, the stand-in accepts outside production and says no email was sent, no string claims a delivery or reveals an account, and a production build cannot request a link | Accepted (2026-10-24; answers ADR-034 §1.5, amends ADR-059 decision 4, extends ADR-028 and ADR-048) |
+| [ADR-063](docs/adr/ADR-063-the-watch-has-a-cadence-and-an-accuracy-budget.md) | The foreground watch has a budget: high accuracy, a 50 m distance filter, and a 60 s time ceiling on Android (iOS filters by distance alone), foreground only — chosen for kilometre-scale zone boundaries against a 5-minute dwell, with the battery cost, the sub-50 m movement it can miss and the platform asymmetry recorded, and no ticker or background capture added | Accepted (2026-10-24; answers ADR-045 decision 8's foreground half, ADR-047 §2.3 and PROJECT open question 21; extends ADR-046 and ADR-056) |
 
 ## Deployment
 
@@ -2578,8 +2581,9 @@ These block or shape feature work and need an owner decision:
     `visitTracking` under a v2 key ([ADR-047](docs/adr/ADR-047-the-consent-says-what-the-app-does.md) §1).
     **Still the owner's, and now written as slots rather than a sentence:** whether Picky ever
     captures in the background, and if so the iOS “Always” string and Android background-location
-    declaration with their store justifications, the watch's cadence (the app asks for
-    `Accuracy.High`), the lawful basis and whether anything derived from a fix may ever be kept —
+    declaration with their store justifications, the watch's cadence (then unanswered — the app
+    asked only for `Accuracy.High`), the lawful basis and whether anything derived from a fix may
+    ever be kept —
     ADR-047 §2, all five, each naming what an answer changes in code. The frame's consent row also
     still ships unchecked against the design's ticked row, and the owner has not been asked to
     confirm that departure the way screen 03's is asked about (open question 11).
@@ -2587,8 +2591,17 @@ These block or shape feature work and need an owner decision:
     ([ADR-056](docs/adr/ADR-056-background-capture-is-out-of-scope.md)), with the lawful basis and
     what may be kept recorded in [ADR-055](docs/adr/ADR-055-retention-and-processors.md). No
     permission is asked, the guard test is the enforcement, the frames' promise stays a recorded
-    departure, and revisiting it after the demo needs a new ADR. What remains here is the notice
-    and the design's ticked row.
+    departure, and revisiting it after the demo needs a new ADR.
+    **Answered (2026-10-24, the foreground budget):** the watch asks for `Accuracy.High`, a fix at
+    most once a minute and only after 50 m of movement, foreground only; the battery-versus-boundary
+    trade-off and the Android-only time ceiling are recorded in
+    [ADR-063](docs/adr/ADR-063-the-watch-has-a-cadence-and-an-accuracy-budget.md). No ticker was
+    added, and the background branch stays closed by ADR-056. The **measurement** that would turn
+    the budget from a ceiling into a figure now has an instrument and a record: `/field-test`
+    (development builds only; the route redirects in production) records fixes, gaps and the
+    phone's own battery for a watch run and a control, and
+    [docs/field-test.md](docs/field-test.md) carries the protocol and a result sheet that is still
+    empty — no phone has run it yet. What remains here is the notice and the design's ticked row.
 
 22. **The core navigation's shape — what is answered, and what is still the owner's.** The design
 draws the same tab bar on frames 06–14 (Discover, Visits, Alerts, Profile) but says nothing about

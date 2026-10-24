@@ -100,7 +100,7 @@ describe('the device position source', () => {
     );
   });
 
-  it('watches in the foreground, hands each fix over as the app’s own shape, and stops when told', async () => {
+  it('watches in the foreground at the decided budget, hands each fix over as the app’s own shape, and stops when told', async () => {
     const remove = jest.fn();
     watch.mockResolvedValue({ remove } as unknown as Location.LocationSubscription);
 
@@ -110,7 +110,13 @@ describe('the device position source', () => {
 
     expect(watch).toHaveBeenCalledTimes(1);
     const [options, callback] = watch.mock.calls[0]!;
-    expect(options.accuracy).toBe(Location.Accuracy.High);
+    // ADR-063's budget, asserted as a whole: high accuracy, a 50 m distance filter, and a 60 s
+    // time ceiling on Android. A change here is a decision, not a tweak.
+    expect(options).toEqual({
+      accuracy: Location.Accuracy.High,
+      distanceInterval: 50,
+      timeInterval: 60_000,
+    });
     // The background task API is never the one used: this app asks for the least that lets it
     // read a position while the screen is open (ADR-045, and the owner's answer of 2026-10-12).
     expect(startUpdates).not.toHaveBeenCalled();

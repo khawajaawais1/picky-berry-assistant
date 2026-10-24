@@ -190,6 +190,9 @@ const SAMPLE_FREE_SCREENS: readonly string[] = [
   // The saved plan reads the zone source (ADR-060): every row is a source zone, and a saved id
   // the source no longer answers to is printed as the id alone — no design sample is drawn.
   'src/features/discover/components/saved-spots-screen.tsx',
+  // The watch field test (ADR-063) is a tester's instrument, not a screen of the design: it draws
+  // readings from the real seam and the phone's own battery, and none of the design's sample.
+  'src/features/field-test/components/field-test-screen.tsx',
 ].sort();
 
 /**

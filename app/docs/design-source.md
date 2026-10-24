@@ -820,6 +820,27 @@ be held to; the harness measures it for “nothing is lost at 200 %” only, its
 expectations live in the screen's unit test, and the browser suite presses the link on the built
 page and reads the list it lands on.
 
+### The watch field test — development only, app-drawn, no node
+
+No frame measures anything: the design draws what a picker sees, and [ADR-063](adr/ADR-063-the-watch-has-a-cadence-and-an-accuracy-budget.md)
+records a budget (`Accuracy.High`, a 50 m distance filter and a 60 s Android ceiling) that no
+battery figure exists for. The route (`/field-test`, `picky://field-test` on a phone) is therefore
+the design's opposite kind of screen: an **instrument for the tester**, not a product screen. It
+has no frame, no translation (its audience is whoever runs the phone, and its copy is hard-coded
+English like the review-only prototypes), no place in the shell, and **no production build at
+all** — the route redirects to the front door before the screen mounts, which
+`e2e/production-export.spec.ts` checks on a real export.
+
+What it draws is ADR-063's protocol, on the real seam rather than a simulation: a **watch run**
+mounts `useDevicePosition`, so the consent gate, the platform permission and the budget's own
+options are the ones a product screen would meet, and a **control run** holds the display awake and
+records battery alone. The screen keeps the display awake for either run (a sleeping phone stops a
+foreground watch), refuses to start on a charger or in Low Power Mode because either makes the
+battery half unusable, polls the battery once a minute, and draws the aggregates the summary
+carries — fixes, median gap, stated accuracy, distance between fixes, and the battery delta — with
+the newest fix held in memory only. Being a tester's instrument and not a screen, it is outside the
+language-length and layout tables: there is no Finnish to measure and no frame to be held to.
+
 ## Language lengths, measured
 
 The design is authored in English, and English is the shorter language of the two the

@@ -1,6 +1,8 @@
 # ADR-045 — A position behind a port, read only with the picker's consent, and nothing kept
 
-- **Status:** Accepted (2026-10-12)
+- **Status:** Accepted (2026-10-12); the foreground half of decision 8 is answered by
+  [ADR-063](ADR-063-the-watch-has-a-cadence-and-an-accuracy-budget.md) (2026-10-24), and the
+  background half by [ADR-056](ADR-056-background-capture-is-out-of-scope.md) (2026-10-23).
 - **Deciders:** the project owner asked for real position capture (2026-10-12) and answered the two
   questions this repository put to them: build the capture seam now rather than the real basemap
   first, and ask for the **foreground permission only**.
@@ -71,9 +73,11 @@ and nothing about it is kept.**
 8. **Background tracking is an open owner question, not an assumption.** The consent screen's copy
    promises timing a visit “while the app is in the background”; honouring it needs the platform's
    “always”/background permission, an Android foreground service and a store declaration each, and
-   none of that is decided (PROJECT.md, open questions). Likewise undecided and recorded: the
-   watch's cadence (the app asks for `Accuracy.High` — see the consequences — and nothing about how
-   often or how far apart) and whether anything derived from a fix may ever be persisted.
+   none of that is decided (PROJECT.md, open questions). The watch's cadence is no longer open:
+   [ADR-063](ADR-063-the-watch-has-a-cadence-and-an-accuracy-budget.md) sets high accuracy, a fix at
+   most once a minute and only after 50 m of movement, foreground only. What may be kept is
+   [ADR-055](ADR-055-retention-and-processors.md)'s: a visit, its presence segments and one coarse
+   centroid, kept twelve months, and no raw sample.
 
 ## Alternatives considered
 
@@ -115,6 +119,8 @@ and nothing about it is kept.**
   visible things still owed**, each with its own missing piece named (a map with geography; a
   background permission decision — answered “no” for v1 by
   [ADR-056](ADR-056-background-capture-is-out-of-scope.md) on 2026-10-23).
-- **`Accuracy.High` is the app's own choice** (the platform's default, `Balanced`, is ~100 m, which
-  would put a picker in a zone they are not in), awaiting confirmation with the cadence question —
-  recorded in `docs/demo-and-stand-ins.md` as class D rather than presented as a requirement.
+- **The foreground watch now has a budget, not only an accuracy** (ADR-063): `Accuracy.High`
+  because the platform's default (`Balanced`, ~100 m) would put a picker in a zone they are not in,
+  a 50 m distance filter, and a 60 s time ceiling on Android. The trade-off — battery for boundary
+  resolution, and the platform asymmetry — is recorded there and in `docs/demo-and-stand-ins.md`
+  (class D4), not presented as a platform requirement.

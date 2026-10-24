@@ -213,6 +213,11 @@ const LEDGER: readonly LedgerEntry[] = [
     why: 'The web fallback draws the same rings as an SVG and claims `image` for the same reason: it is the node a browser exposes, and no part of it is a control.',
   },
   {
+    file: 'src/features/field-test/components/field-test-screen.tsx',
+    offers: { button: 3, textAction: 3 },
+    why: 'The development-only instrument (ADR-063): start a watch run, start a control run and stop a running one all drive the real seam, “Open privacy settings” opens the route that holds the consent switch, and share and clear act on the summary this phone holds. No production build mounts it — the route redirects, which the production export checks.',
+  },
+  {
     file: 'src/features/marketplace/components/listing-card.tsx',
     offers: { pressable: 1, role: 1 },
     why: 'The same guard as the zone row: only the one listing the app has a screen for is a button, and that press opens it.',

@@ -1,6 +1,8 @@
 # ADR-056 — Background capture is out of scope for v1
 
-- **Status:** Accepted (2026-10-23)
+- **Status:** Accepted (2026-10-23) — the background “no” stands; the foreground budget §2.3 named
+  is decided separately by [ADR-063](ADR-063-the-watch-has-a-cadence-and-an-accuracy-budget.md)
+  (2026-10-24).
 - **Date:** 2026-10-23
 - **Deciders:** Project owner, on 2026-10-23, answering
   [ADR-047](ADR-047-the-consent-says-what-the-app-does.md) §2 after eleven days pending.
@@ -40,9 +42,10 @@ currently tells anyone it does.
    keeps only `locationWhenInUsePermission`, and
    [`src/config/__tests__/location-permissions.test.ts`](../../src/config/__tests__/location-permissions.test.ts)
    stays exactly as the enforcement — it is the test that makes this decision true a year from now.
-2. **§2.1 is answered “no”.** §2.2 (permissions and declarations) and §2.3 (cadence and accuracy)
-   **close unanswered because they no longer have a question**: nothing is asked, and the
-   foreground watch keeps `Accuracy.High` as its own recorded choice.
+2. **§2.1 is answered “no”.** §2.2 (permissions and declarations) **closes unanswered because it no
+   longer has a question**: nothing background is asked. §2.3's foreground half — how often and how
+   precisely the open-app watch reads — is decided separately by ADR-063: high accuracy, a fix at
+   most once a minute and only after 50 m of movement.
 3. **§2.4 and §2.5 are answered by [ADR-055](ADR-055-retention-and-processors.md)**: tracking's
    lawful basis is consent, separate from the terms and withdrawable on its own; the
    position-derived record is a visit, its presence segments and one coarse centroid, kept twelve

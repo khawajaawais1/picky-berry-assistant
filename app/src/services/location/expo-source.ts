@@ -19,6 +19,33 @@ import type { PositionAvailability, PositionFix, PositionSource } from './types'
  */
 
 /**
+ * The foreground watch's budget, decided 2026-10-24 (ADR-063).
+ *
+ * **High accuracy.** The platform's default (`Balanced`, roughly 100 m) is close enough to a
+ * kilometre-scale zone's edge to put a picker in the patch next door; `Highest` buys no zone-level
+ * answer for the battery it costs.
+ *
+ * **A fix at most once a minute, and only after 50 m of movement.** The distance filter keeps a
+ * stay from becoming a stream; the 60 s ceiling keeps a moving walk from waking the radio more
+ * often than that on Android. At walking pace 50 m is about 36 s, so a five-minute stay still
+ * yields several fixes — enough to cross a kilometre-scale boundary, and far fewer than the
+ * platform's `High` default (a 2 s interval).
+ *
+ * Both are **limits, not a promise of a periodic fix**: a picker who stands still gets no new fix,
+ * which the tracker already tolerates (a visit stays open until an exit, and no ticker finalises
+ * it — ADR-046), and someone who enters a zone and stops within 50 m of its edge — or leaves one
+ * and stops just outside — may be seen only on their next movement. `timeInterval` is
+ * **Android-only**; iOS applies `distanceInterval` alone,
+ * so a walking iPhone reports every ~50 m rather than at most once a minute. Adding a poller to
+ * even those out would be the ticker ADR-046 deliberately kept out of the tracker.
+ */
+export const POSITION_WATCH_BUDGET = {
+  accuracy: Location.Accuracy.High,
+  distanceIntervalMeters: 50,
+  timeIntervalMs: 60_000,
+} as const;
+
+/**
  * The app's own reading of a platform fix — one function, so every caller sees the same shape and
  * the off-platform tests can assert it without a device.
  */
@@ -58,12 +85,14 @@ export function createDevicePositionSource(): PositionSource {
       let subscription: Location.LocationSubscription | null = null;
 
       Location.watchPositionAsync(
-        // `High` rather than the platform's default (`Balanced`, ~100 m): the thing the app does
-        // with a fix is decide *which zone* the picker is in, and a zone is a small patch of
-        // forest — 100 m of slop would put them in a zone they are not in. The cadence (how often,
-        // how far between fixes, and what the battery may cost) is the app's own choice awaiting
-        // confirmation and is recorded as such (docs/demo-and-stand-ins.md, class D).
-        { accuracy: Location.Accuracy.High },
+        // The budget is the app's own choice, decided 2026-10-24 (ADR-063): high accuracy, a 50 m
+        // distance filter and a 60 s ceiling, foreground only. The constants are named so a future
+        // field measurement has one place to change rather than a literal buried in this call.
+        {
+          accuracy: POSITION_WATCH_BUDGET.accuracy,
+          distanceInterval: POSITION_WATCH_BUDGET.distanceIntervalMeters,
+          timeInterval: POSITION_WATCH_BUDGET.timeIntervalMs,
+        },
         (location) => {
           if (!stopped) onFix(toPositionFix(location));
         },
