@@ -23,10 +23,11 @@ the server implements the same rule and must satisfy the same cases
 
 **Covered, and it is the whole slice:**
 
-1. **Accounts, as identifiers only.** Who the caller is comes from the identity provider decided in
-   [ADR-013](adr/ADR-013-identity-provider.md). The server verifies the caller's ID token and uses
-   its **subject** as the account id. It stores no account row: no email, no phone number, no name,
-   no profile.
+1. **Accounts, as identifiers only.** Who the caller is comes from the identity provider
+   ([ADR-054](adr/ADR-054-the-account-belongs-to-the-api.md): the account row is the API's, the
+   credential Firebase's). The server verifies the caller's ID token and uses its **subject** as the
+   account key. This first slice stores no account row: no email, no phone number, no name, no
+   profile. The v1 account row ADR-054 adds carries a locale and consent timestamps, not those.
 2. **One share, and one access rule.** A picker grants read access to one place (a zone, today) to
    the people they invite, can revoke it, and a recipient becomes one by redeeming the sharer's
    invite link. Who may read what is decided by the rule above, server-side.

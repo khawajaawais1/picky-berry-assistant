@@ -8,12 +8,11 @@ import { createInMemorySessionStore, type SessionStore } from './store';
  * The authentication seam: one port the app acquires, holds and drops a session through, with a
  * stand-in provider behind it until the account service exists.
  *
- * Why it exists: ADR-013 decides Firebase Authentication and PROJECT.md's open question 12 is
- * still open on whether the app talks to Firebase directly or through our own backend. Every
- * screen that needs a signed-in user would otherwise wait for that answer. With a port, the
- * answer changes the **provider** and nothing else: the sign-in screen, the app shell and the
- * profile screen are written against `signIn`, `current` and `signOut` and cannot tell which
- * implementation is behind them.
+ * Why it exists: the account belongs to the team's API and Firebase issues the credential
+ * (ADR-054, which answers PROJECT.md's old question 12). Every screen that needs a signed-in
+ * user would otherwise wait for that service. With a port, the answer changes the **provider**
+ * and nothing else: the sign-in screen, the app shell and the profile screen are written against
+ * `signIn`, `current` and `signOut` and cannot tell which implementation is behind them.
  *
  * What this is not: an authorisation layer. A session says who the user is; **nothing here
  * grants privilege**, and the client is untrusted at all times (SECURITY.md §3–4). When the real

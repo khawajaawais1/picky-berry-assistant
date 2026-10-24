@@ -191,20 +191,23 @@ reports they create.”
 
 | Plan item | This repository today | What closing the gap needs |
 | --- | --- | --- |
-| Map from MapLibre with real zone geometry | **Drawn map**: the design's own geometry with `react-native-svg`, the design's demo zones, no pan/zoom, no device position ([ADR-021](../adr/ADR-021-draw-the-map-from-the-designs-geometry.md)); the real basemap is already planned as self-hosted tiles + MapLibre ([ADR-031](../adr/ADR-031-a-real-basemap-osm-derived-tiles-we-host.md)) | MapLibre + a tile source; `GET /zones`; zone geometry that carries geography (the drawn map's coordinates are the frame's) |
-| API client + TanStack Query | No network client at all; screens read the design's demo values or this device's own records (`services/report-queue.ts`, `services/saved-zones.ts`) | The generated client, a base URL in `src/config/env.ts`, and the first endpoint that returns real data |
+| Map from MapLibre with real zone geometry | **MapLibre over the pilot stub since 2026-10-22** ([ADR-053](../adr/ADR-053-the-discover-map-is-real-geography.md)): screen 06 draws the 50 zones from `data/test_zones.geojson` through a `ZoneSource` port, with five score bands and faded low confidence, and **its card, list and filters read the same answer since 2026-10-23** ([ADR-057](../adr/ADR-057-screen-06-reads-one-zone-source.md)). No basemap or tile source yet ([ADR-031](../adr/ADR-031-a-real-basemap-osm-derived-tiles-we-host.md)); no pan/zoom; frames 08–09 still draw the design's map ([ADR-021](../adr/ADR-021-draw-the-map-from-the-designs-geometry.md)) | The tile host; `GET /zones` behind the same port; the saved plan and frames 08–09 moved onto the source |
+| API client + TanStack Query | TanStack Query's cache is wired for screen 06 since 2026-10-23 (`useZones` reads the `ZoneSource` port, one cached answer per species, validated by zod); still **no network client**: screens read the design's demo values or this device's own records (`services/report-queue.ts`, `services/saved-zones.ts`) | The generated client, a base URL in `src/config/env.ts`, and the first endpoint that returns real data |
 | Drizzle/SQLite cache, outbox, sync engine | A queue of reports on the device (AsyncStorage) written by screen 10, read by screens 11 and 13; nothing is sent | The local database, the outbox table and the sync engine |
 | Routes `(tabs)/map|visits|alerts|profile`, `(auth)/login|register`, `zone/[id]`, `visit/[id]/feedback` | `(app)/discover|visits|alerts|privacy-settings` plus pushed screens `zone-details`, `zone-reports`, `route-to-zone`, `active-visit`, `post-visit-feedback`, `downloads`, `saved-spots`, `account-security`, `terms-privacy`, `your-data`; sign-in and sign-up sit outside the shell | A rename/move of the route tree, or a recording that the design's names are the app's own |
 | Four species (bilberry, lingonberry, cloudberry, crowberry) | Four (`lingonberry`, `bilberry`, `cloudberry`, `crowberry`) since 2026-10-22: the domain list, both catalogues, screen 06's filter chips and screen 10's “More” all name them | Nothing |
 | Zone score 0–100 per species, 5 colour bands, confidence shading, “why this score”, “near me” top 10 | A zone card shows the design's `78 / 100 yield`, “High confidence”, the ripening chip and a report age; the legend names three picking states; scores are the design's sample | Real zone scores, the five bands and their tokens, the confidence rule, the reason list, the ranking |
-| Visits: geofences, dwell 10 min, grace 5 min, background task, local notification, outbox payload | Pure visit rules (`features/visits`: dwell, grace, presence segments) driven by a foreground position port ([ADR-045](../adr/ADR-045-a-position-behind-a-port-and-nothing-kept.md)); no geofencing, no background task, no server | `expo-task-manager` + geofencing, background location permission (ADR-047 §2 is still the owner's decision), and the visit endpoint |
-| Accounts: email + password on FastAPI | Firebase Authentication ([ADR-013](../adr/ADR-013-identity-provider.md)) behind a stand-in session port; screens 03/04 collect an identifier and a code | A decision — two identity providers cannot both be the answer (open question 28) |
+| Visits: geofences, dwell 10 min, grace 5 min, background task, local notification, outbox payload | Pure visit rules (`features/visits`: dwell, grace, presence segments) driven by a foreground position port ([ADR-045](../adr/ADR-045-a-position-behind-a-port-and-nothing-kept.md)); no geofencing, no background task, no server. Background capture is **out of scope for v1** ([ADR-056](../adr/ADR-056-background-capture-is-out-of-scope.md)) | Geofencing and the local notification on the foreground path, the visit endpoint, and the outbox |
+| Accounts: email + password on FastAPI | **Decided 2026-10-23** ([ADR-054](../adr/ADR-054-the-account-belongs-to-the-api.md)): the API owns the account row, Firebase issues the email + password credential behind the stand-in session port. Screens 03/04 still draw an identifier and a code and are re-cut as a password form, a recorded design departure | The screens' re-cut, and the account service's register/login endpoints |
 | Alerts inbox from `GET /alerts`, FCM push with a reason | Frame 12's alert, forecast and preferences as the design's sample | A push transport and the alerts endpoint |
 | My stats from `GET /me/analytics` | Frame 11's season summary and chart are the design's sample; the visit history lists this device's own reports | The analytics endpoint |
 | Profile & privacy: sharing level, background location, offline area, export/delete | Frame 14's rows: saved spots, visit tracking while the app is open, offline centre, account & security, language, terms & privacy, sign out; export through the device's share sheet ([ADR-040](../adr/ADR-040-the-copy-the-app-owes-is-a-document.md)) | The three endpoints and the decisions behind them (sharing level is the unsettled shared-spot model), plus the offline pack manager |
 | Maestro mobile E2E | Playwright harness on the web export ([ADR-018](../adr/ADR-018-measure-layout-in-both-languages.md), [ADR-019](../adr/ADR-019-measure-at-the-largest-system-text-size.md)) | A device/emulator harness |
 | Sentry on app and backend | Nothing | The SDK, a DSN in `config/env.ts`, and a processor decision (GDPR, AGENTS.md §11) |
 | fi + en strings | Finnish + English typed catalogues ([ADR-017](../adr/ADR-017-localization.md)) | Nothing — this is the one row where the two already agree |
+
+The gaps above are cut into owned, ordered tickets in
+[frontend-audit-tickets.md](frontend-audit-tickets.md).
 
 ## 7. What the plan keeps, and what it changes
 
@@ -220,13 +223,17 @@ is the same decision stated on the plan's side.
 
 **Changes or contradicts**:
 
-1. **Identity.** The plan signs in against its own FastAPI with email + password; this repository
-   picked Firebase ([ADR-013](../adr/ADR-013-identity-provider.md)) and holds no password
-   (CONTEXT.md, *Credential*). Both cannot be true.
-2. **The map.** The plan renders MapLibre over real H3 geometry; the screens built so far draw the
-   design's geometry ([ADR-021](../adr/ADR-021-draw-the-map-from-the-designs-geometry.md)). ADR-031
-   already moved the *real* basemap to MapLibre, so this is a question of when the drawn map is
-   retired, not of which renderer wins.
+1. **Identity — resolved 2026-10-23.** The plan signs in against its own FastAPI with email +
+   password; this repository picked Firebase ([ADR-013](../adr/ADR-013-identity-provider.md)) and
+   holds no password (CONTEXT.md, *Credential*). [ADR-054](../adr/ADR-054-the-account-belongs-to-the-api.md)
+   settles it: the API owns the account, Firebase issues the credential, and no password reaches
+   our database.
+2. **The map.** Screen 06 now renders MapLibre over the pilot stub's H3 geometry
+   ([ADR-053](../adr/ADR-053-the-discover-map-is-real-geography.md)); frames 08–09 still draw the
+   design's geometry ([ADR-021](../adr/ADR-021-draw-the-map-from-the-designs-geometry.md)) until a
+   route and a visit's zone have coordinates, and the basemap is still unbuilt
+   ([ADR-031](../adr/ADR-031-a-real-basemap-osm-derived-tiles-we-host.md)). What remains is the
+   tile host and the rest of the data path, not which renderer wins.
 3. **A zone's score vs a visit's score.** The plan calls the zone's 0–100 forecast a **yield
    score**; this repository's glossary uses *Yield score* for the per-visit estimate
    ([CONTEXT.md](../../CONTEXT.md), Scoring). Two meanings need one word each.

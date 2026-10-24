@@ -118,6 +118,19 @@ In this file's terms, the target is:
 | `src/store/` | Zustand stores (UI, settings) | `src/state/`, this file's reserved folder for app-wide composition |
 | `src/i18n/` | fi + en strings | exists as `src/services/i18n/` ([ADR-017](docs/adr/ADR-017-localization.md)) |
 
+**Partly in use (2026-10-23).** `@tanstack/react-query` and `zod` are wired: the Discover
+map's zones are read through `features/discover/hooks/use-zones.ts` over one client per app
+mount (`services/query-client.tsx`, mounted in `src/app/_layout.tsx`), and the `ZoneSource`
+response is validated by `features/discover/domain/zone-schema.ts` before it reaches the map.
+The remaining plan libraries are installed but unused — `zustand`, `react-hook-form`,
+`expo-sqlite` (with its config plugin) and `drizzle-orm` / `drizzle-kit` — and carry no
+store, form or schema yet; those arrive with the seams above, not before. The rest of the
+plan's client stack is deliberately **not** installed
+because it is gated rather than pending: the PMTiles basemap ([ADR-031](docs/adr/ADR-031-a-real-basemap-osm-derived-tiles-we-host.md)),
+background geofencing via `expo-task-manager` ([ADR-056](docs/adr/ADR-056-background-capture-is-out-of-scope.md)),
+FCM via `expo-notifications` (a processor decision) and i18next (the app's own catalogue,
+[ADR-017](docs/adr/ADR-017-localization.md)).
+
 The plan's `app/` group names differ from the routes built here: it draws `(tabs)/map.tsx`,
 `visits.tsx`, `alerts.tsx`, `profile.tsx` and `(auth)/login.tsx`, `register.tsx`; this repository has
 `(app)/discover.tsx`, `visits.tsx`, `alerts.tsx`, `privacy-settings.tsx` and the sign-in and sign-up

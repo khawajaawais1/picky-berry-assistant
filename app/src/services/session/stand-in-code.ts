@@ -11,7 +11,7 @@ import type { AppEnvironment } from '@/config/env';
  * second answer to the same question, and the two would drift.
  *
  * It exists so the flow past screen 04 can be walked while the account service is still to be
- * decided (PROJECT.md, open question 12) and built. It is a **stand-in for an answer only the
+ * built (its shape is decided in ADR-054). It is a **stand-in for an answer only the
  * server may give**: the client never decides whether a credential is valid (SECURITY.md), which
  * is why the rule below is off in a production build, and why this constant goes with it when
  * the API lands.

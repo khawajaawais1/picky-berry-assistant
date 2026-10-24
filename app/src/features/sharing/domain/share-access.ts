@@ -45,8 +45,9 @@ import type { DemoZone } from '@/features/discover';
 /**
  * One picker's grant of read access, as the server keeps it.
  *
- * The identifiers are accounts as the identity provider named them (ADR-013: its token's subject),
- * which is the only account name this rule trusts — never a value a client sent to be believed.
+ * The identifiers are accounts as the identity provider named them (ADR-054: the provider's subject
+ * keys the account), which is the only account name this rule trusts — never a value a client sent
+ * to be believed.
  *
  * What a viewer is *told* about the sharer is not part of this type: whether the sharer's name
  * travels with a share is one of question 26's open parts, so nothing here decides it, and the

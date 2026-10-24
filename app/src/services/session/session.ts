@@ -5,7 +5,7 @@
  * asked about. That is what makes expiry testable without waiting an hour, and what lets the
  * port and a screen agree on one answer instead of each computing it.
  *
- * A session is a claim about **who the user is** (ADR-013: a valid token proves identity, never
+ * A session is a claim about **who the user is** (ADR-054: a valid token proves identity, never
  * privilege), so the reader below is strict in one direction only: anything the app cannot
  * understand is no session. It is never the other way round — unreadable data must not read as
  * an account, for the same reason an unreadable consent must not read as agreement.
@@ -20,11 +20,11 @@
  * How long a session the stand-in issues is good for.
  *
  * **A stand-in value, not a decision.** The real lifetimes are the provider's — Firebase issues
- * an ID token for an hour and refreshes it behind a longer-lived refresh token (ADR-013), and
- * how the app's own session relates to those two is part of open question 12. An hour is chosen
- * here because it is the length the decided provider actually uses, so a screen built against
- * this number is not built against a fiction; when the account service lands, the value comes
- * from the provider and this constant goes with the stand-in.
+ * an ID token for an hour and refreshes it behind a longer-lived refresh token (ADR-054), and the
+ * app's own session is that pair held through the port rather than a second lifetime of ours. An
+ * hour is chosen here because it is the length the decided provider actually uses, so a screen
+ * built against this number is not built against a fiction; when the account service lands, the
+ * value comes from the provider and this constant goes with the stand-in.
  */
 export const SESSION_LIFETIME_MS = 60 * 60 * 1000;
 

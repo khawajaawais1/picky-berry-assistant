@@ -61,9 +61,9 @@ export type AccountSecurityScreenProps = {
  * that is past its time and reports nobody, so the user would meet a signed-out app with no account
  * of how they got there (PROJECT.md, known issue 25).
  *
- * What it deliberately does not do: it does not extend, refresh or re-issue anything. There is no
- * provider to refresh against (open question 12), so a session that has ended is one the user signs
- * into again.
+ * What it deliberately does not do: it does not extend, refresh or re-issue anything. No provider is
+ * wired behind the port yet (ADR-054 decides which), so a session that has ended is one the user
+ * signs into again.
  */
 export function AccountSecurityScreen({ onBack, onSignIn, onSignOut }: AccountSecurityScreenProps) {
   const { colors } = useAppTheme();
@@ -202,7 +202,7 @@ export function AccountSecurityScreen({ onBack, onSignIn, onSignOut }: AccountSe
             value={t('privacy.accountSecurity.session.where.value')}
           />
           {/* The hour is the stand-in's `SESSION_LIFETIME_MS`, which is the provider's own token
-              length rather than a preference (ADR-013, ADR-028); the screen's test asserts the two
+              length rather than a preference (ADR-054, ADR-028); the screen's test asserts the two
               stay in step. */}
           <InfoRow
             hint={t('privacy.accountSecurity.session.lifetime.hint')}

@@ -319,15 +319,26 @@ filtered-out zone leaves nothing behind, because a label left on the map is a zo
 to have found), the list behind the toggle holds the same zones, and a line under the two controls
 says how many are left — or that none is, which the frame does not draw and a filter still needs.
 
-Three departures belong to this screen, all recorded in PROJECT.md. The frame paints its first
+**The map is no longer the frame's drawing** (2026-10-22,
+[ADR-053](adr/ADR-053-the-discover-map-is-real-geography.md)): screen 06 renders the data team's 50
+pilot zones from `data/test_zones.geojson` through a `ZoneSource` port — MapLibre on the device, the
+same rings as an SVG on the web export — and colours them by five yield-score bands rather than the
+frame's three states. The frame's lake name, scale line and per-zone identifiers therefore have no
+counterpart on screen 06; the place name stays, and a count line says how many zones are drawn and
+that they are test data. **The card and the list read the same source** since 2026-10-23
+([ADR-057](adr/ADR-057-screen-06-reads-one-zone-source.md)): the card names the first zone the
+search left, prints that zone's score for the chosen berry, its confidence and its ripeness, under
+the caption “Pilot area · test data”; the list rows do the same for every zone kept. The species
+chips choose the **score layer**, one berry at a time, and the field filters by the zone's name.
+Two things the frame draws are gone with the sample and recorded in PROJECT.md: the card's walking
+distance and report age (nothing supplies them), and its chevron into screen 07, which still
+describes the demo zone. The demo card survives only in the community-map prototype.
+Five departures belong to this screen, all recorded in PROJECT.md. The frame paints its first
 chip as chosen while drawing every zone on its map; the app opens with **no chip chosen**, because
 a chip painted chosen while nothing has been filtered away would claim a filter that is not in
-effect. The frame's **recentre control is not drawn** — the map does not pan or follow the device,
-so there is nothing to recentre — and its **sliders glyph inside the field is not drawn**, because
-the filter it would open is the chip row sitting directly beneath the field. The species the demo
-composition assigns are the frame's for zone 14 alone (its card reads “Zone 14 · Lingonberry”);
-zones 09 and 21 are given bilberry and cloudberry so that two of the frame's three chips are not
-dead, which is demo data like the zones themselves. Its OS status bar and home indicator belong to
+effect. The frame's **recentre control is not drawn** — every map gesture is off until the control
+exists — and its **sliders glyph inside the field is not drawn**, because the filter it would open
+is the chip row sitting directly beneath the field. Its OS status bar and home indicator belong to
 the device, and its **core navigation** is the app shell (ADR-022).
 
 The frame's icons (`search`, `sliders-horizontal`, `map`, `bell`, `user-round`, `list`,
@@ -336,11 +347,12 @@ glyphs, as on every screen so far.
 
 ### Screen 07, as extracted
 
-Frame 07 (node `5:23032`) is what the picker sees before walking out of the door: the same demo
-zone frame 06's card is about — “Zone 14 · Laajavuori”, the unpicked one the map badges with
-`78` — with the yield score behind that number, the confidence in it, the week's reports, today's
-conditions and the freshest report from the field. It is reached from that card, which draws the
-chevron the frame draws on it.
+Frame 07 (node `5:23032`) is what the picker sees before walking out of the door: the design's demo
+zone — “Zone 14 · Laajavuori”, the unpicked one the frame's map badges with `78` — with the yield
+score behind that number, the confidence in it, the week's reports, today's conditions and the
+freshest report from the field. It is reached by its URL and from the saved plan; screen 06's card
+no longer opens it, because that card reads the source zones now and this screen still describes
+the design's sample (ADR-057).
 
 Values measured on node `5:23032` that are now tokens in `src/constants/theme.ts`: the season
 photograph (342×154 at the card radius, exported to `assets/images/zone-season.png`), the yield

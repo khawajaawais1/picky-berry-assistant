@@ -89,7 +89,10 @@ The real geographic map: OpenStreetMap-derived vector tiles (Protomaps PMTiles, 
 `data/` pipeline) **the project hosts itself**, drawn by MapLibre React Native, with real zone
 geometry on it
 ([ADR-031](docs/adr/ADR-031-a-real-basemap-osm-derived-tiles-we-host.md)). It does not exist in the
-app yet — no screen reads a zone from the API — so the drawn map is what stands in until one does.
+app yet — there is no tile host, so the map paints a ground colour and the zone polygons. Screen 06
+is real geography over the pilot stub's rings through a `ZoneSource` port
+([ADR-053](docs/adr/ADR-053-the-discover-map-is-real-geography.md)); frames 08–09 still draw the
+design's map. “The drawn map” now means only that drawing, not the app's whole map surface.
 _Avoid_: OSM, OpenStreetMap (that is the data's source, not the surface), tile server, Google Maps
 
 ## Species
@@ -143,10 +146,12 @@ record), account (who the user is, which outlives one session), signed-in user (
 thing)
 
 **Credential**:
-What a caller offers in exchange for a session: an identifier (an email address or phone number)
-and the code that was sent to it. The app holds no password — the provider verifies credentials
-(ADR-013) — and the client never decides whether a credential is valid.
-_Avoid_: password, secret, login, code (a code is part of a credential, not the whole of one)
+What a caller offers in exchange for a session: an email address and a password, verified by the
+identity provider, which opens the **Account** the API owns ([ADR-054](docs/adr/ADR-054-the-account-belongs-to-the-api.md)).
+The app sends the password only to the provider, stores none and holds no hash; the client never
+decides whether a credential is valid. A code was the design's credential and is not v1's — phone
+sign-in is deferred, so a code survives only as that branch's word.
+_Avoid_: secret, login, hash (the app holds none), code (not v1's credential)
 
 **Stand-in**:
 An implementation that answers for a service that does not exist yet, accepted for exactly as

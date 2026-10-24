@@ -57,7 +57,7 @@ says so, not that this repository records it.
 | # | Value | Screens | Disclosed on screen | Lives in |
 | - | ----- | ------- | ------------------- | -------- |
 | A1 | `EXAMPLE_NAME` `'Aino Korhonen'`, `EXAMPLE_EMAIL` `'aino@example.fi'` | 03 (as placeholders, never pre-filled); 04 (the destination named on a cold start) | Yes — they are placeholders, not a filled form | `src/features/onboarding/domain/example-values.ts` |
-| A2 | `DEMO_ZONES` — Z14 unpicked score 78 · Z09 recently picked · Z21 ripening; place “Laajavuori” | 06 map, legend, zone card; 07–10 read the same zone | **Yes**: eyebrow `CORE PICKER · SEASON DEMO / 28 AUG` and the map's own `━━ 200 m · Season demo` | `src/features/discover/domain/zone.ts:61` |
+| A2 | `DEMO_ZONES` — Z14 unpicked score 78 · Z09 recently picked · Z21 ripening; place “Laajavuori” | 06's card, list and filters; 07–10 read the same zone. **No longer the map**: since 2026-10-22 screen 06's map reads the pilot stub through `ZoneSource` (B7, ADR-053) | **Yes**: eyebrow `CORE PICKER · SEASON DEMO / 28 AUG`, and the map's own `50 zones · test data` line | `src/features/discover/domain/zone.ts:61` |
 | A3 | `DEMO_ZONE_DETAILS` — score 78, high confidence, 11 reports this week, ripe, 18 °C light wind 08:00, a trusted report 38 min old at 4/5 | 07; and the list behind its “See all 11”, where the eleven are stated as the design's sample week (their count is read from the zone's own figures, so the card and the line cannot disagree) | **Yes**, since 2026-10-10: screen 07's eyebrow `CORE PICKER · ZONE INSIGHT · SEASON DEMO`, beside the frame's forecast disclaimer; the list's eyebrow carries the same disclosure, and its own sentence names the week as the design's (ADR-044) | `zone-details.ts:65` |
 | A4 | `DEMO_ROUTE` — 1400 m, 22 min, arrival 10:03, keep right in 180 m | 08; and frame 07's “Navigate · 1.4 km” | **Yes**, since 2026-10-10: eyebrow `… · WALKING ROUTE · SEASON DEMO`, and the same change removed the note's claim that tiles are cached (see F2) | `route.ts:33` |
 | A5 | `DEMO_ACTIVE_VISIT` — 42 min 17 s | 09 (the timer is **seeded** from it: `Date.now() - elapsedMs`), 10 | **Yes**, since 2026-10-10: eyebrow `… · VISIT IN PROGRESS · SEASON DEMO` | `active-visit.ts:13` |
@@ -68,9 +68,9 @@ says so, not that this repository records it.
 | A10 | `DEMO_ALERT` — ripe bilberries 1.8 km north, 82/100, high confidence, Zone 18 Laajavuori, latest report 1 h ago, stamped `TODAY · 28 AUG · 09:30` | 12 | **Yes**, since 2026-10-10: eyebrow `… · FORECAST REASONING · SEASON DEMO`, and the closing note says the alert is a sample (see F2) | `alert.ts:33` |
 | A11 | `DEMO_ALERT_REASON_COUNT` = 3 (“A warm week”, “Rain on Sunday”, “Last picked 6 days ago”) | 12 | **Yes**, with A10's eyebrow | `alert.ts:53` |
 | A12 | `DEMO_LISTINGS` — Matti Laine 4.9/24, Liisa Niemi 4.8/18, €8/kg, €6/kg, 20 kg, 8 kg; `DEMO_LISTING_DETAIL` — harvested 28 Aug 2026, Laajavuori car park 17:00–19:00; `DEMO_ORDER` — 5 kg, €40 held, pickup 18:30; `DEMO_THREAD` — four messages 14:02–14:06 | 15–18 | **Yes, on all four**: the common `Planned extra` chip (frame 15 `5:23793`, 16 `5:23846`, 17 `5:23897`, 18 `5:23949`), plus `Buyer mode · Preview` (15) and `Provider test mode` + “Test order confirmed · No real money was charged. Demo payment is held by the provider.” (18) | `src/features/marketplace/domain/{listing,order,chat}.ts` |
-| A13 | The map's geometry — the three zone polygons, the position marker, the route line | 06, 08, 09 | Covered by A2's disclosure | `zone-map-geometry.ts` (ADR-021) |
+| A13 | The design map's geometry — the three zone polygons, the position marker, the route line | 08, 09 (screen 06 draws real geography since ADR-053) | Covered by A2's disclosure | `zone-map-geometry.ts` (ADR-021) |
 | A14 | `ACTIVE · LINGONBERRY` (09) and `28 Aug` inside 10's exit summary (`discover.visit.status`, `report.exit.body`) | 09, 10 | Covered by A5's and A6's eyebrows since 2026-10-10; the two strings are still the design's own words, and `28 Aug` is still printed as a date (F3) | `locales/en.ts` |
-| A15 | `discover.map.place` `'Laajavuori'`, `discover.map.lake` `'Tuomiojärvi'` | 06–10 | Covered by A2 | `locales/en.ts:114-115` |
+| A15 | `discover.map.place` `'Laajavuori'`, `discover.map.lake` `'Tuomiojärvi'` | the lake name on 08–09's drawing; the place name on 06–10 (on 06 it names the pilot area the real map frames) | Covered by A2 | `locales/en.ts:114-115` |
 | A16 | `DEMO_DOWNLOADS` — 12 km², 86 MB of 500, 24 zones' tiles, a forecast saved 28 Aug 08:00, last sync 08:12 | 13 | **Yes**, since 2026-10-11: the eyebrow's `· SEASON DEMO` and the screen's own sentence above the block saying these are the design's sample and nothing is downloaded (ADR-042) | `features/offline/domain/downloads.ts` |
 | A17 | `DEMO_ALERT_PREFERENCES` — ripe-berry push alerts on, a 3 km search radius, quiet hours 21:00–07:00, bilberry + 1 species | 12 | **Yes**, since 2026-10-11: the eyebrow's `· SEASON DEMO` and a line **on the card itself** saying the four settings are the design's and that nothing reads them; the switch is a figure with no role and the three rows are readings (ADR-043) | `features/discover/domain/alert.ts` |
 
@@ -81,11 +81,12 @@ says so, not that this repository records it.
 | # | Stand-in | What it stands in for | Gate | Swap point |
 | - | -------- | --------------------- | ---- | ---------- |
 | B1 | `verifyCode` / `STUB_CODE` | The account service's answer to “is this the code we sent?” | **Production: accepts nothing** (G1) | Delete with the API; both callers already read it (screen 04 and the port) |
-| B2 | `createStandInSessionPort` behind the `SessionPort` seam (`signIn`, `current`, `signOut`) | Firebase Authentication, or our own backend in front of it (ADR-013; PROJECT.md question 12) | Production: no credential is accepted, so no session is ever minted | The provider behind the port; no screen changes (ADR-028) |
+| B2 | `createStandInSessionPort` behind the `SessionPort` seam (`signIn`, `current`, `signOut`) | The account service and Firebase's credential — the account is the API's, the credential the provider's (ADR-054) | Production: no credential is accepted, so no session is ever minted | The real adapter behind the port; no screen changes (ADR-028) |
 | B3 | `createInMemorySessionStore` | A session store that survives the process | Not gated — the value is not a door, it is a session that vanishes on reload | `src/services/session/store.ts`; ADR-006's secure adapter is not installed (`expo-secure-store` is not a dependency) |
 | B4 | `pending-verification.ts` — the destination the code is for, held in a module-level variable | The code request answering with what screen 04 should say | Not gated. It carries **an email address or phone number in memory** for the process's lifetime | Deleted with the API; already documented as temporary |
 | B5 | `DEFAULT_VISIT_POLICY` — `default-1`, 5 min dwell, 30 min grace, 1 day | The server-owned policy payload `parseVisitPolicy` validates | Not wired to any screen. `features/visits` is imported by nothing and `expo-location` is not installed | Replace with the fetched policy |
 | B6 | No transport behind `src/services/report-queue.ts` | The sync the design's “sync when you're online” promises | Not gated — the queue holds the picker's own data and never drains. Nothing can reach the `synced` state the design draws | ADR-005; the queue stays as the capture half |
+| B7 | `assets/data/test-zones.json` behind the `ZoneSource` port (`services/test-zone-source.ts`) — the data team's 50-zone stub around Laajavuori, a copy of `data/test_zones.geojson` kept equal by a test | The zone service's `GET /zones` | **Not gated**: the scores are stand-ins, and the map and card say `test data` on the screen itself. No network, no location and nothing sent | The service's adapter behind the same port; no screen changes (ADR-053, ADR-057) |
 
 ---
 
@@ -177,7 +178,8 @@ no role, and a figure nothing measures is not printed.
 - Frames 06 and 09: the **recentre control** — its whole meaning is “centre the map on my
   position”, the app reads no position for any screen yet (the seam exists since 2026-10-12,
   [ADR-045](adr/ADR-045-a-position-behind-a-port-and-nothing-kept.md), and no screen asks it for a
-  fix) and its map is a fixed drawing that does not pan or follow (ADR-021). A button on the map (06) and one under it (09)
+  fix) and its map neither pans nor follows the device — on screen 06 it is real geography with
+  every gesture off (ADR-053), on 09 it is still the design's drawing (ADR-021). A button on the map (06) and one under it (09)
   would look operable and act on nothing, so both stay out. What they wait on is more than a
   position source and a map that moves: on 2026-10-12 a reading of the drawing found it carries no
   latitude or longitude at all (its paths are the frame's own 342×300 coordinates), so a real fix

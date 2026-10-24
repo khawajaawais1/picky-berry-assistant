@@ -77,8 +77,12 @@ first needed.
 - [`../data/test_zones.geojson`](../data/test_zones.geojson) — 50 zones around Laajavuori in
   the exact `GET /api/v1/zones?species=bilberry` shape. It is the app's mock until the
   backend serves zones.
-- Basemap: `picky-data basemap --scope pilot` (owner: Awais) → a `pmtiles://` source
-  for MapLibre. The drawn map is what ships until then (ADR-021, ADR-031).
+- The app bundles that file (`assets/data/test-zones.json`) and draws it with MapLibre on the
+  device, the same rings on the web export ([ADR-053](docs/adr/ADR-053-the-discover-map-is-real-geography.md)).
+  MapLibre is not in Expo Go: seeing screen 06 on a device needs a development build
+  (`npx expo run:ios` / `eas build --profile development`). There is no basemap yet
+  ([ADR-031](docs/adr/ADR-031-a-real-basemap-osm-derived-tiles-we-host.md)); frames 08–09 still
+  draw the design's map (ADR-021).
 
 ## Where the app sits in the feature catalogue
 
