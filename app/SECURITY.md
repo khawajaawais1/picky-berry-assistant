@@ -4,8 +4,8 @@ The permanent security baseline. These requirements are mandatory for every
 change unless a documented technical analysis shows a control is not applicable
 to this project — in which case record that analysis here or in an ADR.
 
-Last updated: 2026-10-08 (initialization; §16 EU data protection added for the GDPR
-requirement, see AGENTS.md §11).
+Last updated: 2026-10-25 (Android backup and the deep-link surface recorded from a
+mobile-checklist review; dependency advisories in §17).
 
 ## 1. Threat model in one paragraph
 
@@ -174,6 +174,14 @@ source maps where that leaks implementation detail.
   traffic.
 - Deep links and push payloads are untrusted input: validate route parameters
   before use.
+- Android auto-backup is **off** (`android.allowBackup: false`). With it on — Expo's prebuild
+  default, so the key has to be written — the OS would copy the app's private files, the
+  `AsyncStorage` records included, into the user's cloud backup, although the copy on screen says
+  they stay on this phone. `src/config/__tests__/app-hardening.test.ts` holds the setting.
+- The `picky://` scheme is a deep-link surface: another app or a page can open any route.
+  Onboarding is **not** an authentication boundary, and nothing the app stores today is
+  protected by it; route-level gating has to arrive with the account service (ADR-028), not be
+  assumed from the journey.
 
 ## 13. ML and AI boundaries
 
@@ -289,6 +297,10 @@ Implemented in this repository:
   deletion that fails leaves the user signed in with their data intact rather than signed out of
   an account the app did not manage to clear (`src/services/sign-out.ts`; the assumption is
   recorded as PROJECT.md known issue 29).
+- **Android auto-backup is off** (`android.allowBackup: false`), so the records above are not
+  copied off the device by the OS. `src/config/__tests__/app-hardening.test.ts` asserts that
+  setting, the foreground-only permission list, and the absence of a blanket iOS cleartext
+  exception.
 
 The Discover map's **zone cache** (`picky.zones-cache.v1`) also lives on the device, and is not
 one of the four records above: it holds the service's public zone geometry and scores — no
@@ -297,8 +309,18 @@ while the map has been opened within the previous week, and removed when the app
 cleared or the app is uninstalled
 (`src/features/discover/services/zone-cache.ts`).
 
+**Dependency advisories (2026-10-25).** `npm audit --omit=dev` reports 5 high and 5 moderate
+advisories, reached through Expo's CLI and build tooling (`@expo/cli`, `node-forge`, `zod`) and
+through `tailwindcss`/`nativewind`/`postcss-selector-parser`. npm offers only major version
+changes — including a downgrade to Expo 54, the wrong direction for this SDK 58 app — so they are
+recorded here as a review item rather than patched silently; re-run the audit before a release
+and decide each one.
+
 Not implemented (blocking feature work):
 
 - Authentication/authorisation, secure credential storage, API client, TLS
   pinning policy, privacy enforcement, file-upload validation, rate limiting,
   secret scanning in CI, crash reporting.
+- Route-level access control: the app shell gates nothing and a deep link can open any route.
+  Onboarding is a journey, not an authentication boundary; gating has to arrive with the account
+  service (ADR-028), not be bolted onto a journey later.

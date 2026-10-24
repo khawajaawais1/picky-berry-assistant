@@ -60,7 +60,7 @@ picky-berry-assistant/
 
 | Folder | Status |
 |--------|--------|
-| `app/` | ✅ Expo app: every v1 design screen, 119 suites / 1191 tests, layout + accessibility + native bundle CI; MapLibre draws the pilot stub's zones — a basemap and the zone service are next ([`app/README.md`](app/README.md)) |
+| `app/` | ✅ Expo app: every v1 design screen, 120 suites / 1194 tests, layout + accessibility + native bundle CI; MapLibre draws the pilot stub's zones — a basemap and the zone service are next ([`app/README.md`](app/README.md)) |
 | `data/` | ✅ Pipelines for 6.2 + 28 tests; 50 stub zones committed; the real backfill and bucket upload are not run |
 | `docker/` | 🟡 Postgres 17 + PostGIS + h3 image and dev compose defined; no CI build |
 | `backend/`, `ml/`, `ontology/`, `deploy/` | ⬜ Planned layout in each README; no code in any of them yet |

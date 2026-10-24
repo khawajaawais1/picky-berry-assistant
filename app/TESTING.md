@@ -174,7 +174,7 @@ Maestro is added it will run on a build artifact rather than on every pull reque
 
 ## 11. Current state
 
-119 suites, 1,191 tests, all passing (2026-10-25), plus 200 browser checks in the development
+120 suites, 1,194 tests, all passing (2026-10-25), plus 200 browser checks in the development
 export (211 when the harness's own 11 measurement probes are counted) and 4 in the production one
 (`npm run test:layout`, §12, last measured 2026-10-24). Every app-drawn
 screen the design never drew is measured there — the sign-in screen, frame 14's two destinations,

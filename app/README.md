@@ -39,7 +39,7 @@ npm run build:native     # export the iOS and Android JavaScript bundles
 ```
 
 Current state (measured in `app/` on 2026-10-25): typecheck, lint and format are clean and Jest
-passes **119 suites / 1,191 tests**; `npm run test:layout` measures every built screen in both
+passes **120 suites / 1,194 tests**; `npm run test:layout` measures every built screen in both
 languages and at both text sizes, over the same screens, the app shell's destinations and the
 built flow from the walk through the report to the queued row; `npm run build:native` exports
 the iOS and Android bundles.
