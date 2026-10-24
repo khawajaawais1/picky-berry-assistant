@@ -16,9 +16,9 @@ import { OnboardingCreateAccountScreen } from '../create-account-screen';
 // eslint-disable-next-line import/first
 import { OnboardingLocationConsentScreen } from '../location-consent-screen';
 // eslint-disable-next-line import/first
-import { OnboardingSignInScreen } from '../sign-in-screen';
+import { OnboardingForgotPasswordScreen } from '../forgot-password-screen';
 // eslint-disable-next-line import/first
-import { OnboardingVerificationScreen } from '../verification-screen';
+import { OnboardingSignInScreen } from '../sign-in-screen';
 // eslint-disable-next-line import/first
 import { OnboardingWelcomeScreen } from '../welcome-screen';
 
@@ -41,32 +41,68 @@ describe('screens on a Finnish device', () => {
 
   it('renders the sign-in screen in Finnish, which the design never drew', async () => {
     // The app's own screen (ADR-034), so its copy is the catalogue's like every other screen's —
-    // and Finnish is the language where a word that does not fit is found.
-    await render(<OnboardingSignInScreen onSendCode={() => {}} />);
+    // and Finnish is the language where a word that does not fit is found. Since 2026-10-24 the
+    // credential is email + password (ADR-054, ADR-059).
+    await render(<OnboardingSignInScreen onSignIn={async () => false} />);
 
     expect(screen.getByText('KÄYTTÖÖNOTTO · KIRJAUDU SISÄÄN')).toBeOnTheScreen();
-    expect(screen.getByText('Kirjaudu sisään')).toBeOnTheScreen();
-    expect(screen.getByText('Kirjaudu sisään koodilla.')).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        'Yksi tunnus, sitten kuusi numeroa. Ei salasanaa muistettavaksi — eikä vuodettavaksi.',
-      ),
-    ).toBeOnTheScreen();
-    expect(screen.getByText('Sähköposti tai puhelin')).toBeOnTheScreen();
-    expect(screen.getByText('Jatka koodilla')).toBeOnTheScreen();
+    // The screen's title and its action are the same word, as they are in English.
+    expect(screen.getAllByText('Kirjaudu sisään').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Tervetuloa takaisin.')).toBeOnTheScreen();
+    expect(screen.getByText('Syötä sähköposti ja salasana, joilla loit tilin.')).toBeOnTheScreen();
+    expect(screen.getByText('Sähköpostiosoite')).toBeOnTheScreen();
+    expect(screen.getByText('Salasana')).toBeOnTheScreen();
+    expect(screen.getByText('Unohditko salasanan?')).toBeOnTheScreen();
     expect(screen.getByText('Minulla ei ole vielä tiliä')).toBeOnTheScreen();
 
-    expect(screen.queryByText('Continue with a code')).not.toBeOnTheScreen();
-    expect(screen.queryByText('Sign in with a code.')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Welcome back.')).not.toBeOnTheScreen();
+    expect(
+      screen.queryByText('Enter the email and password you signed up with.'),
+    ).not.toBeOnTheScreen();
+  });
+
+  it('renders the password-reset request in Finnish, the test-build note included', async () => {
+    // The app's own journey (ADR-062): the sign-in service owns the link, and the note says no
+    // email is sent in a build with no service — in Finnish too, where the sentence is longer.
+    await render(<OnboardingForgotPasswordScreen onRequestReset={async () => true} />);
+
+    expect(screen.getByText('KÄYTTÖÖNOTTO · SALASANAN PALAUTUS')).toBeOnTheScreen();
+    expect(screen.getByText('Palauta salasana')).toBeOnTheScreen();
+    expect(screen.getByText('Unohditko salasanasi?')).toBeOnTheScreen();
+    expect(screen.getByText('Sähköpostiosoite')).toBeOnTheScreen();
+    expect(screen.getByText('Pyydä palautuslinkki')).toBeOnTheScreen();
+
+    expect(screen.queryByText('Reset password')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Forgot your password?')).not.toBeOnTheScreen();
+  });
+
+  it('renders the reset confirmation in Finnish, without claiming a delivery', async () => {
+    await render(<OnboardingForgotPasswordScreen onRequestReset={async () => true} />);
+
+    await fireEvent.changeText(screen.getByLabelText('Sähköpostiosoite'), 'aino@example.fi');
+    await fireEvent.press(screen.getByRole('button', { name: 'Pyydä palautuslinkki' }));
+
+    expect(await screen.findByText('Palautuspyyntö vastaanotettu.')).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        'Jos osoitteella aino@example.fi on tili, seuraava vaihe on kirjautumispalvelun palautuslinkki tähän osoitteeseen. Sovellus ei koskaan tallenna salasanaasi.',
+      ),
+    ).toBeOnTheScreen();
+    expect(screen.getByText('Testiversio')).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        'Kirjautumispalvelua ei ole kytketty tähän versioon, joten palautussähköpostia ei lähetetä. Valmiissa sovelluksessa linkki menisi tähän osoitteeseen.',
+      ),
+    ).toBeOnTheScreen();
   });
 
   it('renders the create-account screen in Finnish, accessibility labels included', async () => {
-    await render(<OnboardingCreateAccountScreen onBack={() => {}} onSubmit={() => {}} />);
+    await render(<OnboardingCreateAccountScreen onBack={() => {}} onSubmit={async () => true} />);
 
     expect(screen.getByText('KÄYTTÖÖNOTTO · 03 / 05')).toBeOnTheScreen();
     expect(screen.getByText('Luo tilisi')).toBeOnTheScreen();
     expect(screen.getByText('Pieni esittely.')).toBeOnTheScreen();
-    expect(screen.getByText('Sähköposti')).toBeOnTheScreen();
+    expect(screen.getByText('Sähköpostiosoite')).toBeOnTheScreen();
     expect(screen.getByText('Nimesi')).toBeOnTheScreen();
     expect(screen.getByText('Salasana')).toBeOnTheScreen();
     expect(screen.getByText('Vähintään 8 merkkiä, sisältää numeron.')).toBeOnTheScreen();
@@ -82,69 +118,10 @@ describe('screens on a Finnish device', () => {
       }),
     ).toBeOnTheScreen();
 
+    // The frame's phone chip is gone with the phone flow: the form is email-only.
+    expect(screen.queryByText('Puhelinnumero')).not.toBeOnTheScreen();
     expect(screen.queryByText('Create your account')).not.toBeOnTheScreen();
     expect(screen.queryByText('Back')).not.toBeOnTheScreen();
-  });
-
-  it('renders the verification screen in Finnish, naming the address the code belongs to', async () => {
-    // The refusal is the one failure line this screen has, and it is Finnish like the rest:
-    // the route behind it is where a code is actually answered (`src/services/session/`), so
-    // the screen is given a reporter that refuses the code.
-    await render(
-      <OnboardingVerificationScreen
-        destination="aino@example.fi"
-        destinationKind="email"
-        onSubmitCode={async () => false}
-      />,
-    );
-
-    expect(screen.getByText('KÄYTTÖÖNOTTO · 04 / 05')).toBeOnTheScreen();
-    expect(screen.getByText('Vahvista sähköpostisi')).toBeOnTheScreen();
-    expect(screen.getByText('Vahvista, että olet sinä.')).toBeOnTheScreen();
-    expect(screen.getByText('Syötä 6-numeroinen koodi aino@example.fi varten.')).toBeOnTheScreen();
-    expect(screen.getByText('Vahvistuskoodi')).toBeOnTheScreen();
-    expect(
-      screen.getByText('Koodi vanhenee 10 minuutissa. Älä jaa sitä kenellekään.'),
-    ).toBeOnTheScreen();
-    expect(screen.getByText('Vahvista ja jatka')).toBeOnTheScreen();
-    // No resend row here: this screen was given nobody who can send a code, so the frame's
-    // row is absent rather than counting down to a press that cannot act (ADR-048).
-    expect(screen.queryByText('Lähetä koodi uudelleen · saatavilla')).not.toBeOnTheScreen();
-    expect(screen.getByText('Vaihda sähköpostiosoite')).toBeOnTheScreen();
-    expect(screen.getByText('Rekisteröidyitkö puhelimella?')).toBeOnTheScreen();
-    expect(
-      screen.getByText('Sama kuusinumeroinen vaihe vahvistaa puhelinnumeron.'),
-    ).toBeOnTheScreen();
-
-    expect(screen.getByLabelText('Vahvistuskoodi')).toBeOnTheScreen();
-    expect(screen.queryByText('Confirm it’s you.')).not.toBeOnTheScreen();
-    expect(screen.queryByText('Verify & continue')).not.toBeOnTheScreen();
-
-    // The failure the frame does not draw, in Finnish: the code the app had to refuse is a
-    // sentence the user reads, so it is translated like every other line on the screen.
-    await fireEvent.changeText(screen.getByLabelText('Vahvistuskoodi'), '482169');
-    await fireEvent.press(screen.getByTestId('verification-action'));
-
-    expect(
-      screen.getByText('Koodi ei täsmää. Tarkista kuusi numeroa ja yritä uudelleen.'),
-    ).toBeOnTheScreen();
-  });
-
-  it('renders screen 04 in Finnish for a number, which the frame does not draw', async () => {
-    // Screen 03 offers both identifiers and the frame draws one state, so the state it does not
-    // draw has its own words — the app's, in both languages (ADR-049 §3.1–§3.2, assumed 2026-10-13).
-    // Finnish is where a title that grew by a word is found, and it is measured by the harness.
-    await render(
-      <OnboardingVerificationScreen destination="+358 40 123 4567" destinationKind="phone" />,
-    );
-
-    expect(screen.getByText('Vahvista puhelinnumerosi')).toBeOnTheScreen();
-    expect(screen.getByText('Vaihda puhelinnumero')).toBeOnTheScreen();
-    expect(screen.getByText('Syötä 6-numeroinen koodi +358 40 123 4567 varten.')).toBeOnTheScreen();
-
-    expect(screen.queryByText('Vahvista sähköpostisi')).not.toBeOnTheScreen();
-    expect(screen.queryByText('Vaihda sähköpostiosoite')).not.toBeOnTheScreen();
-    expect(screen.queryByText('Rekisteröidyitkö puhelimella?')).not.toBeOnTheScreen();
   });
 
   it('renders the location-consent screen in Finnish, consent included', async () => {

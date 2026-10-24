@@ -1,21 +1,22 @@
 /**
  * Public API of the `onboarding` feature.
  *
- * Screens 01–05 of the design live in this flow: welcome, role, account, verification
- * and location consent. It also holds the **sign-in screen**, which the design never drew: the
- * links on frames 01 and 03 had no destination until the design owner chose the reading it is
- * built from (ADR-034). Everything else in this folder is an implementation detail, so routes
- * import only from here.
+ * Screens 01, 03 and 05 of the design live in this flow — welcome, account and location consent.
+ * **Screen 04 (verification) is retired**: the account's credential is the email + password screen
+ * 03 collects, so there is no code screen for the flow to walk (ADR-054, ADR-059). The flow also
+ * holds the **sign-in screen** and the **password-reset journey**, neither of which the design
+ * drew: the links on frames 01 and 03 had no destination until the design owner chose the reading
+ * the sign-in screen is built from (ADR-034), and the reset screen is the app's own request step
+ * while the provider owns the link (ADR-062). Everything else in this folder is an implementation
+ * detail, so routes import only from here.
  */
 export {
   EMPTY_CREATE_ACCOUNT_FORM,
-  applyIdentifierMode,
   isSubmittable,
   type CreateAccountForm,
-  type IdentifierMode,
 } from './domain/create-account-form';
 
-/** The design's example values, which screen 04 falls back to on a cold start. */
+/** The design's example values, which screen 03 renders as placeholders. */
 export { EXAMPLE_EMAIL, EXAMPLE_NAME } from './domain/example-values';
 
 /** Screen 05's state and its consent rule. */
@@ -24,22 +25,6 @@ export {
   canContinue,
   type LocationConsent,
 } from './domain/location-consent';
-
-/**
- * The hand-off between the screens that ask for a code and screen 04: where the code was just
- * sent, the name the account is shown under (which screen 04 hands to the session port —
- * ADR-029), and which journey asked (a sign-up that continues to screen 05 or a sign-in that
- * ends in the app — ADR-034). `peek` reads it, `remember`/`rememberSignIn` record it, and
- * `forget` drops it once the flow behind it is over.
- */
-export {
-  forgetVerificationRequest,
-  peekVerificationRequest,
-  rememberSignInRequest,
-  rememberVerificationRequest,
-  type VerificationPurpose,
-  type VerificationRequest,
-} from './domain/pending-verification';
 
 export {
   OnboardingCreateAccountScreen,
@@ -59,10 +44,14 @@ export {
   type OnboardingSignInScreenProps,
 } from './components/sign-in-screen';
 
+/**
+ * The password-reset request: the app-drawn step the sign-in screen's recovery action opens
+ * (ADR-062). The provider owns the email, the token and the new-password page.
+ */
 export {
-  OnboardingVerificationScreen,
-  type OnboardingVerificationScreenProps,
-} from './components/verification-screen';
+  OnboardingForgotPasswordScreen,
+  type OnboardingForgotPasswordScreenProps,
+} from './components/forgot-password-screen';
 
 export {
   OnboardingWelcomeScreen,
