@@ -4,8 +4,8 @@ The permanent security baseline. These requirements are mandatory for every
 change unless a documented technical analysis shows a control is not applicable
 to this project — in which case record that analysis here or in an ADR.
 
-Last updated: 2026-10-25 (Android backup and the deep-link surface recorded from a
-mobile-checklist review; dependency advisories in §17).
+Last updated: 2026-10-25 (Android backup, the deep-link surface and CI secret scanning
+recorded from a mobile-checklist review; dependency advisories in §17).
 
 ## 1. Threat model in one paragraph
 
@@ -139,8 +139,14 @@ Accepted policy (owner decision, 2026-10-08):
   actions are drawn disabled (ADR-054 §8, ADR-059). The password is handed to the provider
   adapter's place and is never written to a store, a log or the session; the app's own database
   will hold no password or hash (ADR-054 decision 2).
-- Secret scanning in CI is planned; the repository currently relies on review plus
-  `.env` being git-ignored.
+- **Secret scanning runs in CI.** `gitleaks` 8.30.1 (pinned by version and SHA-256, so a moved
+  release tag cannot change what runs) scans the full git history on the frontend workflow,
+  with `.gitleaks.toml` extending the default rules and allowing only the app's versioned
+  `picky.*` storage keys, which are public identifiers. A finding fails the job. The workflow
+  is path-filtered to `app/**` and its config files, so a secret committed in `backend/`,
+  `data/` or elsewhere is scanned only when a later frontend change starts it; a repo-wide
+  secret workflow is the follow-up. Review remains the first control, and `.env` stays
+  git-ignored.
 
 ## 10. GPS and privacy
 
@@ -301,6 +307,8 @@ Implemented in this repository:
   copied off the device by the OS. `src/config/__tests__/app-hardening.test.ts` asserts that
   setting, the foreground-only permission list, and the absence of a blanket iOS cleartext
   exception.
+- **Secret scanning** in the frontend workflow: `gitleaks` over the full history with
+  `.gitleaks.toml` (§9), on every pull request and push that starts it.
 
 The Discover map's **zone cache** (`picky.zones-cache.v1`) also lives on the device, and is not
 one of the four records above: it holds the service's public zone geometry and scores — no
@@ -320,7 +328,7 @@ Not implemented (blocking feature work):
 
 - Authentication/authorisation, secure credential storage, API client, TLS
   pinning policy, privacy enforcement, file-upload validation, rate limiting,
-  secret scanning in CI, crash reporting.
+  crash reporting.
 - Route-level access control: the app shell gates nothing and a deep link can open any route.
   Onboarding is a journey, not an authentication boundary; gating has to arrive with the account
   service (ADR-028), not be bolted onto a journey later.

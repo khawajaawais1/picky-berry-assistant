@@ -169,8 +169,12 @@ and runs `npm run test:layout`, which builds and serves two static web exports o
 green, so a broken build does not pay for a browser download. A third job, **Native bundle
 exports**, runs `npm run build:native` after the fast gate: it exports the iOS and Android
 JavaScript bundles, which catches a platform-specific module or transform failure the web export
-cannot see. It is a bundle check, not a device run. Device E2E is still not part of CI: when
-Maestro is added it will run on a build artifact rather than on every pull request.
+cannot see. It is a bundle check, not a device run. A fourth job, **Secret scan**, runs
+`gitleaks` over the full history beside the fast gate and needs no other job: the scanner is
+pinned by version and SHA-256, `.gitleaks.toml` extends the default rules, and a committed
+credential fails the pull request. It is path-filtered with the rest of the workflow, so a
+change outside `app/` does not start it (SECURITY.md §9). Device E2E is still not part of CI:
+when Maestro is added it will run on a build artifact rather than on every pull request.
 
 ## 11. Current state
 

@@ -137,7 +137,7 @@ is not obvious, never commit secrets, never commit generated artifacts
 - The description states: what changed, why, how it was verified (paste the
   commands and results), security impact, and anything deliberately left out.
 - All CI checks must be green: typecheck, lint, format, tests, expo-doctor, the
-  Playwright layout/accessibility harness and the native bundle exports.
+  Playwright layout/accessibility harness, the native bundle exports and the secret scan.
 - Do not merge your own PR unless the repository owner has explicitly allowed it.
 
 ## Code review requirements
@@ -168,10 +168,10 @@ Reviewers check, at minimum:
 ## CI
 
 `.github/workflows/mobile.yml` at the repository root runs `npm ci`, typecheck, lint,
-format check, tests and expo-doctor, then the Playwright layout/accessibility job and the
-native bundle exports (iOS + Android), for changes under `app/**` on `main` and on every
-pull request. It only verifies — it never deploys or publishes. Fix red builds; do not skip
-or weaken the gate.
+format check, tests and expo-doctor, then the Playwright layout/accessibility job, the native
+bundle exports (iOS + Android) and a gitleaks secret scan over the history, for changes under
+`app/**` (or to the workflow and `.gitleaks.toml`) on `main` and on every pull request. It only
+verifies — it never deploys or publishes. Fix red builds; do not skip or weaken the gate.
 
 Because the workflow is path-filtered, a pull request that touches only documentation or
 another folder will not start it. That is the same convention as `data.yml`; if the mobile
