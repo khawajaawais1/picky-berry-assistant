@@ -20,8 +20,9 @@ SELECT z.id FROM zones z LEFT JOIN zone_species s ON s.zone_id = z.id WHERE s.zo
 SELECT zone_id, sum(weight) FROM zone_weather_weights GROUP BY zone_id
 HAVING abs(sum(weight) - 1) > 0.001;
 
--- C6: every zone has weather weights
-SELECT z.id FROM zones z LEFT JOIN zone_weather_weights w ON w.zone_id = z.id WHERE w.zone_id IS NULL;
+-- C6: every zone has weather weights (only once weather has been loaded)
+SELECT z.id FROM zones z LEFT JOIN zone_weather_weights w ON w.zone_id = z.id
+WHERE w.zone_id IS NULL AND EXISTS (SELECT 1 FROM zone_weather_weights);
 
 -- C7: GDD never decreases within a season at a station
 SELECT fmisid, date FROM (

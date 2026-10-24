@@ -17,14 +17,48 @@ from .config import DATA_DIR, load_env, load_yaml
 log = logging.getLogger(__name__)
 
 
+def database_url():
+    """Build the SQLAlchemy URL from the environment (repo-root .env is loaded first).
+
+    Preferred: separate PGHOST / PGPORT / PGUSER / PGPASSWORD / PGDATABASE lines – the password
+    is used exactly as written, no URL-encoding needed (e.g. passwords containing @ or #).
+    Fallback: DATABASE_URL (special characters in the password must be %-encoded).
+    """
+    from sqlalchemy.engine import URL, make_url
+    from sqlalchemy.exc import ArgumentError
+
+    load_env()
+    host = (os.getenv("PGHOST") or "").strip()
+    if host:
+        return URL.create(
+            "postgresql+psycopg",
+            username=(os.getenv("PGUSER") or "postgres").strip(),
+            password=os.getenv("PGPASSWORD"),
+            host=host,
+            port=int((os.getenv("PGPORT") or "5432").strip()),
+            database=(os.getenv("PGDATABASE") or "postgres").strip(),
+        )
+    raw = (os.getenv("DATABASE_URL") or "").strip().strip('"').strip("'")
+    if not raw:
+        raise RuntimeError("No database configured: set PGHOST/PGUSER/PGPASSWORD (or DATABASE_URL) in .env")
+    for prefix in ("postgresql://", "postgres://"):
+        if raw.startswith(prefix):                      # the URI Supabase shows → psycopg 3 driver
+            raw = "postgresql+psycopg://" + raw[len(prefix):]
+    try:
+        return make_url(raw)
+    except ArgumentError as exc:
+        scheme = raw.split("://", 1)[0] if "://" in raw else "<no scheme>"
+        masked = scheme + "://…" + (("@" + raw.rsplit("@", 1)[1]) if "://" in raw and "@" in raw else "")
+        raise RuntimeError(f"DATABASE_URL could not be parsed ({masked}). Use the PGHOST/PGUSER/"
+                           "PGPASSWORD lines in .env instead – see data/README.md §3a.") from exc
+
+
 def engine():
     from sqlalchemy import create_engine
 
-    load_env()
-    url = os.getenv("DATABASE_URL")
-    if not url:
-        raise RuntimeError("DATABASE_URL not set (copy .env.example to .env)")
-    return create_engine(url, future=True)
+    url = database_url()
+    log.info("database: %s", url.render_as_string(hide_password=True))
+    return create_engine(url, future=True, pool_pre_ping=True)
 
 
 def _has_h3(conn) -> bool:
@@ -41,7 +75,8 @@ def apply_ddl(eng) -> None:
         if not _has_h3(conn):
             log.warning("h3-pg not installed – storing H3 ids as text (D4 stub)")
             ddl = ddl.replace("h3index", "text")
-        conn.exec_driver_sql(ddl)
+        # raw DBAPI cursor without parameters: the driver must not scan the script for % markers
+        conn.connection.cursor().execute(ddl)
         conn.execute(text("SELECT 1"))
 
 

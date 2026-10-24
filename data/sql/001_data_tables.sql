@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS zone_weather_weights (
 );
 
 -- What scoring reads: weather per zone × day (IDW over stations that reported that day).
-CREATE OR REPLACE VIEW weather_daily AS
+CREATE OR REPLACE VIEW weather_daily WITH (security_invoker = true) AS
 SELECT w.zone_id,
        d.date,
        sum(w.weight * d.tmean_c)        / nullif(sum(w.weight) FILTER (WHERE d.tmean_c IS NOT NULL), 0) AS tmean_c,
@@ -112,8 +112,38 @@ CREATE TABLE IF NOT EXISTS ndvi_obs (
 );
 
 -- Latest NDVI anomaly per zone (scoring reads this; missing → 0).
-CREATE OR REPLACE VIEW ndvi_zone_latest AS
+CREATE OR REPLACE VIEW ndvi_zone_latest WITH (security_invoker = true) AS
 SELECT DISTINCT ON (zone_id) zone_id, period_start, ndvi_mean, ndvi_anomaly
 FROM ndvi_obs
 WHERE ndvi_anomaly IS NOT NULL
 ORDER BY zone_id, period_start DESC;
+
+-- Row Level Security (Supabase) ----------------------------------------------
+-- Supabase publishes every table in `public` through its Data API. RLS on, and only the
+-- map tables get a read-only policy for the app's roles. The pipeline connects as the
+-- database owner (bypasses RLS); nobody can write through the API. On a plain local
+-- Postgres the anon/authenticated roles do not exist, so the policies are skipped.
+ALTER TABLE species               ENABLE ROW LEVEL SECURITY;
+ALTER TABLE zones                 ENABLE ROW LEVEL SECURITY;
+ALTER TABLE zone_species          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ingest_runs           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE weather_stations      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE weather_station_daily ENABLE ROW LEVEL SECURITY;
+ALTER TABLE zone_weather_weights  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ndvi_obs              ENABLE ROW LEVEL SECURITY;
+
+DO $$
+DECLARE t text;
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon')
+     AND EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+    FOREACH t IN ARRAY ARRAY['species', 'zones', 'zone_species'] LOOP
+      IF NOT EXISTS (SELECT 1 FROM pg_policies
+                     WHERE schemaname = 'public' AND tablename = t AND policyname = 'public read') THEN
+        -- plain string concatenation keeps the script free of format() placeholders
+        EXECUTE 'CREATE POLICY "public read" ON public.' || quote_ident(t)
+             || ' FOR SELECT TO anon, authenticated USING (true)';
+      END IF;
+    END LOOP;
+  END IF;
+END $$;

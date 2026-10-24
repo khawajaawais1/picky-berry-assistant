@@ -111,6 +111,40 @@ picky-data ndvi --start <today-20d> && picky-data load         # 06:00
 
 Every `load` writes one row per source to `ingest_runs`.
 
+## 3a. Loading into Supabase (team database)
+
+The team's database is the Supabase project **Picky** (Postgres + PostGIS). `picky-data load`
+creates the tables (idempotent), turns on Row Level Security, and upserts everything in `data/out/`.
+
+1. Supabase dashboard → **Database → Extensions** → enable **postgis**. (If **h3** is offered,
+   enable it too; otherwise H3 ids are stored as text automatically.)
+2. Dashboard → **Connect** → **Session pooler** (works on IPv4 networks) → note host, port, user.
+3. In the repo-root `.env`, comment out `DATABASE_URL` and add these lines. The password is used
+   exactly as written (characters like `@` or `#` need no encoding):
+
+```
+# DATABASE_URL=...
+PGHOST=aws-0-eu-west-1.pooler.supabase.com
+PGPORT=5432
+PGUSER=postgres.<project-ref>
+PGPASSWORD=<database password>
+PGDATABASE=postgres
+```
+
+   (A single `DATABASE_URL=postgresql://…` also works, but then special characters in the
+   password must be %-encoded, e.g. `@` → `%40`. `PGHOST` wins when both are set.)
+4. Run:
+
+```powershell
+picky-data load
+picky-data check --db
+```
+
+Security: `species`, `zones` and `zone_species` are readable by the app (`anon`/`authenticated`,
+read-only); weather, NDVI and `ingest_runs` are not exposed through the Data API at all. Nobody can
+write through the API — only the pipeline (database owner). The views run with the caller's
+rights (`security_invoker`). Never commit `.env`.
+
 ## 4. Outputs (`data/out/`, git-ignored → object storage)
 
 | File | Table | Notes |
@@ -141,7 +175,7 @@ Checks: `sql/900_data_checks.sql` + `src/picky_data/checks.py`.
 
 ## 6. Tests
 
-`pytest` – 35 tests: pilot square, H3 coverage maths, end-to-end zone build on a synthetic Geofabrik zip,
+`pytest` – 39 tests: pilot square, H3 coverage maths, end-to-end zone build on a synthetic Geofabrik zip,
 MS-NFI enrichment across two map sheets (bog share, volume shares, fertility, glob patterns), zone_species rules, GDD (season start, gaps, yearly reset), FMI XML parsing, temperature ranges, IDW,
 NDVI zonal stats + anomaly, data checks, and the shape of the test zones (matches the API's `ZoneProps`).
 
