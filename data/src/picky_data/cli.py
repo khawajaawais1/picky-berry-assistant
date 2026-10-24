@@ -4,7 +4,8 @@ Typical order (deep dive §11, weeks 1–3):
   picky-data area                       D3  write pilot square for review (QGIS / geojson.io)
   picky-data test-zones                 D10 stub: 50 zones → data/test_zones.geojson
   picky-data basemap --scope pilot      D18 PMTiles extract (needs pmtiles CLI)
-  picky-data zones --osm raw/finland-latest-free.shp.zip     D10
+  picky-data msnfi-download             D10 pilot cut of Luke's forest inventory (6 layers)
+  picky-data zones --msnfi-dir raw/msnfi D10 (OSM forest + MS-NFI bogs/tree species/fertility)
   picky-data zone-species               D11
   picky-data weather --start 2021-01-01 D13 (FMI backfill + GDD + IDW weights)
   picky-data ndvi --start 2021-04-01    D14 (or --stub)
@@ -63,7 +64,14 @@ def cmd_zones(args) -> int:
     src = Path(args.osm)
     mask = load_vector_mask(args.mask, area) if args.mask else read_geofabrik(src, area)
     places = None if args.no_names else read_places_geofabrik(src, area)
-    msnfi = MsnfiRasters(args.msnfi_pine, args.msnfi_spruce, args.msnfi_broadleaf, args.msnfi_fertility)
+    if args.msnfi_dir:
+        from .zones.msnfi import from_dir
+
+        msnfi = from_dir(args.msnfi_dir)
+        print(f"MS-NFI: {msnfi}")
+    else:
+        msnfi = MsnfiRasters(args.msnfi_pine, args.msnfi_spruce, args.msnfi_broadleaf,
+                             args.msnfi_fertility, args.msnfi_site_type)
     version = args.version or f"osm-{src.stem.split('.')[0]}-{date.today():%Y%m%d}/h3r{area.zones['h3_resolution']}/v1"
     zones = build_zones(area, mask, places, msnfi, version)
     paths = write_zones(zones)
@@ -71,6 +79,34 @@ def cmd_zones(args) -> int:
     print(f"{len(zones)} zones · forest types {zones.forest_type.value_counts().to_dict()}")
     for k, p in paths.items():
         print(f"  {k}: {p}")
+    return 0
+
+
+def cmd_msnfi_download(args) -> int:
+    import geopandas as gpd
+
+    from .config import METRIC_CRS, RAW_DIR
+    from .zones.msnfi import LAYERS, MSNFI_URL, clip_layer
+
+    area = _area(args)
+    bounds = tuple(gpd.GeoSeries([area.polygon_3067.buffer(args.buffer_m, join_style="mitre")],
+                                 crs=METRIC_CRS).total_bounds)
+    out_dir = Path(args.out) if args.out else RAW_DIR / "msnfi"
+    for layer in args.layers or list(LAYERS):
+        if args.source_dir:      # whole-Finland files already downloaded
+            matches = [f for f in sorted(Path(args.source_dir).glob(f"{layer}_*.tif"))
+                       if "tukki" not in f.name and "kuitu" not in f.name and "pilot" not in f.name]
+            if not matches:
+                print(f"  {layer}: no file in {args.source_dir}, skipped")
+                continue
+            source = str(matches[0])
+        else:
+            source = MSNFI_URL.format(year=args.year, layer=layer)
+        out = out_dir / f"{layer}_pilot.tif"
+        print(f"  {layer}: {source} → {out.name} …", flush=True)
+        clip_layer(source, bounds, out)
+        print(f"  {layer}: {out.stat().st_size / 1e6:.1f} MB")
+    print(f"done → {out_dir}\nnext: picky-data zones --msnfi-dir {out_dir}")
     return 0
 
 
@@ -205,10 +241,22 @@ def main(argv: list[str] | None = None) -> int:
                    help="Geofabrik finland-latest-free.shp.zip (or unpacked folder)")
     s.add_argument("--mask", help="alternative polygon file with a habitat column (forest/mire)")
     s.add_argument("--no-names", action="store_true", help="skip OSM place names")
-    s.add_argument("--msnfi-pine"), s.add_argument("--msnfi-spruce")
-    s.add_argument("--msnfi-broadleaf"), s.add_argument("--msnfi-fertility")
+    for opt, what in (("pine", "pine volume (manty)"), ("spruce", "spruce volume (kuusi)"),
+                      ("broadleaf", "birch + other broadleaf volume (koivu, muulp)"),
+                      ("fertility", "site fertility class (kasvupaikka)"),
+                      ("site-type", "site main class (paatyyppi) – adds bogs OSM misses")):
+        s.add_argument(f"--msnfi-{opt}", nargs="+", metavar="TIF", help=f"MS-NFI {what}; one or more map sheets")
+    s.add_argument("--msnfi-dir", help="folder with MS-NFI GeoTIFFs (e.g. raw/msnfi from `msnfi-download`)")
     s.add_argument("--version", help="source_version label")
     s.set_defaults(fn=cmd_zones)
+
+    s = sub.add_parser("msnfi-download", help="D10: cut the pilot square out of Luke's MS-NFI rasters")
+    s.add_argument("--year", default="2023")
+    s.add_argument("--layers", nargs="+", help="default: paatyyppi kasvupaikka manty kuusi koivu muulp")
+    s.add_argument("--source-dir", help="use whole-Finland .tif files you already downloaded instead of HTTP")
+    s.add_argument("--out", help="output folder (default data/raw/msnfi)")
+    s.add_argument("--buffer-m", type=float, default=2000)
+    s.set_defaults(fn=cmd_msnfi_download)
 
     s = sub.add_parser("zone-species", help="D11: habitat suitability per zone × species")
     s.add_argument("--stub", action="store_true", help="every species allowed everywhere")

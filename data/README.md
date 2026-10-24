@@ -40,8 +40,42 @@ Accounts to request **now** (lead time):
 | File | From | Size | Used by |
 |------|------|------|---------|
 | `finland-latest-free.shp.zip` | https://download.geofabrik.de/europe/finland.html | ~1 GB | zones, names (read straight from the zip with a bbox filter) |
-| MS-NFI rasters (optional) | https://kartta.luke.fi/opendata/valinta.html — volume of pine / spruce / broadleaf + site fertility class, 16 m | ~100 MB each (Central Finland tile) | forest type → better bilberry vs. lingonberry suitability |
+| MS-NFI 2023 rasters (strongly recommended) | Luke / Funet — `picky-data msnfi-download` cuts the pilot square, see §2a | ~10–30 MB after the cut | forest type, fertility and **bogs** (OSM maps only ~10 km² of bog in the pilot) |
 | `pmtiles` CLI | https://github.com/protomaps/go-pmtiles/releases (Windows x86_64 zip) | 10 MB | basemap |
+
+## 2a. MS-NFI forest inventory (why and how)
+
+First real run (24 Oct 2026): OSM gave 4,863 zones but **no forest type** and only **9.6 km² of bog**,
+so bilberry, lingonberry and crowberry came out allowed everywhere and cloudberry in 18 zones.
+Luke's MS-NFI rasters fix that (CC BY 4.0, 16 m, EPSG:3067, GeoTIFF, split by TM35 map sheet).
+
+Luke publishes each 2023 layer as **one whole-Finland GeoTIFF** on the Funet mirror
+(`https://www.nic.funet.fi/index/geodata/luke/vmi/2023/<layer>_vmi1x_1923.tif`, 0.3–1.7 GB each).
+You do **not** need to download them: this reads only the pilot square over HTTP and writes six
+small files to `data/raw/msnfi/`:
+
+```powershell
+picky-data msnfi-download
+picky-data zones --msnfi-dir raw/msnfi
+```
+
+| File prefix | Layer | Used for |
+|-------------|-------|----------|
+| `paatyyppi_` | Site main class (1 mineral soil, 2 spruce mire, 3 pine mire, 4 treeless peatland) | bog share of each zone |
+| `kasvupaikka_` | Site fertility class (1 herb-rich … 6 barren, 7 rocky/sandy) | bilberry ↔ lingonberry/crowberry shift |
+| `manty_` | Volume, pine (m³/ha) | forest_pine |
+| `kuusi_` | Volume, spruce | forest_spruce |
+| `koivu_` | Volume, birch | forest_broadleaf |
+| `muulp_` | Volume, other broadleaf | forest_broadleaf |
+
+If the HTTP read is slow or blocked, download the six whole-Finland files with a browser into one
+folder and cut them locally: `picky-data msnfi-download --source-dir <that folder>`.
+Individual layers can also be passed by hand (`--msnfi-site-type`, `--msnfi-pine`, …; several files
+or `*` patterns allowed). The `_tukki` / `_kuitu` (saw timber / pulpwood) variants are ignored.
+
+Glob patterns work (the tool expands them), and several map sheets per layer are mosaicked.
+Codes 32766/32767 are ignored. Bogs: the larger of OSM's and MS-NFI's estimate is used; extra bog
+is taken out of OSM forest first (OSM tags wooded pine bogs as forest).
 
 ## 3. Run order (deep dive §11)
 
@@ -55,7 +89,7 @@ cd scripts && npm i @protomaps/basemaps@5 && node make_style.mjs pmtiles://http:
 
 # Week 2 – real zones + weather
 picky-data zones --osm raw/finland-latest-free.shp.zip
-#   optional MS-NFI: --msnfi-pine raw/manty.tif --msnfi-spruce raw/kuusi.tif --msnfi-broadleaf raw/lehtip.tif --msnfi-fertility raw/kasvupaikka.tif
+#   better: picky-data msnfi-download && picky-data zones --msnfi-dir raw/msnfi   (§2a)
 picky-data zone-species
 picky-data weather --start 2021-01-01             # backfill, cached per month in cache/fmi
 picky-data ndvi --stub                            # until the Copernicus client exists
@@ -107,8 +141,8 @@ Checks: `sql/900_data_checks.sql` + `src/picky_data/checks.py`.
 
 ## 6. Tests
 
-`pytest` – 28 tests: pilot square, H3 coverage maths, end-to-end zone build on a synthetic Geofabrik zip,
-zone_species rules, GDD (season start, gaps, yearly reset), FMI XML parsing, temperature ranges, IDW,
+`pytest` – 35 tests: pilot square, H3 coverage maths, end-to-end zone build on a synthetic Geofabrik zip,
+MS-NFI enrichment across two map sheets (bog share, volume shares, fertility, glob patterns), zone_species rules, GDD (season start, gaps, yearly reset), FMI XML parsing, temperature ranges, IDW,
 NDVI zonal stats + anomaly, data checks, and the shape of the test zones (matches the API's `ZoneProps`).
 
 ## 7. Roadmap — what data/ delivers to each feature

@@ -45,6 +45,22 @@ def classify(forest: float, mire: float, shares: dict[str, float] | None) -> tup
     return label, habitat
 
 
+def combine_mire(osm_forest: pd.Series, osm_mire: pd.Series,
+                 msnfi_mire: pd.Series) -> tuple[pd.Series, pd.Series]:
+    """Merge OSM cover with MS-NFI's mire share.
+
+    Mire = the larger of the two estimates. Extra mire found by MS-NFI is taken out of OSM
+    forest first (OSM tags most wooded pine bogs as forest); any remainder is new cover OSM
+    missed (open bogs). Fractions stay within 0–1 and forest + mire ≤ 1.
+    """
+    mire = np.maximum(osm_mire, msnfi_mire)
+    extra = (mire - osm_mire).clip(lower=0)
+    forest = (osm_forest - extra).clip(lower=0)
+    total = forest + mire
+    scale = np.where(total > 1, 1 / total, 1.0)
+    return (forest * scale).clip(0, 1), (mire * scale).clip(0, 1)
+
+
 def build_zones(area: PilotArea, mask_3067: gpd.GeoDataFrame,
                 places_3067: gpd.GeoDataFrame | None = None,
                 msnfi: MsnfiRasters | None = None,
@@ -61,14 +77,23 @@ def build_zones(area: PilotArea, mask_3067: gpd.GeoDataFrame,
     frac = h3_grid.habitat_fractions(grid, mask_3067)
     forest = frac.get("forest", pd.Series(0.0, index=grid.index))
     mire = frac.get("mire", pd.Series(0.0, index=grid.index))
+
+    # MS-NFI runs on every cell (not only kept ones): its bog share can add cover OSM missed.
+    extra = enrich(grid, msnfi) if (msnfi and msnfi.any()) else pd.DataFrame(index=grid.index)
+    if "mire_share" in extra:
+        forest, mire = combine_mire(forest, mire, extra["mire_share"].fillna(0.0))
+        log.info("MS-NFI site type: mire %.1f km² (OSM alone %.1f km²)",
+                 (mire * grid.area).sum() / 1e6,
+                 (frac.get("mire", pd.Series(0.0, index=grid.index)) * grid.area).sum() / 1e6)
+
     keep = (forest + mire) >= min_frac
     log.info("kept %d / %d cells with ≥ %.0f %% forest or mire", keep.sum(), len(grid), min_frac * 100)
 
     z = grid.loc[keep].copy()
+    extra = extra.loc[keep]
     z["forest_fraction"] = forest[keep].round(4).values
     z["mire_fraction"] = mire[keep].round(4).values
 
-    extra = enrich(z, msnfi) if (msnfi and msnfi.any()) else pd.DataFrame(index=z.index)
     share_cols = [c for c in ("share_pine", "share_spruce", "share_broadleaf") if c in extra]
     labels, habitats = [], []
     for i in z.index:
