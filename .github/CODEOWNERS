@@ -1,18 +1,24 @@
-# Replace names with GitHub usernames once the repo exists (Sayeem).
+# Code owners must be repository collaborators: GitHub cannot request a review
+# from anyone else, so a pattern whose owner is not a collaborator routes
+# nowhere. Current collaborators are @salmanprottoy (app) and @khawajaawais1
+# (repo owner); add the other leads back as they join the repository.
+#
+# Intended owners once those accounts are collaborators:
+#   docs / .github   Sayeem
+#   backend          Hassan
+#   prediction       Remon
+#   reasoning        Asmer
+#   ingest           Awais
+#   media            Sabih
+#   ml               Remon
+#   ontology         Asmer
+#   docker / deploy  Sabih
+#
 # The last matching pattern wins.
-*                       @sayeem
-/docs/                  @sayeem
-/.github/               @sayeem
-/app/                   @salman
-/backend/               @hassan
-/backend/app/modules/prediction/  @remon @hassan
-/backend/app/modules/reasoning/   @asmer @hassan
-/backend/app/modules/ingest/      @awais @hassan
-/backend/app/modules/media/       @sabih @hassan
-/ml/                    @remon
-/data/                  @awais
-/ontology/              @asmer
-/docker/                @sabih @hassan
-/deploy/                @sabih
-/docs/data-contract.md  @awais
-/docs/privacy.md        @hassan
+
+# Fallback: the repo owner reviews everything not claimed below.
+*                       @khawajaawais1
+
+# App code and its docs. Both collaborators own it so either can approve an
+# app PR; the author cannot approve their own.
+/app/                   @salmanprottoy @khawajaawais1
