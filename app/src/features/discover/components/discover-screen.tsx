@@ -1,5 +1,5 @@
 import { Feather } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useDeferredValue, useMemo, useState } from 'react';
 import { View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
@@ -104,8 +104,15 @@ export function DiscoverScreen({
   const scoreSpecies = species[0] ?? PILOT_ZONE_SPECIES;
   const { status, updatedAt, zones } = useZones(zoneSource, scoreSpecies);
 
-  const filter: ZoneFilter = { query };
-  const matches = filterZones(zones, filter);
+  // The field's own value is the picker's, immediately: a controlled input that lags is a
+  // broken input. The **filter** is allowed to follow on a lower-priority render, because it
+  // is what redraws the map or the list — fifty polygons or fifty rows on every keystroke is
+  // work the typing should not wait for (React's concurrent renderer drops intermediate passes
+  // when the next key arrives). The count line follows the same answer, so it always describes
+  // the drawing below it rather than a search the screen has not applied yet.
+  const deferredQuery = useDeferredValue(query);
+  const filter = useMemo<ZoneFilter>(() => ({ query: deferredQuery }), [deferredQuery]);
+  const matches = useMemo(() => filterZones(zones, filter), [filter, zones]);
   const filtering = isFilterActive(filter);
   const cardZone = matches[0];
 

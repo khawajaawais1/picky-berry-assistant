@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { View, type LayoutChangeEvent } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
@@ -34,9 +34,16 @@ export function ZoneMapCanvas({ height, label, zones }: ZoneMapCanvasProps) {
   const onLayout = (event: LayoutChangeEvent) =>
     setWidth(Math.max(event.nativeEvent.layout.width, 1));
 
-  const paths = projectRings(
-    zones.map((zone) => zone.ring),
-    { width, height, padding: 12 },
+  // The screen re-renders on every keystroke in its search field. When the search leaves the
+  // same zones and the box has not changed, the paths are the same strings, so building them
+  // again would be work with no drawing to show for it.
+  const paths = useMemo(
+    () =>
+      projectRings(
+        zones.map((zone) => zone.ring),
+        { width, height, padding: 12 },
+      ),
+    [height, width, zones],
   );
 
   return (

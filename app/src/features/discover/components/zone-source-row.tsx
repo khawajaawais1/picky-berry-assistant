@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import { memo } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
@@ -41,8 +42,19 @@ export type ZoneSourceRowProps = {
  * because a row there is one of fifty and the card is the map's own way into a zone. The saved
  * plan passes one for every zone it can resolve, which is what puts the picker's saved places
  * back one press from their details (ADR-060).
+ *
+ * It is memoised because the search redraws the list on every keystroke: a row whose zone,
+ * berry and destination are unchanged has nothing new to draw. The map's list passes no
+ * destination, so all of its rows keep the default shallow comparison; a caller that passes a
+ * fresh closure per row (the saved plan does) still re-renders those rows, which is correct
+ * because their destination may have changed.
  */
-export function ZoneSourceRow({ onOpen, rowTestID, species, zone }: ZoneSourceRowProps) {
+export const ZoneSourceRow = memo(function ZoneSourceRow({
+  onOpen,
+  rowTestID,
+  species,
+  zone,
+}: ZoneSourceRowProps) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
   const band = scoreBand(zone.score);
@@ -107,4 +119,4 @@ export function ZoneSourceRow({ onOpen, rowTestID, species, zone }: ZoneSourceRo
       {row}
     </Pressable>
   );
-}
+});

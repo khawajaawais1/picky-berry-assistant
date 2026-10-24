@@ -145,4 +145,22 @@ describe('ZoneMap', () => {
 
     expect(screen.getByTestId('zone-map')).toHaveStyle({ height: layout.routeMapHeight });
   });
+
+  it('hands MapLibre the same style, data and camera when nothing changed', async () => {
+    const zones = [zone()];
+    const view = await render(<ZoneMap status="ready" zones={zones} />);
+    const style = screen.getByTestId('zone-map-drawing').props.mapStyle;
+    const data = screen.getByTestId('zone-map-source').props.data;
+    const bounds = screen.getByTestId('zone-map-camera').props.bounds;
+
+    // The search field re-renders this screen on every keystroke. The camera is memoised on
+    // its props and re-fits when its bounds array is new; the map and source wrappers hand
+    // their style and data to the native view, so rebuilding them is work with no new drawing.
+    // An unchanged map must hand MapLibre the same objects.
+    await view.rerender(<ZoneMap status="ready" zones={zones} />);
+
+    expect(screen.getByTestId('zone-map-drawing').props.mapStyle).toBe(style);
+    expect(screen.getByTestId('zone-map-source').props.data).toBe(data);
+    expect(screen.getByTestId('zone-map-camera').props.bounds).toBe(bounds);
+  });
 });
