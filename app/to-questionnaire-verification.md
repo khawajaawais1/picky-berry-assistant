@@ -1,5 +1,11 @@
 # Screen 04 on a phone: which screen a phone sign-up and a phone sign-in see, and what the copy says when the code travels by SMS
 
+> **Retired (2026-10-24).** Screen 04 and its phone states were deleted with the email + password
+> re-cut ([ADR-059](docs/adr/ADR-059-email-password-replaces-the-code-screen.md)): the app creates
+> and signs in with an email address only, and phone sign-in is deferred (ADR-054 §5). The ask below
+> is kept as the history of an open question that was answered by retiring the screen, and the
+> route it links to no longer exists.
+
 **Purpose:** PROJECT.md's open question 20, in the half that is a screen and its words rather than a
 service. A picker who signs up — and a picker who **signs in** — with a phone number both walk screen
 04 today: the frame's email state, headed “Verify your email”, with an action reading “Change email

@@ -8,9 +8,9 @@ below is the audit's own reading.
 
 This file records **classification and gating only**. What each frame contains is
 [design-source.md](design-source.md)'s, what is built of each frame is PROJECT.md's
-“Implementation status”, and why the marketplace and the code stand-in are built the
+“Implementation status”, and why the marketplace and the account stand-in are built the
 way they are is [ADR-026](adr/ADR-026-marketplace-screens-as-a-disclosed-demo.md) and
-[ADR-027](adr/ADR-027-a-stand-in-verification-code.md). None of the three is repeated here.
+[ADR-059](adr/ADR-059-email-password-replaces-the-code-screen.md). None of the three is repeated here.
 
 ## How to read it
 
@@ -34,7 +34,7 @@ this file ships in a production build.
 
 | # | Value | What it would be | The gate | Evidence |
 | - | ----- | ---------------- | -------- | -------- |
-| G1 | `STUB_CODE` (`'000000'`) and `verifyCode` (`src/services/session/stand-in-code.ts`) | A code the app accepted without asking the account service | `verifyCode` returns `rejected` for **every** code when `environment === 'production'`; the port answers `unavailable`; screen 04's action is drawn disabled (`verification-screen.tsx:97`) | `e2e/production-export.spec.ts` (a real production export types the documented code and the action stays disabled); `src/services/session/__tests__/stand-in-code.test.ts`, `stand-in-port.test.ts` |
+| G1 | The stand-in session port's acceptance (`createStandInSessionPort`, `src/services/session/stand-in-port.ts`) | A credential accepted, and a reset link requested, without asking the account service | In a production build the port answers `unavailable` for **every** credential and reset request and keeps nothing; screens 03, `/sign-in` and `/forgot-password` draw their action disabled | `e2e/production-export.spec.ts` (a real production export fills the forms and every account action stays disabled, the reset request included); `src/services/session/__tests__/stand-in-port.test.ts` |
 | G2 | Two prototype sets behind one shared switcher: the three sign-in readings (`src/features/onboarding/components/prototype/`) and the community map's three readings, each on the screen it would live on (`src/features/discover/components/prototype/`); `PrototypeSwitcher` (`src/components/prototype/`) | Throwaway readings of a screen the design has no frame for, and of a feature (shared spots) whose frame does not exist either | Every host route reads `appEnvironment() === 'production' ? undefined : …` and then ignores `?variant=` entirely | `e2e/production-export.spec.ts` (`/create-account?variant=B` shows screen 03; `/discover?variant=A`, `/zone-details?variant=B` and `/saved-spots?variant=C` each show the app's own screen — and no `PROTOTYPE` text is mounted on any of them) |
 
 Both gates were re-run against a production export of this tree on 2026-10-10
@@ -56,9 +56,9 @@ says so, not that this repository records it.
 
 | # | Value | Screens | Disclosed on screen | Lives in |
 | - | ----- | ------- | ------------------- | -------- |
-| A1 | `EXAMPLE_NAME` `'Aino Korhonen'`, `EXAMPLE_EMAIL` `'aino@example.fi'` | 03 (as placeholders, never pre-filled); 04 (the destination named on a cold start) | Yes — they are placeholders, not a filled form | `src/features/onboarding/domain/example-values.ts` |
-| A2 | `DEMO_ZONES` — Z14 unpicked score 78 · Z09 recently picked · Z21 ripening; place “Laajavuori” | 06's card, list and filters; 07–10 read the same zone. **No longer the map**: since 2026-10-22 screen 06's map reads the pilot stub through `ZoneSource` (B7, ADR-053) | **Yes**: eyebrow `CORE PICKER · SEASON DEMO / 28 AUG`, and the map's own `50 zones · test data` line | `src/features/discover/domain/zone.ts:61` |
-| A3 | `DEMO_ZONE_DETAILS` — score 78, high confidence, 11 reports this week, ripe, 18 °C light wind 08:00, a trusted report 38 min old at 4/5 | 07; and the list behind its “See all 11”, where the eleven are stated as the design's sample week (their count is read from the zone's own figures, so the card and the line cannot disagree) | **Yes**, since 2026-10-10: screen 07's eyebrow `CORE PICKER · ZONE INSIGHT · SEASON DEMO`, beside the frame's forecast disclaimer; the list's eyebrow carries the same disclosure, and its own sentence names the week as the design's (ADR-044) | `zone-details.ts:65` |
+| A1 | `EXAMPLE_NAME` `'Aino Korhonen'`, `EXAMPLE_EMAIL` `'aino@example.fi'` | 03 (as placeholders, never pre-filled) | Yes — they are placeholders, not a filled form | `src/features/onboarding/domain/example-values.ts` |
+| A2 | `DEMO_ZONES` — Z14 unpicked score 78 · Z09 recently picked · Z21 ripening; place “Laajavuori” | 07 without a zone id (a bare URL alone since the plan reads the source — ADR-060); 08–10 read the same demo zone. **No longer the map or the plan**: since 2026-10-22 screen 06's map reads the pilot stub through `ZoneSource` (B7, ADR-053), since 2026-10-24 its card, list and filters do too (ADR-057/ADR-058), and the saved plan's rows do since the same day (ADR-060) | **Yes**: eyebrow `CORE PICKER · SEASON DEMO / 28 AUG` on the screens that still draw it, and the map's own `50 zones · test data` line | `src/features/discover/domain/zone.ts:61` |
+| A3 | `DEMO_ZONE_DETAILS` — 11 reports this week, 18 °C light wind 08:00, a trusted report 38 min old at 4/5 (its score 78 and season also fill screen 07's no-id path) | 07: the outlook, freshest report, walk and report list **even when the zone's figures come from the source** (the score and season are the source's there); and the whole screen without a zone id. The list behind “See all 11” states the eleven as the design's sample week (their count is read from this one constant, so the card and the line cannot disagree) | **Yes**, since 2026-10-10: screen 07's eyebrow `CORE PICKER · ZONE INSIGHT · SEASON DEMO`, beside the frame's forecast disclaimer, and since 2026-10-24 one sentence before those blocks on a source zone (ADR-058); the list's eyebrow carries the same disclosure, and its own sentence names the week as the design's (ADR-044) | `zone-details.ts:65` |
 | A4 | `DEMO_ROUTE` — 1400 m, 22 min, arrival 10:03, keep right in 180 m | 08; and frame 07's “Navigate · 1.4 km” | **Yes**, since 2026-10-10: eyebrow `… · WALKING ROUTE · SEASON DEMO`, and the same change removed the note's claim that tiles are cached (see F2) | `route.ts:33` |
 | A5 | `DEMO_ACTIVE_VISIT` — 42 min 17 s | 09 (the timer is **seeded** from it: `Date.now() - elapsedMs`), 10 | **Yes**, since 2026-10-10: eyebrow `… · VISIT IN PROGRESS · SEASON DEMO` | `active-visit.ts:13` |
 | A6 | `DEMO_VISIT_WINDOW` — arrival 10:03, departure 10:55 → 52 min | 10's exit summary **and every report the picker saves** | **Yes on the screen**, since 2026-10-10: eyebrow `… · QUICK REPORT · SEASON DEMO`. The **stored** half is disclosed where the report is read back by nothing — that is F1 | `visit-report.ts:55` (see F1) |
@@ -80,13 +80,16 @@ says so, not that this repository records it.
 
 | # | Stand-in | What it stands in for | Gate | Swap point |
 | - | -------- | --------------------- | ---- | ---------- |
-| B1 | `verifyCode` / `STUB_CODE` | The account service's answer to “is this the code we sent?” | **Production: accepts nothing** (G1) | Delete with the API; both callers already read it (screen 04 and the port) |
-| B2 | `createStandInSessionPort` behind the `SessionPort` seam (`signIn`, `current`, `signOut`) | The account service and Firebase's credential — the account is the API's, the credential the provider's (ADR-054) | Production: no credential is accepted, so no session is ever minted | The real adapter behind the port; no screen changes (ADR-028) |
+| B2 | `createStandInSessionPort` behind the `SessionPort` seam (`signIn`, `current`, `signOut`, `requestPasswordReset`) | The account service and Firebase's credential — the account is the API's, the credential the provider's (ADR-054); the reset request belongs to the same provider (ADR-062) | Production: no credential or reset request is accepted, so no session is ever minted and no link is requested (G1). Outside production it accepts any non-empty password and verifies nothing, and accepts a reset address without sending anything | The real adapter behind the port; no screen changes (ADR-028, ADR-059, ADR-062) |
 | B3 | `createInMemorySessionStore` | A session store that survives the process | Not gated — the value is not a door, it is a session that vanishes on reload | `src/services/session/store.ts`; ADR-006's secure adapter is not installed (`expo-secure-store` is not a dependency) |
-| B4 | `pending-verification.ts` — the destination the code is for, held in a module-level variable | The code request answering with what screen 04 should say | Not gated. It carries **an email address or phone number in memory** for the process's lifetime | Deleted with the API; already documented as temporary |
 | B5 | `DEFAULT_VISIT_POLICY` — `default-1`, 5 min dwell, 30 min grace, 1 day | The server-owned policy payload `parseVisitPolicy` validates | Not wired to any screen. `features/visits` is imported by nothing and `expo-location` is not installed | Replace with the fetched policy |
 | B6 | No transport behind `src/services/report-queue.ts` | The sync the design's “sync when you're online” promises | Not gated — the queue holds the picker's own data and never drains. Nothing can reach the `synced` state the design draws | ADR-005; the queue stays as the capture half |
 | B7 | `assets/data/test-zones.json` behind the `ZoneSource` port (`services/test-zone-source.ts`) — the data team's 50-zone stub around Laajavuori, a copy of `data/test_zones.geojson` kept equal by a test | The zone service's `GET /zones` | **Not gated**: the scores are stand-ins, and the map and card say `test data` on the screen itself. No network, no location and nothing sent | The service's adapter behind the same port; no screen changes (ADR-053, ADR-057) |
+
+B1 (`STUB_CODE`/`verifyCode`) and B4 (the `pending-verification` hand-off) were the code screen's
+stand-ins; both were **deleted with screen 04** on 2026-10-24
+([ADR-059](adr/ADR-059-email-password-replaces-the-code-screen.md)). Their numbers are not reused,
+so the rows that cite B2/B3/B5–B7 keep pointing at the same thing.
 
 ---
 
@@ -95,13 +98,14 @@ says so, not that this repository records it.
 | # | What | Where it lives | Left by | Four questions (AGENTS.md §11) |
 | - | ---- | -------------- | ------- | ------------------------------ |
 | C1 | Privacy consent — `visitTracking`, `decidedAt` | `picky.privacy-consent.v2` (AsyncStorage) | The consent screens, by an affirmative action; ships unchecked | Answered in `src/services/privacy-consent.ts` (ADR-020); the field and the copy state what the app does — tracking while the app is open — since 2026-10-12 (ADR-047), and a record left under the previous key is cleared on the next read |
-| C2 | Saved zones — zone id, saved at | `picky.saved-zones.v1` (AsyncStorage) | Frame 07's bookmark | Answered in `src/services/saved-zones.ts` (ADR-024); the plan is listed on frame 14's “Saved spots” screen (ADR-030) |
+| C2 | Saved zones — zone id, the berry it was saved under, saved at | `picky.saved-zones.v1` (AsyncStorage) | Frame 07's bookmark | Answered in `src/services/saved-zones.ts` (ADR-024, ADR-061); the plan is listed on frame 14's “Saved spots” screen (ADR-030), whose rows resolve each id against the zone source's answer for its own berry (ADR-060, ADR-061) |
 | C3 | Report queue — zone id, species, yield rating, typed amount, minutes, recorded at | `picky.report-queue.v1` (AsyncStorage) | Frame 10's “Save report offline”, through `enqueueReport` | Answered in `src/services/report-queue.ts`; **two of the six fields are the design's sample** (F1) |
-| C4 | Session — account id, the account's name (ADR-029), issued at, expires at | Process memory only | The stand-in port, on screen 04's code | Answered in `src/services/session/index.ts`; the id and the name are personal data whose **lawful basis is open** (PROJECT.md question 15) |
+| C4 | Session — account id, the account's name (ADR-029), issued at, expires at | Process memory only | The stand-in port, on screens 03 and `/sign-in`; `/forgot-password` passes an address through the port but stores nothing | Answered in `src/services/session/index.ts`; the id and the name are personal data whose **lawful basis is open** (PROJECT.md question 15) |
 | C5 | App language | The device's preference list (`expo-localization`) | The OS | No storage (ADR-017) |
 | C6 | Colour scheme | The device (`useColorScheme`) | The OS | No storage |
 | C7 | Connection state | The device (`expo-network`) | The OS | Read to draw one sentence, then forgotten (ADR-025) |
 | C8 | The clock — a visit's elapsed time and every `recordedAt` | The device | The OS | Stored only inside C3 |
+| C9 | Zone cache — a berry's last zone list: public geometry, score, confidence, ripeness | `picky.zones-cache.v1` (AsyncStorage) | A successful zone read, through the query provider in `src/app/_layout.tsx` | Answered in `src/features/discover/services/zone-cache.ts`; **no personal data** — the service's answers about forests, not the picker — refreshed by the next read, dropped when the app's data is cleared or it is uninstalled, and restored only if the map has been opened within the previous week |
 
 ---
 
@@ -109,11 +113,12 @@ says so, not that this repository records it.
 
 | # | Value | Why it exists | Recorded in |
 | - | ----- | ------------- | ----------- |
-| D1 | `RESEND_COOLDOWN_SECONDS` = 60 | The frame draws a cooldown in progress (`00:28`) and never says how long one runs; the number has to come from somewhere, and 60 s contains the drawn state | `verification.ts`; PROJECT.md open questions |
 | D2 | `SESSION_LIFETIME_MS` = 1 h | The provider owns a session's lifetime and there is no provider yet | `session.ts:24`; PROJECT.md known issue 23 / open questions |
-| D3 | Six digits (`CODE_LENGTH`) and the resend/expiry words | The frame draws six cells; the “expires in 10 minutes” line is the frame's own copy | `verification.ts`; `locales/en.ts:74` |
 | D4 | `Accuracy.High` for the position watch, and nothing yet about its cadence | The platform's default (`Balanced`, ~100 m) would put a picker in a zone they are not in, and the decision the app actually needs — how precisely and how often to read a position, and at what battery cost — is one the owner has not been asked yet | `src/services/location/expo-source.ts`; [ADR-045](adr/ADR-045-a-position-behind-a-port-and-nothing-kept.md); [ADR-047](adr/ADR-047-the-consent-says-what-the-app-does.md) §2.3; PROJECT.md open question 21 |
-| D5 | The two strings of screen 04's phone state — `onboarding.verification.titlePhone` (“Verify your number” / “Vahvista puhelinnumerosi”) and `onboarding.verification.changePhone` (“Change phone number” / “Vaihda puhelinnumero”) — and the frame's foot card drawn on the email journey only | The frame draws the **email** state only, so a number stands where an address would and the frame's own title and way back to the field would name an account the picker does not have. The two strings are therefore the app's own, written as the **assumed** cheapest answer to [to-questionnaire-verification.md](../to-questionnaire-verification.md) §1–§3 (2026-10-13) so the screen could stop making that claim without waiting — a departure from the frame, and the design owner's and owner's answers replace it slot by slot | [ADR-049](adr/ADR-049-screen-04s-phone-states-and-the-words-that-follow-them.md) §3.1–§3.3; `src/features/onboarding/components/verification-screen.tsx`; [design-source.md](design-source.md) §“Screen 04” (the sixth deviation); PROJECT.md open question 20 |
+
+D1 (the 60-second resend wait), D3 (the six-digit code and its expiry words) and D5 (the phone
+state's two strings) went with screen 04 on 2026-10-24
+([ADR-059](adr/ADR-059-email-password-replaces-the-code-screen.md)). Their numbers are not reused.
 
 ---
 
@@ -185,14 +190,9 @@ no role, and a figure nothing measures is not printed.
   latitude or longitude at all (its paths are the frame's own 342×300 coordinates), so a real fix
   has no place on it — the control needs **a map with geographic coordinates**, which is the real
   basemap ([ADR-031](adr/ADR-031-a-real-basemap-osm-derived-tiles-we-host.md)), beside the position
-  source ([ADR-044](adr/ADR-044-the-partial-frames-remaining-parts.md)).- Screen 04: the frame's **resend row**, in both of its states — the action and the mid-wait “Resend
-  code · available in 00:28” the frame itself catches. Asking for another code is the row's whole
-  meaning and there is no transport to send one, so the screen draws the row only where a caller
-  supplies `onResend`, and the app's own route supplies none; the cooldown goes with it, because the
-  wait is what a send starts ([ADR-048](adr/ADR-048-the-verification-copy-claims-no-delivery.md)).
-  The same pass rewrote the screen's copy so it no longer claims a delivery either (claims-audit
-  row 3), which is what makes the row's absence consistent rather than the only honest line on the
-  screen.
+  source ([ADR-044](adr/ADR-044-the-partial-frames-remaining-parts.md)).
+- Screen 04 is retired, so its resend row is not a “not drawn” part any more: the whole screen went
+  on 2026-10-24 ([ADR-059](adr/ADR-059-email-password-replaces-the-code-screen.md)).
 - Frame 12: “View Zone 18” — the alert names a zone the app's demo composition does not hold (the
 design's own three zones are Z14, Z09 and Z21), so a screen for it would need a zone source or a
 zone invented for it; the link stays out ([ADR-044](adr/ADR-044-the-partial-frames-remaining-parts.md)).
@@ -283,16 +283,15 @@ and were checked rather than assumed:
 - frame 17's composer and frame 15's filter chips are drawn inert — no input role, no filter
   role — so there is nothing on them to be true about (AGENTS.md §11.2).
 
-**F5 — personal data whose lawful basis is still open.** The account identifier is held twice:
-in memory for the process `pending-verification.ts`, and inside the session
-(`src/services/session/`). Both name an email address or phone number; PROJECT.md question 15 is
-the recorded open decision. Neither is logged, sent or persisted — but a field with no lawful
-basis recorded is not done (AGENTS.md §11.1).
+**F5 — personal data whose lawful basis is still open.** The account's email address is held
+inside the session (`src/services/session/`), and the password is passed through without being
+kept. The address is personal data; PROJECT.md question 15 is the recorded open decision. It is
+not logged, sent or persisted — but a field with no lawful basis recorded is not done
+(AGENTS.md §11.1).
 
-**F6 — two numbers the design never states, picked here.** `RESEND_COOLDOWN_SECONDS` = 60 (D1)
-and `SESSION_LIFETIME_MS` = 1 h (D2). Both are reachable, harmless stand-ins; both are waiting on
-an owner answer rather than a service, which is why they are classed separately and not counted
-as demo data.
+**F6 — a number the design never states, picked here.** `SESSION_LIFETIME_MS` = 1 h (D2). It is a
+reachable, harmless stand-in; it is waiting on an owner answer rather than a service, which is why
+it is classed separately and not counted as demo data.
 
 **F7 — a whole domain built and unwired.** `features/visits` (the visit policy, the polygon
 containment and the visit lifecycle) is exported and tested, and imported by nothing; the policy's

@@ -3,6 +3,9 @@
 - **Status:** Accepted (the plan's own surface, left open below, is ADR-030)
 - **Date:** 2026-10-10
 - **Deciders:** Project owner (asked to finish the frames' remaining parts; the shape below is this repository's)
+- **Superseded in part by:** [ADR-061](ADR-061-the-saved-zone-remembers-its-berry.md) (2026-10-24)
+  — decision 1's per-zone shape gained the berry the zone was saved under. The record, its key,
+  its versioning rule and its deletion path stand.
 
 ## Context
 

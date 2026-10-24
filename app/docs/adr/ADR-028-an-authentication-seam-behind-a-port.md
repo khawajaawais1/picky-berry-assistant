@@ -1,6 +1,10 @@
 # ADR-028 — One session port, with a stand-in provider behind it
 
-- **Status:** Accepted
+- **Status:** Accepted; the stand-in's credential changed on 2026-10-24. The port's shape
+  (`signIn`, `current`, `signOut`) is unchanged, but it now takes `{ email, password, displayName? }`
+  instead of an identifier + code, and the stand-in behind it verifies no password and accepts
+  none in a production build
+  ([ADR-059](ADR-059-email-password-replaces-the-code-screen.md)).
 - **Date:** 2026-10-10
 - **Deciders:** Project owner (chose the seam's shape: an in-memory stand-in with the storage port declared, and the existing stand-in code `000000` as the credential it accepts)
 
@@ -31,11 +35,14 @@ answer to open question 12 does.
 
 ## Decision
 
-1. **One session port, in `src/services/session/`.** `SessionPort` has three operations —
-   `signIn(credential)`, `current()` and `signOut()` — because they are the three things the app
-   does with a session: acquire one, ask for the one it holds, drop it. `src/app/verify-email.tsx`
-   is its first caller; the sign-in screen, the shell's session check and the profile's sign-out
-   row are written against the same three calls.
+1. **One session port, in `src/services/session/`.** `SessionPort` has four operations —
+   `signIn(credential)`, `current()`, `signOut()` and `requestPasswordReset(email)` — because they
+   are the four things the app does with the provider: acquire a session, ask for the one it holds,
+   drop it, and ask the provider to recover the credential that owns a session. `src/app/verify-email.tsx`
+   is the original first caller; the sign-in screen, the shell's session check, the profile's
+   sign-out row and the password-reset screen are written against the same calls. The fourth
+   operation was added on 2026-10-24 by
+   [ADR-062](ADR-062-password-reset-belongs-to-the-provider.md); the first three are unchanged.
 2. **The port is a service, not a feature.** It is cross-cutting infrastructure that onboarding,
    the shell and the profile all need, and it is not a vertical slice of the product's domain:
    `src/services/` is the home for cross-cutting adapters (ARCHITECTURE.md §2), and features may

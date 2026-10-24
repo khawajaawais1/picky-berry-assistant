@@ -7,6 +7,10 @@
   be recorded. Every slot below is therefore filled, and every one is **marked as assumed** where it
   is filled: the design owner's and the owner's own answers are still owed and supersede any of them.
   The ADR becomes `Accepted` when §1–§4 hold real answers or explicit deferrals.
+- **Status note (2026-10-24):** **superseded by
+  [ADR-059](ADR-059-email-password-replaces-the-code-screen.md)** — screen 04 is retired, phone
+  sign-in is deferred (ADR-054 §5), and the two `titlePhone`/`changePhone` strings and the whole
+  phone branch were deleted. This record stays as the history of the assumed answers.
 - **Date:** 2026-10-12 (skeleton); 2026-10-13 (the assumed answers, built).
 - **Deciders:** the Figma design owner (§1, §2 and §3 — a frame and the frame's own words) and the
   project owner (§4, and §2's journey call) — covering PROJECT.md **open question 20** in the half

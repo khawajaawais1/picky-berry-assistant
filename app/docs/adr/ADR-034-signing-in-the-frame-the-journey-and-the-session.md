@@ -1,9 +1,13 @@
 # ADR-034 — Signing in: the frame, the journey and the session — the answers, recorded in one place
 
-- **Status:** **Recorded in part (2026-10-11).** §1.1, §1.2, §1.3, §1.6, §1.7 and §2.1 are answered
-  and the sign-in screen is built from them; §1.4, §1.5 and §2.2–§4 are still `> _pending_`, and each
-  keeps the thing it decides unbuilt rather than defaulted. The ADR becomes `Accepted` when §1–§4 are
-  answered or explicitly deferred.
+- **Status:** **Recorded in part (2026-10-11).** §1.1, §1.2, §1.3, §1.6, §1.7, §2.1 and §1.5 are
+  answered and the sign-in screen is built from them; §1.4 and §2.2–§4 are still `> _pending_`, and
+  each keeps the thing it decides unbuilt rather than defaulted. The ADR becomes `Accepted` when
+  §1–§4 are answered or explicitly deferred. **The credential was re-cut on 2026-10-24**: the screen
+  now collects email + password instead of an identifier + code, and lands in the app as before
+  ([ADR-059](ADR-059-email-password-replaces-the-code-screen.md)). **§1.5 was answered on
+  2026-10-24** ([ADR-062](ADR-062-password-reset-belongs-to-the-provider.md)): v1 has a recovery
+  path, the provider owns it, and the sign-in screen now draws the action.
 - **Date:** 2026-10-11 (skeleton and first answers). Each recorded answer carries the date it arrived.
 - **Deciders:** the Figma design owner (questionnaire §1) and the project owner (§2–§4) — covering
   PROJECT.md open questions 12 and 25, the lawful-basis sentence question 15 owes the session's own
@@ -140,7 +144,13 @@ treatment to be invented, which is the thing the repository may not do.
 **1.5 Is there a recovery path in v1 — a “forgot password” action — or deliberately none?** No frame
 contains its destination, and provider-side recovery is ADR-013's to configure, not ours to build.
 
-> _pending — questionnaire §1.5_
+> **The owner's answer (2026-10-24):** v1 has a recovery path, and it is the provider's. The
+> sign-in screen draws a “Forgot password?” action; the app asks the provider to send its reset link
+> to the account's address, the provider hosts the email and the new-password page, and the app
+> draws no new-password screen and handles no reset token. The request screen is app-drawn because
+> the design has no reset frame, and keeps the sign-in screen's framing. Recorded, with the
+> stand-in's honest no-email note, in
+> [ADR-062](ADR-062-password-reset-belongs-to-the-provider.md).
 
 **1.6 Does this screen carry the app shell, or sit outside it like onboarding?** It decides whether
 the bar is drawn here, as frames 01–05 draw none.

@@ -3,6 +3,9 @@
 - **Status:** Accepted
 - **Date:** 2026-10-10
 - **Deciders:** Project owner (asked to finish the frames' remaining parts; the shape below is this repository's)
+- **Superseded in part by:** [ADR-060](ADR-060-the-saved-plan-reads-the-zone-source.md) (2026-10-24)
+  — decisions 3 and 6 drew the plan from `DEMO_ZONES`, which the source replaced. The screen, its
+  route, its order and its unknown-id rule stand.
 
 ## Context
 
@@ -64,5 +67,6 @@ Two things made closing the gap the next honest step rather than a liberty.
   its own entry and the copy's own expectations, since there is no frame to take them from.
 - The plan and the settings row count **the same record**; a change to one is a change to the
   other, and both are read through `useSavedZones`.
-- When a zone source lands, this screen does not change: it draws whatever `ZoneRow` draws, and
-  the demo disclosure goes when the demo zones do.
+- The source landed on 2026-10-24: [ADR-060](ADR-060-the-saved-plan-reads-the-zone-source.md)
+  moves the plan's rows onto it, so the screen no longer draws `DEMO_ZONES`, and the eyebrow's
+  season-demo disclosure (decision 6) went with the rows.

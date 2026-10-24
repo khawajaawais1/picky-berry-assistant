@@ -155,10 +155,11 @@ _Avoid_: secret, login, hash (the app holds none), code (not v1's credential)
 
 **Stand-in**:
 An implementation that answers for a service that does not exist yet, accepted for exactly as
-long as that is true: one documented code, a lifetime copied from the provider's own token,
-nothing persisted, and **nothing accepted in a production build**. ADR-027's verification code
-and ADR-028's session provider are the two there are; both are deleted, not disabled, when the
-account service lands.
+long as that is true: a lifetime copied from the provider's own token, nothing persisted, and
+**nothing accepted in a production build**. There is one left — ADR-028's session provider, whose
+stand-in accepts any non-empty password outside production and verifies nothing (ADR-059), and
+accepts a reset address without sending anything (ADR-062). It is deleted, not disabled, when the
+account service lands; the code stand-in went with screen 04 on 2026-10-24.
 _Avoid_: mock, fake, stub, dummy, demo data (the **Marketplace demo** and **Season summary** are
 the design's own values — a different thing with a different word)
 
@@ -259,6 +260,12 @@ picker's intent, not a property of the zone: the same zone may be in one picker'
 in nobody else's, and it is never a report or a visit. The **Saved spots** screen is the
 list of them, in the order they were saved — frame 14's row of that name opens it, and the
 design drew no frame for the list itself ([ADR-030](docs/adr/ADR-030-the-saved-plan-gets-a-screen.md)).
+A saved zone remembers the berry whose score layer was being read when it was saved: the plan
+reads the zone source's answer for that layer, so the row carries the name and figures the map
+showed and opens that zone's screen under the same berry; an id the source does not answer to is
+named alone
+([ADR-060](docs/adr/ADR-060-the-saved-plan-reads-the-zone-source.md),
+[ADR-061](docs/adr/ADR-061-the-saved-zone-remembers-its-berry.md)).
 _Avoid_: favourite, bookmark, watchlist, collection, plan (as a noun for the record)
 
 **Share**:

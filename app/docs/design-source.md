@@ -69,10 +69,10 @@ screen without a reachable route is not implemented.
 | 01  | Onboarding · Welcome | **implemented** | `5:22710` | `src/app/index.tsx` → `features/onboarding` |
 | 02  | Onboarding · Choose role | out of v1 scope (design exploration only) | — | — (see PROJECT.md assumption 1) |
 | 03  | Onboarding · Create account | **implemented** | `5:22788` | `src/app/create-account.tsx` → `features/onboarding` |
-| 04  | Onboarding · Verification | **implemented** — including the phone state the frame does not draw, whose two headings, two change actions and foot card follow the destination the code was sent to (assumed 2026-10-13, [ADR-049](adr/ADR-049-screen-04s-phone-states-and-the-words-that-follow-them.md)) | `5:22840` | `src/app/verify-email.tsx` → `features/onboarding` |
+| 04  | Onboarding · Verification | **retired (2026-10-24)** — the account's credential is screen 03's email + password, so there is no code step. The screen, its route and its phone state were deleted rather than left beside the form; the departure is [ADR-059](adr/ADR-059-email-password-replaces-the-code-screen.md) and the frame's composition stays recorded in §“Screen 04” below | `5:22840` | — (no route; see [ADR-059](adr/ADR-059-email-password-replaces-the-code-screen.md)) |
 | 05  | Onboarding · Location consent | **implemented** | `5:22885` | `src/app/location-consent.tsx` → `features/onboarding` |
-| 06  | Core picker · Discover map | **partial** — the header, the frame's search field and species chips (which really filter: the map draws only the zones they leave, and a line says how many), the app's own drawing of that filtered map, the zone-state legend, the zone card (which opens screen 07), the frame's map/list toggle with the zone list behind it, and its download glyph (which opens screen 13); its recentre control is not built, because the map does not move, nothing asks the device for a position, and — found by reading the code on 2026-10-12 — the drawing's paths are the frame's own coordinates rather than latitude and longitude, so a real fix would have no place on it (the seam that could read one exists as of 2026-10-12, [ADR-045](adr/ADR-045-a-position-behind-a-port-and-nothing-kept.md), and no screen asks it for a fix): what the control waits on is a map with geographic coordinates, the real basemap ([ADR-031](adr/ADR-031-a-real-basemap-osm-derived-tiles-we-host.md)), beside a position source ([ADR-044](adr/ADR-044-the-partial-frames-remaining-parts.md)); its core navigation is the app shell (ADR-022) | `5:22942` | `src/app/(app)/discover.tsx` → `features/discover` |
-| 07  | Core picker · Zone details | **partial** — the header, the season photograph, the species row the zone is reported for, the yield card, the outlook, the freshest report, the frame's own **bookmark**, which writes and removes the picker's saved-zone record on this device (ADR-024), the “Navigate” action that opens screen 08, and **“See all 11”**, which opens the report list this phone holds for the zone (app-drawn, [ADR-044](adr/ADR-044-the-partial-frames-remaining-parts.md) — see the app-drawn inventory below); its species row's third chip (“More”) is not drawn, because a single zone's screen has no species to narrow, and the zone's reports from *other* pickers are not on the list the link opens: nothing returns one, and the screen says so | `5:23032` | `src/app/(app)/zone-details.tsx` → `features/discover` |
+| 06  | Core picker · Discover map | **partial** — the header, the frame's search field and species chips (the field narrows by zone name and the chips choose the score layer; the map draws exactly the zones left and a line says how many), MapLibre over the pilot stub on the device and the same rings as an SVG on the web export, the five-band score legend, the zone card reading the source's first zone (its score, confidence and season) **which opens screen 07** with the zone's id and berry, the frame's map/list toggle with the source's rows behind it, and its download glyph (which opens screen 13); its recentre control is not built, because every map gesture is off until a control exists, and the real basemap ([ADR-031](adr/ADR-031-a-real-basemap-osm-derived-tiles-we-host.md)) is what it waits on beside a position source ([ADR-044](adr/ADR-044-the-partial-frames-remaining-parts.md)); its core navigation is the app shell (ADR-022) | `5:22942` | `src/app/(app)/discover.tsx` → `features/discover` |
+| 07  | Core picker · Zone details | **partial** — the header, the season photograph, the species row the zone is reported for, the yield card, the outlook, the freshest report, the frame's own **bookmark**, which writes and removes the picker's saved-zone record on this device (ADR-024), the “Navigate” action that opens screen 08, and **“See all 11”**, which opens the report list this phone holds for the zone (app-drawn, [ADR-044](adr/ADR-044-the-partial-frames-remaining-parts.md) — see the app-drawn inventory below). Since 2026-10-24 the screen **reads the same `ZoneSource` as screen 06** when its card hands over a zone id and berry ([ADR-058](adr/ADR-058-screen-07-reads-the-zone-source.md)): name, scored species, score, confidence and season are that zone's; the design's week of reports is not printed beside them, and the zone's own `updated_at` is printed under the yield card in the map line's words (omitted when the payload has none). The outlook, freshest report, walk and report list have no source and stay the design's sample, said by one sentence before them; without a zone id the whole screen is the sample. Its third species chip (“More”) is not drawn, because a single zone's screen has no species to narrow, and other pickers' reports are not on the list the link opens: nothing returns one, and the screen says so | `5:23032` | `src/app/(app)/zone-details.tsx` → `features/discover` |
 | 08  | Core picker · Route to zone | **implemented** — the header, the offline note, the frame's own map with its walking route, the distance and arrival card, the next turn, “Start walking” (which opens screen 09) and “Cancel route”; its core navigation is the app shell (ADR-022), and the offline note is the frame's claim about a tile cache this app does not have | `5:23106` | `src/app/(app)/route-to-zone.tsx` → `features/discover` |
 | 09  | Core picker · Active visit | **partial** — the header, the arrival note, the same map at 210 px, the live timer with its pause, the frame's privacy line, “End visit” (which opens screen 10) and the supporting line; the frame's recentre control is not drawn, for the reason frame 06's is not — position source and a map that carries geography ([ADR-044](adr/ADR-044-the-partial-frames-remaining-parts.md), [ADR-031](adr/ADR-031-a-real-basemap-osm-derived-tiles-we-host.md)); its core navigation is the app shell (ADR-022) | `5:23185` | `src/app/(app)/active-visit.tsx` → `features/discover` |
 | 10  | Core picker · Post-visit feedback | **partial** — the header, the exit summary, the heading, the two species chips the frame names, its third chip (“More”), which reveals the rest of the app's species vocabulary, the five-cell yield rating, the harvest field, the offline note, “Save report offline” (which writes the device's report queue) and “Skip report for now”; the frame's “Add a berry photo” row is not built (the owner deferred evidence media) | `5:23259` | `src/app/(app)/post-visit-feedback.tsx` → `features/discover` |
@@ -142,67 +142,73 @@ control that established `layout.minTouchTarget`. Its components became
 measured against the frame rather than approximated, and the screen's own values were
 re-checked in a browser at the frame's 390 px width.
 
-Four deliberate deviations, recorded in PROJECT.md: the consent control ships
-**unchecked**, although the frame draws it ticked, because a pre-ticked box is not a
-valid affirmative action; the frame's example values (`Aino Korhonen`,
-`aino@example.fi`) are rendered as placeholders rather than as a pre-filled form; the
-frame's icons (back arrow, mail, eye, lock, square-check) use the nearest glyphs from
-`@expo/vector-icons`; and its OS status bar and home indicator are not drawn.
+Five deliberate deviations, recorded in PROJECT.md. The first four are the frame's own drawing
+choices: the consent control ships **unchecked**, although the frame draws it ticked, because a
+pre-ticked box is not a valid affirmative action; the frame's example values (`Aino Korhonen`,
+`aino@example.fi`) are rendered as placeholders rather than as a pre-filled form; the frame's icons
+(back arrow, mail, eye, lock, square-check) use the nearest glyphs from `@expo/vector-icons`; and
+its OS status bar and home indicator are not drawn. The fifth is the credential re-cut of
+2026-10-24 ([ADR-059](adr/ADR-059-email-password-replaces-the-code-screen.md)): **the email/phone
+chips are not drawn** and the form is email-only, because phone sign-in is deferred (ADR-054 §5).
+The frame's password field and its hint are kept exactly as drawn; they are the credential now, not
+a field waiting for a code.
 
-Wired: submitting the form leads to screen 04 with the address the code goes to, the
-sign-in action leads to `/sign-in` (ADR-034), and **the terms link opens the device notice**
-(`/terms-privacy`) since 2026-10-11 — the app has no terms document, and the notice is what it can
-honestly put behind a consent line: what this phone is holding, record by record, and the rights
-over each ([ADR-043](adr/ADR-043-three-waiting-frame-parts-get-their-answers.md)). While that link
-had nowhere to go it was drawn as a label; a link that lands somewhere real is an action, so it now
-carries the role every other action in the app carries. The phone state of the identifier field
-shows the chip's own copy and no example, because the frame only draws the email state.
+Wired: submitting the form is account creation and sign-in at once — the values go to the session
+port and, when they are accepted, the flow continues to screen 05. Screen 04's code step is gone
+(ADR-059), so there is no verification screen between the form and the consent. The sign-in action
+leads to `/sign-in` (ADR-034, re-cut to email + password), and **the terms link opens the device
+notice** (`/terms-privacy`) since 2026-10-11 — the app has no terms document, and the notice is what
+the app can honestly put behind a consent line: what this phone is holding, record by record, and
+the rights over each ([ADR-043](adr/ADR-043-three-waiting-frame-parts-get-their-answers.md)). While
+that link had nowhere to go it was drawn as a label; a link that lands somewhere real is an action,
+so it now carries the role every other action in the app carries.
 
-### Screen 04, as extracted
+### Screen 04, as extracted — retired 2026-10-24
 
-Values measured on node `5:22840` that are now tokens in `src/constants/theme.ts`: the
-62 px code cell (`layout.codeCellHeight`), the 76 px symbol tile (`layout.symbolTile`)
-and the 25/30 semibold digit inside a cell (`typography.digit`). Its components became
-`CodeField` — six cells over the frame's 8 px gap at the control radius, each stroked in
-the accent colour 2 px wide while the field has the focus, which is the state the frame
-itself draws — and the shared `TextAction`, which screens 01 and 03 had each written for
-themselves until this frame drew three of them.
+**This frame is no longer built.** The account's credential is screen 03's email + password
+(ADR-054), so a code screen has nothing to ask for; the route, the screen, its domain, its
+countdown and its stand-in code were deleted ([ADR-059](adr/ADR-059-email-password-replaces-the-code-screen.md)).
+What follows is the extraction as it stood, kept because the frame remains the design's record
+and a later phone or verification journey may need it.
 
-Six deliberate deviations, recorded in PROJECT.md and
-[ADR-048](adr/ADR-048-the-verification-copy-claims-no-delivery.md): the copy stops claiming a
-delivery — nothing in the app sends a code, so the heading says what the step is for and the
-supporting line names the destination the code belongs to, with the frame's own words recorded as
-the branch that earns them — and the frame's **resend row is not drawn** for the same reason, since
-asking for another code is the row's whole meaning and no caller can send one; the resend wait's
-**length** is the app's choice, because the frame catches one in progress (`available in 00:28`) and
-never says how long it runs; the frame's icons (`mail-check`, `smartphone`, back arrow) use the
-nearest glyphs from `@expo/vector-icons`; and its OS status bar and home indicator are not
-drawn, because the device owns those. The sixth (2026-10-13, built at the owner's
+Values measured on node `5:22840` were once tokens in `src/constants/theme.ts`: the 62 px code
+cell (`layout.codeCellHeight`), the 76 px symbol tile (`layout.symbolTile`) and the 25/30
+semibold digit inside a cell (`typography.digit`). The cell and digit tokens went with the
+screen; the tile stays because the app-drawn sign-in screen draws it as its key tile. Its
+components were `CodeField` — six cells over the frame's 8 px gap at the control radius, each
+stroked in the accent colour 2 px wide while the field has the focus, which is the state the
+frame itself draws — and the shared `TextAction`, which screens 01 and 03 had each written for
+themselves until this frame drew three of them. `CodeField` was deleted with the screen;
+`TextAction` is still the app's secondary action.
+
+Five deliberate deviations were recorded while it was built, in PROJECT.md and
+[ADR-048](adr/ADR-048-the-verification-copy-claims-no-delivery.md): the copy stopped claiming a
+delivery — nothing in the app sends a code, so the heading said what the step was for and the
+supporting line named the destination the code belonged to, with the frame's own words recorded as
+the branch that earns them — and the frame's **resend row was not drawn** for the same reason, since
+asking for another code is the row's whole meaning and no caller could send one; the resend wait's
+**length** was the app's choice, because the frame catches one in progress (`available in 00:28`) and
+never says how long it runs; the frame's icons (`mail-check`, `smartphone`, back arrow) used the
+nearest glyphs from `@expo/vector-icons`; and its OS status bar and home indicator were not
+drawn, because the device owns those. The fifth (2026-10-13, built at the owner's
 instruction — [ADR-049](adr/ADR-049-screen-04s-phone-states-and-the-words-that-follow-them.md))
-is the **phone state the frame never draws**: the frame draws the email state only, so the
-title and the change action follow the destination the code belongs to — “Verify your
-number” and “Change phone number” when it is a number, the frame's own “Verify your email”
-and “Change email address” when it is an address — and the frame's foot card, which asks
-whether the reader signed up by phone *instead*, is drawn on the email journey only. The
-answers are this repository's **assumed** ones, marked as assumptions in PROJECT.md (open
-question 20) and owed by the design owner and the owner, who replace them slot by slot; the
-screen's copy is quoted in full there rather than duplicated here.
+was the **phone state the frame never draws**: the title and the change action followed the
+destination the code belonged to, and the frame's foot card was drawn on the email journey only.
+Those answers were this repository's **assumed** ones and were deleted with the screen; ADR-049
+holds their history.
 
-Two things the screen has that the frame does not draw, both written app-side: a failure
-line under the action when the app has to **refuse** the code (the design has no error
-state — open question 11), and the rule behind the action, which accepts one stand-in code
-outside production builds while the account service does not exist
-([ADR-027](adr/ADR-027-a-stand-in-verification-code.md)). The failure line is measured with
-the screen's other copy, in both languages at both text sizes.
+One thing the screen had that the frame did not draw, written app-side: a failure line under the
+action when the app had to **refuse** the code (the design has no error state — open question 11).
+The app's failure lines now live on screens 03 and `/sign-in`, written the same way.
 
-### Screen 04, and copy that carries a value
+### Copy that carries a value
 
-Screen 04's supporting line names the destination the code belongs to, which is the first copy
-in the app with a runtime value in it: the catalogue holds the sentence with a
-`{destination}` placeholder and `interpolate` fills it. The harness measures the filled
-sentence, not the placeholder — its manifest gives the rule the same value the route
-falls back to — because a screen that names the destination it is asking about is not a
-screen with a missing string in it.
+Screen 04's supporting line was the first copy in the app with a runtime value in it: the
+catalogue held the sentence with a `{destination}` placeholder and `interpolate` filled it. That
+screen is retired, but the mechanism is used wherever a sentence names a runtime value — screen
+08's zone number, route length and arrival time, screen 07's weather line, the account row's
+identifier. The layout harness measures the filled sentence rather than the placeholder, because
+a screen that names the value it is about is not a screen with a missing string in it.
 
 ### Screen 05, as extracted
 
@@ -331,8 +337,14 @@ search left, prints that zone's score for the chosen berry, its confidence and i
 the caption “Pilot area · test data”; the list rows do the same for every zone kept. The species
 chips choose the **score layer**, one berry at a time, and the field filters by the zone's name.
 Two things the frame draws are gone with the sample and recorded in PROJECT.md: the card's walking
-distance and report age (nothing supplies them), and its chevron into screen 07, which still
-describes the demo zone. The demo card survives only in the community-map prototype.
+distance and report age (nothing supplies them). Its **chevron into screen 07 is back** since
+2026-10-24 ([ADR-058](adr/ADR-058-screen-07-reads-the-zone-source.md)): the card hands the zone id
+and the berry whose score it printed to a screen that now reads the same source. The list rows
+stay readings; the demo card survives only in the community-map prototype. **The app adds one line
+the frame does not draw** (2026-10-24): under the map, “Last updated 3 August 2026” / “Päivitetty
+3.8.2026” prints the oldest `updated_at` in the data the map is showing, as the plan's §2.4 label
+asks. It is the data's instant, so a cached answer keeps the age of what it holds; an answer with
+an undated zone prints no line.
 Five departures belong to this screen, all recorded in PROJECT.md. The frame paints its first
 chip as chosen while drawing every zone on its map; the app opens with **no chip chosen**, because
 a chip painted chosen while nothing has been filtered away would claim a filter that is not in
@@ -347,12 +359,20 @@ glyphs, as on every screen so far.
 
 ### Screen 07, as extracted
 
-Frame 07 (node `5:23032`) is what the picker sees before walking out of the door: the design's demo
-zone — “Zone 14 · Laajavuori”, the unpicked one the frame's map badges with `78` — with the yield
-score behind that number, the confidence in it, the week's reports, today's conditions and the
-freshest report from the field. It is reached by its URL and from the saved plan; screen 06's card
-no longer opens it, because that card reads the source zones now and this screen still describes
-the design's sample (ADR-057).
+Frame 07 (node `5:23032`) is what the picker sees before walking out of the door: the yield score
+behind the zone's number, the confidence in it, the season, today's conditions and the freshest
+report from the field. Since 2026-10-24 it is **reached from screen 06's card**, which hands it the
+zone's id and the berry whose score the card printed ([ADR-058](adr/ADR-058-screen-07-reads-the-zone-source.md)).
+With those params the screen asks the same `ZoneSource` frame 06 read and draws that zone's own
+name, its scored species, its score, confidence and season; the design's week of reports leaves the
+yield card, because the payload carries no such count. The app adds one line the frame does not:
+under the yield card it prints the zone's `updated_at` in frame 06's own words (“Last updated …” /
+“Päivitetty …”), the same instant the map reads, and prints nothing when the payload carries none. The frame's outlook, freshest report, walk
+and report list have no source, so they stay the design's sample and one sentence before them says
+so. **Without params** — a bare URL alone since the saved plan reads the source
+([ADR-060](adr/ADR-060-the-saved-plan-reads-the-zone-source.md)) — the whole screen is still the
+design's demo zone, “Zone 14 · Laajavuori” with `78`, as it was built in 2026-10-09; that path
+is the last demo here, kept for a deep link the app cannot fill.
 
 Values measured on node `5:23032` that are now tokens in `src/constants/theme.ts`: the season
 photograph (342×154 at the card radius, exported to `assets/images/zone-season.png`), the yield
@@ -363,13 +383,13 @@ both are the success tint: the frame paints “Unpicked” and “Ripe now” in
 chip reads in the map legend's own word and the ripeness chip says the other thing about the same
 zone.
 
-**The design's sample numbers are one story told twice, and the tests hold the two together.**
+**The no-param path's numbers are one story told twice, and the tests hold the two together.**
 The score `78`, the state `unpicked` and the report's `38 min ago` are the same values frame 06's
-map badge, legend and card carry, so `DEMO_ZONE_DETAILS` is tied to frame 06's zone by test
-rather than by a copied literal: a drift would have the app tell the user two different numbers
-about one zone. Nothing returns any of it — there is no zone service, no weather source and no
-report stream — and the frame itself says so in the line that could otherwise be read as a
-promise (“A forecast of conditions, not a guaranteed harvest.”), which the screen keeps.
+demo card carried before ADR-057, so `DEMO_ZONE_DETAILS` is tied to that zone by test rather than
+by a copied literal: a drift would have the app tell the user two different numbers about one
+zone. No source returns the weather or the report — and the frame itself says so in the line that
+could otherwise be read as a promise (“A forecast of conditions, not a guaranteed harvest.”),
+which the screen keeps in both readings.
 
 **One type departure, recorded in PROJECT.md.** The frame sets “Fresh from pickers” at 17/23.8 and
 “Today's outlook” at 18/25; the app keeps the one section-heading slot for both, which is the
@@ -382,15 +402,14 @@ frame 06. The frame's third chip **“More”** opens a species index the app do
 not drawn, and zone 14's own two species are the frame's two names (its card reads “Lingonberry”
 because that is the first of them).
 
-**What the frame draws and this screen does not.** **“Save zone”** would write a personal record
-about the picker's own plans to this device, so it waits on the owner's lawful-basis and purpose
-decision rather than being invented here (AGENTS.md §11, and the same gate the report queue went
-through on 2026-10-09). **“Navigate · 1.4 km”** opens frame 08, which exists and is what the route
-passes in. **“See all 11”** needs the report list it names — a stream of other pickers' reports
-that nothing returns yet — so it is rendered as the design's own words rather than as a control,
-which is how its copy is still measured in both languages without the screen announcing an action
-it cannot perform (the treatment frame 13's two sample actions get). The **core navigation** is
-present: it is the app shell (ADR-022).
+**The frame's controls.** **“Save zone”** is real since 2026-10-10: the bookmark writes the zone
+the screen is about to the picker's own plan on this device and removes it again (ADR-024).
+**“Navigate · 1.4 km”** opens frame 08, which is still the design's demo walk; its distance comes
+from that screen's one constant. **“See all 11”** opens the app-drawn report list since
+2026-10-12 (ADR-044); the eleven are the design's sample week, and the list says so. On a source
+zone the sentence before the outlook names the outlook, report, walk and list as the design's
+sample, because none of them has a service behind it. The **core navigation** is present: it is
+the app shell (ADR-022).
 
 The frame's own assets and sample values were read the same way frame 06's were: its texts,
 boxes and fills from the node response, and its photograph exported at @2x.
@@ -540,8 +559,8 @@ are in, “All visits” is everything the phone holds, and the screen opens on 
 is the period holding the report screen 10 has just saved
 ([ADR-043](adr/ADR-043-three-waiting-frame-parts-get-their-answers.md)); the **rows are the device's
 own** rather than the design's three alone; and the frame's **core navigation** is absent, as on every
-other core picker screen. The chips draw through `ChoiceChips` — the radio group screen 03's
-identifier chips already use — and the two lines under “Visit history” state what the choice is
+other core picker screen. The chips draw through `ChoiceChips` — the radio group screen 10's
+species chips already use — and the two lines under “Visit history” state what the choice is
 showing, including how many visits the month chip leaves out. A visit's month is read in **UTC**, the
 same reading every date this screen prints uses. The preface lines under the heading are the app's
 own — the frame draws none — which is why they are held to one line each in both languages. The
@@ -714,16 +733,43 @@ list's below, and joins the rest of the catalogue in open question 13's review.
 Frames 01 and 03 both draw “Already have an account? Sign in”, and the design file stops there:
 there is no frame for what the link opens. The screen exists (`/sign-in`) and the design owner's
 answers are what it is built from ([ADR-034](adr/ADR-034-signing-in-the-frame-the-journey-and-the-session.md)):
-**one identifier field**, then screen 04's own code step, which is reached with a pending request
-that carries the address and no name — a returning account's name is the account service's answer,
-and there is no profile to read ([ADR-038](adr/ADR-038-a-session-may-carry-no-name.md)). Once the
-code is accepted a **returning user lands inside the app** rather than on screen 05, which is where
-a sign-up continues, and the screen lives **outside the app shell** like the rest of onboarding
-(ADR-022 draws no bar there). Being frame-less it has no frame line counts to be held to, so the
-harness holds the app's own wording to the lines it needs in the wider language (the supporting
-sentence takes three in Finnish) and measures it in both languages at the largest text size
-(entry `01b` in `e2e/layout.spec.ts`), and what it states — a code, never a password — is the
-reading ADR-034 records.
+the screen's shape, with no frame for its composition. **Since 2026-10-24 its credential is the
+account's own — an email address and a password** ([ADR-054](adr/ADR-054-the-account-belongs-to-the-api.md),
+[ADR-059](adr/ADR-059-email-password-replaces-the-code-screen.md)) — so there is no field for a
+phone number and no code step behind it. Once the credential is accepted a **returning user lands
+inside the app** rather than on screen 05, which is where a sign-up continues, and the screen lives
+**outside the app shell** like the rest of onboarding (ADR-022 draws no bar there). Being
+frame-less it has no frame line counts to be held to, so the harness holds the app's own wording to
+the lines it needs in the wider language and measures it in both languages at the largest text size
+(entry `01b` in `e2e/layout.spec.ts`). It draws a failure line the design does not, because a
+refused press must not be silent (AGENTS.md §2.3), and since 2026-10-24 it draws the recovery
+action that opens the app-drawn reset request ([ADR-062](adr/ADR-062-password-reset-belongs-to-the-provider.md)).
+
+### The password-reset request — app-drawn, no node
+
+Frames 01 and 03 draw a sign-in link and stop; no frame, and no app-drawn screen before 2026-10-24,
+drew anything behind a forgotten password. The owner asked for the journey, and
+[ADR-062](adr/ADR-062-password-reset-belongs-to-the-provider.md) records the split: the app draws
+**the request** (`/forgot-password`) and its confirmation, while the sign-in provider sends the
+reset email, hosts the page where a new password is set, and owns the token. There is therefore
+**no new-password field and no token in the app** — the way on after the provider's page is
+`/sign-in`.
+
+The screen keeps the sign-in screen's framing because it stands beside it: the same 76 px key
+tile, the onboarding header and back control, the design's 54 px field and action, and a text
+action back to sign-in. Being frame-less it has no line counts to be held to; the harness measures
+its request state for “nothing is lost at 200 %” (entry `01c` in `e2e/layout.spec.ts`), and its
+copy's own expectations live in the screen's unit test. The confirmation is reached by pressing
+through in the browser journey, not by a fresh page load, because the request's state lives in the
+screen rather than in the store.
+
+**No string claims a delivery.** The action says “Request reset link” rather than “Send me a link”,
+and the confirmation says the request was accepted and that *if* an account uses the address, the
+provider's link is the next step. Outside production the stand-in sends nothing, so the
+confirmation adds a test-build note saying no reset email is sent; a production build draws the
+action disabled because no provider is connected. The one failure line does not distinguish an
+unknown address from a failed request, so the screen cannot be used to learn which addresses have
+accounts. This is ADR-048's rule applied to reset rather than a second wording for it.
 
 ### The screen behind frame 14's “Saved spots” row — app-drawn, no node
 
@@ -731,12 +777,17 @@ There is no frame for it: the design's only collection point for the plan is fra
 it was never drawn past that row ([ADR-024](adr/ADR-024-saved-zones-on-the-device.md) recorded the
 gap, [ADR-030](adr/ADR-030-the-saved-plan-gets-a-screen.md) answers it). The screen
 (`/saved-spots`) is therefore built **entirely from the app's own vocabulary** — the shell, the
-screen template's header, frame 06's own `ZoneRow` for each saved zone and its empty state's
-action — with copy that belongs to the app rather than to the design, and it says so: its eyebrow
-carries the “· SEASON DEMO” disclosure frame 06's map and frame 11's season screen carry, because
-the zones it lists are the design's demo composition until a zone source exists. What it does not
-take from the design it takes from the record: the plan in the order it was made, a saved
-identifier the zone source cannot describe named rather than dropped, and an empty plan that says
+screen template's header, frame 06's own `ZoneSourceRow` for each saved zone and its empty
+state's action — with copy that belongs to the app rather than to the design. Since 2026-10-24
+the rows read the same `ZoneSource` frame 06 and screen 07 read, so the eyebrow no longer carries
+a season-demo disclosure: a row shows the source's name, score band and season, and a row the
+source answers opens frame 07 with that zone and the berry the record holds
+([ADR-060](adr/ADR-060-the-saved-plan-reads-the-zone-source.md),
+[ADR-061](adr/ADR-061-the-saved-zone-remembers-its-berry.md)). The berry is what the bookmark
+wrote when the zone was saved, read from the source's answer for that layer; a record from before
+the widening is shown under the pilot berry, as it always was. What it does not take from the
+design it takes from the record: the plan in the order it was made, a saved identifier the zone
+source cannot describe named rather than dropped (and with no role), and an empty plan that says
 it is empty and offers frame 06's map. Being frame-less, it has no line counts to be held to; the
 harness measures it for “nothing is lost at 200 %” only, and its copy's own expectations live in
 the screen's unit test.
@@ -779,20 +830,20 @@ wraps where the design shows a single line.
 | Screen | English | Finnish |
 | ------ | ------- | ------- |
 | 01 · Welcome | clean | one defect found and fixed: the third promise tag wrapped to two lines (17 px → 34 px), because “Yksityinen luonnostaan” is 22 characters in a third of the content column |
-| 03 · Create account | clean | clean — every field stays 54 px, the chips grow in width as designed, and the 87 px privacy note keeps two lines, so it stays 87 px |
-| 04 · Verification | clean | clean — the sentence naming the destination and the expiry note both keep the frame's two lines, and the six code cells stay on one row; the frame's resend row (and with it the countdown) is not drawn, because no caller can send a code (ADR-048) |
-| 04b · Verification, the phone state (design-drawn, frame undrawn) | clean | clean — the frame draws no phone state, so there is no line count to wrap against: the titles, the change actions and the foot card's own sentences that name the destination render in both languages at both text sizes |
+| 03 · Create account | clean | clean — every field stays 54 px, the password hint keeps its line under the field, and the 87 px privacy note keeps two lines, so it stays 87 px; the frame's chip row is not drawn any more (ADR-059) |
+| 04 · Verification | retired (2026-10-24) | no route renders it, so the harness no longer measures it — its last clean reading, before the retirement, was that the sentence naming the destination and the expiry note kept the frame's two lines and the six code cells stayed on one row |
+| 04b · Verification, the phone state (design-drawn, frame undrawn) | retired (2026-10-24) | the phone state went with screen 04 and its assumed answers; [ADR-049](adr/ADR-049-screen-04s-phone-states-and-the-words-that-follow-them.md) keeps their history |
 | 05 · Location consent | clean | clean — the supporting line, the second benefit and the consent row all keep the frame's two lines; “Löydä suuntasi” and “Ei nyt · selaa ilman seurantaa” fit theirs |
-| 06 · Discover map | clean | one defect found and fixed: at 200 % the three legend states no longer fitted the 342 px column in Finnish (“Poimimaton”, “Äskettäin poimittu”, “Kypsymässä”) and the row was cut off horizontally — it wraps now, as screen 03's chip row does |
+| 06 · Discover map | clean | one defect found and fixed: at 200 % the three legend states no longer fitted the 342 px column in Finnish (“Poimimaton”, “Äskettäin poimittu”, “Kypsymässä”) and the row was cut off horizontally — it wraps now, as screen 11's period chips do |
 | 07 · Zone details | clean | one defect found and fixed: the scoring note (“Pisteisiin vaikuttavat tuoreus, luotettavuus ja lähihavaintojen yhtäpitävyys.”) ran to two lines where the frame draws one (342×17) — shortened to “…ja lähihavainnot.” |
 | 08 · Route to zone | clean | one defect found and fixed: the turn guidance (“Käänny oikealle 180 m kuluttua · määränpää Laajavuori”) ran to two lines where the frame draws one (264×18) — the word “määränpää” went, and the place name now closes the line |
 | 09 · Active visit | one defect found and fixed | the two action labels (“Keskeytä käynti”, “Lopeta käynti”) each wrapped to two lines in the frame's 103 px label box — shortened to “Keskeytä” and “Lopeta”; and at 200 % the reading needed 440 px in a 302 px card, so it is painted in parts and reflows |
 | 10 · Post-visit feedback | one defect found and fixed | the Finnish rating word “Kohtalaisesti” was clipped by the frame's own 63 px cell at the design's 11 px — the cells now size to their words and the row wraps |
-| 11 · Visits and analytics | clean | one defect found and fixed: at 200 % the two period chips (“Elokuu 2026”, “Kaikki käynnit”) were cut off horizontally in their row — the row wraps now, as screen 03's chip row does |
+| 11 · Visits and analytics | clean | one defect found and fixed: at 200 % the two period chips (“Elokuu 2026”, “Kaikki käynnit”) were cut off horizontally in their row — the row wraps now, as screen 10's rating row does |
 | 12 · Alerts and forecast | clean | one defect found and fixed: the alert's context line (“Alue 18 · Laajavuori · Tuorein havainto 60 min sitten”) ran to two lines where the frame draws one (306×18) — the Finnish now states the reading alone (“… · 60 min sitten”) |
 | 13 · Downloads | clean | two findings: at 200 % the “Jonossa · käynti ja raportti” chip was cut off vertically by the frame's 36 px chip height — the chip's height is a floor now (`min-h-chip`) — and the queue row's own line keeps the frame's single 306 px line in both languages. The sample block ADR-042 added was measured with it (2026-10-11): every one of the frame's lines — the region's name and its “12 km² · 86 MB · ladattu”, both card rows and their “Välimuistissa”, the forecast's own line, the refresh note, both storage figures, both action labels and the last-sync line — renders in the frame's own single line in Finnish as well as in English, and the app's own disclosure sentence above the block needs three of the column's lines |
 | 14 · Privacy settings | clean | one defect found and fixed, and it was this harness that found it: the frame's group of rows was first drawn inside a card, whose 18 px inset took the sync row's label from the frame's own 244 px (node `5:23671`) down to 200 px, so “Offline-kartat ja synkronointi” wrapped where the design draws one line and the row clipped at 200 %; the group is drawn where the frame draws it now — outside any card — and the rest is clean: the status message's body keeps the frame's two lines (282x36), the title, both row labels and the new subtitle (“3 spots · private by default” / “3 paikkaa · oletuksena yksityisiä”) fit theirs, and the sync row's own value (“1 queued” / “1 jonossa”) fits its 62 px slot |
-| 14b · Saved spots (app-drawn) | clean | clean — the design drew no frame for this list, so there is no line count to wrap against: every string of it renders in both languages at both text sizes, and its rows are frame 06's own `ZoneRow`s, which frame 06's entry above already holds to their lines |
+| 14b · Saved spots (app-drawn) | clean | clean — the design drew no frame for this list, so there is no line count to wrap against: every string of it renders in both languages at both text sizes, and its rows are frame 06's own `ZoneSourceRow`s, which frame 06's entry above already holds to their lines |
 | 14c · Account & security (app-drawn) | clean | clean — frame-less, so the run holds it to “nothing is lost” at 200 %: every string of the screen's own copy renders in both languages at both text sizes. The one reading that changes on its own (the time left in the session's hour, ADR-041) cannot be seeded into a browser run, because the session lives in the process (ADR-028); it is asserted in the screen's unit test, and the harness measures the lines that are there — including the lifetime reading the countdown sits beside |
 | 14d · Terms & privacy (app-drawn) | clean | clean — frame-less, held to “nothing is lost” at 200 %: the Finnish is markedly longer than the English and every sentence still renders, the record rows' hints included (the runs carry the wider language's line counts, 2–5 lines per sentence) |
 | 14e · Your data (app-drawn) | clean | clean — frame-less, held to “nothing is lost” at 200 %: the contents card's rows, the file card, the sentence naming where the copy goes and the control that opens the sheet all render in both languages at both text sizes |
@@ -822,7 +873,7 @@ The frames are a fixed-height composition, and a device can ask for text twice a
 for — and what is measured instead is that nothing is lost: no clipped copy, no box whose
 content spills out of it, no sideways scroll. Three frames' numbers did not survive that, and
 all three were fixed as floors rather than redrawn: the 64 px header row became a minimum;
-screen 03's chip row wraps now, because “Sähköposti” and “Puhelinnumero” together are wider
+screen 11's period chips wrap now, because “Elokuu 2026” and “Kaikki käynnit” together are wider
 than the 342 px content column at that size; and a field's value box lets the field keep its
 width instead of stretching past the screen. What the *design* should look like at 200 % is
 not in the file — it is an owner question, not something this document can extract.

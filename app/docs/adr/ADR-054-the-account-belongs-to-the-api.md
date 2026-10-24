@@ -9,7 +9,9 @@
   account is**.
 - **Narrows:** [ADR-027](ADR-027-a-stand-in-verification-code.md) and
   [ADR-028](ADR-028-an-authentication-seam-behind-a-port.md) — both stand-ins stay until the
-  account service answers, and both go when it does.
+  account service answers, and both go when it does. **Amended (2026-10-24):** the `000000` code
+  stand-in is retired early by [ADR-059](ADR-059-email-password-replaces-the-code-screen.md), because
+  the code screen it served is gone; the stand-in session port is the one stand-in left.
 - **Extends:** [ADR-032](ADR-032-the-first-backend-slice.md). Its “accounts are
   identity-provider subjects and nothing else” still holds for the share slice; the v1 account
   record below adds a locale and consent timestamps, not a name and address of its own.
@@ -100,9 +102,11 @@ by Firebase satisfies both: the password never reaches our database, and the acc
   kept), and that is a **recorded departure** for the design owner — the design has no password
   field, and no copy for reset. It is a departure, not a redraw: the frames stay the source for
   what the screen looks like.
-- **Password reset is a journey the app does not draw yet.** Resilience copy, the reset email and
-  the post-reset landing need their own screens; until then the app names the provider's reset
-  path rather than inventing one.
+- **Password reset is a journey the app drew in part on 2026-10-24.** The owner asked for it, and
+  [ADR-062](ADR-062-password-reset-belongs-to-the-provider.md) records the split: the app draws the
+  request and the confirmation, the provider sends the email and hosts the new-password page, and
+  the app handles no token. Until an adapter is wired, a production build cannot request a link and
+  a development build says no email was sent.
 - **A smaller breach surface, a real lock-in.** Our database cannot leak a password because it
   holds none; migrating identities out of Firebase later remains a project (ADR-013's cost, kept).
 - **Processor and region consequences** are recorded in [ADR-055](ADR-055-retention-and-processors.md):

@@ -127,8 +127,11 @@ Accepted policy (owner decision, 2026-10-08):
 - What a session proves is **identity in this client's own understanding, never privilege**.
   The client is untrusted, the server decides what a caller may see and do, and nothing in the
   seam grants access to anything (ADR-013 §3, ADR-012).
-- `000000` is accepted as a verification code outside production builds only (ADR-027), and it
-  is accepted by **one** rule (`verifyCode`), which both screen 04 and the session port ask.
+- Outside a production build the **stand-in session port accepts any non-empty password and
+  verifies nothing**; in a production build it accepts no credential at all and both account
+  actions are drawn disabled (ADR-054 §8, ADR-059). The password is handed to the provider
+  adapter's place and is never written to a store, a log or the session; the app's own database
+  will hold no password or hash (ADR-054 decision 2).
 - Secret scanning in CI is planned; the repository currently relies on review plus
   `.env` being git-ignored.
 
@@ -266,9 +269,11 @@ Implemented in this repository:
     never as a yes.
   - the **report queue** (`picky.report-queue.v1`): the picker's own report, listed back on
     screens 11 and 13, deletable entry by entry or wholesale (`src/services/report-queue.ts`).
-  - the **saved plan** (`picky.saved-zones.v1`): zone ids and when they were saved, removable by
-    the frame 07 bookmark or all at once, and listed on the `Saved spots` screen
-    ([ADR-024](docs/adr/ADR-024-saved-zones-on-the-device.md), [ADR-030](docs/adr/ADR-030-the-saved-plan-gets-a-screen.md)).
+  - the **saved plan** (`picky.saved-zones.v1`): zone ids, the berry whose score layer each was
+    saved under, and when they were saved — removable by the frame 07 bookmark or all at once,
+    and listed on the `Saved spots` screen
+    ([ADR-024](docs/adr/ADR-024-saved-zones-on-the-device.md), [ADR-030](docs/adr/ADR-030-the-saved-plan-gets-a-screen.md),
+    [ADR-061](docs/adr/ADR-061-the-saved-zone-remembers-its-berry.md)).
   - the **session** — the account's identifier **and the name the sign-up collected**
     ([ADR-029](docs/adr/ADR-029-the-session-carries-the-accounts-name.md)) — held in process
     memory only, never written to storage, dropped by the first sign-out or the end of the
@@ -277,6 +282,13 @@ Implemented in this repository:
   deletion that fails leaves the user signed in with their data intact rather than signed out of
   an account the app did not manage to clear (`src/services/sign-out.ts`; the assumption is
   recorded as PROJECT.md known issue 29).
+
+The Discover map's **zone cache** (`picky.zones-cache.v1`) also lives on the device, and is not
+one of the four records above: it holds the service's public zone geometry and scores — no
+coordinate, identifier or input of the picker's — is replaced by the next read, restored only
+while the map has been opened within the previous week, and removed when the app's data is
+cleared or the app is uninstalled
+(`src/features/discover/services/zone-cache.ts`).
 
 Not implemented (blocking feature work):
 

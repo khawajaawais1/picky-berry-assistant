@@ -81,17 +81,19 @@ fill it.
 
 `utils/` is the home of the **pure helpers more than one layer needs**, and it has one tenant:
 `identifier.ts` answers which of the two identifiers a typed string is, as a function of the string
-alone. It lives here rather than in a feature because two features ask it and neither may import the
-other's internals (onboarding's screen 04, whose title and change action follow the destination, and
-privacy's account row, which must not print “Phone verified” over an address); it arrived from the
-second on 2026-10-13 ([ADR-049](docs/adr/ADR-049-screen-04s-phone-states-and-the-words-that-follow-them.md) §4).
+alone. It lives here because the account row must not print “Phone verified” over an address, and
+because phone sign-in may return one day (ADR-054 §5 deferred it); it arrived from the account
+surface on 2026-10-13 and outlived screen 04, its other reader, which retired on 2026-10-24
+([ADR-049](docs/adr/ADR-049-screen-04s-phone-states-and-the-words-that-follow-them.md) §4,
+[ADR-059](docs/adr/ADR-059-email-password-replaces-the-code-screen.md)).
 It validates nothing: whether the account service accepts an identifier is the provider's answer.
 
 `services/i18n/` is the first tenant of `services/`: it reads the device's languages
 and owns the copy (ADR-017). `services/session/` is the second: the authentication seam —
-one session port (`signIn`, `current`, `signOut`) with a stand-in provider and an in-memory
-session store behind it until the account service exists (ADR-028), holding the account's
-identifier and the name it is shown under (ADR-029). It is a service rather than
+one session port (`signIn`, `current`, `signOut`, `requestPasswordReset`) with a stand-in provider
+and an in-memory session store behind it until the account service exists (ADR-028), holding the
+account's identifier and the name it is shown under (ADR-029). The reset request is a port call,
+not a session: it passes an address to the provider and keeps no token (ADR-062). It is a service rather than
 a feature because onboarding, the app shell and the profile all need it and none of them owns
 it. `services/location/` is the third: the position seam (ADR-045) — one port
 (`requestAvailability`, `watch`) with `expo-location` behind it, asking for the foreground
@@ -118,10 +120,16 @@ In this file's terms, the target is:
 | `src/store/` | Zustand stores (UI, settings) | `src/state/`, this file's reserved folder for app-wide composition |
 | `src/i18n/` | fi + en strings | exists as `src/services/i18n/` ([ADR-017](docs/adr/ADR-017-localization.md)) |
 
-**Partly in use (2026-10-23).** `@tanstack/react-query` and `zod` are wired: the Discover
-map's zones are read through `features/discover/hooks/use-zones.ts` over one client per app
-mount (`services/query-client.tsx`, mounted in `src/app/_layout.tsx`), and the `ZoneSource`
-response is validated by `features/discover/domain/zone-schema.ts` before it reaches the map.
+**Partly in use (2026-10-24).** `@tanstack/react-query` and `zod` are wired: the Discover
+zones are read through `features/discover/hooks/use-zones.ts` over one client per app mount
+(`services/query-client.tsx`, mounted in `src/app/_layout.tsx`), and the `ZoneSource` response is
+validated by `features/discover/domain/zone-schema.ts` before it reaches the map, its card and
+list, and screen 07's zone read.
+`@tanstack/react-query-persist-client` carries that cache across launches: the shared
+`services/query-persister.ts` stores the queries a feature claims, re-reads each stored
+answer through the feature's schema, and clears the ones it cannot understand.
+`features/discover/services/zone-cache.ts` decides which queries those are and how old the
+cache may be.
 The remaining plan libraries are installed but unused — `zustand`, `react-hook-form`,
 `expo-sqlite` (with its config plugin) and `drizzle-orm` / `drizzle-kit` — and carry no
 store, form or schema yet; those arrive with the seams above, not before. The rest of the
@@ -203,7 +211,7 @@ Unit values are *inlined at build time* by Expo, so a value change requires a re
 never a runtime secret store. That substitution is textual, and it only reaches a literal
 `process.env.EXPO_PUBLIC_<NAME>` read: looking a name up through a variable leaves the read
 unset in the bundle (the runtime's `process.env` carries none of these names), which is how a
-production build once answered `development` and accepted screen 04's stand-in code. Any new
+production build once answered `development` and accepted the stand-in credential. Any new
 read belongs in `declaredPublicEnv`, in that literal shape, and `e2e/production-export.spec.ts`
 is where a production-only rule is checked.
 
@@ -272,11 +280,27 @@ Fixed by the team's conventions (`../CONTEXT.md` §7):
 
 ## 6. Data architecture
 
-Nothing is persisted yet. Planned client-side layers: platform secure storage for
-credentials (ADR-006), a local database for offline capture, and a sync queue.
-Server-side: PostgreSQL + PostGIS. The data model, identifiers used in URLs, and
-media storage ownership rules are undecided; object-level authorisation must be
-enforced server-side for every resource.
+**On the device today:** the consent record, the saved plan, the report queue and the
+Discover map's zone cache are versioned `AsyncStorage` values, each behind the module that
+owns it and each read strictly — an unreadable value is no record, never a guessed one
+(`src/services/privacy-consent.ts`, `saved-zones.ts`, `report-queue.ts`,
+`src/features/discover/services/zone-cache.ts`). The session is held in process memory only
+(ADR-028), and **credentials are not persisted at all** (ADR-006).
+
+The zone cache is the first read that survives the process — ADR-051's persisted TanStack
+Query cache, for the one query the app has. Each berry's `['zones', species]` answer is
+dehydrated to `picky.zones-cache.v1`, read back through the same zod schema a live response
+crosses, and restored only while the map has been opened within the previous week
+(`services/query-persister.ts` is generic; the key, age and validation are the Discover
+feature's). It uses `AsyncStorage` rather than the
+plan's Drizzle/SQLite layer because that layer does not exist yet and a zone list has no
+relational shape: when the local database lands, this cache can move behind it without a
+screen changing.
+
+**Not built yet:** the local database for offline capture, the outbox and the sync queue.
+Server-side: PostgreSQL + PostGIS. The data model, identifiers used in URLs, and media
+storage ownership rules are undecided; object-level authorisation must be enforced
+server-side for every resource.
 
 ## 7. Authentication and authorisation architecture (planned)
 

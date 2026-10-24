@@ -1,6 +1,10 @@
 # ADR-027 — One stand-in verification code, and it does not exist in a production build
 
-- **Status:** Accepted
+- **Status:** **Retired (2026-10-24)** by
+  [ADR-059](ADR-059-email-password-replaces-the-code-screen.md). The credential is screen 03's
+  email + password, so there is no code screen and no stand-in code: `STUB_CODE`, `verifyCode`,
+  screen 04, its resend countdown and its `pending-verification` hand-off were deleted, not
+  disabled. This record stays as the history of the decision.
 - **Date:** 2026-10-10
 - **Amended 2026-10-10:** the rule moved from `features/onboarding/domain/verification.ts` to
   `src/services/session/stand-in-code.ts` (`STUB_CODE`, `verifyCode`, `CodeVerdict`), because a

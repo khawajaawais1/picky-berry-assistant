@@ -1,6 +1,8 @@
 # ADR-057 — Screen 06's card and list read the zone source, and the sample leaves the screen
 
-- **Status:** Accepted (2026-10-23)
+- **Status:** Accepted (2026-10-23); **extended by
+  [ADR-058](ADR-058-screen-07-reads-the-zone-source.md) (2026-10-24)**, which meets decision 4's
+  condition: screen 07 reads the same source, so the card links again. Nothing else here changes.
 - **Date:** 2026-10-23
 - **Deciders:** Project owner, instructing that the Discover card, list and filters move onto
   the same `ZoneSource` so the screen shows one dataset.
@@ -73,6 +75,8 @@ and a walking distance — neither of which the payload has.
   intended reading of “the map draws what the list shows”.
 - **The saved plan and screen 07 still read `DEMO_ZONES`**; they are the only surfaces left with
   the design's sample, and that is now a single remaining step rather than half this screen.
+  **Resolved 2026-10-24:** screen 07 reads the source (ADR-058) and so does the saved plan
+  ([ADR-060](ADR-060-the-saved-plan-reads-the-zone-source.md)); screens 08–09 are what is left.
 - **The species chip row is single-select here while the component still supports several**, so
   the report screen's use, if it returns, is unaffected.
 

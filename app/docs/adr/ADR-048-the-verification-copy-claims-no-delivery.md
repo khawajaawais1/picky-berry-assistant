@@ -1,6 +1,9 @@
 # ADR-048 — The verification copy claims no delivery
 
-- **Status:** Accepted (2026-10-12), **amended in part** by
+- **Status:** Accepted (2026-10-12), **superseded in part (2026-10-24)** — screen 04 and its copy
+  retired with [ADR-059](ADR-059-email-password-replaces-the-code-screen.md), so §2–§4's screen-04
+  strings are no longer shipped; what remains of this record is the sign-in and account-surface
+  wording, which still holds. **Amended in part** by
   [ADR-049](ADR-049-screen-04s-phone-states-and-the-words-that-follow-them.md) §3.1 (2026-10-13): the
   half of §3 below that keeps the screen title for both identifiers no longer holds — the frame's
   title is drawn only when the destination is an address, and a number gets
