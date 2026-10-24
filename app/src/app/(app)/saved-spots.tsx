@@ -12,10 +12,12 @@ import { CommunityMapPrototype, SavedSpotsScreen, communityMapReading } from '@/
  * a deep link straight to this route has not, and a control that cannot act must not claim a role
  * (AGENTS.md §11.2).
  *
- * Two destinations, both of them screens that exist: a saved zone the app has a zone screen for
- * opens frame 07 (`/zone-details`), and the empty plan offers frame 06's map. The screen itself
- * decides which of its rows may open anything — a row for a zone with no numbers behind it stays a
- * reading.
+ * Two destinations, both of them screens that exist: a saved zone the source answers opens frame
+ * 07 (`/zone-details?zone=…&species=…`), and the empty plan offers frame 06's map. The screen
+ * itself decides which of its rows may open anything — a row for a zone with no numbers behind it
+ * stays a reading. The zone is handed over with **the berry the record holds**, which is the layer
+ * its row was read from (ADR-061), so the score the picker saw and the score the screen opens are
+ * one reading.
  *
  * The way in is the settings screen (`src/app/(app)/privacy-settings.tsx`), which is frame 14's
  * own row; the plan belongs to the Profile destination, as the frames 13–14 half of the app does.
@@ -40,7 +42,12 @@ export default function SavedSpotsRoute() {
     <SavedSpotsScreen
       onBack={router.canGoBack() ? () => router.back() : undefined}
       onBrowseZones={() => router.navigate('/discover')}
-      onOpenZone={() => router.push('/zone-details')}
+      onOpenZone={(zoneId, species) =>
+        router.push({
+          pathname: '/zone-details',
+          params: { species, zone: zoneId },
+        })
+      }
     />
   );
 }

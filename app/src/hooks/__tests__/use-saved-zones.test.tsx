@@ -18,18 +18,20 @@ beforeEach(async () => {
 
 describe('useSavedZones', () => {
   it('loads the plan the picker already made', async () => {
-    await saveZone('Z14', new Date('2026-10-10T09:30:00.000Z'));
+    await saveZone('Z14', 'lingonberry', new Date('2026-10-10T09:30:00.000Z'));
 
     const { result } = await renderHook(() => useSavedZones());
 
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.zones).toEqual([{ savedAt: '2026-10-10T09:30:00.000Z', zoneId: 'Z14' }]);
+    expect(result.current.zones).toEqual([
+      { savedAt: '2026-10-10T09:30:00.000Z', speciesId: 'lingonberry', zoneId: 'Z14' },
+    ]);
     expect(result.current.isSaved('Z14')).toBe(true);
     expect(result.current.isSaved('Z09')).toBe(false);
   });
 
   it('claims no saved zone while the record is still being read', async () => {
-    await saveZone('Z14');
+    await saveZone('Z14', 'bilberry');
     const renders: boolean[] = [];
 
     const { result } = await renderHook(() => {
@@ -51,16 +53,17 @@ describe('useSavedZones', () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     await act(async () => {
-      await result.current.toggle('Z09');
+      await result.current.toggle('Z09', 'cloudberry');
     });
     expect(result.current.zones.map((zone) => zone.zoneId)).toEqual(['Z09']);
     expect(result.current.isSaved('Z09')).toBe(true);
+    // The layer the screen was reading is part of what the press records.
     await expect(readSavedZones()).resolves.toEqual([
-      { savedAt: expect.any(String), zoneId: 'Z09' },
+      { savedAt: expect.any(String), speciesId: 'cloudberry', zoneId: 'Z09' },
     ]);
 
     await act(async () => {
-      await result.current.toggle('Z09');
+      await result.current.toggle('Z09', 'cloudberry');
     });
     expect(result.current.zones).toEqual([]);
     expect(result.current.isSaved('Z09')).toBe(false);
@@ -68,14 +71,14 @@ describe('useSavedZones', () => {
   });
 
   it('shows what is stored when the device refuses the write, and says so', async () => {
-    await saveZone('Z14');
+    await saveZone('Z14', 'bilberry');
     jest.spyOn(AsyncStorage, 'setItem').mockRejectedValueOnce(new Error('storage is full'));
 
     const { result } = await renderHook(() => useSavedZones());
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     await act(async () => {
-      await result.current.toggle('Z09');
+      await result.current.toggle('Z09', 'bilberry');
     });
 
     // The zone the device refused to keep is not in the plan the screen shows, the one it did
@@ -88,7 +91,7 @@ describe('useSavedZones', () => {
   });
 
   it('deletes the whole plan when the picker asks for it', async () => {
-    await saveZone('Z14');
+    await saveZone('Z14', 'bilberry');
 
     const { result } = await renderHook(() => useSavedZones());
     await waitFor(() => expect(result.current.loading).toBe(false));

@@ -35,8 +35,8 @@ export type SavedZonesState = {
   error: boolean;
   /** Whether one zone is in the plan, as the screen's own control asks. */
   isSaved: (zoneId: string) => boolean;
-  /** Saves the zone if it is not saved, removes it if it is. */
-  toggle: (zoneId: string) => Promise<void>;
+  /** Saves the zone under the berry it is being read on, or removes it if it is saved. */
+  toggle: (zoneId: string, speciesId: string) => Promise<void>;
   /** Deletes the whole plan — the user's way out. */
   clear: () => Promise<void>;
 };
@@ -73,11 +73,11 @@ export function useSavedZones(): SavedZonesState {
   );
 
   const toggle = useCallback(
-    async (zoneId: string) => {
+    async (zoneId: string, speciesId: string) => {
       const saved = zones.some((zone) => zone.zoneId === zoneId);
 
       try {
-        setZones(saved ? await removeSavedZone(zoneId) : await saveZone(zoneId));
+        setZones(saved ? await removeSavedZone(zoneId) : await saveZone(zoneId, speciesId));
         setError(false);
       } catch {
         setError(true);

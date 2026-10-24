@@ -15,12 +15,14 @@ import { useSavedZones } from '@/hooks/use-saved-zones';
 import { interpolate, useTranslation } from '@/services/i18n';
 
 import { formatDistance } from '../../domain/route';
-import { savedSpots } from '../../domain/saved-spots';
+import { savedPlanSpecies, savedSpots } from '../../domain/saved-spots';
 import { CARD_ZONE_STATE, DEMO_ZONES, type DemoZone } from '../../domain/zone';
 import { DEMO_ZONE_DETAILS, SCORE_MAX } from '../../domain/zone-details';
+import { useZoneAnswers } from '../../hooks/use-zones';
+import { testZoneSource } from '../../services/test-zone-source';
 import { DesignZoneCard } from '../design-zone-card';
 import { DesignZoneMap } from '../design-zone-map';
-import { ZoneRow } from '../zone-row';
+import { ZoneSourceRow } from '../zone-source-row';
 import { ZoneStateLegend } from '../zone-state-legend';
 
 /**
@@ -375,8 +377,9 @@ function UnderTheZoneReading() {
 function PlaceCardsReading({ onOpenPlace }: { onOpenPlace: (spot: SharedSpot) => void }) {
   const { colors } = useAppTheme();
   const { locale, t } = useTranslation();
-  const { error, loading, zones } = useSavedZones();
-  const plan = savedSpots(zones.map((zone) => zone.zoneId));
+  const { error, loading, zones: saved } = useSavedZones();
+  const answers = useZoneAnswers(testZoneSource, savedPlanSpecies(saved));
+  const plan = savedSpots(saved, answers.zones);
 
   return (
     <Screen eyebrow={PROTOTYPE_EYEBROW} title={t('privacy.savedSpots.title')}>
@@ -456,9 +459,10 @@ function PlaceCardsReading({ onOpenPlace }: { onOpenPlace: (spot: SharedSpot) =>
               what the app actually holds, not beside more invention. */}
           {plan.map((spot, index) =>
             spot.kind === 'zone' ? (
-              <ZoneRow
+              <ZoneSourceRow
                 key={`${spot.zone.id}-${index}`}
                 rowTestID={`prototype-plan-row-${spot.zone.id}`}
+                species={spot.species}
                 zone={spot.zone}
               />
             ) : (

@@ -1,4 +1,4 @@
-import { parseZones, type Zone } from '../zone-source';
+import { parseZones, zoneSpecies, type Zone } from '../zone-source';
 
 /**
  * The shape `data/test_zones.geojson` publishes, as the app reads it.
@@ -65,6 +65,7 @@ describe('parseZones', () => {
       h3: '8811250e25fffff',
       name: 'Laajavuori 1',
       ring: RING,
+      updatedAt: '2026-08-03T07:02:00+03:00',
     });
   });
 
@@ -79,15 +80,33 @@ describe('parseZones', () => {
     expect(lingonberry).toMatchObject({ score: 70, confidence: 'medium', ripeness: 'ripe' });
   });
 
-  it('drops the fields the app does not draw rather than carrying them on', () => {
+  it('carries the timestamp the map draws and drops the fields it does not', () => {
     const [zone] = parseZones(collection(feature()), 'bilberry');
 
-    // `stub`, `forest_type` and `updated_at` are the file's, and a screen could one day use
-    // them — but nothing does today, and echoing an unknown field is how a payload the app
-    // does not understand reaches a component that assumes it does.
+    // `updated_at` is the one metadata field a screen now prints (the map's freshness line),
+    // so it survives as the app's own name. `stub` and `forest_type` are the file's and are
+    // still dropped: echoing an unknown field is how a payload the app does not understand
+    // reaches a component that assumes it does.
+    expect(zone).toHaveProperty('updatedAt', '2026-08-03T07:02:00+03:00');
     expect(zone).not.toHaveProperty('stub');
     expect(zone).not.toHaveProperty('forestType');
-    expect(zone).not.toHaveProperty('updatedAt');
+  });
+
+  it('keeps a zone whose timestamp it cannot read, and states no freshness for it', () => {
+    // A timestamp is metadata, not geometry or a score: losing the zone because its date is
+    // malformed would hide a zone the map can draw. The app drops the claim instead — the
+    // screen omits the line rather than printing a day the payload did not name.
+    const noTimestamp = feature({}, { updated_at: undefined });
+    const bareDate = feature({}, { updated_at: '2026-08-03' });
+    const localTime = feature({}, { updated_at: '2026-08-03T07:02:00' });
+    const nonsense = feature({}, { updated_at: 'last Tuesday' });
+
+    for (const candidate of [noTimestamp, bareDate, localTime, nonsense]) {
+      const [zone] = parseZones(collection(candidate), 'bilberry');
+
+      expect(zone?.name).toBe('Laajavuori 1');
+      expect(zone?.updatedAt).toBeNull();
+    }
   });
 
   it('leaves out a zone that has no score for the species asked about', () => {
@@ -172,5 +191,47 @@ describe('parseZones', () => {
     expect(parseZones({ type: 'FeatureCollection' }, 'bilberry')).toEqual([]);
     expect(parseZones({ type: 'FeatureCollection', features: {} }, 'bilberry')).toEqual([]);
     expect(parseZones([feature()], 'bilberry')).toEqual([]);
+  });
+});
+
+/**
+ * The species row frame 07 draws is the zone's own `scores`, not the design's two chips: the
+ * payload is the only thing that can say what a zone was reported for. The berry the screen is
+ * reading leads, so the accent chip and the score in the card are about the same berry.
+ */
+describe('zoneSpecies', () => {
+  const zone = parseZones(collection(feature()), 'bilberry')[0]!;
+
+  it('puts the berry the screen is reading first, then the rest in the app’s order', () => {
+    expect(zoneSpecies(zone, 'lingonberry')).toEqual([
+      'lingonberry',
+      'bilberry',
+      'cloudberry',
+      'crowberry',
+    ]);
+    expect(zoneSpecies(zone, 'bilberry')).toEqual([
+      'bilberry',
+      'lingonberry',
+      'cloudberry',
+      'crowberry',
+    ]);
+  });
+
+  it('leaves out a species the payload did not score', () => {
+    const partial = parseZones(
+      collection(feature({}, { scores: { bilberry: scores.bilberry } })),
+      'bilberry',
+    )[0]!;
+
+    expect(zoneSpecies(partial, 'bilberry')).toEqual(['bilberry']);
+  });
+
+  it('never invents the berry it was asked for when the zone has no score for it', () => {
+    const partial = parseZones(
+      collection(feature({}, { scores: { lingonberry: scores.lingonberry } })),
+      'lingonberry',
+    )[0]!;
+
+    expect(zoneSpecies(partial, 'bilberry')).toEqual(['lingonberry']);
   });
 });

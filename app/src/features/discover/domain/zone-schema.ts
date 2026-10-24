@@ -53,6 +53,10 @@ const zoneSchema: z.ZodType<Zone> = z.object({
   // and an unknown one is not: `partialRecord` accepts the first and refuses the second.
   scores: z.partialRecord(z.enum(SPECIES), zoneScoreSchema),
   ring: zoneRingSchema,
+  // The instant the source computed the score, when it sent one the app can print. Optional so
+  // an adapter that predates the field still parses; `null` is how a parsed zone records that
+  // the payload carried no readable timestamp.
+  updatedAt: z.iso.datetime({ offset: true }).nullable().optional(),
 });
 
 /**
@@ -60,7 +64,20 @@ const zoneSchema: z.ZodType<Zone> = z.object({
  * Never a partial list: a map missing one of the zones the source sent lies by omission.
  */
 export function parseZoneList(value: unknown): readonly Zone[] {
+  return parseZoneListStrict(value) ?? [];
+}
+
+/**
+ * The same reading, for a caller that must tell **unreadable** from **empty**.
+ *
+ * `parseZoneList` answers an empty list in both cases, which is the right answer at the map:
+ * either way there is nothing to draw, and the screen says why separately. It is the wrong
+ * answer when deciding whether a stored cache entry may be hydrated — an empty answer is a
+ * real answer this device once received, while a value that fails the schema is a cache from
+ * a build the app cannot trust, and must be dropped rather than restored as “no zones”.
+ */
+export function parseZoneListStrict(value: unknown): readonly Zone[] | null {
   const result = z.array(zoneSchema).safeParse(value);
 
-  return result.success ? result.data : [];
+  return result.success ? result.data : null;
 }

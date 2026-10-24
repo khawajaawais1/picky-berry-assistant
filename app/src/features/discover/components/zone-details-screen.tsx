@@ -8,27 +8,31 @@ import { Screen } from '@/components/templates';
 import { layout, radii, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useSavedZones } from '@/hooks/use-saved-zones';
-import { interpolate, useTranslation, type TranslationKey } from '@/services/i18n';
+import { formatLongDate, interpolate, useTranslation, type TranslationKey } from '@/services/i18n';
 
-import { CARD_ZONE_STATE, DEMO_ZONES } from '../domain/zone';
+import type { Species } from '../domain/species';
+import { CARD_ZONE_STATE, DEMO_ZONES, type ZoneState } from '../domain/zone';
 import { DEMO_ROUTE, formatDistance } from '../domain/route';
 import {
   DEMO_ZONE_DETAILS,
   REPORT_YIELD_MAX,
   SCORE_MAX,
-  type Confidence,
   type ReportTrust,
-  type Ripeness,
   type ZoneWeather,
 } from '../domain/zone-details';
+import {
+  PILOT_ZONE_SPECIES,
+  zoneSpecies,
+  type Zone,
+  type ZoneConfidence,
+  type ZoneRipeness,
+  type ZoneSource,
+} from '../domain/zone-source';
+import { useZones } from '../hooks/use-zones';
+import { testZoneSource } from '../services/test-zone-source';
 import { SPECIES_LABEL_KEY } from './species-copy';
 import { ZONE_STATE_LABEL_KEY } from './zone-state-copy';
-
-const CONFIDENCE_KEY: Record<Confidence, TranslationKey> = {
-  high: 'discover.details.confidence.high',
-  medium: 'discover.details.confidence.medium',
-  low: 'discover.details.confidence.low',
-};
+import { CONFIDENCE_LABEL_KEY, RIPENESS_LABEL_KEY } from './zone-source-copy';
 
 const WIND_KEY: Record<ZoneWeather['wind'], TranslationKey> = {
   light: 'discover.details.wind.light',
@@ -41,12 +45,19 @@ const TRUST_KEY: Record<ReportTrust, TranslationKey> = {
   unverified: 'discover.details.reports.trust.unverified',
 };
 
-const RIPENESS_KEY: Record<Ripeness, TranslationKey> = {
-  ripe: 'discover.details.ripeness.ripe',
-  ripening: 'discover.details.ripeness.ripening',
-};
-
 export type ZoneDetailsScreenProps = {
+  /**
+   * The zone the route names — the id frame 06's card handed over — or nothing.
+   *
+   * With an id the screen asks the `ZoneSource` for that zone's answer and draws it. Without
+   * one it draws the design's sample, which a bare deep link alone reaches now that the saved
+   * plan reads the source (ADR-060); that path is recorded as the last demo on this screen.
+   */
+  zoneId?: string;
+  /** The berry whose score layer the card showed; the screen reads the same one. */
+  species?: Species;
+  /** Where the zone comes from. Defaults to the pilot stub, as on frame 06. */
+  zoneSource?: ZoneSource;
   onBack?: () => void;
   /**
    * Opens the route to this zone — frame 08 — or nothing.
@@ -69,22 +80,63 @@ export type ZoneDetailsScreenProps = {
 };
 
 /**
+ * Everything the screen draws about one zone, read from one source: the port when the route
+ * named a zone, the design's sample when it did not.
+ *
+ * `state` and `reportsThisWeek` are the design's own and only the sample supplies them: the
+ * zone payload has no picking state, and no source counts a week of reports. On a source reading
+ * their absence is what keeps the demo week out of the yield card; the sentence before the blocks
+ * that have no source is the view's `sampleNote`, said because a source zone is on screen.
+ */
+type DetailsRead = {
+  zoneId: string;
+  title: string;
+  /** The berry this screen is reading, which is what its bookmark saves (ADR-061). */
+  layer: Species;
+  species: readonly Species[];
+  score: number;
+  confidence: ZoneConfidence;
+  ripeness: ZoneRipeness;
+  state?: ZoneState;
+  reportsThisWeek?: number;
+  /**
+   * When the zone's scores were computed, as the source wrote them, or `null`/absent when it
+   * sent none. The same field frame 06 prints under its map (ADR-053), shown here for this one
+   * zone; the design's sample has no instant of its own, so it prints no line.
+   */
+  updatedAt?: string | null;
+};
+
+/**
  * Screen 07 · Core picker · Zone details (Figma node `5:23032`).
  *
  * What a picker wants before walking out: the zone's yield score with the confidence behind
- * it, how many reports this week produced it, whether it is ripe, today's conditions and the
- * freshest report from the field. It is the screen frame 06's zone card opens.
+ * it, whether it is ripe, today's conditions and the freshest report from the field. It is the
+ * screen frame 06's zone card opens.
  *
- * Everything on it is the design's sample, and the design says so itself in the one line
- * that could be read as a promise: “A forecast of conditions, not a guaranteed harvest.” The
- * figures — the score, the week's report count, the temperature, the report and its age —
- * live in `DEMO_ZONE_DETAILS`, tied by test to the same demo zone frame 06 draws, because
- * there is no zone service, no weather source and no report stream yet (PROJECT.md).
+ * **Two readings, one frame.** With a zone id — the path the card takes — the screen asks the
+ * same `ZoneSource` frame 06 read, for the same berry, and draws that zone's own name, its
+ * reported species, its score, confidence and season. A zone the source does not answer to is
+ * said so; another zone's figures are never stood in for it.
  *
- * The frame's **“Save zone”** bookmark (node `5:23081`) is real: it writes the zone to the
- * picker's own plan on this device and takes it back out again, which is where its saved state
- * comes from (`services/saved-zones.ts`, ADR-024). The frame's **species chips** are drawn as
- * the zone's own data (see below).
+ * Without an id the design's sample is drawn, as it has been since the screen was built: a bare
+ * URL alone lands there now that the saved plan reads the source (ADR-060), and the eyebrow's
+ * “SEASON DEMO” says what it is. That path is the last demo on this screen.
+ *
+ * The frame's **outlook, freshest report, walk and report list** have no source at all: no
+ * weather service and no report stream exist, and screen 08 still draws the design's route. On
+ * a source zone the screen therefore says, before them, that they are the design's sample — the
+ * rule frame 13's demo block follows (`offline.sample.note`).
+ *
+ * **The zone's own freshness** is the app's line, not the frame's: under the yield card it
+ * prints the source's `updated_at` in the words frame 06 prints under its map, so one answer
+ * cannot show two ages. It is omitted when the source sent none, and the design's sample — which
+ * has no source behind it — prints no line at all.
+ *
+ * The frame's **“Save zone”** bookmark (node `5:23081`) is real in both readings: it writes the
+ * zone the screen is about — under the berry whose layer the screen is reading — to the picker's
+ * own plan on this device, and takes it back out again (`services/saved-zones.ts`, ADR-024,
+ * ADR-061). The frame's **species chips** are drawn as the zone's own data (see below).
  *
  * What the frame draws and this screen deliberately does not:
  *
@@ -103,25 +155,148 @@ export type ZoneDetailsScreenProps = {
  * One departure in type, recorded in PROJECT.md: the frame sets “Fresh from pickers” one
  * pixel smaller than “Today's outlook”; the app keeps one section-heading slot for both.
  */
-export function ZoneDetailsScreen({ onBack, onNavigate, onSeeReports }: ZoneDetailsScreenProps) {
-  const { colors } = useAppTheme();
-  const { locale, t } = useTranslation();
+export function ZoneDetailsScreen({ zoneId, ...props }: ZoneDetailsScreenProps) {
+  // The two readings are separate components so the demo path asks no query cache for an
+  // answer it does not draw, and the source path cannot forget which zone it is about.
+  return zoneId === undefined ? (
+    <DemoZoneDetails {...props} />
+  ) : (
+    <SourceZoneDetails {...props} zoneId={zoneId} />
+  );
+}
+
+/** The design's sample: the same demo zone frames 06 and 07 have always drawn. */
+function DemoZoneDetails({ onBack, onNavigate, onSeeReports }: ZoneDetailsScreenProps) {
+  const { t } = useTranslation();
   const zone = DEMO_ZONES.find((candidate) => candidate.state === CARD_ZONE_STATE);
   const details = DEMO_ZONE_DETAILS;
+
+  const read: DetailsRead | undefined = zone
+    ? {
+        zoneId: zone.id,
+        title: interpolate(t('discover.details.title'), {
+          place: t('discover.map.place'),
+          zone: zone.number,
+        }),
+        layer: PILOT_ZONE_SPECIES,
+        species: zone.species,
+        score: details.score,
+        confidence: details.confidence,
+        ripeness: details.ripeness,
+        state: details.state,
+        reportsThisWeek: details.reportsThisWeek,
+      }
+    : undefined;
+
+  if (!read) {
+    // The constant always holds the card's zone; a build that lost it must not draw another
+    // zone's figures, so it says nothing rather than something false.
+    return (
+      <Screen edges={['top']} eyebrow={t('discover.details.eyebrow')} onBack={onBack}>
+        <AppText testID="zone-details-status" tone="muted" variant="bodySmall">
+          {t('discover.details.unknown')}
+        </AppText>
+      </Screen>
+    );
+  }
+
+  return (
+    <DetailsView
+      onBack={onBack}
+      onNavigate={onNavigate}
+      onSeeReports={onSeeReports}
+      read={read}
+      sampleNote={false}
+    />
+  );
+}
+
+/** The zone the route named, read through the `ZoneSource` port. */
+function SourceZoneDetails({
+  onBack,
+  onNavigate,
+  onSeeReports,
+  species = PILOT_ZONE_SPECIES,
+  zoneId,
+  zoneSource = testZoneSource,
+}: ZoneDetailsScreenProps & { zoneId: string }) {
+  const { t } = useTranslation();
+  const { status, zones } = useZones(zoneSource, species);
+  const zone: Zone | undefined = zones.find((candidate) => candidate.id === zoneId);
+
+  if (!zone) {
+    // Loading, failed and “the source does not answer to this id” are three different
+    // sentences: an empty screen that meant “failed” would read as a zone with no figures.
+    return (
+      <Screen
+        edges={['top']}
+        eyebrow={t('discover.details.eyebrow')}
+        onBack={onBack}
+        title={t('discover.details.pendingTitle')}
+      >
+        <AppText testID="zone-details-status" tone="muted" variant="bodySmall">
+          {status === 'loading'
+            ? t('discover.map.loading')
+            : status === 'error'
+              ? t('discover.map.unavailable')
+              : t('discover.details.unknown')}
+        </AppText>
+      </Screen>
+    );
+  }
+
+  return (
+    <DetailsView
+      onBack={onBack}
+      onNavigate={onNavigate}
+      onSeeReports={onSeeReports}
+      read={{
+        zoneId: zone.id,
+        title: zone.name,
+        layer: species,
+        species: zoneSpecies(zone, species),
+        score: zone.score,
+        confidence: zone.confidence,
+        ripeness: zone.ripeness,
+        updatedAt: zone.updatedAt,
+      }}
+      sampleNote
+    />
+  );
+}
+
+/**
+ * The frame itself, over whatever was read. It owns no data: every figure comes from `read`,
+ * so the source and the sample cannot be drawn from two different places.
+ *
+ * `sampleNote` is true only on the source reading: it is the sentence that separates the
+ * zone's own figures from the blocks below, which are the design's sample.
+ */
+function DetailsView({
+  onBack,
+  onNavigate,
+  onSeeReports,
+  read,
+  sampleNote,
+}: {
+  onBack?: () => void;
+  onNavigate?: () => void;
+  onSeeReports?: () => void;
+  read: DetailsRead;
+  sampleNote: boolean;
+}) {
+  const { colors } = useAppTheme();
+  const { locale, t } = useTranslation();
+  const details = DEMO_ZONE_DETAILS;
   const { error: saveError, isSaved, loading: savingLoading, toggle } = useSavedZones();
-  const saved = zone ? isSaved(zone.id) : false;
+  const saved = isSaved(read.zoneId);
 
   return (
     <Screen
       edges={['top']}
       eyebrow={t('discover.details.eyebrow')}
       onBack={onBack}
-      // The frame's title names the same demo place the map draws, so both values are read
-      // from the catalogue (and from the same demo zone) rather than repeated here.
-      title={interpolate(t('discover.details.title'), {
-        place: t('discover.map.place'),
-        zone: zone?.number ?? '',
-      })}
+      title={read.title}
     >
       <View className="w-full gap-section">
         <Image
@@ -139,7 +314,7 @@ export function ZoneDetailsScreen({ onBack, onNavigate, onSeeReports }: ZoneDeta
             frame's third chip (“More”) opens a species index the app does not have, so it is
             not drawn (AGENTS.md §11.2; PROJECT.md records it). */}
         <View className="w-full flex-row flex-wrap gap-gap" testID="zone-species-chips">
-          {zone?.species.map((species, position) => {
+          {read.species.map((species, position) => {
             const main = position === 0;
 
             return (
@@ -170,25 +345,30 @@ export function ZoneDetailsScreen({ onBack, onNavigate, onSeeReports }: ZoneDeta
         <Card style={styles.yieldCard} testID="zone-yield-card">
           <View className="w-full flex-row items-center gap-gap">
             <AppText style={{ color: colors.accent }} testID="zone-yield-score" variant="metric">
-              {details.score}
+              {read.score}
             </AppText>
             <View className="flex-1 gap-xs">
               <AppText style={styles.strong} variant="bodySmall">
                 {interpolate(t('discover.details.scoreLabel'), { max: String(SCORE_MAX) })}
               </AppText>
               <AppText tone="success" variant="label">
-                {t(CONFIDENCE_KEY[details.confidence])}
+                {t(CONFIDENCE_LABEL_KEY[read.confidence])}
               </AppText>
-              <AppText tone="muted" variant="metadata">
-                {interpolate(t('discover.details.reportsThisWeek'), {
-                  count: String(details.reportsThisWeek),
-                })}
-              </AppText>
+              {read.reportsThisWeek === undefined ? null : (
+                <AppText tone="muted" variant="metadata">
+                  {interpolate(t('discover.details.reportsThisWeek'), {
+                    count: String(read.reportsThisWeek),
+                  })}
+                </AppText>
+              )}
             </View>
           </View>
 
           <View className="w-full flex-row flex-wrap gap-sm">
-            {[ZONE_STATE_LABEL_KEY[details.state], RIPENESS_KEY[details.ripeness]].map((key) => (
+            {[
+              ...(read.state === undefined ? [] : [ZONE_STATE_LABEL_KEY[read.state]]),
+              RIPENESS_LABEL_KEY[read.ripeness],
+            ].map((key) => (
               <View
                 className="h-chip flex-row items-center rounded-pill px-gap"
                 key={key}
@@ -205,6 +385,25 @@ export function ZoneDetailsScreen({ onBack, onNavigate, onSeeReports }: ZoneDeta
             {t('discover.details.forecastDisclaimer')}
           </AppText>
         </Card>
+
+        {/*
+          The zone's own freshness, in the frame 06 line's words: the instant the source computed
+          these scores, never the moment this screen read them. Omitted when the payload carries
+          none — a missing instant is not a reason to guess one.
+        */}
+        {read.updatedAt ? (
+          <AppText testID="zone-details-updated" tone="muted" variant="metadata">
+            {interpolate(t('discover.map.updated'), {
+              date: formatLongDate(read.updatedAt, locale),
+            })}
+          </AppText>
+        ) : null}
+
+        {sampleNote ? (
+          <AppText testID="zone-details-sample-note" tone="muted" variant="metadata">
+            {t('discover.details.sample')}
+          </AppText>
+        ) : null}
 
         <View className="w-full gap-sm">
           <AppText variant="sectionHeading">{t('discover.details.outlook.title')}</AppText>
@@ -286,61 +485,59 @@ export function ZoneDetailsScreen({ onBack, onNavigate, onSeeReports }: ZoneDeta
           acts on the picker's own plan, not on the route — and the action only when the caller
           supplied a destination.
         */}
-        {zone ? (
-          <View className="w-full flex-row items-center gap-gap">
-            <Pressable
-              // The frame names the control “Save zone”; a control that is already acting on a
-              // saved zone says what its next press does instead (AGENTS.md §11.2).
-              accessibilityLabel={t(
-                saved ? 'discover.details.save.saved' : 'discover.details.save',
-              )}
-              accessibilityRole="button"
-              // The bookmark is not a state the app has read yet while the record is loading,
-              // and a control that cannot act may not claim one.
-              accessibilityState={{ disabled: savingLoading, selected: saved }}
-              disabled={savingLoading}
-              onPress={() => {
-                void toggle(zone.id);
-              }}
-              style={{
-                alignItems: 'center',
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-                borderRadius: radii.control,
-                borderWidth: 1,
-                height: layout.actionHeight,
-                justifyContent: 'center',
-                width: layout.actionHeight,
-              }}
-              testID="zone-details-save"
-            >
-              {/*
-                The glyph carries the state as a shape, not as a colour alone: outline for a
-                zone that is not in the plan, filled for one that is. Feather has only the
-                outline, so the frame's own bookmark is drawn from Material Icons, which has
-                both.
-              */}
-              <MaterialIcons
-                color={colors.accent}
-                name={saved ? 'bookmark' : 'bookmark-border'}
-                size={22}
-              />
-            </Pressable>
+        <View className="w-full flex-row items-center gap-gap">
+          <Pressable
+            // The frame names the control “Save zone”; a control that is already acting on a
+            // saved zone says what its next press does instead (AGENTS.md §11.2).
+            accessibilityLabel={t(saved ? 'discover.details.save.saved' : 'discover.details.save')}
+            accessibilityRole="button"
+            // The bookmark is not a state the app has read yet while the record is loading,
+            // and a control that cannot act may not claim one.
+            accessibilityState={{ disabled: savingLoading, selected: saved }}
+            disabled={savingLoading}
+            onPress={() => {
+              // The berry is the one the screen is reading, not the pilot default: the plan opens
+              // the layer the picker was looking at (ADR-061).
+              void toggle(read.zoneId, read.layer);
+            }}
+            style={{
+              alignItems: 'center',
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              borderRadius: radii.control,
+              borderWidth: 1,
+              height: layout.actionHeight,
+              justifyContent: 'center',
+              width: layout.actionHeight,
+            }}
+            testID="zone-details-save"
+          >
+            {/*
+              The glyph carries the state as a shape, not as a colour alone: outline for a
+              zone that is not in the plan, filled for one that is. Feather has only the
+              outline, so the frame's own bookmark is drawn from Material Icons, which has
+              both.
+            */}
+            <MaterialIcons
+              color={colors.accent}
+              name={saved ? 'bookmark' : 'bookmark-border'}
+              size={22}
+            />
+          </Pressable>
 
-            {onNavigate ? (
-              <View className="flex-1">
-                <AppButton
-                  icon={<Feather color={colors.onAccent} name="navigation" size={20} />}
-                  label={interpolate(t('discover.details.navigate'), {
-                    distance: formatDistance(DEMO_ROUTE.distanceMeters, locale),
-                  })}
-                  onPress={onNavigate}
-                  testID="zone-details-navigate"
-                />
-              </View>
-            ) : null}
-          </View>
-        ) : null}
+          {onNavigate ? (
+            <View className="flex-1">
+              <AppButton
+                icon={<Feather color={colors.onAccent} name="navigation" size={20} />}
+                label={interpolate(t('discover.details.navigate'), {
+                  distance: formatDistance(DEMO_ROUTE.distanceMeters, locale),
+                })}
+                onPress={onNavigate}
+                testID="zone-details-navigate"
+              />
+            </View>
+          ) : null}
+        </View>
 
         {saveError ? (
           <AppText testID="zone-details-save-failed" tone="danger" variant="bodySmall">

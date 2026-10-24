@@ -13,3 +13,14 @@
 export const SPECIES = ['lingonberry', 'bilberry', 'cloudberry', 'crowberry'] as const;
 
 export type Species = (typeof SPECIES)[number];
+
+/**
+ * Whether an external value is one of the app's own species codes.
+ *
+ * The route's query string is input the app did not build (SECURITY.md §4). A species the
+ * chips cannot name has no score layer and no cache key of its own, so it is refused here and
+ * the caller falls back to the pilot's berry rather than forwarding it.
+ */
+export function isSpecies(value: unknown): value is Species {
+  return typeof value === 'string' && (SPECIES as readonly string[]).includes(value);
+}

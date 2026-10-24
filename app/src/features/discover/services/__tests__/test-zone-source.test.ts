@@ -29,6 +29,10 @@ describe('testZoneSource', () => {
       expect(zone.score).toBeLessThanOrEqual(100);
       expect(zone.confidence).toBeDefined();
       expect(zone.ripeness).toBeDefined();
+      // The stub carries the instant its scores were computed, which is what the map's
+      // “last updated” line prints. If the published file ever stops carrying it, the app's
+      // copy should stop claiming a freshness it does not have.
+      expect(zone.updatedAt).toBe('2026-08-03T07:02:00+03:00');
     }
   });
 

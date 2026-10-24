@@ -1,8 +1,9 @@
-import { View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { Pressable, View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
 import { Card, Chip } from '@/components/molecules';
-import { spacing } from '@/constants/theme';
+import { layout, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { interpolate, useTranslation } from '@/services/i18n';
 
@@ -19,36 +20,53 @@ export type ZoneSourceRowProps = {
   species: Species;
   /** The row's own handle, so each caller's tests can name the list they are looking at. */
   rowTestID: string;
+  /**
+   * Where the row leads — frame 07's details page, for the saved plan — or nothing. A row with
+   * no destination stays the reading the map's own list draws (AGENTS.md §11.2).
+   */
+  onOpen?: () => void;
 };
 
 /**
  * One source zone as a list row: the zone's name, its score for the berry the chips chose,
  * and how far the season has got.
  *
- * It is the map's own list (`ZoneList`) for the pilot's zones, and it is **not** `ZoneRow`:
- * that row still draws the design's sample zones for the saved plan (ADR-030), whose picking
- * state no source returns. What the two share is the card's metrics and the legend's colours
- * — the ripeness chip is outlined in its score band's line token, which is what makes the row
- * readable to someone who has just read the map.
+ * It is the map's own list (`ZoneList`) for the pilot's zones and, since ADR-060, the saved
+ * plan's row too. It is **not** `ZoneRow`: that row still draws the design's sample zones,
+ * whose picking state no source returns. What the two share is the card's metrics and the
+ * legend's colours — the ripeness chip is outlined in its score band's line token, which is
+ * what makes the row readable to someone who has just read the map.
  *
- * A row is a reading, not a control: no source zone has a detail screen yet (screen 07 still
- * describes the design's demo zone), and a row that opened another zone's numbers would be
- * worse than one that opens nothing (AGENTS.md §11.2).
+ * A row is a reading unless its caller gives it a destination: the map's list still passes none,
+ * because a row there is one of fifty and the card is the map's own way into a zone. The saved
+ * plan passes one for every zone it can resolve, which is what puts the picker's saved places
+ * back one press from their details (ADR-060).
  */
-export function ZoneSourceRow({ rowTestID, species, zone }: ZoneSourceRowProps) {
+export function ZoneSourceRow({ onOpen, rowTestID, species, zone }: ZoneSourceRowProps) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
   const band = scoreBand(zone.score);
   const bandColour = colors[band.line];
+  const openable = onOpen !== undefined;
 
-  return (
+  const row = (
     <Card style={{ gap: spacing.cardGap, padding: spacing.section }} testID={rowTestID}>
-      <AppText variant="cardHeading">
-        {interpolate(t('discover.card.zoneTitle'), {
-          species: t(SPECIES_LABEL_KEY[species]),
-          zone: zone.name,
-        })}
-      </AppText>
+      <View className="w-full flex-row items-center gap-gap">
+        <AppText style={{ flexShrink: 1 }} variant="cardHeading">
+          {interpolate(t('discover.card.zoneTitle'), {
+            species: t(SPECIES_LABEL_KEY[species]),
+            zone: zone.name,
+          })}
+        </AppText>
+        {openable ? (
+          <Feather
+            color={colors.textMuted}
+            name="chevron-right"
+            size={20}
+            testID={`${rowTestID}-chevron`}
+          />
+        ) : null}
+      </View>
 
       <View className="w-full flex-row flex-wrap gap-gap">
         <View
@@ -75,5 +93,18 @@ export function ZoneSourceRow({ rowTestID, species, zone }: ZoneSourceRowProps) 
         />
       </View>
     </Card>
+  );
+
+  if (!openable) return row;
+
+  return (
+    <Pressable
+      accessibilityLabel={interpolate(t('discover.card.open'), { zone: zone.name })}
+      accessibilityRole="button"
+      onPress={onOpen}
+      style={{ minHeight: layout.minTouchTarget }}
+    >
+      {row}
+    </Pressable>
   );
 }

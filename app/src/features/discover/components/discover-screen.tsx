@@ -5,11 +5,11 @@ import { View } from 'react-native';
 import { AppText } from '@/components/atoms';
 import { Screen } from '@/components/templates';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { interpolate, useTranslation } from '@/services/i18n';
+import { formatLongDate, interpolate, useTranslation } from '@/services/i18n';
 
 import type { Species } from '../domain/species';
 import { filterZones, isFilterActive, type ZoneFilter } from '../domain/zone-filter';
-import { PILOT_ZONE_SPECIES, type ZoneSource } from '../domain/zone-source';
+import { PILOT_ZONE_SPECIES, type Zone, type ZoneSource } from '../domain/zone-source';
 import { useZones } from '../hooks/use-zones';
 import { testZoneSource } from '../services/test-zone-source';
 import { MapListToggle, type ZoneView } from './map-list-toggle';
@@ -27,6 +27,15 @@ export type DiscoverScreenProps = {
    * out when the route has nowhere to send it.
    */
   onOpenDownloads?: () => void;
+  /**
+   * Opens frame 07 for the card's zone, under the berry whose score the card is reading — or
+   * nothing.
+   *
+   * The screen hands over the zone it drew and the score layer the chips chose, so the screen
+   * that opens reads the same record rather than another zone's figures. Without a destination
+   * the card stays a reading and claims no role.
+   */
+  onOpenZone?: (zone: Zone, species: Species) => void;
   /**
    * Where the screen's zones come from. Defaults to the bundled pilot stub; a test, or a
    * future composition root that has a real service, supplies its own through the port.
@@ -63,19 +72,26 @@ export type DiscoverScreenProps = {
  *   species chips sit directly below the field and are the filter;
  * - the **core navigation** — that is the app shell's, mounted over this screen (ADR-022).
  *
- * The card no longer opens screen 07: that screen still describes the design's demo zone, so
- * opening it from a source zone would show another zone's numbers. It is a reading until zone
- * details read the same source.
+ * The card opens screen 07 again (2026-10-24): that screen now asks the same port for the same
+ * zone and berry, so the press lands on the figures the card was showing. The list rows stay
+ * readings — the card is the frame's own element with a chevron, and a row that opened a zone
+ * would need the same treatment on another day.
+ *
+ * The frame draws no freshness line; the app adds one below the map whenever the answer carries
+ * timestamps (the plan's “last updated” label, §2.4). It prints the **oldest** score timestamp
+ * on the answer, never the read's own time, so a restored cache shows the age of what it holds
+ * and a zone without a timestamp drops the line rather than letting the others speak for it.
  *
  * The OS status bar and home indicator the frame draws belong to the device.
  */
 export function DiscoverScreen({
   onBack,
   onOpenDownloads,
+  onOpenZone,
   zoneSource = testZoneSource,
 }: DiscoverScreenProps) {
   const { colors } = useAppTheme();
-  const { t } = useTranslation();
+  const { locale, t } = useTranslation();
 
   const [query, setQuery] = useState('');
   const [species, setSpecies] = useState<readonly Species[]>([]);
@@ -86,7 +102,7 @@ export function DiscoverScreen({
   // the lit one clears it, which falls back to the pilot's berry rather than to “all berries”
   // — a single zone carries one score per berry, not one for a set of them.
   const scoreSpecies = species[0] ?? PILOT_ZONE_SPECIES;
-  const { status, zones } = useZones(zoneSource, scoreSpecies);
+  const { status, updatedAt, zones } = useZones(zoneSource, scoreSpecies);
 
   const filter: ZoneFilter = { query };
   const matches = filterZones(zones, filter);
@@ -141,9 +157,24 @@ export function DiscoverScreen({
 
         {view === 'map' ? (
           <>
-            <ZoneMap status={status} zones={matches} />
+            <View className="w-full gap-tight">
+              <ZoneMap status={status} zones={matches} />
+              {updatedAt && matches.length > 0 ? (
+                <AppText testID="discover-updated" tone="muted" variant="metadata">
+                  {interpolate(t('discover.map.updated'), {
+                    date: formatLongDate(updatedAt, locale),
+                  })}
+                </AppText>
+              ) : null}
+            </View>
             <ZoneScoreLegend />
-            {cardZone ? <ZoneCard species={scoreSpecies} zone={cardZone} /> : null}
+            {cardZone ? (
+              <ZoneCard
+                onOpen={onOpenZone ? () => onOpenZone(cardZone, scoreSpecies) : undefined}
+                species={scoreSpecies}
+                zone={cardZone}
+              />
+            ) : null}
           </>
         ) : (
           <>

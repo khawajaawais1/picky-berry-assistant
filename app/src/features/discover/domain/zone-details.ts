@@ -1,18 +1,20 @@
 import { DEMO_ZONES, CARD_ZONE_STATE, type ZoneState } from './zone';
 
 /**
- * What frame 07 (Core picker · Zone details, node `5:23032`) knows about a zone: its yield
- * score with the confidence behind it, how many pickers reported this week, whether it is
- * ripe, today's weather and the freshest report from the field.
+ * What frame 07 (Core picker · Zone details, node `5:23032`) draws where **no source exists**:
+ * the design's week of reports, today's weather and the freshest report from the field, plus
+ * the demo figures the screen still uses when it is opened without a zone id.
  *
- * It is the **same demo zone** frame 06 draws — its card's zone, the unpicked one — because
- * the design is telling one story about one place: the map's badge, the card and this screen
- * all say 78. That tie is what `DEMO_ZONE_DETAILS` is asserted against, and it is the reason
- * this module imports frame 06's zones rather than repeating them.
+ * It is the **same demo zone** the design drew on frame 06 — its card's zone, the unpicked one —
+ * because the design is telling one story about one place: the map's badge, the card and this
+ * screen all said 78. That tie is what `DEMO_ZONE_DETAILS` is asserted against, and it is the
+ * reason this module imports frame 06's zones rather than repeating them.
  *
- * Nothing returns any of this yet: there is no zone service, no weather source and no report
- * stream. The numbers are the design's own sample (PROJECT.md, known issues), and when the
- * sources exist they replace this constant — the screen's structure does not change.
+ * Since 2026-10-24 a zone opened from frame 06's card takes its score, confidence, season,
+ * species and name from the `ZoneSource` instead (ADR-058); this constant supplies the outlook,
+ * the report and the walk, which no service returns, and the whole screen when no zone id is
+ * given. When a weather source and a report stream exist they replace these fields — the
+ * screen's structure does not change.
  */
 
 /** How the flyer of a zone reads on the day: ripe enough to pick, or not yet. */
@@ -74,12 +76,14 @@ export const DEMO_ZONE_DETAILS: ZoneDetails = {
 };
 
 /**
- * The details of one zone, or nothing.
+ * The demo details of one zone, or nothing.
  *
  * A screen that asked for an unknown zone must not fall back to another zone's numbers:
  * showing the wrong zone's yield as the right one's is worse than showing none (the same
- * rule screen 04's destination follows). The route passes a zone identifier when zones are
- * real; today it passes the demo one.
+ * rule the source's unknown-id path follows). Since screen 07 and the saved plan read the source
+ * (ADR-060), no built screen asks for a demo zone through it; the design's own demo row
+ * (`ZoneRow`) is its only remaining caller, kept with `DEMO_ZONE_DETAILS` until the sample
+ * leaves the code.
  */
 export function zoneDetailsFor(zoneId: string): ZoneDetails | undefined {
   return DEMO_ZONE_DETAILS.zoneId === zoneId ? DEMO_ZONE_DETAILS : undefined;

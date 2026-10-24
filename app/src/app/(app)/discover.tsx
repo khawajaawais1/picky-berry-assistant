@@ -15,9 +15,10 @@ import { DiscoverScreen, CommunityMapPrototype, communityMapReading } from '@/fe
  * `router.canGoBack()` test put a back arrow on the app's home screen that walked the picker back
  * into a flow they had finished (`src/config/__tests__/shell-tab-roots.test.ts`).
  *
- * One destination, a screen that exists: the download glyph opens frame 13's offline centre.
- * The zone card and the list rows are readings now — they show the source's zones, and screen
- * 07 still describes the design's demo zone, so there is nowhere true to send them yet.
+ * Two destinations that exist: the download glyph opens frame 13's offline centre, and the zone
+ * card opens frame 07 with the zone it drew and the berry whose score it printed, so that
+ * screen reads the same source answer instead of the design's demo zone. The list rows remain
+ * readings — the frame gives the card the chevron, and a row's own destination is a later step.
  *
  * PROTOTYPE — `?variant=A` swaps this route's rendering for one throwaway reading of the design's
  * community map (other people's shared spots as a second layer on this very map), which is the
@@ -37,5 +38,12 @@ export default function DiscoverRoute() {
 
   if (reading) return <CommunityMapPrototype variant={reading} />;
 
-  return <DiscoverScreen onOpenDownloads={() => router.push('/downloads')} />;
+  return (
+    <DiscoverScreen
+      onOpenDownloads={() => router.push('/downloads')}
+      onOpenZone={(zone, species) =>
+        router.push({ pathname: '/zone-details', params: { species, zone: zone.id } })
+      }
+    />
+  );
 }

@@ -19,7 +19,10 @@ import { scoreBand } from './zone-score-band';
  *   it cannot print is dropped, and a document that is not a feature collection is **no
  *   zones at all**. Half a payload's zones would be a map that lies by omission.
  * - **Nothing unknown is carried on.** A field the app does not draw is not echoed onto the
- *   zone, so a component cannot start depending on something the contract never promised.
+ *   zone, so a component cannot start depending on something the contract never promised. The
+ *   one metadata field the map does draw — `updated_at`, the instant the scores were computed —
+ *   is carried, and only when it is an instant the app can read.
+
  *
  * The score a zone carries is the one for the species the caller asked about — the contract
  * is `GET /zones?species=…` — even though the stub also ships all four species' scores.
@@ -56,12 +59,40 @@ export type Zone = {
   scores: Readonly<Partial<Record<Species, ZoneScore>>>;
   /** Exterior ring, closed: the last point repeats the first. */
   ring: readonly ZonePoint[];
+  /**
+   * When this zone's scores were computed, as the source wrote them (`updated_at`), or `null`
+   * when it sent none the app can read. Optional on the type because a source may not carry a
+   * timestamp at all; `parseZones` always sets it, to `null` when the field is absent.
+   *
+   * It is the **data's** instant, never the moment the app read or cached it: a restored answer
+   * must not look fresher for having been read again.
+   */
+  updatedAt?: string | null;
 };
 
 export type ZoneQuery = {
   /** Which berry the zone's score speaks for. */
   species: Species;
 };
+
+/**
+ * The berries a zone was reported for, in the app's own order, with the one the screen is
+ * reading first.
+ *
+ * The payload is the only thing that can answer what grows in a zone: `scores` carries a score
+ * per berry it was reported for, and a missing berry is a berry the zone has no reading for.
+ * The read berry leads because the screen's score and its accent chip must be about the same
+ * berry — the design's first-chip accent, over the source's own list.
+ */
+export function zoneSpecies(zone: Zone, preferred: Species): readonly Species[] {
+  const others = SPECIES.filter(
+    (candidate) => candidate !== preferred && zone.scores[candidate] !== undefined,
+  );
+
+  // A zone the caller asked for a berry it has no score for is not given that berry back: the
+  // row names what the payload scored, and nothing else.
+  return zone.scores[preferred] === undefined ? others : [preferred, ...others];
+}
 
 /**
  * What the map asks for when the picker has not chosen a berry: the species the data team's
@@ -80,6 +111,21 @@ export interface ZoneSource {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * An instant the app can print, as the payload writes one: a date, a time and a zone or `Z`.
+ * Deliberately strict — a bare date or a local time with no offset is not the instant the
+ * contract means, and the map would be printing a day the data never named.
+ */
+const INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
+
+function asInstant(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+
+  const instant = value.trim();
+
+  return INSTANT.test(instant) && !Number.isNaN(Date.parse(instant)) ? instant : null;
 }
 
 function asText(value: unknown): string | null {
@@ -175,6 +221,9 @@ function parseFeature(value: unknown, species: Species): Zone | null {
     ripeness: score.ripeness,
     scores,
     ring,
+    // A timestamp the app cannot read is not a reason to lose the zone: without it the screen
+    // simply makes no freshness claim (the line is omitted), which is the honest direction.
+    updatedAt: asInstant(value.properties.updated_at),
   };
 }
 

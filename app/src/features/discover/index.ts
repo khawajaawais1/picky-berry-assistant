@@ -49,6 +49,9 @@ export {
   type ZoneQuery,
   type ZoneSource,
 } from './domain/zone-source';
+// The cache a berry's last answer survives the process in. Exported because the app root is the
+// composition point and a feature's rules reach it only through this file (`src/app/_layout.tsx`).
+export { zonesQueryCachePersistence } from './services/zone-cache';
 export {
   CARD_ZONE_STATE,
   DEMO_ZONES,
@@ -58,7 +61,7 @@ export {
   type ZoneAppearance,
   type ZoneState,
 } from './domain/zone';
-export { SPECIES, type Species } from './domain/species';
+export { SPECIES, isSpecies, type Species } from './domain/species';
 // The one table that turns a species into its word, exported because a second feature names berries
 // now: the marketplace's listing screen prints what its produce is (“Bilberry · 20 kg available”).
 // A second table would be a second vocabulary.

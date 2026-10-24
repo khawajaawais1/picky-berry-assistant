@@ -27,7 +27,6 @@ import { PostVisitFeedbackScreen } from '../post-visit-feedback-screen';
 // eslint-disable-next-line import/first
 import { RouteToZoneScreen } from '../route-to-zone-screen';
 // eslint-disable-next-line import/first
-import { SavedSpotsScreen } from '../saved-spots-screen';
 // eslint-disable-next-line import/first
 import { SeasonInsightsScreen } from '../season-insights-screen';
 // eslint-disable-next-line import/first
@@ -38,12 +37,11 @@ import { ZoneReportsScreen } from '../zone-reports-screen';
 /**
  * The rule this guards: **a screen that draws the design's sample names the demo on itself.**
  *
- * *(2026-10-10: the sample check follows one more hop. The saved plan's rows are the picker's own
- * record mapped onto the design's zones — `saved-spots-screen.tsx` names no `DEMO_*` value itself,
- * because the mapping is its feature's domain module — so a screen is now also judged by the
- * domain modules of its own feature that it imports. Every screen already classified stays as it
- * was: the domain modules that reach the sample are discover's, and every screen importing one of
- * them is one of the screens listed below.)*
+ * *(2026-10-10: the sample check follows one more hop — a screen is also judged by the domain
+ * modules of its own feature that it imports, because the saved plan's rows were then the
+ * picker's record mapped onto the design's zones by `saved-spots.ts`. 2026-10-24: that module
+ * reads the zone source instead (ADR-060), so the plan left the demo list below; the hop stays,
+ * because the next screen may reach the sample the same indirect way.)*
  *
  * It exists because the disclosure drifted once. Five screens — 07's yield card, 08's walk, 09's
  * running timer, 10's exit summary and 12's alert — drew the design's own composition with nothing
@@ -126,14 +124,6 @@ const DEMO_SCREENS: readonly DemoScreen[] = [
     draw: () => <AlertsScreen />,
   },
   {
-    // The plan itself is the picker's own record, but the zones it names are the design's own
-    // composition (`saved-spots.ts` reaches `DEMO_ZONES`), so its eyebrow carries the same
-    // season-demo disclosure the map and the season screen carry.
-    file: 'src/features/discover/components/saved-spots-screen.tsx',
-    disclosure: 'privacy.savedSpots.eyebrow',
-    draw: () => <SavedSpotsScreen />,
-  },
-  {
     // The list behind frame 07's “See all 11” (ADR-044): the rows on it are the picker's own
     // queued reports, but the zone it is about and the week it counts are the design's own
     // composition — so it carries the season-demo disclosure, like the plan's list above.
@@ -174,8 +164,8 @@ const DEMO_SCREENS: readonly DemoScreen[] = [
 
 /**
  * The screens that draw none of the design's sample — the other half of the decision the lists
- * make. They are three groups: onboarding (a hero, a form, a code and a consent screen, plus the
- * sign-in screen the design never drew), the account surface (the picker's own settings, the
+ * make. They are three groups: onboarding (a hero, a form and a consent screen, plus the sign-in
+ * screen the design never drew), the account surface (the picker's own settings, the
  * screens behind frame 14's app-drawn rows — ADR-039 — and the copy those records are taken on,
  * ADR-040; all of them state what the device holds rather than any figure of the design's), and
  * nothing else.
@@ -187,9 +177,9 @@ const DEMO_SCREENS: readonly DemoScreen[] = [
  */
 const SAMPLE_FREE_SCREENS: readonly string[] = [
   'src/features/onboarding/components/create-account-screen.tsx',
+  'src/features/onboarding/components/forgot-password-screen.tsx',
   'src/features/onboarding/components/location-consent-screen.tsx',
   'src/features/onboarding/components/sign-in-screen.tsx',
-  'src/features/onboarding/components/verification-screen.tsx',
   'src/features/onboarding/components/welcome-screen.tsx',
   'src/features/privacy/components/account-security-screen.tsx',
   'src/features/privacy/components/privacy-settings-screen.tsx',
@@ -197,6 +187,9 @@ const SAMPLE_FREE_SCREENS: readonly string[] = [
   // The export surface (ADR-040): it lists the phone's own records as the notice does, so it draws
   // none of the design's sample either.
   'src/features/privacy/components/your-data-screen.tsx',
+  // The saved plan reads the zone source (ADR-060): every row is a source zone, and a saved id
+  // the source no longer answers to is printed as the id alone — no design sample is drawn.
+  'src/features/discover/components/saved-spots-screen.tsx',
 ].sort();
 
 /**
@@ -243,8 +236,7 @@ function screenFiles(): string[] {
 /**
  * Whether a screen reaches for the design's sample: directly, through a component that falls back
  * to the demo zones (`ZoneMap`, `ZoneCard`), or through one of the domain modules of its own
- * feature — the path the saved plan takes, whose rows are the picker's record mapped onto the
- * design's zones.
+ * feature — the path the saved plan took until it read the zone source (ADR-060).
  */
 function drawsTheSample(file: string): boolean {
   const text = readFileSync(join(ROOT, file), 'utf8');

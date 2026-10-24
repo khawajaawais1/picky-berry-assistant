@@ -1,4 +1,4 @@
-import { parseZoneList } from '../zone-schema';
+import { parseZoneList, parseZoneListStrict } from '../zone-schema';
 import type { Zone } from '../zone-source';
 
 /**
@@ -37,6 +37,18 @@ describe('parseZoneList', () => {
     const [zone] = parseZoneList([ZONE]);
 
     expect(zone).toEqual(ZONE);
+  });
+
+  it('accepts the timestamp the map prints, and refuses one it cannot read', () => {
+    const [zone] = parseZoneList([{ ...ZONE, updatedAt: '2026-08-03T07:02:00+03:00' }]);
+
+    expect(zone?.updatedAt).toBe('2026-08-03T07:02:00+03:00');
+
+    // A bare day and a local time with no offset are not the instant the contract names; the
+    // adapter that produced one is broken, and the screen would otherwise print a day the
+    // payload never named. The failure direction is still “no zones at all”.
+    expect(parseZoneList([{ ...ZONE, updatedAt: '2026-08-03' }])).toEqual([]);
+    expect(parseZoneList([{ ...ZONE, updatedAt: '2026-08-03T07:02:00' }])).toEqual([]);
   });
 
   it('accepts a species map that carries only the berries the response scored', () => {
@@ -108,5 +120,20 @@ describe('parseZoneList', () => {
     // Not the readable zone alone: a map missing one of the zones the source sent lies by
     // omission, which is the failure direction ADR-036 §1.2 records.
     expect(parseZoneList([ZONE, { ...ZONE, id: 'other', score: -1 }])).toEqual([]);
+  });
+});
+
+describe('parseZoneListStrict', () => {
+  it('tells a response it could not read from one that was empty', () => {
+    // `parseZoneList` answers an empty list for both, which is the right answer at the map and
+    // the wrong one when deciding whether a stored entry may be hydrated: an unreadable cache
+    // must be dropped, where an empty answer is a real answer the app can restore.
+    expect(parseZoneListStrict([{ ...ZONE, score: 130 }])).toBeNull();
+    expect(parseZoneListStrict('zones')).toBeNull();
+    expect(parseZoneListStrict([])).toEqual([]);
+  });
+
+  it('reads the same list `parseZoneList` would', () => {
+    expect(parseZoneListStrict([ZONE])).toEqual(parseZoneList([ZONE]));
   });
 });

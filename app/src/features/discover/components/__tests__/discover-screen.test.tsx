@@ -23,7 +23,14 @@ import { DiscoverScreen, type DiscoverScreenProps } from '../discover-screen';
 const BILBERRY: ZoneScore = { score: 53, confidence: 'medium', ripeness: 'past' };
 const LINGONBERRY: ZoneScore = { score: 70, confidence: 'high', ripeness: 'ripe' };
 
-function zone(id: string, name: string, scores: Partial<Record<Species, ZoneScore>>): Zone {
+const UPDATED_AT = '2026-08-03T07:02:00+03:00';
+
+function zone(
+  id: string,
+  name: string,
+  scores: Partial<Record<Species, ZoneScore>>,
+  updatedAt: string | null = UPDATED_AT,
+): Zone {
   return {
     id,
     h3: id,
@@ -38,6 +45,7 @@ function zone(id: string, name: string, scores: Partial<Record<Species, ZoneScor
       [25.703822, 62.254551],
       [25.689711, 62.25623],
     ],
+    updatedAt,
   };
 }
 
@@ -91,6 +99,23 @@ describe('DiscoverScreen', () => {
     expect(screen.getByTestId('zone-score-legend')).toBeOnTheScreen();
     expect(screen.getByTestId('zone-card')).toBeOnTheScreen();
     expect(screen.getByTestId('map-list-toggle')).toBeOnTheScreen();
+  });
+
+  it('prints the oldest score timestamp under the map', async () => {
+    await renderScreen();
+    await screen.findByText('3 zones · test data');
+
+    // The payload's own instant, not the read's: the zones were scored on 3 August.
+    expect(screen.getByTestId('discover-updated')).toHaveTextContent('Last updated 3 August 2026');
+  });
+
+  it('makes no freshness claim when the answer carries no timestamp', async () => {
+    const undated = ZONES.map((candidate) => ({ ...candidate, updatedAt: null }));
+
+    await render(<DiscoverScreen zoneSource={sourceOf(undated)} />, { wrapper: QueryProvider });
+    await screen.findByText('3 zones · test data');
+
+    expect(screen.queryByTestId('discover-updated')).not.toBeOnTheScreen();
   });
 
   it('names the five yield bands the map paints', async () => {
@@ -256,17 +281,39 @@ describe('DiscoverScreen', () => {
     );
   });
 
-  it('claims no destination: a source zone has no details screen yet', async () => {
+  it('opens the zone the card is reading, under the berry whose score it prints', async () => {
+    const onOpenZone = jest.fn();
+    await renderScreen({ onOpenZone });
+    await screen.findByText('3 zones · test data');
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Open zone Laajavuori 1 details' }));
+
+    // The screen hands over the zone it drew and the berry the chips asked for, so the screen
+    // it opens reads the same record rather than another zone's figures.
+    expect(onOpenZone).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'a' }), 'bilberry');
+
+    await fireEvent.press(screen.getByRole('checkbox', { name: 'Lingonberry' }));
+    await screen.findByText('70 / 100 yield');
+    await fireEvent.press(screen.getByRole('button', { name: 'Open zone Laajavuori 1 details' }));
+
+    expect(onOpenZone).toHaveBeenLastCalledWith(
+      expect.objectContaining({ id: 'a' }),
+      'lingonberry',
+    );
+  });
+
+  it('leaves the card a reading where the route supplies no destination', async () => {
     await renderScreen();
     await screen.findByText('3 zones · test data');
 
+    // A card that claimed a role without anywhere to go would be the control AGENTS.md §11.2
+    // refuses; the list rows are still readings even when the card opens a zone.
     expect(screen.queryByRole('button', { name: /Open zone/ })).not.toBeOnTheScreen();
     expect(screen.queryByTestId('zone-card-chevron')).not.toBeOnTheScreen();
 
     await openList();
 
-    // Only the view toggle is a control here (no back, no download glyph in this render);
-    // the rows are readings.
+    // Only the view toggle is a control here (no back, no download glyph in this render).
     expect(screen.getAllByRole('button')).toHaveLength(1);
   });
 

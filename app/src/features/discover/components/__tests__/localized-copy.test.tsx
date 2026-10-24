@@ -2,6 +2,8 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { QueryProvider } from '@/services/query-client';
 
+import type { Zone } from '../../domain/zone-source';
+
 /**
  * A device set to Finnish. The app is Finnish and English (PROJECT.md), so the copy of every
  * built screen must come from the catalogue rather than from literals in the component —
@@ -45,6 +47,8 @@ describe('the discover screen on a Finnish device', () => {
     expect(screen.getByText('Sadon pisteet')).toBeOnTheScreen();
     expect(screen.getByText('Vaaleat alueet ovat epävarmoja')).toBeOnTheScreen();
     expect(await screen.findByText('50 aluetta · testiaineisto')).toBeOnTheScreen();
+    // The map's freshness line reads the payload's own instant in Finnish notation.
+    expect(screen.getByText('Päivitetty 3.8.2026')).toBeOnTheScreen();
     // The card is the source's first zone now, named in Finnish: its own place name, the
     // berry the chips asked the source for, and the values the payload carries.
     expect(screen.getByText('Laajavuori 1 · Mustikka')).toBeOnTheScreen();
@@ -145,6 +149,46 @@ describe('the zone details screen on a Finnish device', () => {
 
     expect(screen.queryByText('High confidence')).not.toBeOnTheScreen();
     expect(screen.queryByText('Fresh from pickers')).not.toBeOnTheScreen();
+  });
+
+  it('reads a source zone in Finnish, with the sample note in Finnish too', async () => {
+    const zone: Zone = {
+      id: 'zone-a',
+      h3: 'zone-a',
+      name: 'Laajavuori 1',
+      score: 70,
+      confidence: 'high',
+      ripeness: 'ripe',
+      scores: {
+        bilberry: { score: 53, confidence: 'medium', ripeness: 'past' },
+        lingonberry: { score: 70, confidence: 'high', ripeness: 'ripe' },
+      },
+      ring: [
+        [25.689711, 62.25623],
+        [25.69564, 62.253184],
+        [25.703822, 62.254551],
+        [25.689711, 62.25623],
+      ],
+    };
+
+    await render(
+      <ZoneDetailsScreen
+        species="lingonberry"
+        zoneId="zone-a"
+        zoneSource={{ list: async () => [zone] }}
+      />,
+      { wrapper: QueryProvider },
+    );
+
+    expect(await screen.findByText('Laajavuori 1')).toBeOnTheScreen();
+    expect(screen.getByText('/ 100 sadon pisteet')).toBeOnTheScreen();
+    expect(screen.getByText('Varma tieto')).toBeOnTheScreen();
+    expect(screen.getByText('Kypsä nyt')).toBeOnTheScreen();
+    // The blocks with no source are the design's sample, and the sentence that says so is a
+    // catalogue string like any other — not English appended in code.
+    expect(screen.getByTestId('zone-details-sample-note')).toHaveTextContent(
+      'Alla olevat näkymät, tuorein havainto, kävelyreitti ja niiden takana oleva raporttilista ovat suunnittelun oma malliesimerkki: sääpalvelua tai raporttivirtaa ei vielä ole.',
+    );
   });
 
   it('names the walk to the zone with the language’s own decimal mark and turn', async () => {

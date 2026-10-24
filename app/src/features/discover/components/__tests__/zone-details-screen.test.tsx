@@ -2,10 +2,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import { themes, typography } from '@/constants/theme';
+import { QueryProvider } from '@/services/query-client';
 import { readSavedZones, saveZone } from '@/services/saved-zones';
 
+import type { Species } from '../../domain/species';
 import { CARD_ZONE_STATE, DEMO_ZONES } from '../../domain/zone';
 import { DEMO_ZONE_DETAILS } from '../../domain/zone-details';
+import type { Zone, ZoneScore, ZoneSource } from '../../domain/zone-source';
 import { ZoneDetailsScreen } from '../zone-details-screen';
 
 /**
@@ -41,6 +44,14 @@ describe('ZoneDetailsScreen', () => {
     // uses for the same demo season.
     expect(screen.getByText('CORE PICKER · ZONE INSIGHT · SEASON DEMO')).toBeOnTheScreen();
     expect(screen.getByText('Zone 14 · Laajavuori')).toBeOnTheScreen();
+  });
+
+  it('prints no score timestamp on the design’s sample', async () => {
+    await render(<ZoneDetailsScreen />);
+
+    // The sample has no zone source behind it, so it has no instant to state — and the app does
+    // not invent one for the design's figures.
+    expect(screen.queryByTestId('zone-details-updated')).not.toBeOnTheScreen();
   });
 
   it('renders the frame’s photograph', async () => {
@@ -187,7 +198,7 @@ describe('ZoneDetailsScreen', () => {
     });
     expect(saved.props.accessibilityState).toMatchObject({ selected: true });
     await expect(readSavedZones()).resolves.toEqual([
-      { savedAt: expect.any(String), zoneId: DEMO_ZONE_DETAILS.zoneId },
+      { savedAt: expect.any(String), speciesId: 'bilberry', zoneId: DEMO_ZONE_DETAILS.zoneId },
     ]);
 
     await fireEvent.press(saved);
@@ -201,7 +212,7 @@ describe('ZoneDetailsScreen', () => {
   });
 
   it('opens already saved when the zone is in the picker’s plan', async () => {
-    await saveZone(DEMO_ZONE_DETAILS.zoneId);
+    await saveZone(DEMO_ZONE_DETAILS.zoneId, 'bilberry');
 
     await render(<ZoneDetailsScreen />);
 
@@ -277,5 +288,225 @@ describe('ZoneDetailsScreen', () => {
         backgroundColor: themes.light.colors.successMuted,
       });
     }
+  });
+});
+
+const BILBERRY_SCORE: ZoneScore = { score: 53, confidence: 'medium', ripeness: 'past' };
+const LINGONBERRY_SCORE: ZoneScore = { score: 70, confidence: 'high', ripeness: 'ripe' };
+
+function sourceZone(
+  id: string,
+  name: string,
+  scores: Partial<Record<Species, ZoneScore>>,
+  updatedAt: string | null = '2026-08-03T07:02:00+03:00',
+): Zone {
+  return {
+    id,
+    h3: id,
+    name,
+    score: scores.bilberry?.score ?? 0,
+    confidence: scores.bilberry?.confidence ?? 'low',
+    ripeness: scores.bilberry?.ripeness ?? 'unripe',
+    scores,
+    updatedAt,
+    ring: [
+      [25.689711, 62.25623],
+      [25.69564, 62.253184],
+      [25.703822, 62.254551],
+      [25.689711, 62.25623],
+    ],
+  };
+}
+
+const SOURCE_ZONES: readonly Zone[] = [
+  sourceZone('zone-a', 'Laajavuori 1', {
+    bilberry: BILBERRY_SCORE,
+    lingonberry: LINGONBERRY_SCORE,
+  }),
+  sourceZone('zone-b', 'Kilimajärvi 1', {
+    bilberry: { score: 12, confidence: 'low', ripeness: 'unripe' },
+  }),
+];
+
+/** A source that answers for one berry and drops the zones it has no score for. */
+function sourceOf(zones: readonly Zone[]): ZoneSource & { list: jest.Mock } {
+  return {
+    list: jest.fn(async ({ species }: { species: Species }) =>
+      zones.flatMap((candidate) => {
+        const score = candidate.scores[species];
+        return score ? [{ ...candidate, ...score }] : [];
+      }),
+    ),
+  };
+}
+
+/**
+ * Frame 07 over the same `ZoneSource` frame 06 reads.
+ *
+ * The card that opened the screen named a zone and a berry; this screen asks the port for that
+ * berry's answer and draws **that** zone's own name, species, score, confidence and season. The
+ * design's outlook, freshest report and walk have no source, so they stay the design's sample
+ * and the screen says so before them. A zone the source does not answer to gets a sentence, not
+ * another zone's figures.
+ */
+describe('ZoneDetailsScreen over the zone source', () => {
+  const SAMPLE_NOTE =
+    'The outlook, the freshest report, the walk and the report list behind them are the design’s own sample: no weather source or report stream exists yet.';
+
+  async function renderSource(zoneId = 'zone-a', species: Species = 'lingonberry') {
+    return render(
+      <ZoneDetailsScreen species={species} zoneId={zoneId} zoneSource={sourceOf(SOURCE_ZONES)} />,
+      { wrapper: QueryProvider },
+    );
+  }
+
+  it('reads the zone the card opened, with that zone’s own name and figures', async () => {
+    await renderSource();
+
+    expect(await screen.findByText('Laajavuori 1')).toBeOnTheScreen();
+    expect(screen.getByText('70')).toBeOnTheScreen();
+    expect(screen.getByText('/ 100 yield score')).toBeOnTheScreen();
+    expect(screen.getByText('High confidence')).toBeOnTheScreen();
+    expect(screen.getByText('Ripe now')).toBeOnTheScreen();
+
+    // The demo zone the card used to open is gone from this path with its figures.
+    expect(screen.queryByText('Zone 14 · Laajavuori')).not.toBeOnTheScreen();
+    expect(screen.queryByText('78')).not.toBeOnTheScreen();
+  });
+
+  it('draws the species row from the zone’s own scores, the berry read first', async () => {
+    await renderSource();
+    await screen.findByText('Laajavuori 1');
+
+    expect(screen.getByTestId('zone-species-chips')).toBeOnTheScreen();
+    expect(screen.getByTestId('zone-species-chip-lingonberry')).toHaveStyle({
+      backgroundColor: themes.light.colors.accent,
+      borderColor: themes.light.colors.accent,
+    });
+    expect(screen.getByTestId('zone-species-chip-bilberry')).toHaveStyle({
+      backgroundColor: themes.light.colors.surface,
+      borderColor: themes.light.colors.border,
+    });
+    // The row is data, not a filter: a single zone has nothing for a species to narrow.
+    expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
+    expect(screen.queryByText('More')).not.toBeOnTheScreen();
+  });
+
+  it('reads the score of the berry the card showed, not the zone’s pilot default', async () => {
+    await renderSource('zone-a', 'bilberry');
+
+    expect(await screen.findByText('Laajavuori 1')).toBeOnTheScreen();
+    expect(screen.getByText('53')).toBeOnTheScreen();
+    expect(screen.getByText('Medium confidence')).toBeOnTheScreen();
+    expect(screen.getByText('Season over')).toBeOnTheScreen();
+    expect(screen.getByTestId('zone-species-chip-bilberry')).toHaveStyle({
+      backgroundColor: themes.light.colors.accent,
+    });
+  });
+
+  it('prints the zone’s own score timestamp, the instant the map reads', async () => {
+    await renderSource();
+
+    // The same data and the same words as the line under frame 06's map: the zone's `updated_at`,
+    // never the moment this screen read it (ADR-053/057, widened to the details here).
+    expect(await screen.findByTestId('zone-details-updated')).toHaveTextContent(
+      'Last updated 3 August 2026',
+    );
+  });
+
+  it('prints no freshness line when the zone carries no timestamp', async () => {
+    await render(
+      <ZoneDetailsScreen
+        species="lingonberry"
+        zoneId="zone-c"
+        zoneSource={sourceOf([
+          sourceZone('zone-c', 'Laajavuori 3', { lingonberry: LINGONBERRY_SCORE }, null),
+        ])}
+      />,
+      { wrapper: QueryProvider },
+    );
+
+    expect(await screen.findByText('Laajavuori 3')).toBeOnTheScreen();
+    // A missing instant is a fact the app does not have; the line is omitted rather than
+    // guessed from the moment the screen loaded.
+    expect(screen.queryByTestId('zone-details-updated')).not.toBeOnTheScreen();
+  });
+
+  it('no longer prints the design’s week of reports over a source zone’s score', async () => {
+    await renderSource();
+    await screen.findByText('Laajavuori 1');
+
+    // The count belongs to the demo week, not to the zone the source answered for.
+    expect(screen.queryByText('11 reports this week')).not.toBeOnTheScreen();
+    // The blocks with no source are still the design’s sample, and the screen says so.
+    expect(screen.getByTestId('zone-details-sample-note')).toHaveTextContent(SAMPLE_NOTE);
+    expect(screen.getByText('Today’s outlook')).toBeOnTheScreen();
+    expect(screen.getByText('Fresh from pickers')).toBeOnTheScreen();
+  });
+
+  it('saves the zone under the berry the screen is reading', async () => {
+    // The screen opened on lingonberry (the card's layer), and that is what the bookmark writes:
+    // the plan must show the score the picker was looking at, not the pilot default (ADR-061).
+    await renderSource();
+    await screen.findByText('Laajavuori 1');
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Save zone' }));
+
+    await expect(readSavedZones()).resolves.toEqual([
+      { savedAt: expect.any(String), speciesId: 'lingonberry', zoneId: 'zone-a' },
+    ]);
+  });
+
+  it('saves the bilberry layer when that is the one the card handed over', async () => {
+    await renderSource('zone-a', 'bilberry');
+    await screen.findByText('Laajavuori 1');
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Save zone' }));
+
+    await expect(readSavedZones()).resolves.toEqual([
+      { savedAt: expect.any(String), speciesId: 'bilberry', zoneId: 'zone-a' },
+    ]);
+  });
+
+  it('says the zones are still loading, rather than drawing an empty screen', async () => {
+    const pending: ZoneSource = { list: () => new Promise(() => undefined) };
+
+    await render(<ZoneDetailsScreen species="lingonberry" zoneId="zone-a" zoneSource={pending} />, {
+      wrapper: QueryProvider,
+    });
+
+    expect(screen.getByText('Zone details')).toBeOnTheScreen();
+    expect(await screen.findByTestId('zone-details-status')).toHaveTextContent('Loading zones…');
+    expect(screen.queryByTestId('zone-details-hero')).not.toBeOnTheScreen();
+  });
+
+  it('says the source could not be read, rather than falling back to the demo', async () => {
+    const failing: ZoneSource = {
+      list: async () => {
+        throw new Error('no docs');
+      },
+    };
+
+    await render(<ZoneDetailsScreen species="lingonberry" zoneId="zone-a" zoneSource={failing} />, {
+      wrapper: QueryProvider,
+    });
+
+    // The first render says “loading”; the assertion waits for the failed read to replace it.
+    expect(await screen.findByText('Zones could not be read')).toBeOnTheScreen();
+    expect(screen.getByTestId('zone-details-status')).toHaveTextContent('Zones could not be read');
+    expect(screen.queryByText('Zone 14 · Laajavuori')).not.toBeOnTheScreen();
+  });
+
+  it('names a zone the source does not answer to, instead of another zone’s figures', async () => {
+    await renderSource('zone-z');
+
+    expect(
+      await screen.findByText('This zone is not among the pilot zones this phone can read.'),
+    ).toBeOnTheScreen();
+    expect(screen.getByTestId('zone-details-status')).toHaveTextContent(
+      'This zone is not among the pilot zones this phone can read.',
+    );
+    expect(screen.queryByTestId('zone-yield-card')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Zone 14 · Laajavuori')).not.toBeOnTheScreen();
   });
 });
