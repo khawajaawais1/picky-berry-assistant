@@ -14,6 +14,7 @@ import {
   MarketOrderScreen,
 } from '@/features/marketplace';
 import { getCatalogue, SUPPORTED_LOCALES, type Locale, type TranslationKey } from '@/services/i18n';
+import { QueryProvider } from '@/services/query-client';
 
 // eslint-disable-next-line import/first
 import { ActiveVisitScreen } from '../active-visit-screen';
@@ -303,7 +304,7 @@ describe('the demo disclosure', () => {
 
   describe.each(DEMO_SCREENS)('$file', ({ disclosure, draw }) => {
     it('names the demo on the screen it draws', async () => {
-      await render(draw());
+      await render(draw(), { wrapper: QueryProvider });
 
       expect(screen.queryAllByText(disclosurePattern('en')).length).toBeGreaterThan(0);
     });

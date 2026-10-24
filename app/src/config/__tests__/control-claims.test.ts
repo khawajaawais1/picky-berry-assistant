@@ -173,9 +173,9 @@ const LEDGER: readonly LedgerEntry[] = [
     why: 'Frame 10’s yield radios, a real choice stored with the report it describes.',
   },
   {
-    file: 'src/features/discover/components/zone-card.tsx',
+    file: 'src/features/discover/components/design-zone-card.tsx',
     offers: { pressable: 1, role: 1 },
-    why: 'A card that is a control only where the caller has somewhere to go: without a handler it returns the drawing, with no role and no chevron.',
+    why: 'The design’s demo card, kept for the community-map prototype: it is a control only where the caller has somewhere to go, and without a handler it returns the drawing, with no role and no chevron.',
   },
   {
     file: 'src/features/discover/components/zone-details-screen.tsx',
@@ -193,9 +193,19 @@ const LEDGER: readonly LedgerEntry[] = [
     why: 'A list row that is a control only for a zone the app has a detail screen for, so it can never open the wrong zone’s numbers.',
   },
   {
-    file: 'src/features/discover/components/zone-map.tsx',
+    file: 'src/features/discover/components/design-zone-map.tsx',
     offers: { role: 1 },
-    why: 'The map drawing claims `image` — the text alternative it carries, not a control (known issue 35, corrected): it has no handler to lose and nothing on it acts, which is why the frame’s own recentre button is still not drawn.',
+    why: 'The design’s drawing claims `image` — the text alternative it carries, not a control (known issue 35, corrected): it has no handler to lose and nothing on it acts, which is why the frame’s own recentre button is still not drawn. It remains the map on frames 08 and 09.',
+  },
+  {
+    file: 'src/features/discover/components/zone-map-canvas.native.tsx',
+    offers: { role: 1 },
+    why: 'The MapLibre map claims `image` — the text alternative WCAG 1.1.1 asks of the screen’s primary presentation of the zones (known issue 35, corrected) — and nothing on it acts: every gesture is off, because the frame’s recentre button does not exist yet.',
+  },
+  {
+    file: 'src/features/discover/components/zone-map-canvas.web.tsx',
+    offers: { role: 1 },
+    why: 'The web fallback draws the same rings as an SVG and claims `image` for the same reason: it is the node a browser exposes, and no part of it is a control.',
   },
   {
     file: 'src/features/marketplace/components/listing-card.tsx',
@@ -429,7 +439,7 @@ describe('the controls the app offers', () => {
         source: 'if (!openable) return row;',
       },
       {
-        file: 'src/features/discover/components/zone-card.tsx',
+        file: 'src/features/discover/components/design-zone-card.tsx',
         source: 'if (!onPress) return card;',
       },
       {

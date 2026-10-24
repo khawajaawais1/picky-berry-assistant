@@ -161,6 +161,18 @@ export const en = {
   'discover.map.lake': 'Tuomiojärvi',
   'discover.map.position': 'Position marker on the map',
   'discover.map.scale': '━━  200 m   ·   Season demo',
+  // The real map's own lines (screen 06 only — frames 08 and 09 still draw the design's
+  // map). The count says the zones are the pilot's **test data**, because they are the data
+  // team's stub, not pickers' reports (docs/demo-and-stand-ins.md).
+  'discover.map.count': '{count} zones · test data',
+  'discover.map.countOne': '{count} zone · test data',
+  'discover.map.loading': 'Loading zones…',
+  'discover.map.unavailable': 'Zones could not be read',
+  'discover.map.empty': 'No zones to show',
+  // What the five colours mean. The ranges themselves are numbers rather than copy, so they
+  // are written by the legend; these two lines are the words a reader needs.
+  'discover.score.label': 'Yield score',
+  'discover.score.lowConfidence': 'Faded zones have low confidence',
   // The zone's own name is visible text; its state is not, and colour alone cannot carry it
   // to a screen reader, so the label's accessible name spells the state out.
   'discover.zone.a11y': 'Zone {id}, {state}',
@@ -169,13 +181,28 @@ export const en = {
   'discover.legend.unpicked': 'Unpicked',
   'discover.legend.recentlyPicked': 'Picked recently',
   'discover.legend.ripening': 'Ripening',
-  // The zone's number and its species are the card's live values: a zone is a place and a
-  // berry, and the species is the zone's own data rather than part of the sentence.
+  // The design's sample zones still use this label — the saved plan's rows and screen 07's
+  // own zone; screen 06 no longer draws them (its card and rows read the ZoneSource instead).
   'discover.card.title': 'Zone {zone} · {species}',
+  // Screen 06's card and list rows, over the source: the zone's own name and the berry whose
+  // score is read are both values from the payload, not part of the sentence.
+  'discover.card.zoneTitle': '{zone} · {species}',
+  // The design's demo card (the community-map prototype): the frame's own values, kept for
+  // the one reading that still draws the demo composition.
   'discover.card.place': 'Laajavuori · 1.4 km walk',
   'discover.card.yield': '78 / 100 yield',
   'discover.card.confidence': 'High confidence',
   'discover.card.status': 'Unpicked · Ripe · Report updated 38 min ago',
+  // The caption under the source card's name: the same disclosure the map carries, so a
+  // picker reading the card knows the numbers are the data team's stub and not reports.
+  'discover.card.source': 'Pilot area · test data',
+  // The four words a source zone's season can be in — the card's third line and the list
+  // rows' chip. The details screen keeps its own two ("Ripe now"), which describe a zone it
+  // has a full reading for.
+  'discover.ripeness.unripe': 'Not ripe yet',
+  'discover.ripeness.ripening': 'Ripening now',
+  'discover.ripeness.ripe': 'Ripe now',
+  'discover.ripeness.past': 'Season over',
   // The card's accessible name once it leads somewhere. It says where the card goes rather
   // than reading out every value on it, which is what a screen reader would otherwise
   // announce as one button (frame 06's card opens frame 07's zone details).

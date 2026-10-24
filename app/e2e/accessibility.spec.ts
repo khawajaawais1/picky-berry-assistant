@@ -378,45 +378,29 @@ test.describe('the app shell in the built web app', () => {
 });
 
 /**
- * The route wiring frame 06's card does, checked where the wiring actually lives.
+ * The zone screen’s own wiring, checked where the routing lives.
  *
- * The card's press is reported by the feature and the route decides where it leads (the
- * feature imports no router), so the unit tests cannot see the destination at all: they
- * assert the press is reported and nothing more. This is the half that proves the promise the
- * card's own accessible name makes — that pressing it opens the zone screen — and that the
- * frame's back control comes back.
+ * The screen's Navigate action is one of its controls and its destination is a route the
+ * feature does not import; the bookmark is the other, writing the device's plan. This is the
+ * half that proves the walk the label names, that cancelling comes back to the zone, and that
+ * the plan can still be written. The screen is reached by its URL: screen 06's card is a
+ * reading over the ZoneSource now, so no in-app control opens it yet.
  */
-test.describe('the zone card’s destination in the built web app', () => {
-  test('opens the zone screen its accessible name names, and comes back from it', async ({
-    page,
-  }) => {
-    await page.goto('/discover');
-    const card = page.getByRole('button', { name: 'Open zone 14 details' });
-    await expect(card).toBeVisible();
+test.describe('the zone screen’s wiring in the built web app', () => {
+  test('writes the plan from the zone screen, and removes it again', async ({ page }) => {
+    await page.goto('/zone-details');
 
-    await card.click();
+    await page.getByRole('button', { name: 'Save zone' }).click();
+    await expect(page.getByRole('button', { name: 'Remove zone from saved zones' })).toBeVisible();
 
-    // The same zone, the same score: screen 07 describes the zone the card was about.
-    await expect(page).toHaveURL(/\/zone-details$/);
-    await expect(page.getByText('Zone 14 · Laajavuori')).toBeVisible();
-    // By its own handle rather than by its text: the router keeps the screen it left in the
-    // DOM, so “78” is also the badge and the chip on frame 06.
-    await expect(page.getByTestId('zone-yield-score')).toHaveText('78');
-
-    // The screen the card just opened, with the bar's Discover destination now current — the state
-    // no at-rest walk reaches, because a freshly loaded export has no history behind the screen.
-    await expectTreeReadable(page, '/zone-details, opened from the map card');
-
-    await page.getByRole('button', { name: 'Back' }).click();
-    await expect(page).toHaveURL(/\/discover$/);
+    await page.getByRole('button', { name: 'Remove zone from saved zones' }).click();
+    await expect(page.getByRole('button', { name: 'Save zone' })).toBeVisible();
   });
 
   test('carries the walk on to the route screen, and cancels back to the zone', async ({
     page,
   }) => {
-    await page.goto('/discover');
-    await page.getByRole('button', { name: 'Open zone 14 details' }).click();
-    await expect(page).toHaveURL(/\/zone-details$/);
+    await page.goto('/zone-details');
 
     // The zone screen's action names the walk; the screen it opens prints the same figure
     // (frame 07's “Navigate · 1.4 km” leads to frame 08's card).
@@ -789,14 +773,17 @@ test.describe('the account and the plan in the built web app', () => {
       QUEUE_KEY,
     );
 
-    // Frame 06's card opens the zone's own screen, whose bookmark writes the plan.
-    await page.getByRole('button', { name: 'Open zone 14 details' }).click();
-    await expect(page).toHaveURL(/\/zone-details$/);
-    await page.getByRole('button', { name: 'Save zone' }).click();
-    await expect(page.getByRole('button', { name: 'Remove zone from saved zones' })).toBeVisible();
-
-    // The screen after the press: the same bookmark, now saying what the next press would do.
-    await expectTreeReadable(page, '/zone-details, after saving the zone');
+    // The plan, written the way the device's store holds it: screen 06's card is a reading over
+    // the source zones now, so it no longer opens screen 07 (which still describes the demo
+    // zone). The bookmark's own write is covered above, by the zone screen's test.
+    await page.evaluate(
+      (key) =>
+        localStorage.setItem(
+          key,
+          JSON.stringify([{ savedAt: '2026-08-28T09:00:00.000Z', zoneId: 'Z14' }]),
+        ),
+      'picky.saved-zones.v1',
+    );
 
     // The plan is reached the way the app reaches it: the Profile destination, frame 14's settings
     // screen, and its own row.
@@ -973,6 +960,42 @@ test.describe('the discover map in the built web app', () => {
       expect(snapshot).not.toContain('- img\n');
     });
   }
+
+  /**
+   * Screen 06 is the one map that is real geography (ADR-053): the pilot stub's 50 rings are
+   * projected into the drawing, and every one of them has to land inside it. A map that draws
+   * nothing, or a projection that sends a zone off the edge, still passes the layout harness —
+   * it measures text — so this is the check that the drawing is the map it claims to be.
+   */
+  test('/discover draws all 50 pilot zones inside the drawing', async ({ page }) => {
+    await page.goto('/discover');
+
+    const drawing = page.locator('[data-testid="zone-map-drawing"]');
+    await expect(drawing).toBeVisible();
+    await expect(drawing.locator('path')).toHaveCount(50);
+
+    const box = await drawing.boundingBox();
+    expect(box).not.toBeNull();
+
+    const rings = await drawing.locator('path').evaluateAll((paths) =>
+      paths.map((path) => {
+        const bounds = (path as SVGPathElement).getBBox();
+        return {
+          left: bounds.x,
+          top: bounds.y,
+          right: bounds.x + bounds.width,
+          bottom: bounds.y + bounds.height,
+        };
+      }),
+    );
+
+    for (const ring of rings) {
+      expect(ring.left).toBeGreaterThanOrEqual(-0.5);
+      expect(ring.top).toBeGreaterThanOrEqual(-0.5);
+      expect(ring.right).toBeLessThanOrEqual(box!.width + 0.5);
+      expect(ring.bottom).toBeLessThanOrEqual(box!.height + 0.5);
+    }
+  });
 });
 
 test.describe('the review-only prototype surfaces in the built web app', () => {

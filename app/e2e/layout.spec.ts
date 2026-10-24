@@ -310,27 +310,29 @@ const SCREENS: readonly Screen[] = [
     copy: [
       { what: 'the eyebrow', key: 'discover.eyebrow' },
       { what: 'the screen title', key: 'discover.title' },
-      // The map's own words. They are components rather than part of the drawing precisely so
-      // that they are measured here: every one of them is a single line on the frame (node
-      // 5:22966), including the Finnish ones the frame does not contain.
+      // The map's own words. Screen 06's map is the pilot's real zones now (ADR-053), not the
+      // frame's drawing, so the frame's lake name and scale line are gone — the real map has
+      // no lake layer and no tile scale — and the three state words are replaced by the five
+      // band legend's two lines. Every one of them is a single line on the screen.
       { what: 'the place name on the map', key: 'discover.map.place' },
-      { what: 'the lake name on the map', key: 'discover.map.lake' },
-      { what: 'the map’s scale line', key: 'discover.map.scale' },
-      { what: 'the first zone state', key: 'discover.legend.unpicked' },
-      { what: 'the second zone state', key: 'discover.legend.recentlyPicked' },
-      { what: 'the third zone state', key: 'discover.legend.ripening' },
-      // The card's zone number and its species are values, the way screen 04's supporting line has
-      // one: the sentence is copy and both of those are data (the frame's own demo zone is the
-      // unpicked one, and the frame's own card reads “Zone 14 · Lingonberry”).
+      { what: 'the legend’s heading', key: 'discover.score.label' },
+      { what: 'the legend’s low-confidence line', key: 'discover.score.lowConfidence' },
+      // The card reads the ZoneSource's first zone now: its own name and the berry the chips
+      // asked for are values, and every other line is a fact the payload carries. The score,
+      // confidence and ripeness are the stub's, so the run measures the sentences around them.
       {
         what: 'the zone card’s title',
-        key: 'discover.card.title',
-        values: { species: { key: 'report.species.lingonberry' }, zone: '14' },
+        key: 'discover.card.zoneTitle',
+        values: { species: { key: 'report.species.bilberry' }, zone: 'Laajavuori 1' },
       },
-      { what: 'the zone card’s place line', key: 'discover.card.place' },
-      { what: 'the yield chip', key: 'discover.card.yield' },
-      { what: 'the confidence chip', key: 'discover.card.confidence' },
-      { what: 'the zone card’s status line', key: 'discover.card.status' },
+      { what: 'the zone card’s source line', key: 'discover.card.source' },
+      {
+        what: 'the yield chip',
+        key: 'discover.list.yield',
+        values: { max: '100', score: '53' },
+      },
+      { what: 'the confidence chip', key: 'discover.details.confidence.medium' },
+      { what: 'the zone card’s status line', key: 'discover.ripeness.past' },
       // The frame's two filter controls (nodes `5:22955` and `5:22959`) and the row under the
       // card (node `5:23008`). The field's promise is one line in a 250x21 slot, each chip is
       // one line inside its 36 px pill, and the row's three pieces are drawn on one 342x20

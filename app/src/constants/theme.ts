@@ -82,6 +82,22 @@ export type ThemeColors = {
   mapZoneRecentLabel: string;
   /** The ripening zone's name, darkened from the frame's `#855C25` for the same reason. */
   mapZoneRipeningLabel: string;
+  /**
+   * The five yield-score bands the real map paints (`ZONE_SCORE_BANDS`): a sequential
+   * green scale, darker as the score rises, so the map reads as one quantity rather than
+   * five unrelated categories. The `…Line` token is each band's boundary, a darker step of
+   * the same hue. App-side: the design draws three zone *states*, not a score scale.
+   */
+  mapScoreLowest: string;
+  mapScoreLowestLine: string;
+  mapScoreLow: string;
+  mapScoreLowLine: string;
+  mapScoreMid: string;
+  mapScoreMidLine: string;
+  mapScoreHigh: string;
+  mapScoreHighLine: string;
+  mapScoreHighest: string;
+  mapScoreHighestLine: string;
 };
 
 export type Theme = {
@@ -125,6 +141,16 @@ const lightColors: ThemeColors = {
   mapLakeLabel: '#35596A',
   mapZoneRecentLabel: '#44506B',
   mapZoneRipeningLabel: '#6B4A1E',
+  mapScoreLowest: '#DDE5D8',
+  mapScoreLowestLine: '#A9B8A2',
+  mapScoreLow: '#C8DCBE',
+  mapScoreLowLine: '#8FA985',
+  mapScoreMid: '#A9CE9E',
+  mapScoreMidLine: '#6E9562',
+  mapScoreHigh: '#7CB47B',
+  mapScoreHighLine: '#477C4C',
+  mapScoreHighest: '#4E8F5B',
+  mapScoreHighestLine: '#2C5F38',
 };
 
 /**
@@ -163,6 +189,16 @@ const darkColors: ThemeColors = {
   mapLakeLabel: '#9CC3CB',
   mapZoneRecentLabel: '#B3BBE0',
   mapZoneRipeningLabel: '#E7C27D',
+  mapScoreLowest: '#2E3A32',
+  mapScoreLowestLine: '#4C5D50',
+  mapScoreLow: '#33513C',
+  mapScoreLowLine: '#547B5E',
+  mapScoreMid: '#3E6B49',
+  mapScoreMidLine: '#61996D',
+  mapScoreHigh: '#5C9B68',
+  mapScoreHighLine: '#84BE8D',
+  mapScoreHighest: '#86C893',
+  mapScoreHighestLine: '#B5E1BC',
 };
 
 export const themes: Record<ColorSchemeName, Theme> = {

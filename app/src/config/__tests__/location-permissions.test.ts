@@ -11,13 +11,13 @@ import { join } from 'node:path';
  * The owner's answer of 2026-10-12 is **foreground only**: the app asks to read the picker's
  * position while a screen is open, and asks for nothing else. Android's background location and
  * iOS's “Always” are separate permissions with their own store declarations and their own
- * justification, and neither is decided; a background permission that slipped into the config
- * would be a promise the app cannot keep and a heavier permission than the consent screen
- * describes. The guard is a test because a permission is a one-word edit away from existing.
+ * justification, and on 2026-10-23 the owner closed them for v1 (ADR-056); a background permission
+ * that slipped into the config would be a promise the app cannot keep, a heavier permission than
+ * the consent screen describes, and a contradiction of that ADR. The guard is a test because a
+ * permission is a one-word edit away from existing.
  *
  * What it does **not** decide: the copy's own wording, which is the app's (`locationWhenInUsePermission`
- * below), and whether the app should ever ask for more. Those are the owner's, recorded in
- * PROJECT.md's open questions.
+ * below). The “no” itself is ADR-056's; this file is its enforcement.
  */
 const ROOT = join(__dirname, '..', '..', '..');
 

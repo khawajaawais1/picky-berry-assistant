@@ -54,7 +54,9 @@
             "ios": ["en", "fi"]
           }
         }
-      ]
+      ],
+      "@maplibre/maplibre-react-native",
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,

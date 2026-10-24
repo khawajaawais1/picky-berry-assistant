@@ -16,3 +16,7 @@ package-lock.json
 # Prose documentation is reviewed by humans, not reformatted by a tool. Code,
 # config and JSON stay formatted. See ADR-008.
 *.md
+
+# A verbatim copy of the data team's published stub (data/test_zones.geojson).
+# Reformatting it would break the equality test that keeps the two in step.
+assets/data/test-zones.json

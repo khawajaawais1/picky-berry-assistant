@@ -31,13 +31,24 @@ export {
 export { RouteToZoneScreen, type RouteToZoneScreenProps } from './components/route-to-zone-screen';
 export { SavedSpotsScreen, type SavedSpotsScreenProps } from './components/saved-spots-screen';
 export { ZoneDetailsScreen, type ZoneDetailsScreenProps } from './components/zone-details-screen';
+export { DesignZoneMap } from './components/design-zone-map';
 export { ZoneCard, type ZoneCardProps } from './components/zone-card';
 export { ZoneMap } from './components/zone-map';
+export { ZoneScoreLegend } from './components/zone-score-legend';
 export { ZoneReportsScreen, type ZoneReportsScreenProps } from './components/zone-reports-screen';
 export { SpeciesChips, type SpeciesChipsProps } from './components/species-chips';
 export { ZoneList, type ZoneListProps } from './components/zone-list';
 export { ZoneSearchField, type ZoneSearchFieldProps } from './components/zone-search-field';
 export { ZoneStateLegend } from './components/zone-state-legend';
+export { ZONE_SCORE_BANDS, scoreBand, type ZoneScoreBand } from './domain/zone-score-band';
+export {
+  PILOT_ZONE_SPECIES,
+  parseZones,
+  zoneFeatureCollection,
+  type Zone,
+  type ZoneQuery,
+  type ZoneSource,
+} from './domain/zone-source';
 export {
   CARD_ZONE_STATE,
   DEMO_ZONES,

@@ -48,6 +48,17 @@ module.exports = {
       mapLakeLabel: '#35596A',
       mapZoneRecentLabel: '#44506B',
       mapZoneRipeningLabel: '#6B4A1E',
+      // The five yield-score bands of the real map (see theme.ts).
+      mapScoreLowest: '#DDE5D8',
+      mapScoreLowestLine: '#A9B8A2',
+      mapScoreLow: '#C8DCBE',
+      mapScoreLowLine: '#8FA985',
+      mapScoreMid: '#A9CE9E',
+      mapScoreMidLine: '#6E9562',
+      mapScoreHigh: '#7CB47B',
+      mapScoreHighLine: '#477C4C',
+      mapScoreHighest: '#4E8F5B',
+      mapScoreHighestLine: '#2C5F38',
     },
     spacing: {
       tight: '3px',

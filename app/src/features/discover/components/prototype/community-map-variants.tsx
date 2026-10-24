@@ -18,8 +18,8 @@ import { formatDistance } from '../../domain/route';
 import { savedSpots } from '../../domain/saved-spots';
 import { CARD_ZONE_STATE, DEMO_ZONES, type DemoZone } from '../../domain/zone';
 import { DEMO_ZONE_DETAILS, SCORE_MAX } from '../../domain/zone-details';
-import { ZoneCard } from '../zone-card';
-import { ZoneMap } from '../zone-map';
+import { DesignZoneCard } from '../design-zone-card';
+import { DesignZoneMap } from '../design-zone-map';
 import { ZoneRow } from '../zone-row';
 import { ZoneStateLegend } from '../zone-state-legend';
 
@@ -195,7 +195,7 @@ function MapLayerReading({
     <Screen eyebrow={PROTOTYPE_EYEBROW} title={t('discover.title')}>
       <View className="w-full gap-section">
         <View className="w-full">
-          <ZoneMap zones={DEMO_ZONES} />
+          <DesignZoneMap zones={DEMO_ZONES} />
 
           {/* The reading's whole claim, drawn: other people's spots over the zones the picker's
               own legend explains. Nothing here is a control — pressing a shared place would open a
@@ -259,7 +259,7 @@ function MapLayerReading({
           </AppText>
         </View>
 
-        <ZoneCard onPress={onOpenZone} />
+        <DesignZoneCard onPress={onOpenZone} />
 
         <Card style={{ gap: spacing.cardGap, padding: spacing.section }}>
           <View className="w-full flex-row items-center justify-between">

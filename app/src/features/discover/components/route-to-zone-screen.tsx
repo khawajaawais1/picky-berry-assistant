@@ -10,7 +10,7 @@ import { interpolate, useTranslation, type TranslationKey } from '@/services/i18
 
 import { CARD_ZONE_STATE, DEMO_ZONES } from '../domain/zone';
 import { DEMO_ROUTE, formatDistance, type TurnDirection } from '../domain/route';
-import { ZoneMap } from './zone-map';
+import { DesignZoneMap } from './design-zone-map';
 
 const TURN_KEY: Record<TurnDirection, TranslationKey> = {
   left: 'discover.route.turn.left',
@@ -76,7 +76,7 @@ export function RouteToZoneScreen({ onBack, onCancel, onStart }: RouteToZoneScre
           {interpolate(t('discover.route.offline.body'), { place: t('discover.map.place') })}
         </Callout>
 
-        <ZoneMap height={layout.routeMapHeight} route />
+        <DesignZoneMap height={layout.routeMapHeight} route />
 
         <Card style={styles.card} testID="route-card">
           <View className="w-full flex-row gap-gap">

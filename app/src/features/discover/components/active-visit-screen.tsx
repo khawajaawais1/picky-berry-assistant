@@ -12,7 +12,7 @@ import { interpolate, useTranslation } from '@/services/i18n';
 import { DEMO_ACTIVE_VISIT, formatClockTime, formatElapsed } from '../domain/active-visit';
 import { CARD_ZONE_STATE, DEMO_ZONES } from '../domain/zone';
 import { useElapsedMs } from '../hooks/use-elapsed-ms';
-import { ZoneMap } from './zone-map';
+import { DesignZoneMap } from './design-zone-map';
 
 export type ActiveVisitScreenProps = {
   onBack?: () => void;
@@ -82,7 +82,7 @@ export function ActiveVisitScreen({ onBack, onEnd }: ActiveVisitScreenProps) {
           {interpolate(t('discover.visit.arrived.body'), { time: formatClockTime(startedAtMs) })}
         </Callout>
 
-        <ZoneMap height={layout.visitMapHeight} />
+        <DesignZoneMap height={layout.visitMapHeight} />
 
         <Card style={styles.card} testID="visit-timer-card">
           <AppText style={styles.centred} tone="success" variant="statusLabel">

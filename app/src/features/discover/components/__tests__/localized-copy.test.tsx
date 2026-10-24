@@ -1,5 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
+import { QueryProvider } from '@/services/query-client';
+
 /**
  * A device set to Finnish. The app is Finnish and English (PROJECT.md), so the copy of every
  * built screen must come from the catalogue rather than from literals in the component —
@@ -33,23 +35,30 @@ import { SeasonInsightsScreen } from '../season-insights-screen';
 import { ZoneDetailsScreen } from '../zone-details-screen';
 
 describe('the discover screen on a Finnish device', () => {
-  it('renders the screen, the map’s labels and the legend in Finnish', async () => {
-    await render(<DiscoverScreen />);
+  it('renders the screen, the map’s labels and the source card in Finnish', async () => {
+    await render(<DiscoverScreen />, { wrapper: QueryProvider });
 
     expect(screen.getByText('POIMINTA · KAUSIDEMO / 28.8.')).toBeOnTheScreen();
     expect(screen.getByText('Löydä lähialueet')).toBeOnTheScreen();
-    expect(screen.getByText('Poimimaton')).toBeOnTheScreen();
-    expect(screen.getByText('Äskettäin poimittu')).toBeOnTheScreen();
-    expect(screen.getByText('Kypsymässä')).toBeOnTheScreen();
-    expect(screen.getByText('━━  200 m   ·   Kausidemo')).toBeOnTheScreen();
-    expect(screen.getByText('Alue 14 · Puolukka')).toBeOnTheScreen();
+    // The real map's own words: what the colours mean, what the fade means, where the pilot
+    // area is, and that its zones are the data team's test data.
+    expect(screen.getByText('Sadon pisteet')).toBeOnTheScreen();
+    expect(screen.getByText('Vaaleat alueet ovat epävarmoja')).toBeOnTheScreen();
+    expect(await screen.findByText('50 aluetta · testiaineisto')).toBeOnTheScreen();
+    // The card is the source's first zone now, named in Finnish: its own place name, the
+    // berry the chips asked the source for, and the values the payload carries.
+    expect(screen.getByText('Laajavuori 1 · Mustikka')).toBeOnTheScreen();
+    expect(screen.getByText('Koealue · testiaineisto')).toBeOnTheScreen();
+    expect(screen.getByText('Sato 53 / 100')).toBeOnTheScreen();
+    expect(screen.getByText('Kohtalainen varmuus')).toBeOnTheScreen();
+    expect(screen.getByText('Kausi ohi')).toBeOnTheScreen();
 
-    // The zone's state travels in the accessible name, so it has to be translated too: a
-    // Finnish screen reader user must not be told “Picked recently”.
-    expect(screen.getByLabelText('Alue Z09, Äskettäin poimittu')).toBeOnTheScreen();
+    // The map's text alternative is translated too: a Finnish screen reader user must not be
+    // told the map is a “Map of nearby berry zones”.
+    expect(screen.getByLabelText('Kartta lähellä olevista marja-alueista')).toBeOnTheScreen();
 
     // The frame's two controls and the row under the card, all in Finnish: the field's own
-    // promise, the three berries the chips filter by, and the words on the map/list row.
+    // promise, the berries the chips ask for, and the words on the map/list row.
     expect(screen.getByLabelText('Hae paikkaa tai aluetta')).toBeOnTheScreen();
     expect(screen.getByRole('checkbox', { name: 'Puolukka' })).toBeOnTheScreen();
     expect(screen.getByRole('checkbox', { name: 'Mustikka' })).toBeOnTheScreen();
@@ -62,30 +71,48 @@ describe('the discover screen on a Finnish device', () => {
   });
 
   it('says in Finnish what the filter left, including the case of one zone', async () => {
-    await render(<DiscoverScreen />);
+    await render(<DiscoverScreen />, { wrapper: QueryProvider });
+    await screen.findByText('50 aluetta · testiaineisto');
 
-    await fireEvent.changeText(screen.getByLabelText('Hae paikkaa tai aluetta'), 'Z09');
+    await fireEvent.changeText(screen.getByLabelText('Hae paikkaa tai aluetta'), 'Laajavuori 50');
 
     // The singular is its own string in both languages: “{count} zones match” would print
     // “1 zones match”, and Finnish agrees with the number here. It is copy the picker reads
     // exactly when a filter has just narrowed the map, so it has to be translated.
     expect(screen.getByText('1 alue vastaa hakua')).toBeOnTheScreen();
+    expect(screen.getByText('1 alue · testiaineisto')).toBeOnTheScreen();
 
     await fireEvent.changeText(screen.getByLabelText('Hae paikkaa tai aluetta'), 'Kilimajärvi');
 
     expect(screen.getByText('Mikään alue ei vastaa hakua')).toBeOnTheScreen();
   });
 
+  it('reads another berry’s scores in Finnish when its chip is pressed', async () => {
+    await render(<DiscoverScreen />, { wrapper: QueryProvider });
+    await screen.findByText('Sato 53 / 100');
+
+    await fireEvent.press(screen.getByRole('checkbox', { name: 'Puolukka' }));
+
+    // The same zone, the lingonberry score the stub carries, said in Finnish.
+    expect(await screen.findByText('Laajavuori 1 · Puolukka')).toBeOnTheScreen();
+    expect(screen.getByText('Sato 70 / 100')).toBeOnTheScreen();
+    expect(screen.getByText('Kohtalainen varmuus')).toBeOnTheScreen();
+    expect(screen.getByText('Kypsä nyt')).toBeOnTheScreen();
+  });
+
   it('names the zone list’s rows in Finnish, chips and all', async () => {
-    await render(<DiscoverScreen />);
+    await render(<DiscoverScreen />, { wrapper: QueryProvider });
+    await screen.findByText('50 aluetta · testiaineisto');
 
     await fireEvent.press(screen.getByRole('button', { name: 'Näytä alueluettelo' }));
 
     expect(screen.getByTestId('zone-list')).toBeOnTheScreen();
-    expect(screen.getByText('Alue 09 · Mustikka')).toBeOnTheScreen();
-    // The row's state chip is the map legend's own word for the same zone, and its yield chip
-    // prints the design's sample score through the Finnish sentence.
-    expect(screen.getByText('Sato 78 / 100')).toBeOnTheScreen();
+    expect(screen.getByText('Laajavuori 1 · Mustikka')).toBeOnTheScreen();
+    // The row's season chip is the card's own word for the same state, and its yield chip
+    // prints the source's score through the Finnish sentence. More than one stub zone can
+    // share a score or a season, so the list is asked rather than the whole screen.
+    expect(screen.getAllByText('Sato 53 / 100').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Kausi ohi').length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: 'Näytä kartta' })).toBeOnTheScreen();
   });
 });
