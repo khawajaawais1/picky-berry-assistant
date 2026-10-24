@@ -26,11 +26,15 @@ const ACCOUNT_READ_FAILED = 'Your account could not be read.';
 const SIGN_OUT_FAILED = 'Signing out did not finish. Nothing was removed.';
 
 /**
- * The account the app is holding, as screen 03 and screen 04 leave it behind: the name the
- * sign-up collected and the address the code was sent to (ADR-029).
+ * The account the app is holding, as screen 03 leaves it behind: the name the sign-up collected
+ * and the address it was created with (ADR-029).
  */
-async function signedIn(identifier = 'aino@example.fi') {
-  await sessionPort.signIn({ code: '000000', displayName: 'Aino Korhonen', identifier });
+async function signedIn(email = 'aino@example.fi') {
+  await sessionPort.signIn({
+    displayName: 'Aino Korhonen',
+    email,
+    password: 'berries1234',
+  });
 }
 
 /** The row's switch, as it is rendered right now: a control is re-read, never held. */
@@ -51,7 +55,7 @@ describe('PrivacySettingsScreen', () => {
     // account's own one, so the session records that it has none (ADR-038). The row then names
     // what the app knows — the identifier the code belongs to — and the line under it carries the
     // verification claim alone, rather than printing the same identifier twice.
-    await sessionPort.signIn({ code: '000000', identifier: 'aino@example.fi' });
+    await sessionPort.signIn({ email: 'aino@example.fi', password: 'berries1234' });
 
     await render(<PrivacySettingsScreen />);
 
@@ -244,8 +248,8 @@ describe('PrivacySettingsScreen', () => {
   });
 
   it('counts the picker’s plan on the frame’s own saved-spots row', async () => {
-    await saveZone('Z14');
-    await saveZone('Z09');
+    await saveZone('Z14', 'bilberry');
+    await saveZone('Z09', 'bilberry');
 
     await render(<PrivacySettingsScreen />);
 
@@ -261,7 +265,7 @@ describe('PrivacySettingsScreen', () => {
   });
 
   it('words a plan of one in the singular, as the language asks', async () => {
-    await saveZone('Z14');
+    await saveZone('Z14', 'bilberry');
 
     await render(<PrivacySettingsScreen />);
 
@@ -313,7 +317,7 @@ describe('PrivacySettingsScreen', () => {
   });
 
   it('opens the saved spots it counts, and is a reading until the route can', async () => {
-    await saveZone('Z14');
+    await saveZone('Z14', 'bilberry');
     const onOpenSavedSpots = jest.fn();
     const { rerender } = await render(<PrivacySettingsScreen />);
 

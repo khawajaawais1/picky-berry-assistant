@@ -154,7 +154,7 @@ export function parseEnvironment(
  * `process.env[PUBLIC_ENV_VARS.appEnvironment]`, which is what this module used to do — is
  * left alone in the bundle, where the runtime's `process.env` carries none of these names. A
  * computed lookup therefore reads as *unset* in every build, which is how a production export
- * came to accept screen 04's stand-in verification code and to mount the sign-in prototype
+ * came to accept the stand-in credential and to mount the sign-in prototype
  * (`e2e/production-export.spec.ts` is the check that keeps it fixed; the unit tests here
  * cannot see it, because Node's `process.env` is a real object).
  */

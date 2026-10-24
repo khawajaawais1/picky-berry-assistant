@@ -93,8 +93,8 @@ export const DEMO_LISTINGS: readonly MarketListing[] = [
  * The listing with this identifier, or nothing.
  *
  * A screen that asked for an unknown listing must not fall back to another one's price: printing
- * one listing's name over another's figures is worse than printing none (the rule screen 04's
- * destination and `zoneDetailsFor` follow).
+ * one listing's name over another's figures is worse than printing none (the rule `zoneDetailsFor`
+ * follows).
  */
 /**
  * What only the listing the design tells its story about has: the day its berries were picked and
@@ -141,8 +141,8 @@ export const DEMO_LISTING = listingById(DEMO_LISTING_ID)!;
  * The listing with this identifier, or nothing.
  *
  * A screen that asked for an unknown listing must not fall back to another one's price: printing
- * one listing's name over another's figures is worse than printing none (the rule screen 04's
- * destination and `zoneDetailsFor` follow).
+ * one listing's name over another's figures is worse than printing none (the rule `zoneDetailsFor`
+ * follows).
  */
 export function listingById(id: string): MarketListing | undefined {
   return DEMO_LISTINGS.find((listing) => listing.id === id);

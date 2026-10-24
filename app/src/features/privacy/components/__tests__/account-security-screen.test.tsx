@@ -7,8 +7,8 @@ import { AccountSecurityScreen } from '../account-security-screen';
 /**
  * The screen frame 14's “Account & security” row opens (node 5:23677). **The design never drew it**
  * (ADR-039), so its copy is this repository's and its content is what the app can be true about: an
- * account surface for a flow that has no password, a session that lives in memory for an hour, and
- * no account service behind any of it.
+ * account surface for a flow whose password the app never stores, a session that lives in memory
+ * for an hour, and no account service behind any of it (ADR-054, ADR-059).
  *
  * The screen's own risk is the opposite of a missing control: it may not *claim* more security than
  * the app has. So the session's facts are stated as they are — where it is kept, how long it lasts,
@@ -32,26 +32,26 @@ describe('AccountSecurityScreen', () => {
     ).toBeOnTheScreen();
   });
 
-  it('says there is no password, because the flow has none to keep', async () => {
+  it('says the app keeps no password of its own, because it hands the credential on', async () => {
     await render(<AccountSecurityScreen />);
 
-    // The reading the sign-in screen is built from has no password: a code takes its place, so
-    // there is nothing to change, reset or leak. Saying it here is the answer to §1.5 of the
-    // sign-in questionnaire for anyone who goes looking for a change-password control. The line
-    // names the code’s destination without claiming a delivery, since nothing sends one (ADR-048).
-    expect(screen.getByText('The code is the key')).toBeOnTheScreen();
+    // The credential is email + password at the provider (ADR-054), so the app stores no password
+    // to change, reset or leak. Saying it here is the answer for anyone who goes looking for a
+    // change-password control, and the second sentence names the missing service rather than
+    // pretending the credential is checked today.
+    expect(screen.getByText('Your email and password are the key')).toBeOnTheScreen();
     expect(
       screen.getByText(
-        'Signing in asks for a six-digit code for your email or phone. No password is stored, so there is none to change, reset or leak.',
+        'Signing in asks for your email and password. The app keeps no password of its own, and no account service is connected to check one yet.',
       ),
     ).toBeOnTheScreen();
   });
 
   it('names the account the app is holding', async () => {
     await sessionPort.signIn({
-      code: '000000',
       displayName: 'Aino Korhonen',
-      identifier: 'aino@example.fi',
+      email: 'aino@example.fi',
+      password: 'berries1234',
     });
 
     await render(<AccountSecurityScreen />);
@@ -68,7 +68,7 @@ describe('AccountSecurityScreen', () => {
     await waitFor(() =>
       expect(
         screen.getByText(
-          'No session is being held. One lasts an hour from the moment a code is accepted.',
+          'No session is being held. One lasts an hour from the moment you sign in.',
         ),
       ).toBeOnTheScreen(),
     );
@@ -92,7 +92,7 @@ describe('AccountSecurityScreen', () => {
     expect(screen.getByText('Where it is kept')).toBeOnTheScreen();
     expect(screen.getByText('In this app’s memory, while the app is open.')).toBeOnTheScreen();
     expect(screen.getByText('How long it lasts')).toBeOnTheScreen();
-    expect(screen.getByText('An hour from the moment the code was accepted.')).toBeOnTheScreen();
+    expect(screen.getByText('An hour from the moment you sign in.')).toBeOnTheScreen();
     expect(screen.getByText('What ends it')).toBeOnTheScreen();
     expect(screen.getByText('Signing out, or the hour running out.')).toBeOnTheScreen();
   });
@@ -104,7 +104,7 @@ describe('AccountSecurityScreen', () => {
     await render(<AccountSecurityScreen />);
 
     expect(SESSION_LIFETIME_MS).toBe(60 * 60 * 1000);
-    expect(screen.getByText('An hour from the moment the code was accepted.')).toBeOnTheScreen();
+    expect(screen.getByText('An hour from the moment you sign in.')).toBeOnTheScreen();
   });
 
   it('names what is not there, rather than leaving the gaps to be guessed', async () => {
@@ -113,7 +113,7 @@ describe('AccountSecurityScreen', () => {
     expect(screen.getByText('Not here yet')).toBeOnTheScreen();
     expect(
       screen.getByText(
-        'No account service is connected, so your name and your address or number cannot be changed in the app and an account cannot be deleted.',
+        'No account service is connected, so your name and your email address cannot be changed in the app and an account cannot be deleted.',
       ),
     ).toBeOnTheScreen();
     expect(
@@ -207,9 +207,9 @@ describe('AccountSecurityScreen, as the session’s hour runs out', () => {
 
   async function signInAtStart() {
     await sessionPort.signIn({
-      code: '000000',
       displayName: 'Aino Korhonen',
-      identifier: 'aino@example.fi',
+      email: 'aino@example.fi',
+      password: 'berries1234',
     });
   }
 
@@ -255,7 +255,7 @@ describe('AccountSecurityScreen, as the session’s hour runs out', () => {
     expect(await screen.findByText('This session has ended')).toBeOnTheScreen();
     expect(
       screen.getByText(
-        'The hour that began when the code was accepted is up, so the app is holding no account.',
+        'The hour that began when you signed in is up, so the app is holding no account.',
       ),
     ).toBeOnTheScreen();
     // The account row and the countdown are gone: the app is holding nobody, and a row naming a
@@ -274,7 +274,7 @@ describe('AccountSecurityScreen, as the session’s hour runs out', () => {
 
     expect(
       await screen.findByText(
-        'No session is being held. One lasts an hour from the moment a code is accepted.',
+        'No session is being held. One lasts an hour from the moment you sign in.',
       ),
     ).toBeOnTheScreen();
 
@@ -286,7 +286,7 @@ describe('AccountSecurityScreen, as the session’s hour runs out', () => {
     await render(<AccountSecurityScreen />);
 
     await screen.findByText(
-      'No session is being held. One lasts an hour from the moment a code is accepted.',
+      'No session is being held. One lasts an hour from the moment you sign in.',
     );
 
     // A control that cannot act claims no role (AGENTS.md §11.2), and the sentence above it still

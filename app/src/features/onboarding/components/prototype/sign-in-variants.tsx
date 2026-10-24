@@ -97,7 +97,7 @@ function CodeFirst({ onSendCode, onCreateAccount }: VariantProps & { onSendCode:
         />
 
         <AppText tone="muted" variant="caption">
-          Continues to screen 04’s six-cell code field, which is already built and measured.
+          Proposes the code step ADR-059 retired when the credential became email + password.
         </AppText>
 
         <TextAction align="center" label="I don’t have an account yet" onPress={onCreateAccount} />

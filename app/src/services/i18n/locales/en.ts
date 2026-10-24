@@ -48,18 +48,39 @@ export const en = {
   'onboarding.welcome.tag.privateByNature': 'Private by nature',
   'onboarding.welcome.title': 'Welcome to the outdoors',
 
-  // The sign-in screen, which the design never drew: the design owner chose the reading it is
-  // built from (ADR-034), and its words are this repository's rather than a frame's. Its action
-  // carries the identifier to the code screen and sends nothing itself — there is no account
-  // service and no transport — so it names what the press does rather than a delivery (ADR-048).
-  'onboarding.signIn.action': 'Continue with a code',
+  // The sign-in screen, which the design never drew: the design owner chose the screen's shape
+  // (ADR-034), and its words are this repository's rather than a frame's. Since 2026-10-24 it
+  // collects the account's own credential — email + password (ADR-054, ADR-059) — so the action
+  // says what the press does and the failure line says what a refusal means.
+  'onboarding.signIn.action': 'Sign in',
   'onboarding.signIn.createAccount': 'I don’t have an account yet',
+  'onboarding.signIn.email': 'Email address',
   'onboarding.signIn.eyebrow': 'ONBOARDING · SIGN IN',
-  'onboarding.signIn.heading': 'Sign in with a code.',
-  'onboarding.signIn.identifier': 'Email or phone',
-  'onboarding.signIn.supporting':
-    'One identifier, then six digits. No password to remember — and none to leak.',
+  'onboarding.signIn.failed': 'That email and password didn’t match. Try again.',
+  'onboarding.signIn.forgotPassword': 'Forgot password?',
+  'onboarding.signIn.heading': 'Welcome back.',
+  'onboarding.signIn.password': 'Password',
+  'onboarding.signIn.supporting': 'Enter the email and password you signed up with.',
   'onboarding.signIn.title': 'Sign in',
+
+  // The password-reset journey the design never drew (ADR-062, answering ADR-034 §1.5). Its
+  // framing is the sign-in screen's, and its words are this repository's. **No string claims a
+  // delivery**: the sign-in service owns the link, no service is connected, and the test-build
+  // note says no email is sent — the rule ADR-048 set for the retired code screen.
+  'onboarding.forgotPassword.action': 'Request reset link',
+  'onboarding.forgotPassword.eyebrow': 'ONBOARDING · PASSWORD RESET',
+  'onboarding.forgotPassword.failed': 'The reset link couldn’t be requested. Try again.',
+  'onboarding.forgotPassword.heading': 'Forgot your password?',
+  'onboarding.forgotPassword.requested.another': 'Use a different address',
+  'onboarding.forgotPassword.requested.body':
+    'If an account uses {email}, the sign-in service’s reset link is the next step for that address. The app never stores your password.',
+  'onboarding.forgotPassword.requested.heading': 'Reset request accepted.',
+  'onboarding.forgotPassword.requested.test.body':
+    'No sign-in service is connected here, so no reset email is sent. In the finished app, the link would go to this address.',
+  'onboarding.forgotPassword.requested.test.title': 'Test build',
+  'onboarding.forgotPassword.supporting':
+    'Enter the email your account uses. Reset links belong to the sign-in service; the app never stores your password.',
+  'onboarding.forgotPassword.title': 'Reset password',
 
   'onboarding.createAccount.action': 'Create account',
   'onboarding.createAccount.consent':
@@ -68,11 +89,8 @@ export const en = {
   'onboarding.createAccount.field.email': 'Email address',
   'onboarding.createAccount.field.name': 'Your name',
   'onboarding.createAccount.field.password': 'Password',
-  'onboarding.createAccount.field.phone': 'Phone number',
+  'onboarding.createAccount.failed': 'Your account wasn’t created. Try again.',
   'onboarding.createAccount.heading': 'A little introduction.',
-  'onboarding.createAccount.mode.email': 'Email',
-  'onboarding.createAccount.mode.label': 'How to create your account',
-  'onboarding.createAccount.mode.phone': 'Phone number',
   'onboarding.createAccount.passwordHint': 'At least 8 characters, with a number.',
   'onboarding.createAccount.privacy.body':
     'Saved spots default to private. Your GPS trails are never public.',
@@ -81,47 +99,6 @@ export const en = {
   'onboarding.createAccount.signIn': 'Already registered? Sign in',
   'onboarding.createAccount.supporting': 'Save your spots and keep your picking history together.',
   'onboarding.createAccount.title': 'Create your account',
-
-  // Screen 04's wording is the flow's rather than the frame's, and it is written to be true
-  // **now**: the frame names the address a code was sent to, and nothing in this app sends one
-  // (no account service, no transport — ADR-027, known issue 32, ADR-048). So the heading says
-  // what the step is for and the supporting line names the destination the code belongs to, with
-  // each branch of the account-service decision turning them back into the frame's own words:
-  // with an email transport the heading reads “Check your inbox.” and the sentence “the 6-digit
-  // code we sent to {destination}”, and with SMS the phone note says a text carried it. The
-  // expiry note stays as the frame wrote it: it is the rule of the code being entered, which the
-  // branch with a service makes true and which claims no delivery by itself.
-  'onboarding.verification.action': 'Verify & continue',
-  'onboarding.verification.changeEmail': 'Change email address',
-  // The frame's title and its action back to the field, for the identifier the frame does not
-  // draw. Screen 03 and the sign-in screen take an address **or** a number (ADR-034 §1.2), and on
-  // a phone journey the frame's own words name an address the account does not have — so the copy
-  // follows the destination, which is the assumed answer to ADR-049's questionnaire (§3.1, §3.2)
-  // recorded there on 2026-10-13 with the departure from the frame. The owner's answer supersedes
-  // it; until then these two strings are what a phone destination reads.
-  'onboarding.verification.changePhone': 'Change phone number',
-  'onboarding.verification.codeLabel': 'Verification code',
-  'onboarding.verification.eyebrow': 'ONBOARDING · 04 / 05',
-  'onboarding.verification.expiry': 'The code expires in 10 minutes. Don’t share it with anyone.',
-  'onboarding.verification.heading': 'Confirm it’s you.',
-  'onboarding.verification.phoneNote.body': 'The same six-digit step confirms a phone number.',
-  'onboarding.verification.phoneNote.title': 'Signed up by phone instead?',
-  // The two resend states render only where a caller can actually send a new code: asking for one
-  // is the whole meaning of the row, so with no transport behind it the row is absent rather than
-  // counting down to an action that cannot act (ADR-048, docs/demo-and-stand-ins.md §7).
-  'onboarding.verification.resend': 'Resend code',
-  // The frame draws the action mid-wait (“Resend code · available in 00:28”), and its
-  // countdown is a live value rather than copy: the screen renders it beside this
-  // sentence, which is why the sentence stops before the number.
-  'onboarding.verification.resendWaiting': 'Resend code · available in',
-  'onboarding.verification.supporting': 'Enter the 6-digit code for {destination}.',
-  'onboarding.verification.title': 'Verify your email',
-  'onboarding.verification.titlePhone': 'Verify your number',
-  // Written here rather than in the frame: the design draws no failure state, and a refused
-  // code must say so rather than leave the press silent. The design's own error treatment is
-  // still an owner question (PROJECT.md, open question 11).
-  'onboarding.verification.verifyFailed':
-    'That code isn’t right. Check the six digits and try again.',
 
   // The frame's own label reads “Continue to location settings”, and no such screen exists: the
   // consent is recorded here, and the platform's permission is asked in the app the first time a
@@ -161,11 +138,13 @@ export const en = {
   'discover.map.lake': 'Tuomiojärvi',
   'discover.map.position': 'Position marker on the map',
   'discover.map.scale': '━━  200 m   ·   Season demo',
-  // The real map's own lines (screen 06 only — frames 08 and 09 still draw the design's
-  // map). The count says the zones are the pilot's **test data**, because they are the data
-  // team's stub, not pickers' reports (docs/demo-and-stand-ins.md).
+  // The real map's own lines (screen 06 — frames 08 and 09 still draw the design's map). The
+  // count says the zones are the pilot's **test data**, because they are the data team's stub,
+  // not pickers' reports (docs/demo-and-stand-ins.md). `updated` is also screen 07's freshness
+  // line for the one zone it draws: the same data, so the same words rather than a second key.
   'discover.map.count': '{count} zones · test data',
   'discover.map.countOne': '{count} zone · test data',
+  'discover.map.updated': 'Last updated {date}',
   'discover.map.loading': 'Loading zones…',
   'discover.map.unavailable': 'Zones could not be read',
   'discover.map.empty': 'No zones to show',
@@ -234,10 +213,17 @@ export const en = {
   // as `{placeholders}`: the score, the week's report count, the temperature, the hour and
   // the reporter's own reading are data rather than copy, so a locale can order them.
   //
-  // The eyebrow carries the disclosure frame 06's map carries (“SEASON DEMO”): these figures are
-  // the design's sample — there is no zone service, weather source or report stream — and the
-  // screen that shows them says so rather than leaving it to PROJECT.md.
+  // The eyebrow carries the disclosure frame 06's map carries (“SEASON DEMO”). A source zone's
+  // name, species, score, confidence and season come from the zone port; the outlook, freshest
+  // report, walk and report list have no source and stay the design's sample, which the
+  // `sample` sentence says before them. The whole screen is the sample when no zone id is given,
+  // which a bare URL alone reaches since the saved plan reads the source (ADR-060).
   'discover.details.eyebrow': 'CORE PICKER · ZONE INSIGHT · SEASON DEMO',
+  // The title the screen can print before it knows a zone: loading, a failed read, or an id the
+  // source does not answer to.
+  'discover.details.pendingTitle': 'Zone details',
+  'discover.details.unknown': 'This zone is not among the pilot zones this phone can read.',
+  // The design's own two-chip title, still drawn for the no-zone sample path.
   'discover.details.title': 'Zone {zone} · {place}',
   'discover.details.hero': 'Berry season photograph',
   'discover.details.scoreLabel': '/ {max} yield score',
@@ -245,9 +231,14 @@ export const en = {
   'discover.details.confidence.medium': 'Medium confidence',
   'discover.details.confidence.low': 'Low confidence',
   'discover.details.reportsThisWeek': '{count} reports this week',
-  'discover.details.ripeness.ripe': 'Ripe now',
-  'discover.details.ripeness.ripening': 'Ripening now',
+  // The season words are the map screen's four (`discover.ripeness.*`), shared with the card
+  // and the rows, so the details screen cannot name a season differently from the map.
   'discover.details.forecastDisclaimer': 'A forecast of conditions, not a guaranteed harvest.',
+  // Said before the blocks no source supplies, so a picker reading a source zone's real score
+  // knows where the outlook and the report stop being the app's own knowledge (the rule frame
+  // 13's demo note follows).
+  'discover.details.sample':
+    'The outlook, the freshest report, the walk and the report list behind them are the design’s own sample: no weather source or report stream exists yet.',
   'discover.details.outlook.title': 'Today’s outlook',
   'discover.details.outlook.body':
     'Ripe lingonberries after a warm week. Similar conditions expected tomorrow.',
@@ -546,10 +537,10 @@ export const en = {
   'privacy.useAs.buyer': 'Buyer',
   'privacy.useAs.note': 'Same account. Buying is a planned marketplace extra.',
   // Frame 14's “Saved spots” row and the surface it opens. The words are the frame's; the screen
-  // behind the row was never drawn, so its own lines are written here (ADR-030). The eyebrow
-  // carries the disclosure the design's own map and season screens carry, because the zones it
-  // lists are the design's demo composition rather than a zone source.
-  'privacy.savedSpots.eyebrow': 'ACCOUNT / OFFLINE · SAVED SPOTS · SEASON DEMO',
+  // behind the row was never drawn, so its own lines are written here (ADR-030). The eyebrow no
+  // longer carries the “SEASON DEMO” disclosure: since ADR-060 the rows are source zones, and a
+  // saved id the source cannot describe is printed alone rather than filled from the design.
+  'privacy.savedSpots.eyebrow': 'ACCOUNT / OFFLINE · SAVED SPOTS',
   'privacy.savedSpots.title': 'Saved spots',
   // The frame's own subtitle under the row's label (node 5:23644, “4 spots · private by
   // default”), printed only once the plan has been read: it counts what it describes, so an
@@ -575,24 +566,23 @@ export const en = {
   // get two keys.
 
   // Frame 14's account row drawn again, from the same session, plus what the app can be true about:
-  // no password (the sign-in flow asks for a code — ADR-034), a session in memory for an hour, and
-  // no account service behind any of it.
+  // an email + password credential the app stores no password of (ADR-054), a session in memory for
+  // an hour, and no account service behind any of it.
   'privacy.accountSecurity.eyebrow': 'ACCOUNT / OFFLINE · ACCOUNT & SECURITY',
   'privacy.accountSecurity.title': 'Account & security',
   'privacy.accountSecurity.intro': 'What the app knows about your account, and what keeps it.',
   'privacy.accountSecurity.none':
-    'No session is being held. One lasts an hour from the moment a code is accepted.',
-  'privacy.accountSecurity.reach.title': 'The code is the key',
+    'No session is being held. One lasts an hour from the moment you sign in.',
+  'privacy.accountSecurity.reach.title': 'Your email and password are the key',
   'privacy.accountSecurity.reach.body':
-    'Signing in asks for a six-digit code for your email or phone. No password is stored, so there is none to change, reset or leak.',
+    'Signing in asks for your email and password. The app keeps no password of its own, and no account service is connected to check one yet.',
   'privacy.accountSecurity.session.title': 'The session',
   'privacy.accountSecurity.session.where.label': 'Where it is kept',
   'privacy.accountSecurity.session.where.value': 'In this app’s memory, while the app is open.',
   'privacy.accountSecurity.session.where.hint':
     'Nothing is written to this phone yet: the store behind the stand-in is memory, and the secure store arrives with the account service.',
   'privacy.accountSecurity.session.lifetime.label': 'How long it lasts',
-  'privacy.accountSecurity.session.lifetime.value':
-    'An hour from the moment the code was accepted.',
+  'privacy.accountSecurity.session.lifetime.value': 'An hour from the moment you sign in.',
   'privacy.accountSecurity.session.lifetime.hint':
     'The hour is the provider’s own token lifetime rather than a preference of ours.',
   'privacy.accountSecurity.session.ends.label': 'What ends it',
@@ -612,10 +602,10 @@ export const en = {
   // way back in.
   'privacy.accountSecurity.ended.title': 'This session has ended',
   'privacy.accountSecurity.ended.body':
-    'The hour that began when the code was accepted is up, so the app is holding no account.',
+    'The hour that began when you signed in is up, so the app is holding no account.',
   'privacy.accountSecurity.absent.title': 'Not here yet',
   'privacy.accountSecurity.absent.service':
-    'No account service is connected, so your name and your address or number cannot be changed in the app and an account cannot be deleted.',
+    'No account service is connected, so your name and your email address cannot be changed in the app and an account cannot be deleted.',
   'privacy.accountSecurity.absent.devices':
     'There is no list of your devices and no second session to end.',
   'privacy.accountSecurity.signOut.note':

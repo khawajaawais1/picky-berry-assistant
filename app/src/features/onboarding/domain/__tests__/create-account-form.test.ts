@@ -1,6 +1,5 @@
 import {
   EMPTY_CREATE_ACCOUNT_FORM,
-  applyIdentifierMode,
   isSubmittable,
   type CreateAccountForm,
 } from '../create-account-form';
@@ -14,17 +13,16 @@ import {
 const complete: CreateAccountForm = {
   ...EMPTY_CREATE_ACCOUNT_FORM,
   consent: true,
-  identifier: 'aino@example.fi',
+  email: 'aino@example.fi',
   name: 'Aino Korhonen',
   password: 'berries1',
 };
 
 describe('EMPTY_CREATE_ACCOUNT_FORM', () => {
-  it('starts empty, on the email identifier the frame shows, and without consent', () => {
+  it('starts empty, on the email the frame shows, and without consent', () => {
     expect(EMPTY_CREATE_ACCOUNT_FORM).toEqual({
       consent: false,
-      identifier: '',
-      mode: 'email',
+      email: '',
       name: '',
       password: '',
     });
@@ -44,8 +42,9 @@ describe('isSubmittable', () => {
     expect(isSubmittable({ ...complete, name: '   ' })).toBe(false);
   });
 
-  it('requires an identifier', () => {
-    expect(isSubmittable({ ...complete, identifier: '' })).toBe(false);
+  it('requires an email address', () => {
+    expect(isSubmittable({ ...complete, email: '' })).toBe(false);
+    expect(isSubmittable({ ...complete, email: '   ' })).toBe(false);
   });
 
   it('requires at least eight characters in the password', () => {
@@ -63,20 +62,5 @@ describe('isSubmittable', () => {
 
   it('requires consent', () => {
     expect(isSubmittable({ ...complete, consent: false })).toBe(false);
-  });
-});
-
-describe('applyIdentifierMode', () => {
-  it('switches the mode and clears the identifier that belonged to the other one', () => {
-    const phone = applyIdentifierMode(complete, 'phone');
-
-    expect(phone.mode).toBe('phone');
-    // An address typed as an email must never be submitted as a phone number.
-    expect(phone.identifier).toBe('');
-    expect(phone.name).toBe(complete.name);
-  });
-
-  it('keeps the identifier when the same mode is selected again', () => {
-    expect(applyIdentifierMode(complete, 'email').identifier).toBe(complete.identifier);
   });
 });

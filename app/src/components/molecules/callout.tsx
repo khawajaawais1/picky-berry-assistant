@@ -14,8 +14,8 @@ export type CalloutProps = ViewProps & {
   icon?: ReactNode;
   /**
    * The tint the frame gives the block. The design draws three: the success tint on screen
-   * 03's privacy note, the accent tint on screen 04's note about the phone path, and the
-   * warning tint on screen 10's offline note.
+   * 03's privacy note, the accent tint on the account surface's reach note, and the warning
+   * tint on screen 10's offline note.
    */
   tone?: CalloutTone;
 };

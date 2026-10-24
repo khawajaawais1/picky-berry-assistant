@@ -1,9 +1,9 @@
 import { interpolate } from '../index';
 
 /**
- * Copy that carries a runtime value — screen 04 names the destination the code belongs to.
- * The catalogue holds the sentence with a `{destination}` placeholder; this fills it, in
- * the language the sentence is written in, so no component concatenates its own grammar.
+ * Copy that carries a runtime value — a screen names the place or the account it is about.
+ * The catalogue holds the sentence with a `{placeholder}`; this fills it, in the language the
+ * sentence is written in, so no component concatenates its own grammar.
  */
 describe('interpolate', () => {
   it('fills the placeholder with the value', () => {

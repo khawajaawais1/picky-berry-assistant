@@ -6,7 +6,7 @@ import { OnboardingLocationConsentScreen } from '@/features/onboarding';
  * Screen 05 · Onboarding · Location consent (Figma node 5:22885).
  *
  * A route only wires a screen to a feature's public API. The back control is wired because
- * screen 04 sits behind it.
+ * screen 03 sits behind it; screen 04's code step is retired (ADR-059).
  *
  * **Continuing and skipping both lead into the app** — the screens the design draws beyond this
  * one (frames 06+), which exist, so the flow no longer stops here. Until 2026-10-10 this route's

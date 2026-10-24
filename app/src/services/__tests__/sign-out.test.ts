@@ -47,11 +47,11 @@ describe('signing out', () => {
   it('removes everything this device holds, and drops the session with it', async () => {
     await recordPrivacyConsent(true);
     await enqueueReport(REPORT);
-    await saveZone('Z14');
+    await saveZone('Z14', 'bilberry');
     await sessionPort.signIn({
-      code: '000000',
       displayName: 'Aino Korhonen',
-      identifier: 'aino@example.fi',
+      email: 'aino@example.fi',
+      password: 'berries1234',
     });
 
     await signOut();
@@ -67,9 +67,9 @@ describe('signing out', () => {
   it('keeps the session when a record could not be deleted, so nothing half-leaves', async () => {
     await recordPrivacyConsent(true);
     await sessionPort.signIn({
-      code: '000000',
       displayName: 'Aino Korhonen',
-      identifier: 'aino@example.fi',
+      email: 'aino@example.fi',
+      password: 'berries1234',
     });
     // The first deletion fails — a store that will not answer — and deliberately **no
     // `mockRestore()` afterwards**: restoring a spy over this shared mock resets the mock's

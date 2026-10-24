@@ -1,62 +1,65 @@
 import { appEnvironment, type AppEnvironment } from '@/config/env';
 
 import { isExpired, mintSession, parseSession, type Session } from './session';
-import { verifyCode } from './stand-in-code';
 import { createInMemorySessionStore, type SessionStore } from './store';
 
 /**
- * The authentication seam: one port the app acquires, holds and drops a session through, with a
- * stand-in provider behind it until the account service exists.
+ * The authentication seam: one port the app acquires, holds and drops a session through, and asks
+ * for a password reset through, with a stand-in provider behind it until the account service
+ * exists.
  *
  * Why it exists: the account belongs to the team's API and Firebase issues the credential
- * (ADR-054, which answers PROJECT.md's old question 12). Every screen that needs a signed-in
- * user would otherwise wait for that service. With a port, the answer changes the **provider**
- * and nothing else: the sign-in screen, the app shell and the profile screen are written against
- * `signIn`, `current` and `signOut` and cannot tell which implementation is behind them.
+ * (ADR-054, which answers PROJECT.md's old question 12). Every screen that needs a signed-in user
+ * would otherwise wait for that service. With a port, the answer changes the **provider** and
+ * nothing else: the create-account screen, the sign-in screen, the reset request, the app shell
+ * and the profile screen are written against `signIn`, `current`, `signOut` and
+ * `requestPasswordReset`, and cannot tell which implementation is behind them.
  *
- * What this is not: an authorisation layer. A session says who the user is; **nothing here
- * grants privilege**, and the client is untrusted at all times (SECURITY.md §3–4). When the real
+ * What this is not: an authorisation layer. A session says who the user is; **nothing here grants
+ * privilege**, and the client is untrusted at all times (SECURITY.md §3–4). When the real
  * provider arrives, everything this module answers remains the client's own understanding; the
  * server still decides what a caller may see and do.
  */
 
 /**
- * What a caller offers in exchange for a session: who it is about, the code they were sent, and —
- * at sign-up — the name the account is being created under.
+ * What a caller offers in exchange for a session: the address the account is reached by, its
+ * password, and — at sign-up — the name the account is being created under.
+ *
+ * **The password is passed through, never kept.** It goes to the provider that issues the
+ * credential and is not stored, hashed, logged or put in a session (ADR-054 decisions 2 and 6;
+ * SECURITY.md). The port asks for it in one shape so the provider adapter is a swap.
  *
  * The name is not a credential — it proves nothing — but it is part of what the session has to
- * carry, and the sign-up is where a new account gets it (ADR-029). A real provider takes the
- * same value at sign-up and keeps it as the profile's display name.
+ * carry, and the sign-up is where a new account gets it (ADR-029). A real provider takes the same
+ * value at sign-up and keeps it as the profile's display name.
  *
- * **A credential that names no account omits it**, which is the sign-in journey: nothing was
- * collected to send, and the account's own name is the provider's answer rather than the
- * caller's to supply (ADR-038). Absent and blank are therefore different things, and the port
- * treats them differently: a blank name is what a caller that *meant* to pass one produces, and
- * it is refused, while an absent one is a returning account whose name the session records as
- * unknown.
+ * **A credential that names no name omits it**, which is the sign-in journey: nothing was
+ * collected to send, and the account's own name is the provider's answer rather than the caller's
+ * to supply (ADR-038). Absent and blank are therefore different things, and the port treats them
+ * differently: a blank name is what a caller that *meant* to pass one produces, and it is refused,
+ * while an absent one is a returning account whose name the session records as unknown.
  */
 export type Credential = {
-  /** The email address or phone number the code belongs to, as typed on screen 03. */
-  identifier: string;
+  /** The email address the account is reached by, as typed on screen 03 or the sign-in screen. */
+  email: string;
+  /** The account's password, handed to the provider. Never stored. */
+  password: string;
   /**
    * The name screen 03 collected for the account, as typed — or omitted by a sign-in, where
    * nothing collected one and the service owns the answer.
    */
   displayName?: string;
-  /** The six digits the user enters on screen 04. */
-  code: string;
 };
 
 /**
  * Why a credential was not exchanged for a session.
  *
- * - `refused` — nothing accepted it. With the stand-in that means the code is not one this app
- *   can accept outside a production build; with a real provider it is the server's answer, and
- *   the app is careful not to distinguish “wrong code” from “no such account” when the API says
- *   so (PROJECT.md's open question 11 covers the design's missing error treatment).
+ * - `refused` — nothing accepted it. With a real provider it is the server's answer, and the app
+ *   is careful not to distinguish “wrong password” from “no such account” when the API says so
+ *   (PROJECT.md's open question 11 covers the design's missing error treatment).
  * - `unavailable` — nothing here can answer the question at all. A production build is the case
- *   that matters: there is no account service to ask, so no credential is accepted there,
- *   including the stand-in one (ADR-027).
+ *   that matters: there is no account service to ask, so no credential is accepted there
+ *   (ADR-054 §8, and the stand-in below).
  */
 export type SignInRefusal = 'refused' | 'unavailable';
 
@@ -64,20 +67,51 @@ export type SignInRefusal = 'refused' | 'unavailable';
 export type SignInResult = { ok: true; session: Session } | { ok: false; reason: SignInRefusal };
 
 /**
- * The port. Three operations, because they are the three things the app does with a session:
- * acquire one, ask for the one it is holding, and drop it.
+ * Why a reset request was not accepted.
+ *
+ * - `refused` — the provider would not take it: too many attempts, an address it rejects, or a
+ *   service that is temporarily unable to answer. The screen says one sentence for all of them,
+ *   because the app must not tell a stranger whether the address has an account.
+ * - `unavailable` — nothing here can answer the request at all. A production build is the case
+ *   that matters: there is no sign-in service to ask, so no reset link is requested there
+ *   (ADR-054 §8, ADR-062).
+ */
+export type PasswordResetRefusal = 'refused' | 'unavailable';
+
+/**
+ * The provider accepted the reset request for an address — or did not, with a reason.
+ *
+ * `ok` says the provider took the address, not that an email arrived and not that an account
+ * exists. The provider answers every address the same way for exactly that reason, and the
+ * screen repeats the condition in its words rather than turning a request into an oracle.
+ */
+export type PasswordResetResult = { ok: true } | { ok: false; reason: PasswordResetRefusal };
+
+/**
+ * The port. Four operations: acquire a session, ask for the one being held, drop it, and ask the
+ * provider for a password reset.
+ *
+ * The reset request is not a session operation in the sense the other three are — it holds
+ * nothing and signs nobody in — but it belongs to the same provider and the same adapter, so it
+ * lives on the same seam rather than inventing a second one (ADR-062, extending ADR-028).
  *
  * Both failures a caller must not miss are **explicit rather than thrown**: a refused credential
- * resolves to `{ ok: false }`, so a screen has to decide what to say about it. The two things
- * that *do* reject are the two a caller cannot do anything about — a credential naming no
- * account at all (a programming error) and a store that would not keep the session (a session
- * the app does not have must not be reported as one).
+ * or reset request resolves to `{ ok: false }`, so a screen has to decide what to say about it.
+ * The things that *do* reject are the ones a caller cannot do anything about — a credential or
+ * reset request naming no account at all (a programming error) and a store that would not keep
+ * the session (a session the app does not have must not be reported as one).
  */
 export type SessionPort = {
   signIn(credential: Credential): Promise<SignInResult>;
   /** The session being held, or `null` — including when the one being held has expired. */
   current(): Promise<Session | null>;
   signOut(): Promise<void>;
+  /**
+   * Asks the provider to send the account's reset link to `email`, and holds nothing it returns:
+   * no token, no address, no session. Every address gets the same outcome so the screen cannot
+   * reveal which ones have accounts.
+   */
+  requestPasswordReset(email: string): Promise<PasswordResetResult>;
 };
 
 export type StandInSessionPortOptions = {
@@ -94,15 +128,22 @@ export type StandInSessionPortOptions = {
 };
 
 /**
- * The stand-in provider: it issues a session about whoever offers the stand-in code, and refuses
- * everyone else.
+ * The stand-in provider: it issues a session for any credential the form accepted, and refuses
+ * every credential in a production build.
  *
- * It is the smallest thing that lets the rest of the app be built, and it is built so that it
- * cannot be mistaken for a real check: it answers only the one code, it answers nothing at all in
- * a production build, it keeps the session in memory rather than on disk, and it talks to no
- * server — so a session it issues is worth exactly as much as the stand-in code behind it, which
- * is to say nothing outside this repository. What it *does* hold is the port's contract, so a
- * real provider is a swap rather than a rewrite.
+ * **It cannot check a password, and does not pretend to.** A password is verified by the
+ * provider that issued it, and no provider is wired yet; asking a client-side stand-in to “check”
+ * one would be a door made of a comparison. So outside a production build any non-empty password
+ * is accepted — exactly as the flow's own form rule gated it — and **nothing is verified**. What
+ * that buys is the rest of the app being buildable and walkable; what it costs is that a session
+ * it issues is worth exactly as much as the stand-in behind it, which is to say nothing outside
+ * this repository.
+ *
+ * It is built so it cannot be mistaken for a real check: it answers nothing at all in a
+ * production build, it keeps the session in memory rather than on disk, it stores no password,
+ * and it talks to no server. What it *does* hold is the port's contract, so a real provider is a
+ * swap rather than a rewrite. ADR-059 records why screen 04's code stand-in was retired rather
+ * than kept beside it.
  */
 export function createStandInSessionPort(options: StandInSessionPortOptions = {}): SessionPort {
   const environment = options.environment ?? appEnvironment();
@@ -110,8 +151,8 @@ export function createStandInSessionPort(options: StandInSessionPortOptions = {}
   const store = options.store ?? createInMemorySessionStore();
 
   return {
-    async signIn({ code, displayName, identifier }) {
-      const accountId = identifier.trim();
+    async signIn({ email, password, displayName }) {
+      const accountId = email.trim();
       // Absent is the sign-in journey, and `null` is how the session records that the app has no
       // name for the account; blank is a caller that meant to pass one (ADR-038).
       const name = displayName === undefined ? null : displayName.trim();
@@ -127,11 +168,14 @@ export function createStandInSessionPort(options: StandInSessionPortOptions = {}
         throw new RangeError('a name was offered for the account, and it was blank');
       }
 
-      if (verifyCode(code, environment) === 'rejected') {
-        return {
-          ok: false,
-          reason: environment === 'production' ? 'unavailable' : 'refused',
-        };
+      if (password === '') {
+        // Also a programming error: the screens refuse an empty password before a press, so a
+        // caller that got here with one has skipped its own rule.
+        throw new RangeError('a password was offered, and it was empty');
+      }
+
+      if (environment === 'production') {
+        return { ok: false, reason: 'unavailable' };
       }
 
       const session = mintSession(accountId, name, now());
@@ -166,12 +210,31 @@ export function createStandInSessionPort(options: StandInSessionPortOptions = {}
     async signOut() {
       await store.clear();
     },
+
+    async requestPasswordReset(email) {
+      const address = email.trim();
+
+      if (address === '') {
+        // Not a refusal: nothing was offered to refuse. There is no reset about nobody.
+        throw new RangeError('a password reset names an account, and this request named none');
+      }
+
+      if (environment === 'production') {
+        // No provider is connected, so a shipped build cannot ask for a link (ADR-054 §8).
+        return { ok: false, reason: 'unavailable' };
+      }
+
+      // The stand-in has no provider to ask and no mailbox to reach. It accepts the request so
+      // the screen's next step can be walked; it sends nothing, stores nothing, and the screen's
+      // own test-build note says so rather than the request pretending a message is on its way.
+      return { ok: true };
+    },
   };
 }
 
 /**
- * The port the app itself uses — the sign-up flow today, the sign-in screen and the app shell's
- * session check as they are built.
+ * The port the app itself uses — the create-account flow, the sign-in screen and the reset request
+ * today, the app shell's session check as it is built.
  *
  * One instance, because a session is one thing: two ports over two stores would be two answers to
  * “is the user signed in?”. Its lifetime is the process's, which is what the in-memory store

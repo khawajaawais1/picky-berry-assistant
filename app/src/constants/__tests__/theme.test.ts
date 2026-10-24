@@ -48,7 +48,6 @@ describe('design tokens', () => {
       'cardTitle',
       'chip',
       'code',
-      'digit',
       'headline',
       'heroTitle',
       'input',
@@ -201,11 +200,9 @@ describe('design-sourced tokens (Figma file “Picky”, extracted 2026-10-08)',
     expect(layout.navItemHeight).toBeGreaterThanOrEqual(layout.minTouchTarget);
   });
 
-  it('carries screen 04’s code cell, symbol tile and digit metrics', () => {
-    // Frame 04 (Onboarding · Verification, node 5:22840): six cells 50x62 at an 8 px
-    // gap, the digit inside them at 25/30 semibold, and a 76 px symbol tile above them.
-    expect(typography.digit).toMatchObject({ fontSize: 25, lineHeight: 30, fontWeight: '600' });
-    expect(layout.codeCellHeight).toBe(62);
+  it('keeps the symbol tile the sign-in screen draws', () => {
+    // Frame 04's 76 px tile, drawn by the app's own sign-in screen as its key tile. Screen 04's
+    // code cells and digit are gone with the screen (ADR-059), and their metrics went with them.
     expect(layout.symbolTile).toBe(76);
   });
 

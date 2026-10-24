@@ -43,16 +43,36 @@ export const fi: Record<TranslationKey, string> = {
   'onboarding.welcome.tag.privateByNature': 'Yksityinen oletus',
   'onboarding.welcome.title': 'Tervetuloa luontoon',
 
-  // Kirjautumisnäkymä, jota suunnittelutiedostossa ei ole (ADR-034). Painike vie tunnuksen
-  // koodinäkymälle eikä lähetä mitään itse: tilipalvelua ja lähetystietä ei ole (ADR-048).
-  'onboarding.signIn.action': 'Jatka koodilla',
+  // Kirjautumisnäkymä, jota suunnittelutiedostossa ei ole (ADR-034). Tilillä on nyt oma
+  // tunnusparinsa — sähköposti ja salasana (ADR-054, ADR-059) — joten painike kertoo, mitä
+  // painallus tekee, ja virherivi kertoo, mitä hylkäys tarkoittaa.
+  'onboarding.signIn.action': 'Kirjaudu sisään',
   'onboarding.signIn.createAccount': 'Minulla ei ole vielä tiliä',
+  'onboarding.signIn.email': 'Sähköpostiosoite',
   'onboarding.signIn.eyebrow': 'KÄYTTÖÖNOTTO · KIRJAUDU SISÄÄN',
-  'onboarding.signIn.heading': 'Kirjaudu sisään koodilla.',
-  'onboarding.signIn.identifier': 'Sähköposti tai puhelin',
-  'onboarding.signIn.supporting':
-    'Yksi tunnus, sitten kuusi numeroa. Ei salasanaa muistettavaksi — eikä vuodettavaksi.',
+  'onboarding.signIn.failed': 'Sähköposti ja salasana eivät täsmänneet. Yritä uudelleen.',
+  'onboarding.signIn.forgotPassword': 'Unohditko salasanan?',
+  'onboarding.signIn.heading': 'Tervetuloa takaisin.',
+  'onboarding.signIn.password': 'Salasana',
+  'onboarding.signIn.supporting': 'Syötä sähköposti ja salasana, joilla loit tilin.',
   'onboarding.signIn.title': 'Kirjaudu sisään',
+
+  // The password-reset journey (ADR-062): the sign-in service owns the link, the app keeps no
+  // token, and no string claims that an email was sent while no service is connected.
+  'onboarding.forgotPassword.action': 'Pyydä palautuslinkki',
+  'onboarding.forgotPassword.eyebrow': 'KÄYTTÖÖNOTTO · SALASANAN PALAUTUS',
+  'onboarding.forgotPassword.failed': 'Palautuslinkkiä ei voitu pyytää. Yritä uudelleen.',
+  'onboarding.forgotPassword.heading': 'Unohditko salasanasi?',
+  'onboarding.forgotPassword.requested.another': 'Käytä toista osoitetta',
+  'onboarding.forgotPassword.requested.body':
+    'Jos osoitteella {email} on tili, seuraava vaihe on kirjautumispalvelun palautuslinkki tähän osoitteeseen. Sovellus ei koskaan tallenna salasanaasi.',
+  'onboarding.forgotPassword.requested.heading': 'Palautuspyyntö vastaanotettu.',
+  'onboarding.forgotPassword.requested.test.body':
+    'Kirjautumispalvelua ei ole kytketty tähän versioon, joten palautussähköpostia ei lähetetä. Valmiissa sovelluksessa linkki menisi tähän osoitteeseen.',
+  'onboarding.forgotPassword.requested.test.title': 'Testiversio',
+  'onboarding.forgotPassword.supporting':
+    'Syötä tilisi sähköpostiosoite. Palautuslinkit kuuluvat kirjautumispalvelulle; sovellus ei koskaan tallenna salasanaasi.',
+  'onboarding.forgotPassword.title': 'Palauta salasana',
 
   'onboarding.createAccount.action': 'Luo tili',
   'onboarding.createAccount.consent':
@@ -61,11 +81,8 @@ export const fi: Record<TranslationKey, string> = {
   'onboarding.createAccount.field.email': 'Sähköpostiosoite',
   'onboarding.createAccount.field.name': 'Nimesi',
   'onboarding.createAccount.field.password': 'Salasana',
-  'onboarding.createAccount.field.phone': 'Puhelinnumero',
+  'onboarding.createAccount.failed': 'Tilin luonti ei onnistunut. Yritä uudelleen.',
   'onboarding.createAccount.heading': 'Pieni esittely.',
-  'onboarding.createAccount.mode.email': 'Sähköposti',
-  'onboarding.createAccount.mode.label': 'Miten haluat luoda tilin',
-  'onboarding.createAccount.mode.phone': 'Puhelinnumero',
   'onboarding.createAccount.passwordHint': 'Vähintään 8 merkkiä, sisältää numeron.',
   'onboarding.createAccount.privacy.body':
     'Tallennetut paikat ovat oletuksena yksityisiä. GPS-reittejäsi ei koskaan julkaista.',
@@ -75,31 +92,6 @@ export const fi: Record<TranslationKey, string> = {
   'onboarding.createAccount.supporting':
     'Tallenna paikkasi ja pidä keruuhistoriasi yhdessä paikassa.',
   'onboarding.createAccount.title': 'Luo tilisi',
-
-  // Näkymän 04 sanat noudattavat englanninkielisen luettelon sääntöä (ADR-048): mikään tässä
-  // sovelluksessa ei lähetä koodia, joten otsikko kertoo, mitä vaihe tekee, ja lause nimeää
-  // kohteen. Suomessa kohde taipuu “varten”-rakenteeseen, joka sopii yhtä hyvin osoitteelle ja
-  // numerolle — kirjautumisessa kumpi tahansa on mahdollinen — ja puhelinhuomautus sanoo vaiheen
-  // vahvistavan numeron sen sijaan, että tekstiviesti toisi koodin.
-  'onboarding.verification.action': 'Vahvista ja jatka',
-  'onboarding.verification.changeEmail': 'Vaihda sähköpostiosoite',
-  // Englanninkielisen luettelon sääntö: näkymä 04 pysyy yhtenä näkymänä, jonka sanoja tunnus
-  // valitsee (ADR-049 §3.1–§3.2, oletettu vastaus 2026-10-13). Puhelintunnuksella otsikko ja
-  // paluu kentälle nimeävät numeron, koska osoitetta tilillä ei silloin ole.
-  'onboarding.verification.changePhone': 'Vaihda puhelinnumero',
-  'onboarding.verification.codeLabel': 'Vahvistuskoodi',
-  'onboarding.verification.eyebrow': 'KÄYTTÖÖNOTTO · 04 / 05',
-  'onboarding.verification.expiry': 'Koodi vanhenee 10 minuutissa. Älä jaa sitä kenellekään.',
-  'onboarding.verification.heading': 'Vahvista, että olet sinä.',
-  'onboarding.verification.phoneNote.body': 'Sama kuusinumeroinen vaihe vahvistaa puhelinnumeron.',
-  'onboarding.verification.phoneNote.title': 'Rekisteröidyitkö puhelimella?',
-  'onboarding.verification.resend': 'Lähetä koodi uudelleen',
-  'onboarding.verification.resendWaiting': 'Lähetä koodi uudelleen · saatavilla',
-  'onboarding.verification.supporting': 'Syötä 6-numeroinen koodi {destination} varten.',
-  'onboarding.verification.title': 'Vahvista sähköpostisi',
-  'onboarding.verification.titlePhone': 'Vahvista puhelinnumerosi',
-  'onboarding.verification.verifyFailed':
-    'Koodi ei täsmää. Tarkista kuusi numeroa ja yritä uudelleen.',
 
   // Same as the English: the frame names a settings step the app never takes, so the action names
   // where the press leads (ADR-050). Shorter than the frame's own line, which is what the harness
@@ -139,6 +131,7 @@ export const fi: Record<TranslationKey, string> = {
   'discover.map.scale': '━━  200 m   ·   Kausidemo',
   'discover.map.count': '{count} aluetta · testiaineisto',
   'discover.map.countOne': '{count} alue · testiaineisto',
+  'discover.map.updated': 'Päivitetty {date}',
   'discover.map.loading': 'Ladataan alueita…',
   'discover.map.unavailable': 'Alueita ei voitu lukea',
   'discover.map.empty': 'Ei näytettäviä alueita',
@@ -181,11 +174,15 @@ export const fi: Record<TranslationKey, string> = {
   'discover.filter.none': 'Mikään alue ei vastaa hakua',
 
   // Screen 07. “High confidence” is the same phrase the zone card already uses
-  // (“Varma tieto”), so the zone reads the same way on both screens. The chips say what
-  // the map's legend says it ("Poimimaton"); the ripeness chip is the frame's “Ripe now”.
-  // The eyebrow repeats the demo disclosure frame 06's map carries (“KAUSIDEMO”): these
-  // figures are the design's sample, and the screen that shows them says so.
+  // (“Varma tieto”), so the zone reads the same way on both screens. The eyebrow repeats the
+  // demo disclosure frame 06's map carries (“KAUSIDEMO”): a source zone's own figures come from
+  // the zone port, the blocks below them are the design's sample, and the whole screen is the
+  // sample when no zone id is given.
   'discover.details.eyebrow': 'POIMINTA · ALUEEN TIEDOT · KAUSIDEMO',
+  // The title before a zone is known: loading, a failed read, or an id the source does not know.
+  'discover.details.pendingTitle': 'Alueen tiedot',
+  'discover.details.unknown':
+    'Tämä alue ei ole niissä pilottialueissa, jotka tämä puhelin voi lukea.',
   'discover.details.title': 'Alue {zone} · {place}',
   'discover.details.hero': 'Valokuva marjakaudesta',
   'discover.details.scoreLabel': '/ {max} sadon pisteet',
@@ -193,9 +190,12 @@ export const fi: Record<TranslationKey, string> = {
   'discover.details.confidence.medium': 'Kohtalainen varmuus',
   'discover.details.confidence.low': 'Vähäinen varmuus',
   'discover.details.reportsThisWeek': '{count} havaintoa tällä viikolla',
-  'discover.details.ripeness.ripe': 'Kypsä nyt',
-  'discover.details.ripeness.ripening': 'Kypsymässä nyt',
+  // Vuodenajan sanat ovat kartan neljä (`discover.ripeness.*`), samat kuin kortilla ja riveillä.
   'discover.details.forecastDisclaimer': 'Ennuste olosuhteista, ei taattu sato.',
+  // Sanotaan ennen niitä osioita, joille ei ole lähdettä: lähdealueen oikean pisteen alla
+  // lukija tietää, mihin sovelluksen oma tieto päättyy.
+  'discover.details.sample':
+    'Alla olevat näkymät, tuorein havainto, kävelyreitti ja niiden takana oleva raporttilista ovat suunnittelun oma malliesimerkki: sääpalvelua tai raporttivirtaa ei vielä ole.',
   'discover.details.outlook.title': 'Tämän päivän näkymät',
   'discover.details.outlook.body':
     'Kypsiä puolukoita lämpimän viikon jälkeen. Samanlaisia olosuhteita odotetaan huomenna.',
@@ -460,9 +460,9 @@ export const fi: Record<TranslationKey, string> = {
   // already uses, so one claim does not become two.
   'privacy.useAs.note': 'Sama tili. Ostaminen on suunniteltu markkinapaikan lisäosa.',
   // Frame 14's “Saved spots”, which screen 03's privacy line already calls “Tallennetut paikat”.
-  // The eyebrow repeats the demo disclosure frame 06's map carries (“KAUSIDEMO”), because these
-  // are the design's zones rather than a zone source's.
-  'privacy.savedSpots.eyebrow': 'TILI / OFFLINE · TALLENNETUT PAIKAT · KAUSIDEMO',
+  // The eyebrow no longer repeats the demo disclosure frame 06's map carries (“KAUSIDEMO”): since
+  // ADR-060 the rows are source zones, and an id the source cannot describe is printed alone.
+  'privacy.savedSpots.eyebrow': 'TILI / OFFLINE · TALLENNETUT PAIKAT',
   'privacy.savedSpots.title': 'Tallennetut paikat',
   // The frame's own subtitle under the row's label (“4 spots · private by default”). The clause is
   // the one screen 03's privacy promise already makes (“… ovat oletuksena yksityisiä”), in the
@@ -484,10 +484,10 @@ export const fi: Record<TranslationKey, string> = {
   'privacy.accountSecurity.title': 'Tili ja turvallisuus',
   'privacy.accountSecurity.intro': 'Mitä sovellus tietää tilistäsi ja mikä pitää sen tallessa.',
   'privacy.accountSecurity.none':
-    'Istuntoa ei ole käytössä. Istunto kestää tunnin siitä hetkestä, kun koodi hyväksytään.',
-  'privacy.accountSecurity.reach.title': 'Koodi on avain',
+    'Istuntoa ei ole käytössä. Istunto kestää tunnin siitä hetkestä, kun kirjaudut sisään.',
+  'privacy.accountSecurity.reach.title': 'Sähköposti ja salasana ovat avain',
   'privacy.accountSecurity.reach.body':
-    'Sisäänkirjautuminen pyytää kuusinumeroisen koodin sähköpostiasi tai puhelintasi varten. Salasanaa ei tallenneta, joten sitä ei tarvitse vaihtaa, palauttaa eikä se voi vuotaa.',
+    'Sisäänkirjautuminen pyytää sähköpostin ja salasanan. Sovellus ei tallenna omaa salasanaa, eikä tilipalvelua ole vielä kytketty tarkistamaan sitä.',
   'privacy.accountSecurity.session.title': 'Istunto',
   'privacy.accountSecurity.session.where.label': 'Missä se on',
   'privacy.accountSecurity.session.where.value':
@@ -495,8 +495,7 @@ export const fi: Record<TranslationKey, string> = {
   'privacy.accountSecurity.session.where.hint':
     'Puhelimeen ei kirjoiteta vielä mitään: korvikkeen takana oleva varasto on muistissa, ja suojattu varasto tulee tilipalvelun mukana.',
   'privacy.accountSecurity.session.lifetime.label': 'Kuinka kauan se kestää',
-  'privacy.accountSecurity.session.lifetime.value':
-    'Tunnin siitä hetkestä, kun koodi hyväksyttiin.',
+  'privacy.accountSecurity.session.lifetime.value': 'Tunnin siitä hetkestä, kun kirjaudut sisään.',
   'privacy.accountSecurity.session.lifetime.hint':
     'Tunti on palveluntarjoajan oma tunnisteen voimassaoloaika, ei meidän valintamme.',
   'privacy.accountSecurity.session.ends.label': 'Mikä sen päättää',
@@ -510,10 +509,10 @@ export const fi: Record<TranslationKey, string> = {
     'Luetaan istunnon omasta päättymisajasta, kerran sekunnissa. Mikään täällä ei pidennä sitä — päättyneeseen istuntoon kirjaudutaan uudelleen.',
   'privacy.accountSecurity.ended.title': 'Istunto on päättynyt',
   'privacy.accountSecurity.ended.body':
-    'Koodin hyväksymisen jälkeen alkanut tunti on kulunut, joten sovellus ei enää pidä tiliä.',
+    'Sisäänkirjautumisen jälkeen alkanut tunti on kulunut, joten sovellus ei enää pidä tiliä.',
   'privacy.accountSecurity.absent.title': 'Ei vielä täällä',
   'privacy.accountSecurity.absent.service':
-    'Tilipalvelua ei ole kytketty, joten nimeäsi ja osoitettasi tai numeroasi ei voi vielä muuttaa sovelluksessa eikä tiliä voi poistaa.',
+    'Tilipalvelua ei ole kytketty, joten nimeäsi ja sähköpostiosoitettasi ei voi vielä muuttaa sovelluksessa eikä tiliä voi poistaa.',
   'privacy.accountSecurity.absent.devices': 'Laitelistaa ei ole, eikä toista istuntoa voi päättää.',
   'privacy.accountSecurity.signOut.note':
     'Uloskirjautuminen poistaa tältä puhelimelta käyntien seurannan suostumuksen, tallennetut paikat ja jonossa olevat raportit ja pudottaa sitten istunnon.',

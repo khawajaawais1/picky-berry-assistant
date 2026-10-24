@@ -8,10 +8,9 @@
  *
  * - the initials the avatar shows, because the session holds a name rather than a monogram;
  * - which of the frame's two words the line uses — “Email verified” or “Phone verified” — because
- *   the app must not print the wrong one over an identifier. That half is **not here**: the same
- *   answer is needed by screen 04, whose copy follows the destination (ADR-049 §4), so the rule
- *   lives in the shared pure helpers as `identifierKind` (`src/utils/identifier.ts`) and both
- *   features read it.
+ *   the app must not print the wrong one over an identifier. That half is **not here**: the rule
+ *   lives in the shared pure helpers as `identifierKind` (`src/utils/identifier.ts`), where the
+ *   account surface reads it (ADR-049 §4).
  *
  * Neither is validation. The app never decides whether an identifier is usable — screen 03
  * collects it and the provider accepts or refuses it (CONTEXT.md, **Credential**) — and a rule

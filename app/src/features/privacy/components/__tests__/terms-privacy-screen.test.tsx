@@ -42,7 +42,7 @@ describe('TermsPrivacyScreen', () => {
 
   it('names every record the phone is holding, and how each one goes away', async () => {
     await recordPrivacyConsent(true);
-    await saveZone('Z14');
+    await saveZone('Z14', 'bilberry');
     await enqueueReport({
       amountText: '1.3 kg',
       minutes: 52,
@@ -52,9 +52,9 @@ describe('TermsPrivacyScreen', () => {
       zoneId: 'Z14',
     });
     await sessionPort.signIn({
-      code: '000000',
       displayName: 'Aino Korhonen',
-      identifier: 'aino@example.fi',
+      email: 'aino@example.fi',
+      password: 'berries1234',
     });
 
     await render(<TermsPrivacyScreen />);
@@ -187,7 +187,7 @@ describe('TermsPrivacyScreen', () => {
     // screen's file records: a spy over this shared mock is deliberately not restored (restoring it
     // resets the mock's own implementation), so a file that mocks the store leaves the mock behind
     // for whatever runs next.
-    await saveZone('Z14');
+    await saveZone('Z14', 'bilberry');
     jest.spyOn(AsyncStorage, 'getItem').mockRejectedValue(new Error('the store refused'));
 
     await render(<TermsPrivacyScreen />);

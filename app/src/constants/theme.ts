@@ -295,14 +295,9 @@ export const layout = {
    */
   searchHeight: 50,
   /**
-   * Verification code cell height, measured on screen 04 (62 px). A floor on the cell,
-   * not a fixed box: at the largest system text size the digit is taller than the frame's
-   * 62 px (ADR-019).
-   */
-  codeCellHeight: 62,
-  /**
-   * The symbol tile on screen 04 (76 px square). The frame draws no other one, so this
-   * is the only place it is used and it stays a plain metric.
+   * The symbol tile on screen 04's frame (76 px square), which the app-drawn sign-in screen
+   * carries as its key tile. Screen 04's code screen is retired (ADR-059); the metric stays
+   * because the sign-in screen draws the same tile.
    */
   symbolTile: 76,
   /**
@@ -433,7 +428,6 @@ export type TypographyVariant =
   | 'listingHeading'
   | 'mapLabel'
   | 'mapAnnotation'
-  | 'digit'
   | 'code'
   | 'profileName'
   | 'profileInitials';
@@ -578,8 +572,6 @@ export const typography = {
    * item while the size does not.
    */
   navLabel: { fontSize: 12, lineHeight: 15, fontWeight: '400' },
-  /** Verification code digit metrics, measured on screen 04 (25 px at 121 %, bold). */
-  digit: { fontSize: 25, lineHeight: 30, fontWeight: '600' },
   code: {
     fontSize: 13,
     lineHeight: 18,

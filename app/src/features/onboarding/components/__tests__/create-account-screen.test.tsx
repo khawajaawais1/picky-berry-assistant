@@ -12,11 +12,16 @@ import { OnboardingCreateAccountScreen } from '../create-account-screen';
  * Content and metrics come from Figma frame `03 · Onboarding · Create account`
  * (node 5:22788) — the strings are written out literally so this test fails if the
  * screen silently changes its copy.
+ *
+ * Two things the frame draws are deliberately absent: its email/phone chips (the credential is
+ * the plan's email + password, and phone sign-in is deferred — ADR-054 §5, ADR-059) and screen
+ * 04's code screen behind the press (retired with the chips). The password field is the frame's
+ * own; the failure line is the state the design never drew.
  */
 const COMPLETE: CreateAccountForm = {
   ...EMPTY_CREATE_ACCOUNT_FORM,
   consent: true,
-  identifier: 'aino@example.fi',
+  email: 'aino@example.fi',
   name: 'Aino Korhonen',
   password: 'berries1',
 };
@@ -26,7 +31,7 @@ const CONSENT = 'I agree to the Terms of use and acknowledge the Privacy notice.
 /** Fills the form the way a user would, so behaviour is exercised through the UI. */
 async function fillForm(values: CreateAccountForm = COMPLETE) {
   await fireEvent.changeText(screen.getByLabelText('Your name'), values.name);
-  await fireEvent.changeText(screen.getByLabelText('Email address'), values.identifier);
+  await fireEvent.changeText(screen.getByLabelText('Email address'), values.email);
   await fireEvent.changeText(screen.getByLabelText('Password'), values.password);
   if (values.consent) {
     await fireEvent.press(screen.getByRole('checkbox', { name: CONSENT }));
@@ -34,7 +39,7 @@ async function fillForm(values: CreateAccountForm = COMPLETE) {
 }
 
 describe('OnboardingCreateAccountScreen', () => {
-  it('renders the frame’s content', async () => {
+  it('renders the frame’s content, without the identifier chips', async () => {
     await render(<OnboardingCreateAccountScreen />);
 
     expect(screen.getByText('ONBOARDING · 03 / 05')).toBeOnTheScreen();
@@ -43,8 +48,6 @@ describe('OnboardingCreateAccountScreen', () => {
     expect(
       screen.getByText('Save your spots and keep your picking history together.'),
     ).toBeOnTheScreen();
-    expect(screen.getByText('Email')).toBeOnTheScreen();
-    expect(screen.getByText('Phone number')).toBeOnTheScreen();
     expect(screen.getByText('Your name')).toBeOnTheScreen();
     expect(screen.getByText('Email address')).toBeOnTheScreen();
     expect(screen.getByText('Password')).toBeOnTheScreen();
@@ -57,6 +60,11 @@ describe('OnboardingCreateAccountScreen', () => {
     expect(
       screen.getByText('Saved spots default to private. Your GPS trails are never public.'),
     ).toBeOnTheScreen();
+
+    // The frame's identifier chips are gone with the phone flow: there is no choice to make.
+    expect(screen.queryByRole('radio', { name: 'Email' })).not.toBeOnTheScreen();
+    expect(screen.queryByRole('radio', { name: 'Phone number' })).not.toBeOnTheScreen();
+    expect(screen.queryByText('Phone number')).not.toBeOnTheScreen();
   });
 
   it('hints each field with the example the frame shows', async () => {
@@ -86,7 +94,7 @@ describe('OnboardingCreateAccountScreen', () => {
   it('builds its fields as the design’s 54 px controls', async () => {
     await render(<OnboardingCreateAccountScreen />);
 
-    for (const field of ['field-name', 'field-identifier', 'field-password']) {
+    for (const field of ['field-name', 'field-email', 'field-password']) {
       expect(screen.getByTestId(field)).toHaveStyle({
         backgroundColor: themes.light.colors.surface,
         borderColor: themes.light.colors.border,
@@ -98,19 +106,8 @@ describe('OnboardingCreateAccountScreen', () => {
     }
   });
 
-  it('draws the design’s chip pair with the email chosen, as the frame shows it', async () => {
-    await render(<OnboardingCreateAccountScreen />);
-
-    expect(screen.getByRole('radio', { name: 'Email' })).toHaveStyle({
-      backgroundColor: themes.light.colors.accent,
-      borderRadius: radii.pill,
-      height: layout.chipHeight,
-    });
-    expect(screen.getByRole('radio', { name: 'Phone number' })).not.toBeChecked();
-  });
-
   it('draws the action, the sign-in action and the privacy note at the frame’s metrics', async () => {
-    await render(<OnboardingCreateAccountScreen />);
+    await render(<OnboardingCreateAccountScreen onSubmit={async () => true} />);
 
     // The design's 54 px action is a floor: at the largest system text size a wrapped
     // label has to be able to grow the action rather than be cut off (ADR-019).
@@ -160,7 +157,7 @@ describe('OnboardingCreateAccountScreen', () => {
   });
 
   it('will not submit an incomplete form', async () => {
-    const onSubmit = jest.fn();
+    const onSubmit = jest.fn(async () => true);
     await render(<OnboardingCreateAccountScreen onSubmit={onSubmit} />);
 
     const action = screen.getByTestId('create-account-action');
@@ -171,7 +168,7 @@ describe('OnboardingCreateAccountScreen', () => {
   });
 
   it('requires consent before the form can be submitted', async () => {
-    const onSubmit = jest.fn();
+    const onSubmit = jest.fn(async () => true);
     await render(<OnboardingCreateAccountScreen onSubmit={onSubmit} />);
 
     await fillForm({ ...COMPLETE, consent: false });
@@ -182,7 +179,7 @@ describe('OnboardingCreateAccountScreen', () => {
   });
 
   it('reports the entered values once the form is complete', async () => {
-    const onSubmit = jest.fn();
+    const onSubmit = jest.fn(async () => true);
     await render(<OnboardingCreateAccountScreen onSubmit={onSubmit} />);
 
     await fillForm();
@@ -191,21 +188,40 @@ describe('OnboardingCreateAccountScreen', () => {
     expect(onSubmit).toHaveBeenCalledWith(COMPLETE);
   });
 
-  it('switches the identifier field to a phone number and drops what was typed', async () => {
-    await render(<OnboardingCreateAccountScreen />);
+  it('says the account was not created when the service refuses the credential', async () => {
+    const onSubmit = jest.fn(async () => false);
+    await render(<OnboardingCreateAccountScreen onSubmit={onSubmit} />);
 
-    await fireEvent.changeText(screen.getByLabelText('Email address'), 'aino@example.fi');
-    await fireEvent.press(screen.getByRole('radio', { name: 'Phone number' }));
+    await fillForm();
+    await fireEvent.press(screen.getByTestId('create-account-action'));
 
-    // The chip and the field end up sharing the frame's copy: one “Phone number” is
-    // the choice, the other is the field, which is how the design reads too.
-    const sameName = screen.getAllByLabelText('Phone number');
-    expect(sameName).toHaveLength(2);
+    expect(await screen.findByText('Your account wasn’t created. Try again.')).toBeOnTheScreen();
+  });
 
-    const identifierField = sameName.find((element) => 'keyboardType' in element.props);
-    expect(identifierField?.props.value).toBe('');
-    expect(identifierField?.props.keyboardType).toBe('phone-pad');
-    expect(screen.queryByText('Email address')).not.toBeOnTheScreen();
+  it('says the same thing when the session could not be kept', async () => {
+    // A rejecting port is a session the app does not have, which is not a success: the screen
+    // reports it instead of moving on signed out (AGENTS.md §2.3).
+    const onSubmit = jest.fn(async () => {
+      throw new Error('the keychain refused the write');
+    });
+    await render(<OnboardingCreateAccountScreen onSubmit={onSubmit} />);
+
+    await fillForm();
+    await fireEvent.press(screen.getByTestId('create-account-action'));
+
+    expect(await screen.findByText('Your account wasn’t created. Try again.')).toBeOnTheScreen();
+  });
+
+  it('draws the action disabled in a production build, where nothing can answer it', async () => {
+    // ADR-054 §8 / ADR-059: no account service exists in a shipped build, so the action always
+    // says it cannot act and the form does not promise a creation it cannot perform.
+    await render(
+      <OnboardingCreateAccountScreen environment="production" onSubmit={async () => true} />,
+    );
+
+    await fillForm();
+
+    expect(screen.getByTestId('create-account-action')).toBeDisabled();
   });
 
   it('only claims the link and sign-in actions when they can act', async () => {

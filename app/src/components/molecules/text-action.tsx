@@ -33,7 +33,7 @@ export type TextActionProps = {
  *
  * Written twice before it came here (screen 01's sign-in action, screen 03's terms link
  * and sign-in action), which is when the repository extracts a shared component
- * (AGENTS.md §2.5), and screen 04 draws three of them.
+ * (AGENTS.md §2.5), and the screens since then draw it wherever a secondary action is.
  */
 export function TextAction({
   label,

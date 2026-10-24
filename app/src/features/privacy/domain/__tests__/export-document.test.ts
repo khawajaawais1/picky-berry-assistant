@@ -44,8 +44,8 @@ const SESSION: Session = {
 };
 
 const ZONES: SavedZone[] = [
-  { savedAt: '2026-08-26T09:00:00.000Z', zoneId: 'Z14' },
-  { savedAt: '2026-08-27T09:00:00.000Z', zoneId: 'Z09' },
+  { savedAt: '2026-08-26T09:00:00.000Z', speciesId: 'bilberry', zoneId: 'Z14' },
+  { savedAt: '2026-08-27T09:00:00.000Z', speciesId: 'lingonberry', zoneId: 'Z09' },
 ];
 
 const REPORTS: VisitReport[] = [

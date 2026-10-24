@@ -6,69 +6,125 @@ import { OnboardingSignInScreen } from '../sign-in-screen';
 
 /**
  * The screen frames 01 and 03 both point at, and that the design file never drew (PROJECT.md
- * known issue 23). The design owner chose reading A — **one identifier field, then the code
- * screen the sign-up already walks** (ADR-034) — so this screen is the app's own, built from the
- * components the design's screens are built from.
+ * known issue 23). The design owner chose the screen's shape (ADR-034); its credential was
+ * re-cut on 2026-10-24 from an identifier + stand-in code to the account's own **email +
+ * password** (ADR-054, ADR-059).
  *
  * Its copy is written out literally, the way the frames' screens are held: the words are the
- * app's rather than the design's, which makes this test the place they are reviewed. The
- * supporting line and the action name what the press does — carry the identifier to the code
- * screen — rather than a delivery, because nothing in the app sends a code yet (ADR-048).
+ * app's rather than the design's, which makes this test the place they are reviewed.
  */
 describe('OnboardingSignInScreen', () => {
   it('renders the screen’s copy', async () => {
     await render(<OnboardingSignInScreen />);
 
     expect(screen.getByText('ONBOARDING · SIGN IN')).toBeOnTheScreen();
-    expect(screen.getByText('Sign in')).toBeOnTheScreen();
-    expect(screen.getByText('Sign in with a code.')).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        'One identifier, then six digits. No password to remember — and none to leak.',
-      ),
-    ).toBeOnTheScreen();
-    expect(screen.getByText('Email or phone')).toBeOnTheScreen();
-    expect(screen.getByText('Continue with a code')).toBeOnTheScreen();
+    expect(screen.getAllByText('Sign in').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Welcome back.')).toBeOnTheScreen();
+    expect(screen.getByText('Enter the email and password you signed up with.')).toBeOnTheScreen();
+    expect(screen.getByText('Email address')).toBeOnTheScreen();
+    expect(screen.getByText('Password')).toBeOnTheScreen();
+    expect(screen.getByText('Forgot password?')).toBeOnTheScreen();
     expect(screen.getByText('I don’t have an account yet')).toBeOnTheScreen();
+
+    // No code and no biometric prompt: the credential is the password, and the recovery
+    // action opens the reset request rather than a code screen (ADR-062).
+    expect(screen.queryByText(/code/i)).not.toBeOnTheScreen();
   });
 
   it('makes the primary action the design’s 54 px control', async () => {
-    await render(<OnboardingSignInScreen onSendCode={() => {}} />);
+    await render(<OnboardingSignInScreen onSignIn={async () => true} />);
 
-    expect(screen.getByRole('button', { name: 'Continue with a code' })).toHaveStyle({
+    expect(screen.getByTestId('sign-in-action')).toHaveStyle({
       minHeight: layout.actionHeight,
       borderRadius: radii.control,
       backgroundColor: themes.light.colors.accent,
     });
   });
 
-  it('cannot continue before an identifier is typed', async () => {
+  it('cannot continue before both fields are filled', async () => {
     // The action is drawn where the design draws it and states that it is unavailable, which is
     // the contract every action in this app keeps (AGENTS.md §11.2).
-    await render(<OnboardingSignInScreen onSendCode={() => {}} />);
+    await render(<OnboardingSignInScreen onSignIn={async () => true} />);
 
-    expect(screen.getByRole('button', { name: 'Continue with a code' })).toBeDisabled();
-  });
+    const action = screen.getByRole('button', { name: 'Sign in' });
+    expect(action).toBeDisabled();
 
-  it('offers the action once an identifier is there, and hands it up with the whitespace gone', async () => {
-    const onSendCode = jest.fn();
-    await render(<OnboardingSignInScreen onSendCode={onSendCode} />);
+    await fireEvent.changeText(screen.getByTestId('sign-in-email'), 'aino@example.fi');
+    expect(action).toBeDisabled();
 
-    await fireEvent.changeText(screen.getByTestId('sign-in-identifier'), '  aino@example.fi  ');
-    const action = screen.getByRole('button', { name: 'Continue with a code' });
-
+    await fireEvent.changeText(screen.getByTestId('sign-in-password'), 'berries1234');
     expect(action).not.toBeDisabled();
-    await fireEvent.press(action);
-
-    expect(onSendCode).toHaveBeenCalledWith('aino@example.fi');
   });
 
-  it('treats whitespace alone as no identifier', async () => {
-    await render(<OnboardingSignInScreen onSendCode={() => {}} />);
+  it('hands the trimmed address and the password up', async () => {
+    const onSignIn = jest.fn(async () => true);
+    await render(<OnboardingSignInScreen onSignIn={onSignIn} />);
 
-    await fireEvent.changeText(screen.getByTestId('sign-in-identifier'), '   ');
+    await fireEvent.changeText(screen.getByTestId('sign-in-email'), '  aino@example.fi  ');
+    await fireEvent.changeText(screen.getByTestId('sign-in-password'), ' berries1234 ');
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
 
-    expect(screen.getByRole('button', { name: 'Continue with a code' })).toBeDisabled();
+    expect(onSignIn).toHaveBeenCalledWith({
+      email: 'aino@example.fi',
+      password: ' berries1234 ',
+    });
+  });
+
+  it('treats whitespace alone as no address', async () => {
+    await render(<OnboardingSignInScreen onSignIn={async () => true} />);
+
+    await fireEvent.changeText(screen.getByTestId('sign-in-email'), '   ');
+    await fireEvent.changeText(screen.getByTestId('sign-in-password'), 'berries1234');
+
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeDisabled();
+  });
+
+  it('reports a credential the service refused, rather than leaving the press silent', async () => {
+    const onSignIn = jest.fn(async () => false);
+    await render(<OnboardingSignInScreen onSignIn={onSignIn} />);
+
+    await fireEvent.changeText(screen.getByTestId('sign-in-email'), 'aino@example.fi');
+    await fireEvent.changeText(screen.getByTestId('sign-in-password'), 'berries1234');
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
+
+    expect(
+      await screen.findByText('That email and password didn’t match. Try again.'),
+    ).toBeOnTheScreen();
+  });
+
+  it('says the same thing when the session could not be kept', async () => {
+    const onSignIn = jest.fn(async () => {
+      throw new Error('the keychain refused the write');
+    });
+    await render(<OnboardingSignInScreen onSignIn={onSignIn} />);
+
+    await fireEvent.changeText(screen.getByTestId('sign-in-email'), 'aino@example.fi');
+    await fireEvent.changeText(screen.getByTestId('sign-in-password'), 'berries1234');
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
+
+    expect(
+      await screen.findByText('That email and password didn’t match. Try again.'),
+    ).toBeOnTheScreen();
+  });
+
+  it('draws the action disabled in a production build, where nothing can answer it', async () => {
+    await render(<OnboardingSignInScreen environment="production" onSignIn={async () => true} />);
+
+    await fireEvent.changeText(screen.getByTestId('sign-in-email'), 'aino@example.fi');
+    await fireEvent.changeText(screen.getByTestId('sign-in-password'), 'berries1234');
+
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeDisabled();
+  });
+
+  it('keeps the password masked until the user reveals it', async () => {
+    await render(<OnboardingSignInScreen />);
+
+    expect(screen.getByLabelText('Password').props.secureTextEntry).toBe(true);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Show password' }));
+
+    expect(screen.getByLabelText('Password').props.secureTextEntry).toBe(false);
+    expect(screen.getByRole('button', { name: 'Hide password' })).toBeOnTheScreen();
   });
 
   it('offers the way to create an account, for someone who has none', async () => {
@@ -78,6 +134,21 @@ describe('OnboardingSignInScreen', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'I don’t have an account yet' }));
 
     expect(onCreateAccount).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers the reset journey only when the route supplies it', async () => {
+    const onForgotPassword = jest.fn();
+    const { rerender } = await render(
+      <OnboardingSignInScreen onForgotPassword={onForgotPassword} />,
+    );
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Forgot password?' }));
+    expect(onForgotPassword).toHaveBeenCalledTimes(1);
+
+    // A recovery label with no destination is a drawing, not an action: the route always supplies
+    // one, and a caller that does not gets no role rather than a press that does nothing.
+    await rerender(<OnboardingSignInScreen />);
+    expect(screen.queryByRole('button', { name: 'Forgot password?' })).not.toBeOnTheScreen();
   });
 
   it('draws no back control when nothing sits behind it', async () => {

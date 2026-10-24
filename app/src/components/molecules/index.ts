@@ -2,7 +2,6 @@ export { Callout, type CalloutProps, type CalloutTone } from './callout';
 export { Card, type CardProps } from './card';
 export { Chip, type ChipProps, type ChipTone } from './chip';
 export { ChoiceChips, type ChoiceChipOption, type ChoiceChipsProps } from './choice-chips';
-export { CodeField, type CodeFieldProps } from './code-field';
 export {
   CORE_NAV_KEYS,
   CoreNavigation,

@@ -35,8 +35,8 @@ beforeEach(async () => {
 
 async function seedEveryRecord() {
   await recordPrivacyConsent(false);
-  await saveZone('Z14');
-  await saveZone('Z09');
+  await saveZone('Z14', 'bilberry');
+  await saveZone('Z09', 'bilberry');
   await enqueueReport({
     amountText: '1.3 kg',
     minutes: 52,
@@ -46,9 +46,9 @@ async function seedEveryRecord() {
     zoneId: 'Z14',
   });
   await sessionPort.signIn({
-    code: '000000',
     displayName: 'Aino Korhonen',
-    identifier: 'aino@example.fi',
+    email: 'aino@example.fi',
+    password: 'berries1234',
   });
 }
 
@@ -123,8 +123,8 @@ describe('YourDataScreen', () => {
     expect(copy.incomplete).toBe(false);
     expect(copy.consent).toEqual({ visitTracking: false, decidedAt: expect.any(String) });
     expect(copy.savedZones).toEqual([
-      { savedAt: expect.any(String), zoneId: 'Z14' },
-      { savedAt: expect.any(String), zoneId: 'Z09' },
+      { savedAt: expect.any(String), speciesId: 'bilberry', zoneId: 'Z14' },
+      { savedAt: expect.any(String), speciesId: 'bilberry', zoneId: 'Z09' },
     ]);
     expect(copy.queuedReports).toEqual([
       expect.objectContaining({ minutes: 52, yieldRating: 4, zoneId: 'Z14' }),
@@ -191,7 +191,7 @@ describe('YourDataScreen', () => {
     // refusal is a blanket one, for the reason the other screens' files record: a spy over this
     // shared mock is deliberately not restored (restoring it resets the mock's own implementation),
     // so a file that mocks the store leaves the mock behind for whatever runs next.
-    await saveZone('Z14');
+    await saveZone('Z14', 'bilberry');
     jest.spyOn(AsyncStorage, 'getItem').mockRejectedValue(new Error('the store refused'));
 
     await render(<YourDataScreen onShare={jest.fn()} />);

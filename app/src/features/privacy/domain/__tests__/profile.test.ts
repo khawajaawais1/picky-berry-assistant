@@ -7,8 +7,8 @@ import { profileInitials } from '../profile';
  * instead of inventing it.
  *
  * The row's other derivation — which of the frame's two words the verification line uses — is not
- * here: `identifierKind` is shared with screen 04, whose copy follows the destination, so it lives
- * in `src/utils/identifier.ts` with its own test (ADR-049 §4).
+ * here: `identifierKind` lives in `src/utils/identifier.ts` with its own test, because the account
+ * row is not the only reader (ADR-049 §4).
  */
 describe('the initials an avatar shows', () => {
   it('takes the first letter of the first two words', () => {

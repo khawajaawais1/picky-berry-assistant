@@ -8,10 +8,10 @@ import { sessionPort, type Session } from '@/services/session';
  *
  * It lives with the other shared hooks rather than in a feature because a session is about the
  * app rather than about one screen — the settings screen reads it first, and the shell and the
- * sign-in screen will read the same thing when they exist.
+ * sign-in screen read the same thing where they need it.
  *
  * **Reading is all it does.** The session changes in exactly two places, and neither is here:
- * the sign-up flow acquires one (screen 04, through the port), and signing out drops it
+ * the create-account and sign-in screens acquire one (through the port), and signing out drops it
  * (`src/services/sign-out.ts`, after which the caller leaves the screen). So there is no
  * subscription to miss — but there is a read in flight, and a screen must treat that as
  * *nothing is known yet* rather than as *nobody is signed in*: the frame's account row is drawn

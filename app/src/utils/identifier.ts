@@ -1,27 +1,22 @@
 /**
- * Which of the two identifiers an account is reached by, as a pure rule.
+ * Which identifier an account is reached by, as a pure rule.
  *
- * Screen 03 offers both — an email address and a phone number — and the flow that follows keeps
- * whichever was typed, not the mode it was typed in (`pending-verification.ts` holds the
- * destination, the session holds the identifier). Two places therefore have to work out what a
- * string is rather than being told:
+ * Since 2026-10-24 the app creates and signs in with an **email address only** — the frame's
+ * phone state is deferred with phone sign-in (ADR-054 §5) and screen 04 is retired (ADR-059) —
+ * but the account row on frame 14 still has two labels, and it **must not print the wrong one
+ * over an identifier** (ADR-049 §4). The rule is kept as the one place that decides, so the day
+ * phone sign-in arrives the label follows without a second reading of the string.
  *
- * - the account row on frame 14, which prints the frame's “Email verified” or “Phone verified” and
- *   **must not print the wrong one over an identifier** — the design's example is an address;
- * - screen 04, whose title and way back to the field follow the destination the code belongs to
- *   ([ADR-049](../docs/adr/ADR-049-screen-04s-phone-states-and-the-words-that-follow-them.md) §3.1–§3.2).
- *
- * It lives in the shared pure helpers rather than in either feature because both need the same
- * answer and neither may import the other's internals (AGENTS.md §3, ARCHITECTURE.md §3.1): the
- * rule arrived here on 2026-10-13 from `privacy`'s account row, where it had been written for the
- * first of the two callers (ADR-049 §4 records that cost).
+ * It lives in the shared pure helpers rather than in `privacy` because it arrived there from
+ * screen 04, which needed the same answer; that screen is gone, and the rule stays where the
+ * account surface can reach it (AGENTS.md §3, ARCHITECTURE.md §3.1).
  *
  * **This is not a validation.** Whether an identifier is one the account service will accept is the
  * provider's answer and the API contract's, never a client check pretending to be one (CONTEXT.md,
- * **Credential**). The rule reads one thing: a string screen 03 or the sign-in screen collected.
+ * **Credential**). The rule reads one thing: the string a session was issued for.
  */
 
-/** The two identifiers the flow offers, as the catalogue's own two words for them. */
+/** The two identifiers the account row can label. */
 export type IdentifierKind = 'email' | 'phone';
 
 /**

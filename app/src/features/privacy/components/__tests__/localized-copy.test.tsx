@@ -55,18 +55,18 @@ describe('the account screen on a Finnish device', () => {
 
     expect(screen.getByText('TILI / OFFLINE · TILI JA TURVALLISUUS')).toBeOnTheScreen();
     expect(screen.getByText('Tili ja turvallisuus')).toBeOnTheScreen();
-    expect(screen.getByText('Koodi on avain')).toBeOnTheScreen();
+    expect(screen.getByText('Sähköposti ja salasana ovat avain')).toBeOnTheScreen();
     expect(screen.getByText('Istunto')).toBeOnTheScreen();
     // No session is held in a fresh process, so the line for exactly that is what renders here.
     expect(
       screen.getByText(
-        'Istuntoa ei ole käytössä. Istunto kestää tunnin siitä hetkestä, kun koodi hyväksytään.',
+        'Istuntoa ei ole käytössä. Istunto kestää tunnin siitä hetkestä, kun kirjaudut sisään.',
       ),
     ).toBeOnTheScreen();
     expect(screen.getByText('Ei vielä täällä')).toBeOnTheScreen();
 
     expect(screen.queryByText('Account & security')).not.toBeOnTheScreen();
-    expect(screen.queryByText('The code is the key')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Your email and password are the key')).not.toBeOnTheScreen();
   });
 });
 

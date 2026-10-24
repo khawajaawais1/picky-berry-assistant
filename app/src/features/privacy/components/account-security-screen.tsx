@@ -35,9 +35,10 @@ export type AccountSecurityScreenProps = {
  * The screen frame 14's “Account & security” row opens (node 5:23677) — **the design never drew it**
  * (ADR-039).
  *
- * It is an account surface for a flow that has no password: signing in sends a code (ADR-034's
- * chosen reading), so there is nothing here to change, reset or leak, and the screen says that
- * rather than leaving a reader to wonder where the missing controls went. What it *can* state, it
+ * It is an account surface for a flow whose password the app never stores: the credential is
+ * email + password at the provider (ADR-054), so there is no password here to change, reset or
+ * leak, and the screen says that rather than leaving a reader to wonder where the missing
+ * controls went. What it *can* state, it
  * states: whose account the app is holding (the session, ADR-029/ADR-038 — the name when a sign-up
  * collected one, otherwise the identifier alone), where that session lives, how long it is good for,
  * what ends it, and what the app cannot do yet because no account service exists.

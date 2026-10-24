@@ -82,7 +82,6 @@ describe('the Tailwind theme mirrors the design tokens', () => {
       action: layout.actionHeight,
       header: layout.headerHeight,
       chip: layout.chipHeight,
-      codeCell: layout.codeCellHeight,
       touch: layout.minTouchTarget,
     };
 
