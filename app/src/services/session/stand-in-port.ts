@@ -1,12 +1,14 @@
-import { appEnvironment, type AppEnvironment } from '@/config/env';
+import { appEnvironment, firebaseApiKey, type AppEnvironment } from '@/config/env';
 
+import { createFirebasePasswordResetRequest } from './firebase-password-reset';
+import type { PasswordResetRequest, PasswordResetResult } from './password-reset';
 import { isExpired, mintSession, parseSession, type Session } from './session';
 import { createInMemorySessionStore, type SessionStore } from './store';
 
 /**
  * The authentication seam: one port the app acquires, holds and drops a session through, and asks
- * for a password reset through, with a stand-in provider behind it until the account service
- * exists.
+ * for a password reset through, with a stand-in for the account service and a real Firebase
+ * adapter for the reset when a project key is configured.
  *
  * Why it exists: the account belongs to the team's API and Firebase issues the credential
  * (ADR-054, which answers PROJECT.md's old question 12). Every screen that needs a signed-in user
@@ -67,27 +69,6 @@ export type SignInRefusal = 'refused' | 'unavailable';
 export type SignInResult = { ok: true; session: Session } | { ok: false; reason: SignInRefusal };
 
 /**
- * Why a reset request was not accepted.
- *
- * - `refused` — the provider would not take it: too many attempts, an address it rejects, or a
- *   service that is temporarily unable to answer. The screen says one sentence for all of them,
- *   because the app must not tell a stranger whether the address has an account.
- * - `unavailable` — nothing here can answer the request at all. A production build is the case
- *   that matters: there is no sign-in service to ask, so no reset link is requested there
- *   (ADR-054 §8, ADR-062).
- */
-export type PasswordResetRefusal = 'refused' | 'unavailable';
-
-/**
- * The provider accepted the reset request for an address — or did not, with a reason.
- *
- * `ok` says the provider took the address, not that an email arrived and not that an account
- * exists. The provider answers every address the same way for exactly that reason, and the
- * screen repeats the condition in its words rather than turning a request into an oracle.
- */
-export type PasswordResetResult = { ok: true } | { ok: false; reason: PasswordResetRefusal };
-
-/**
  * The port. Four operations: acquire a session, ask for the one being held, drop it, and ask the
  * provider for a password reset.
  *
@@ -125,6 +106,12 @@ export type StandInSessionPortOptions = {
   now?: () => Date;
   /** Where the session is kept. Defaults to the in-memory store. */
   store?: SessionStore;
+  /**
+   * The real reset provider, when the build has one. It is used in every environment; without
+   * it, the stand-in answers below. The provider is a single function so a test can hand in a
+   * recorder and keep the network out of the suite.
+   */
+  passwordReset?: PasswordResetRequest;
 };
 
 /**
@@ -149,6 +136,7 @@ export function createStandInSessionPort(options: StandInSessionPortOptions = {}
   const environment = options.environment ?? appEnvironment();
   const now = options.now ?? (() => new Date());
   const store = options.store ?? createInMemorySessionStore();
+  const passwordReset = options.passwordReset;
 
   return {
     async signIn({ email, password, displayName }) {
@@ -219,6 +207,12 @@ export function createStandInSessionPort(options: StandInSessionPortOptions = {}
         throw new RangeError('a password reset names an account, and this request named none');
       }
 
+      if (passwordReset) {
+        // A real provider is configured: it owns the request, the email and every failure it can
+        // report. The stand-in never sees the address.
+        return passwordReset(address);
+      }
+
       if (environment === 'production') {
         // No provider is connected, so a shipped build cannot ask for a link (ADR-054 §8).
         return { ok: false, reason: 'unavailable' };
@@ -239,5 +233,14 @@ export function createStandInSessionPort(options: StandInSessionPortOptions = {}
  * One instance, because a session is one thing: two ports over two stores would be two answers to
  * “is the user signed in?”. Its lifetime is the process's, which is what the in-memory store
  * means; when the secure adapter lands this becomes the place that reads it.
+ *
+ * The reset half is the only one with a real provider today: when `EXPO_PUBLIC_FIREBASE_API_KEY`
+ * is set, Firebase sends the email; without it, the stand-in keeps the journey walkable outside
+ * production and the screen says no email was sent. Sign-in and account creation still wait for
+ * the account service, so they remain the stand-in's.
  */
-export const sessionPort: SessionPort = createStandInSessionPort();
+const configuredPasswordReset = createFirebasePasswordResetRequest({ apiKey: firebaseApiKey() });
+
+export const sessionPort: SessionPort = createStandInSessionPort(
+  configuredPasswordReset ? { passwordReset: configuredPasswordReset } : {},
+);

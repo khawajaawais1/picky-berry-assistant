@@ -1,7 +1,7 @@
 /**
  * The authentication seam (`src/services/session/`): acquire a session, ask for the one being
- * held, drop it, and ask the provider for a password reset — with a stand-in provider behind the
- * port until the account service exists.
+ * held, drop it, and ask the provider for a password reset — with a stand-in for the account
+ * service and a real Firebase adapter for the reset when a project key is configured.
  *
  * Read [ADR-028](../../../docs/adr/ADR-028-an-authentication-seam-behind-a-port.md) for why the
  * seam is a port, [ADR-054](../../../docs/adr/ADR-054-the-account-belongs-to-the-api.md) for the
@@ -33,7 +33,8 @@
  * **A reset request is not a stored field.** `requestPasswordReset` carries the address to the
  * provider adapter and asks for the provider's reset link; no token, link or new password comes
  * back to the app, and the address is not written to the store or kept after the call (ADR-054,
- * ADR-062). The stand-in sends nothing, which the screen that calls it says out loud.
+ * ADR-062). With `EXPO_PUBLIC_FIREBASE_API_KEY` set, Firebase sends the email; without it, the
+ * stand-in sends nothing, which the screen that calls it says out loud.
  *
  * The **lawful basis** for holding it — and for the address that names the account — is the
  * owner's decision and is still open (PROJECT.md, question 15), owed for every field the app
@@ -59,10 +60,16 @@ export {
   createStandInSessionPort,
   sessionPort,
   type Credential,
-  type PasswordResetRefusal,
-  type PasswordResetResult,
   type SessionPort,
   type SignInRefusal,
   type SignInResult,
   type StandInSessionPortOptions,
 } from './stand-in-port';
+
+export {
+  passwordResetAvailability,
+  type PasswordResetAvailability,
+  type PasswordResetRefusal,
+  type PasswordResetRequest,
+  type PasswordResetResult,
+} from './password-reset';

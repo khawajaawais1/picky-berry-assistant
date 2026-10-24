@@ -17,6 +17,8 @@ const REQUESTED =
   'If an account uses aino@example.fi, the sign-in service’s reset link is the next step for that address. The app never stores your password.';
 const TEST_BUILD =
   'No sign-in service is connected here, so no reset email is sent. In the finished app, the link would go to this address.';
+const LIVE_REQUESTED =
+  'If an account uses aino@example.fi, the sign-in service’s reset link is on its way to that address. The app never stores your password.';
 
 async function requestReset(email = EMAIL) {
   await fireEvent.changeText(screen.getByTestId('forgot-password-email'), email);
@@ -109,6 +111,21 @@ describe('OnboardingForgotPasswordScreen', () => {
     ).toBeOnTheScreen();
   });
 
+  it('says an email is on its way when a provider can send one', async () => {
+    const onRequestReset = jest.fn(async () => true);
+    await render(
+      <OnboardingForgotPasswordScreen availability="live" onRequestReset={onRequestReset} />,
+    );
+
+    await requestReset();
+
+    expect(await screen.findByText('Check your inbox.')).toBeOnTheScreen();
+    expect(screen.getByText(LIVE_REQUESTED)).toBeOnTheScreen();
+    // The test note belongs to the stand-in alone: a live provider earns the delivery claim.
+    expect(screen.queryByText('Test build')).not.toBeOnTheScreen();
+    expect(screen.queryByText(TEST_BUILD)).not.toBeOnTheScreen();
+  });
+
   it('reports a request the service refused, rather than moving on silently', async () => {
     const onRequestReset = jest.fn(async () => false);
     await render(<OnboardingForgotPasswordScreen onRequestReset={onRequestReset} />);
@@ -135,10 +152,21 @@ describe('OnboardingForgotPasswordScreen', () => {
     ).toBeOnTheScreen();
   });
 
-  it('draws the action disabled in a production build, where nothing can answer it', async () => {
+  it('draws the action disabled when the build has no provider to answer it', async () => {
     await render(
-      <OnboardingForgotPasswordScreen environment="production" onRequestReset={async () => true} />,
+      <OnboardingForgotPasswordScreen
+        availability="unavailable"
+        onRequestReset={async () => true}
+      />,
     );
+
+    await fireEvent.changeText(screen.getByTestId('forgot-password-email'), EMAIL);
+
+    expect(screen.getByRole('button', { name: 'Request reset link' })).toBeDisabled();
+  });
+
+  it('draws the action disabled whenever the route supplies no request handler', async () => {
+    await render(<OnboardingForgotPasswordScreen />);
 
     await fireEvent.changeText(screen.getByTestId('forgot-password-email'), EMAIL);
 

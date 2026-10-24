@@ -97,13 +97,22 @@ const FAMILIES: readonly Family[] = [
     // “koodi lähetettiin” (ADR-048). A claim is only covered if the vocabulary catches it.
     pattern:
       /we (send|sent)|sent by (SMS|text)|sent to your (email|phone)|code went to|your inbox|postilaatikko|send me a code|code is sent|lähettämämme|lähetämme|lähetä minulle|tekstiviestillä lähetetty|koodi lähetettiin/i,
-    // Empty on purpose, and asserted empty below: since 2026-10-12 no shipped string claims a
-    // delivery the app does not make. Screen 04 (its heading, its supporting line and its phone
-    // note), the sign-in screen (its supporting line and its action), the account surface's reach
-    // line and the Terms notice's account record all named one before, and each now says what the
-    // step does and which destination the code belongs to (ADR-048). The decision records the
-    // sentence each branch of the account-service answer turns its own line back into.
-    recorded: [],
+    // Empty from 2026-10-12 to 2026-10-24: no shipped string claimed a delivery the app did not
+    // make. Screen 04 (its heading, its supporting line and its phone note), the sign-in screen
+    // (its supporting line and its action), the account surface's reach line and the Terms notice's
+    // account record all named one before, and each now says what the step does and which
+    // destination the code belongs to (ADR-048).
+    //
+    // One entry since 2026-10-24, and it is the branch ADR-048 recorded: the reset confirmation's
+    // live heading is drawn only where `EXPO_PUBLIC_FIREBASE_API_KEY` configures the provider that
+    // sends the email, so the sentence is true in exactly the build that shows it (ADR-062). Without
+    // a key the screen keeps `requested.heading`, which claims acceptance rather than delivery.
+    recorded: [
+      {
+        key: 'onboarding.forgotPassword.requested.live.heading',
+        why: 'Drawn only with a configured reset provider (`passwordResetAvailability` is `live`, ADR-062), where the address really is in the provider’s hands; the keyless build draws `requested.heading` and the test-build note instead.',
+      },
+    ],
   },
   {
     id: 'a-verification-that-happened',
@@ -506,7 +515,6 @@ describe('the claims the copy makes', () => {
 
     expect(cleared.map((family) => family.id)).toEqual([
       'background-capture',
-      'a-message-the-app-sent',
       'identifier-is-an-address',
       'a-settings-step-the-app-never-takes',
     ]);

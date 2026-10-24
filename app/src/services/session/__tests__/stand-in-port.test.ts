@@ -229,6 +229,19 @@ describe('the stand-in session port, asked for a password reset', () => {
     });
   });
 
+  it('hands the request to the real provider, including in a production build', async () => {
+    // The stand-in's production refusal is for the missing provider, not for the port: when a
+    // Firebase adapter is configured, it owns the request in every environment (ADR-062).
+    const passwordReset = jest.fn(async () => ({ ok: true as const }));
+    const port = createStandInSessionPort({
+      environment: 'production',
+      passwordReset,
+    });
+
+    expect(await port.requestPasswordReset(EMAIL)).toEqual({ ok: true });
+    expect(passwordReset).toHaveBeenCalledWith(EMAIL);
+  });
+
   it('refuses an address that is not one, rather than accepting a request about nobody', async () => {
     const { port } = portOn({});
 

@@ -15,8 +15,10 @@ about something the app has done.
 
 **Screen 04 retired on 2026-10-24** ([ADR-059](adr/ADR-059-email-password-replaces-the-code-screen.md)),
 so rows 3 and 14 below — and the verification strings they name — are the audit's history, not the
-shipped catalogue. The scan's families remain: row 3's delivery family is still fixed to no matches,
-and row 14's family is now empty because the app offers an email address only.
+shipped catalogue. The scan's families remain: row 14's is empty because the app offers an email
+address only, and row 3's — cleared since 2026-10-12 — carries **one recorded entry** from
+2026-10-24: the reset confirmation's live heading, drawn only in a build whose Firebase key makes
+the provider send the email ([ADR-062](adr/ADR-062-password-reset-belongs-to-the-provider.md)).
 
 This file is the **index of where each claim is recorded**, not a second place to record it. The
 demo rows it points at are [demo-and-stand-ins.md](demo-and-stand-ins.md)'s; the issues are
@@ -71,7 +73,7 @@ recorded and still unresolved.
 | - | ------ | ---------------------------- | -------------------------- | ------- | -------------------- |
 | 1 | **Capture in the background** | none | Reads a position in the foreground only, and only while a screen asks (ADR-045) | **Fixed** (2026-10-12) | [ADR-047](adr/ADR-047-the-consent-says-what-the-app-does.md) §1 (five strings), plus four this scan found: the export document's consent lines and two Finnish strings that had kept the heavier word |
 | 2 | **An arrival or exit detected automatically** | `discover.visit.arrived.title` “Arrival detected automatically” / “Saapuminen havaittiin automaattisesti”; `discover.visit.supporting` “Leaving the mapped area ends the visit automatically…” / “…päättää käynnin automaattisesti…”; `report.exit.title` “Exit detected · visit complete” | Detects nothing: no watch runs, and the visit screen's timer is seeded from `DEMO_ACTIVE_VISIT` | **Disclosed** | Known issue 17; demo rows A5, A6; PROJECT.md known issue 26 for the stored half |
-| 3 | **A message the app sent** | **was** seven strings: `onboarding.verification.heading` “Check your inbox.” / “Katso postilaatikkosi.”, `onboarding.verification.supporting` “…the code we sent to {destination}…” / “…{destination} lähettämämme 6-numeroinen koodi.”, `onboarding.verification.phoneNote.body` “…a code sent by SMS.” / “…tekstiviestillä lähetettyä koodia.”, `onboarding.signIn.supporting` “We send six digits to your email or phone.” / “Lähetämme kuusi numeroa…”, `onboarding.signIn.action` “Send me a code” / “Lähetä minulle koodi”, `privacy.accountSecurity.reach.body` “…a six-digit code sent to your email or phone…”, `privacy.termsPrivacy.record.account.value` “…the address or number the code went to.” / “…johon koodi lähetettiin.” | Sends nothing: there is no transport at all, the code is the stand-in (`000000`), and the notice's own line says the app “sends nothing anywhere” | **Fixed** (2026-10-12) | [ADR-048](adr/ADR-048-the-verification-copy-claims-no-delivery.md) §2 — all seven rewritten in both languages to name the destination the code belongs to, with the frame's own words recorded per branch; the scan's family is empty and asserted empty. Known issue 32; the stand-in itself is known issue 24 |
+| 3 | **A message the app sent** | **was** seven strings: `onboarding.verification.heading` “Check your inbox.” / “Katso postilaatikkosi.”, `onboarding.verification.supporting` “…the code we sent to {destination}…” / “…{destination} lähettämämme 6-numeroinen koodi.”, `onboarding.verification.phoneNote.body` “…a code sent by SMS.” / “…tekstiviestillä lähetettyä koodia.”, `onboarding.signIn.supporting` “We send six digits to your email or phone.” / “Lähetämme kuusi numeroa…”, `onboarding.signIn.action` “Send me a code” / “Lähetä minulle koodi”, `privacy.accountSecurity.reach.body` “…a six-digit code sent to your email or phone…”, `privacy.termsPrivacy.record.account.value` “…the address or number the code went to.” / “…johon koodi lähetettiin.” | Sends nothing: there is no transport at all, the code is the stand-in (`000000`), and the notice's own line says the app “sends nothing anywhere” | **Fixed** (2026-10-12) | [ADR-048](adr/ADR-048-the-verification-copy-claims-no-delivery.md) §2 — all seven rewritten in both languages to name the destination the code belongs to, with the frame's own words recorded per branch. Known issue 32; the stand-in itself is known issue 24. **One string since 2026-10-24:** `onboarding.forgotPassword.requested.live.heading` “Check your inbox.” / “Tarkista sähköpostisi.”, drawn only where `EXPO_PUBLIC_FIREBASE_API_KEY` configures the provider that sends the reset email, and recorded on the ledger with that condition — [ADR-062](adr/ADR-062-password-reset-belongs-to-the-provider.md) |
 | 4 | **A verification that happened** | `privacy.account.verifiedEmail` “Email verified”, `privacy.account.verifiedPhone` “Phone verified”, read by `privacy.account.line` | Nothing verified the account: the stand-in code did, in a development build | **Recorded** | Known issue 27; ADR-027 |
 | 5 | **A visit that reached a server** | `discover.season.row.synced` “Synced” / “Synkronoitu” | Nothing syncs. Every report the phone holds is `queued`; only the design's two sample rows can print “Synced”, and they carry no marker of their own | **Recorded — Open** | Demo rows A9, F1 (the rows sit in the same list as the picker's own); PROJECT.md known issue 19 |
 | 6 | **Cached tiles, a saved forecast, a last sync** | `offline.cached` “Cached” / “Välimuistissa”; `offline.forecast.title`, `offline.forecast.detail`, `offline.lastSync`; `offline.retry` “Retry sync” / “Yritä synkronoida uudelleen” | Nothing is cached, downloaded or synced. The two actions are drawn as readings with no role, because there is no transport to retry over | **Disclosed** | Demo row A16 (ADR-042 — the screen says so, in its eyebrow and its own sentence) |
@@ -88,9 +90,11 @@ recorded and still unresolved.
 
 **Kept** families are recorded here as checkable facts, so a later reader does not have to re-derive
 them: the scan found no shipped string promising background capture, no string claiming a retry that
-happens automatically, and no string claiming an encrypted or cloud-stored copy of anything. And
-since 2026-10-12 the standing check asserts the same about a delivery (row 3): no shipped string, in
-either language, claims a message the app sent.
+happens automatically, and no string claiming an encrypted or cloud-stored copy of anything. The
+delivery family (row 3) is the one that moved: from 2026-10-12 it was empty and asserted empty, and
+since 2026-10-24 its single entry is the reset confirmation's live heading, whose ledger line states
+the condition it is true under — a configured provider that sends the email (ADR-062). A keyless
+build draws the acceptance sentence and the test-build note instead.
 
 **Row 14 is the one family the 2026-10-12 pass could not have found**, and that is worth stating
 plainly: the sweep was written for claims about *what the app does* — a message sent, a capture, a

@@ -763,13 +763,14 @@ copy's own expectations live in the screen's unit test. The confirmation is reac
 through in the browser journey, not by a fresh page load, because the request's state lives in the
 screen rather than in the store.
 
-**No string claims a delivery.** The action says “Request reset link” rather than “Send me a link”,
-and the confirmation says the request was accepted and that *if* an account uses the address, the
-provider's link is the next step. Outside production the stand-in sends nothing, so the
-confirmation adds a test-build note saying no reset email is sent; a production build draws the
-action disabled because no provider is connected. The one failure line does not distinguish an
-unknown address from a failed request, so the screen cannot be used to learn which addresses have
-accounts. This is ADR-048's rule applied to reset rather than a second wording for it.
+**A delivery is claimed only when one is made.** The action says “Request reset link” rather than
+“Send me a link”. With `EXPO_PUBLIC_FIREBASE_API_KEY` configured, Firebase sends the email and the
+confirmation reads “Check your inbox.”, with the conditional “*if* an account uses the address, its
+reset link is on the way”. Without a provider, the confirmation says the request was accepted and
+a test-build note says no reset email is sent; a shipped build with no provider draws the action
+disabled. The one failure line does not distinguish an unknown address from a failed request, so
+the screen cannot be used to learn which addresses have accounts. This is ADR-048's rule applied
+to reset rather than a second wording for it.
 
 ### The screen behind frame 14's “Saved spots” row — app-drawn, no node
 

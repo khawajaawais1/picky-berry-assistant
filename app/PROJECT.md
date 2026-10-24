@@ -2055,11 +2055,12 @@ text alternative naming what it shows, not fifty accessible zone names.
    the account's own ([ADR-038](docs/adr/ADR-038-a-session-may-carry-no-name.md)); and §1.4 (which
    states the frame must draw) and §2.2–§4 of
    [to-questionnaire-sign-in.md](to-questionnaire-sign-in.md) are still unanswered, each keeping
-   its part unbuilt rather than defaulted. **Password recovery now exists in part** (2026-10-24):
-   `/sign-in` opens the app-drawn request at `/forgot-password`, which asks the same stand-in for
-   the provider's link — but the provider is not connected, so the stand-in sends nothing, the
-   confirmation says so, and a production build cannot request a link
-   ([ADR-062](docs/adr/ADR-062-password-reset-belongs-to-the-provider.md)). §1.5 is answered. One piece of scaffolding also stays behind:
+   its part unbuilt rather than defaulted. **Password recovery's request is wired** (2026-10-24):
+   `/sign-in` opens the app-drawn request at `/forgot-password`, which calls the Firebase adapter
+   behind the same port when `EXPO_PUBLIC_FIREBASE_API_KEY` is set; without it, the stand-in keeps
+   the journey walkable outside production, sends nothing and says so
+   ([ADR-062](docs/adr/ADR-062-password-reset-belongs-to-the-provider.md)). §1.5 is answered;
+   the Firebase project's email template and key remain deployment configuration. One piece of scaffolding also stays behind:
    `npm run prototype:sign-in` still opens **three throwaway readings of the screen**
    (`/create-account?variant=A|B|C`, switchable from a floating bar) — prototype code, no tests,
    hard-coded English, ignored in a `production` build — because the switch that mounts them is
@@ -2069,14 +2070,17 @@ text alternative naming what it shows, not fifty accessible zone names.
 
 24. **The credential is a stand-in until the account service exists (re-cut 2026-10-24).**
    Screen 03 and `/sign-in` hand an email + password to the session port, and `/forgot-password`
-   asks the same port for a reset link
+   asks the same port for a reset link — a link Firebase really sends when the public key is
+   configured, and a stand-in sends nothing when it is not
    ([ADR-054](docs/adr/ADR-054-the-account-belongs-to-the-api.md) decides the real credential).
-   The stand-in behind the port cannot check a password and does not pretend to: outside a
-   **production** build it accepts **any non-empty password** and issues a session; in a
-   production build it accepts **nothing**, and the three screens draw their action disabled
-   because no service can answer there. The reset request is accepted outside production and
-   sends nothing: its confirmation carries a test-build note saying no reset email is sent. Nothing
-   is stored but the session, nothing is logged, and no password, address or reset token is kept.
+   The sign-in stand-in cannot check a password and does not pretend to: outside a **production**
+   build it accepts **any non-empty password** and issues a session; in a production build it
+   accepts **nothing**, and screens 03 and `/sign-in` draw their action disabled because no
+   service can answer there. `/forgot-password` is disabled in production only when no Firebase
+   key is configured. Without a key the reset request is accepted outside production and sends
+   nothing, with a test-build note saying so; with a key, Firebase sends the email and the
+   confirmation changes to “Check your inbox.” Nothing is stored but the session, nothing is
+   logged, and no password, address or reset token is kept.
    To walk the flow: open `/create-account` in a development build, fill the form and press “Create
    account” — the app opens screen 05; open `/sign-in`, type any email and a non-empty password,
    and the app opens the map; press “Forgot password?” to walk the reset request. **The `000000` code and screen 04 are gone**,

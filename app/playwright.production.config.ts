@@ -36,6 +36,8 @@ export default defineConfig({
     url: BASE_URL,
     reuseExistingServer: false,
     timeout: 300_000,
-    env: { EXPO_NO_TELEMETRY: '1' },
+    // A shipped build with no provider is the state checked here, and the harness must never
+    // send a real reset email: the empty key wins over any value in a developer's `.env`.
+    env: { EXPO_NO_TELEMETRY: '1', EXPO_PUBLIC_FIREBASE_API_KEY: '' },
   },
 });

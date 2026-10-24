@@ -2,6 +2,12 @@
 
 - **Status:** Accepted (2026-10-24)
 - **Date:** 2026-10-24
+- **Implementation amendment (2026-10-24):** Firebase is now wired behind
+  `SessionPort.requestPasswordReset` through its Identity Toolkit `accounts:sendOobCode` method.
+  `EXPO_PUBLIC_FIREBASE_API_KEY` turns it on; an empty key keeps the test-build path. Decision 8's
+  “production still cannot reset” therefore holds only in a build without a key — with one, a
+  shipped build sends the email and draws the live confirmation decision 5 recorded. Decisions 3,
+  4 and 7 are unchanged: the app still stores no address, token or new password.
 - **Deciders:** Project owner, on 2026-10-24, asking for the reset journey ADR-059 records as
   missing to be designed and built “keeping the design's framing and recording any departure”.
 - **Answers:** [ADR-034](ADR-034-signing-in-the-frame-the-journey-and-the-session.md) §1.5 — the
@@ -113,14 +119,19 @@ transport, a reset token handler, or any screen that asks for an address to rese
 ## Consequences
 
 - **The credential story is complete on the app's side.** `/sign-in`, screen 03 and the reset
-  request are the three surfaces of one email + password account; the missing half is the provider
-  adapter, not a screen.
-- **A development build can walk the journey, and is told what it is walking.** The request
-  succeeds, the confirmation appears, and the note says no email was sent. A production build
-  cannot request a link and draws the action disabled.
-- **A real adapter has one place to land.** The future Firebase `sendPasswordResetEmail` sits
-  behind `SessionPort.requestPasswordReset`; the screen and its copy do not change except for the
-  confirmation wording the provider earns.
+  request are the three surfaces of one email + password account; the reset's provider adapter is
+  now wired, while sign-in and account creation still wait for the account service.
+- **A development build can walk the journey, and is told what it is walking.** Without a
+  Firebase key the request succeeds in the stand-in, the confirmation appears, and the note says no
+  email was sent; a production build without one cannot request a link and draws the action
+  disabled. With a key, the build sends the real email in every environment and the test note is
+  not drawn.
+- **The real adapter has one place, and it is there.**
+  `services/session/firebase-password-reset.ts` calls Firebase's `accounts:sendOobCode` behind
+  `SessionPort.requestPasswordReset`; the screen and its copy are unchanged except for the live
+  confirmation the provider earns. The adapter uses the REST method rather than installing the
+  Firebase SDK, because the request needs one public key and keeps no client state. The reset
+  email's template and the page where a new password is set remain the Firebase project's.
 - **No reset token, link or new password is handled by the app**, and no new personal data is
   stored. The address in flight is the same one sign-in already carries; it is not retained.
 - **The screen cannot be used to enumerate accounts.** The same acceptance, words and next step are
@@ -130,9 +141,10 @@ transport, a reset token handler, or any screen that asks for an address to rese
   inventory gains an app-drawn section, and the control, layout, accessibility and copy ledgers gain
   the screen. The layout harness measures the request state; the confirmation is held by the
   screen's unit test and the browser journey, which presses through and reads it.
-- **Still owed:** the provider adapter itself, which is where a real email, a real token and the
-  provider's hosted page come from. Until it exists, the journey is a walkable request with an
-  honest note, not a working reset.
+- **Still owed:** the Firebase project's configuration — a Web API key set as
+  `EXPO_PUBLIC_FIREBASE_API_KEY`, the password-reset email template, the page a new password is
+  set on, and email-enumeration protection. Without the key the journey remains a walkable request
+  with an honest note; with it, the app sends the request and Firebase owns the rest.
 
 ## Related
 
@@ -145,4 +157,6 @@ transport, a reset token handler, or any screen that asks for an address to rese
   [ADR-055](ADR-055-retention-and-processors.md) (the provider is already a processor)
 - PROJECT.md known issue 23, open questions 11 and 13, the decision list
 - `docs/design-source.md` (the app-drawn screen), `docs/demo-and-stand-ins.md` (the stand-in's
-  confirmation note), `src/services/session/stand-in-port.ts` (the seam)
+  confirmation note and the provider's gate),
+  `src/services/session/stand-in-port.ts` (the seam),
+  `src/services/session/firebase-password-reset.ts` (the adapter)

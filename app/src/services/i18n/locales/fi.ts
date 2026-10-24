@@ -67,6 +67,9 @@ export const fi: Record<TranslationKey, string> = {
   'onboarding.forgotPassword.requested.body':
     'Jos osoitteella {email} on tili, seuraava vaihe on kirjautumispalvelun palautuslinkki tähän osoitteeseen. Sovellus ei koskaan tallenna salasanaasi.',
   'onboarding.forgotPassword.requested.heading': 'Palautuspyyntö vastaanotettu.',
+  'onboarding.forgotPassword.requested.live.body':
+    'Jos osoitteella {email} on tili, kirjautumispalvelun palautuslinkki on matkalla tähän osoitteeseen. Sovellus ei koskaan tallenna salasanaasi.',
+  'onboarding.forgotPassword.requested.live.heading': 'Tarkista sähköpostisi.',
   'onboarding.forgotPassword.requested.test.body':
     'Kirjautumispalvelua ei ole kytketty tähän versioon, joten palautussähköpostia ei lähetetä. Valmiissa sovelluksessa linkki menisi tähän osoitteeseen.',
   'onboarding.forgotPassword.requested.test.title': 'Testiversio',

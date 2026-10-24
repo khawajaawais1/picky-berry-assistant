@@ -93,7 +93,10 @@ and owns the copy (ADR-017). `services/session/` is the second: the authenticati
 one session port (`signIn`, `current`, `signOut`, `requestPasswordReset`) with a stand-in provider
 and an in-memory session store behind it until the account service exists (ADR-028), holding the
 account's identifier and the name it is shown under (ADR-029). The reset request is a port call,
-not a session: it passes an address to the provider and keeps no token (ADR-062). It is a service rather than
+not a session: it passes an address to Firebase and keeps no token (ADR-062).
+`firebase-password-reset.ts` is that provider's adapter — Identity Toolkit's
+`accounts:sendOobCode`, enabled by `EXPO_PUBLIC_FIREBASE_API_KEY`; without a key the stand-in
+keeps the request walkable outside production. It is a service rather than
 a feature because onboarding, the app shell and the profile all need it and none of them owns
 it. `services/location/` is the third: the position seam (ADR-045) — one port
 (`requestAvailability`, `watch`) with `expo-location` behind it, asking for the foreground
@@ -213,7 +216,9 @@ never a runtime secret store. That substitution is textual, and it only reaches 
 unset in the bundle (the runtime's `process.env` carries none of these names), which is how a
 production build once answered `development` and accepted the stand-in credential. Any new
 read belongs in `declaredPublicEnv`, in that literal shape, and `e2e/production-export.spec.ts`
-is where a production-only rule is checked.
+is where a production-only rule is checked. `EXPO_PUBLIC_FIREBASE_API_KEY` is the one public key
+with a third-party service: Firebase's client keys identify the project rather than authorising
+access, and the reset request is the only thing that reads it.
 
 Two consequences of that substitution worth knowing before building the app twice:
 

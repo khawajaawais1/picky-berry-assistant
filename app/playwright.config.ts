@@ -41,7 +41,9 @@ export default defineConfig({
     // to have running instead of this commit's export.
     reuseExistingServer: false,
     timeout: 300_000,
-    env: { EXPO_NO_TELEMETRY: '1' },
+    // The harness must never send a real reset email: an empty public key keeps the export on the
+    // test-build path, whatever a developer's `.env` contains.
+    env: { EXPO_NO_TELEMETRY: '1', EXPO_PUBLIC_FIREBASE_API_KEY: '' },
   },
   // The production spec belongs to the other config, which is the only place it can run
   // against a bundle built for people.

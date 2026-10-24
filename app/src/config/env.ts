@@ -15,6 +15,7 @@
 export const PUBLIC_ENV_VARS = {
   apiBaseUrl: 'EXPO_PUBLIC_API_BASE_URL',
   appEnvironment: 'EXPO_PUBLIC_APP_ENV',
+  firebaseApiKey: 'EXPO_PUBLIC_FIREBASE_API_KEY',
 } as const;
 
 export type PublicEnvSource = Partial<Record<string, string | undefined>>;
@@ -27,6 +28,12 @@ export type AppConfig = {
   environment: AppEnvironment;
   /** Normalised absolute base URL of the Picky API. */
   apiBaseUrl: string;
+  /**
+   * Firebase's public Web API key, or `null` when no reset provider is configured. It is public
+   * by design — it identifies the Firebase project rather than authorising access — and an empty
+   * value is the test-build path: the stand-in accepts the request and sends nothing.
+   */
+  firebaseApiKey: string | null;
 };
 
 export type ConfigProblem = {
@@ -162,7 +169,21 @@ function declaredPublicEnv(): PublicEnvSource {
   return {
     [PUBLIC_ENV_VARS.apiBaseUrl]: process.env.EXPO_PUBLIC_API_BASE_URL,
     [PUBLIC_ENV_VARS.appEnvironment]: process.env.EXPO_PUBLIC_APP_ENV,
+    [PUBLIC_ENV_VARS.firebaseApiKey]: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
   };
+}
+
+/**
+ * Firebase's public Web API key, or `null` when the build has none.
+ *
+ * This key is **not a secret**: Firebase's client keys identify a project and are safe in a
+ * shipped bundle when the project's API restrictions and quotas are set (SECURITY.md). It is read
+ * here, in the one module allowed to touch `EXPO_PUBLIC_*`, and never logged.
+ */
+export function firebaseApiKey(source: PublicEnvSource = declaredPublicEnv()): string | null {
+  const key = source[PUBLIC_ENV_VARS.firebaseApiKey]?.trim();
+
+  return key ? key : null;
 }
 
 export function appEnvironment(source: PublicEnvSource = declaredPublicEnv()): AppEnvironment {
@@ -194,5 +215,12 @@ export function loadConfig(source: PublicEnvSource = declaredPublicEnv()): Confi
   }
   if (problems.length > 0) return { ok: false, problems };
 
-  return { ok: true, config: { environment, apiBaseUrl: urlResult.url } };
+  return {
+    ok: true,
+    config: {
+      environment,
+      apiBaseUrl: urlResult.url,
+      firebaseApiKey: firebaseApiKey(source),
+    },
+  };
 }

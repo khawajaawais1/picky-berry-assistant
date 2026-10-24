@@ -122,6 +122,56 @@ const LOCALES: readonly Locale[] = [
   { code: 'fi', name: 'Finnish', tag: 'fi-FI', catalogue: fi },
 ];
 
+/**
+ * The zone both of screen 07's source-side journeys open: “Laajavuori 1”, the first feature of the
+ * data team's 50-zone stub (`assets/data/test-zones.json`, held equal to `data/test_zones.geojson`
+ * by a test). Written out because the route receives this id the way it receives any other — as
+ * input from a link, not as a value this harness owns — and the saved-plan journey in
+ * `e2e/accessibility.spec.ts` opens the same zone, so the two must name the same one.
+ */
+const SOURCE_ZONE_ID = 'cc0e7929-de9f-516a-9049-7a25a1a6d092';
+
+/**
+ * Screen 07's frame blocks, which both of its readings draw from the same view with the same
+ * values: the forecast note inside the yield card, the outlook, the freshest report behind the
+ * “See all” link, and the scoring note. One list rather than two, because a rule added for one
+ * reading is a string the other renders too — and because the source reading must not drift from
+ * the design's sample it discloses under itself.
+ */
+const ZONE_DETAILS_BLOCKS: readonly CopyRule[] = [
+  { what: 'the forecast note', key: 'discover.details.forecastDisclaimer' },
+  { what: 'the outlook heading', key: 'discover.details.outlook.title' },
+  // The one block the frame lays out over two lines (342x40, node 5:23069).
+  { what: 'the outlook body', key: 'discover.details.outlook.body', maxLines: 2 },
+  {
+    what: 'the weather line',
+    key: 'discover.details.weather',
+    values: {
+      temperature: '18',
+      time: '08:00',
+      wind: { key: 'discover.details.wind.light' },
+    },
+  },
+  { what: 'the report heading', key: 'discover.details.reports.title' },
+  {
+    what: 'the reports action',
+    key: 'discover.details.reports.seeAll',
+    values: { count: '11' },
+  },
+  { what: 'the report’s own words', key: 'discover.details.reports.quote' },
+  {
+    what: 'the report’s provenance line',
+    key: 'discover.details.reports.meta',
+    values: {
+      max: '5',
+      minutes: '38',
+      trust: { key: 'discover.details.reports.trust.trusted' },
+      yield: '4',
+    },
+  },
+  { what: 'the scoring note', key: 'discover.details.reports.scoring' },
+];
+
 const SCREENS: readonly Screen[] = [
   {
     name: '01 · Onboarding · Welcome',
@@ -320,37 +370,52 @@ const SCREENS: readonly Screen[] = [
       // line inside its 36 px pill — including the two berries the design names.
       { what: 'the first species chip', key: 'report.species.lingonberry', maxLines: 1 },
       { what: 'the second species chip', key: 'report.species.bilberry', maxLines: 1 },
-      { what: 'the forecast note', key: 'discover.details.forecastDisclaimer' },
-      { what: 'the outlook heading', key: 'discover.details.outlook.title' },
-      // The one block the frame lays out over two lines (342x40, node 5:23069).
-      { what: 'the outlook body', key: 'discover.details.outlook.body', maxLines: 2 },
+      ...ZONE_DETAILS_BLOCKS,
+    ],
+  },
+  {
+    // The same frame read from the **zone source** instead of the design's sample: the state the
+    // map's card and the saved plan open (ADR-058, ADR-060), which `/zone-details` alone cannot
+    // reach because a bare URL draws the sample. The zone and berry are the ones the saved-plan
+    // journey opens — Laajavuori 1, scored for lingonberry — so the harness measures the page the
+    // picker actually arrives on, not only the one the design drew.
+    name: '07 · Core picker · Zone details (a source zone)',
+    path: `/zone-details?zone=${SOURCE_ZONE_ID}&species=lingonberry`,
+    shell: true,
+    // The source reading's own sentence: it is drawn only once the zone has been read, so it also
+    // proves the screen is not still pending — or the sample the entry above measures.
+    anchor: 'discover.details.sample',
+    copy: [
+      { what: 'the eyebrow', key: 'discover.details.eyebrow' },
+      // The title is the zone's own name from the payload (“Laajavuori 1”), not a catalogue
+      // sentence, so there is no key to measure here. Its date line below proves the same payload
+      // rendered, and the saved-plan journey asserts the name itself.
       {
-        what: 'the weather line',
-        key: 'discover.details.weather',
-        values: {
-          temperature: '18',
-          time: '08:00',
-          wind: { key: 'discover.details.wind.light' },
-        },
+        what: 'the score’s own scale',
+        key: 'discover.details.scoreLabel',
+        values: { max: '100' },
       },
-      { what: 'the report heading', key: 'discover.details.reports.title' },
+      { what: 'the confidence line', key: 'discover.details.confidence.medium' },
+      // One chip, not the sample's two: a zone's picking state is the design's and is not part of
+      // the source's answer, which is what the sample note below says out loud.
+      { what: 'the ripeness chip', key: 'discover.ripeness.ripe' },
+      // The berry the screen was asked for comes first, then every other berry the payload scores
+      // — a source zone's row is its data, not the design's three chips.
+      { what: 'the first species chip', key: 'report.species.lingonberry', maxLines: 1 },
+      { what: 'the second species chip', key: 'report.species.bilberry', maxLines: 1 },
+      { what: 'the third species chip', key: 'report.species.cloudberry', maxLines: 1 },
+      { what: 'the fourth species chip', key: 'report.species.crowberry', maxLines: 1 },
+      // The zone's own freshness in frame 06's words, with the instant the source sent — formatted
+      // per language, the way the rows' dates are (so both forms are given).
       {
-        what: 'the reports action',
-        key: 'discover.details.reports.seeAll',
-        values: { count: '11' },
+        what: 'the zone’s own freshness',
+        key: 'discover.map.updated',
+        values: { date: { en: '3 August 2026', fi: '3.8.2026' } },
       },
-      { what: 'the report’s own words', key: 'discover.details.reports.quote' },
-      {
-        what: 'the report’s provenance line',
-        key: 'discover.details.reports.meta',
-        values: {
-          max: '5',
-          minutes: '38',
-          trust: { key: 'discover.details.reports.trust.trusted' },
-          yield: '4',
-        },
-      },
-      { what: 'the scoring note', key: 'discover.details.reports.scoring' },
+      // The app's own sentence, not a frame's: its allowance is the one its wording takes rather
+      // than a frame's count (measured 2026-10-24; Finnish is the longer of the two).
+      { what: 'where the app’s own knowledge stops', key: 'discover.details.sample', maxLines: 3 },
+      ...ZONE_DETAILS_BLOCKS,
     ],
   },
   {
@@ -849,6 +914,13 @@ const SCREENS: readonly Screen[] = [
     // The plan the settings screen's own entry holds, so the rows measured here are the ones that
     // screen counts. The empty state is the state the design never showed and the unit test keeps
     // (`saved-spots-screen.test.tsx`).
+    //
+    // **Mixed berries on purpose.** A row names the berry whose layer the bookmark was pressed on
+    // (ADR-061), so a plan saved entirely under one berry measures only that berry's word — the
+    // other language's word for it, and the other berry, would never be drawn. Laajavuori 1 is
+    // saved under the pilot berry and Laajavuori 2 under lingonberry, which the source scores
+    // differently (past / ripening, and 53 / 38); the third identifier is one no zone answers to,
+    // which is the row the screen draws as a bare id.
     seed: {
       'picky.saved-zones.v1': JSON.stringify([
         {
@@ -858,7 +930,7 @@ const SCREENS: readonly Screen[] = [
         },
         {
           savedAt: '2026-08-27T09:00:00.000Z',
-          speciesId: 'bilberry',
+          speciesId: 'lingonberry',
           zoneId: 'a2f83130-4d9a-5133-ba7e-83444d71e848',
         },
         {
@@ -872,20 +944,36 @@ const SCREENS: readonly Screen[] = [
       { what: 'the eyebrow', key: 'privacy.savedSpots.eyebrow' },
       { what: 'the screen title', key: 'privacy.savedSpots.title' },
       // The rows are the source's own (`ZoneSourceRow`), resolved through the same port frame 06
-      // reads since ADR-060, so their strings and values are the map's first zone.
+      // reads since ADR-060, so their strings and values are the map's own zones — each read
+      // through the berry its record holds, which is the half a single-berry plan cannot measure.
       {
-        what: 'a plan row’s title',
+        what: 'the plan row saved under the pilot berry',
         key: 'discover.card.zoneTitle',
         values: { species: { key: 'report.species.bilberry' }, zone: 'Laajavuori 1' },
       },
-      { what: 'a plan row’s ripeness chip', key: 'discover.ripeness.past', maxLines: 1 },
       {
-        what: 'a plan row’s yield chip',
+        what: 'the plan row saved under lingonberry',
+        key: 'discover.card.zoneTitle',
+        values: { species: { key: 'report.species.lingonberry' }, zone: 'Laajavuori 2' },
+      },
+      { what: 'the pilot-berry row’s ripeness chip', key: 'discover.ripeness.past', maxLines: 1 },
+      {
+        what: 'the pilot-berry row’s yield chip',
         key: 'discover.list.yield',
         maxLines: 1,
         values: { max: '100', score: '53' },
       },
-      { what: 'another row’s ripeness chip', key: 'discover.ripeness.ripe', maxLines: 1 },
+      {
+        what: 'the lingonberry row’s ripeness chip',
+        key: 'discover.ripeness.ripening',
+        maxLines: 1,
+      },
+      {
+        what: 'the lingonberry row’s yield chip',
+        key: 'discover.list.yield',
+        maxLines: 1,
+        values: { max: '100', score: '38' },
+      },
       // `privacy.savedSpots.empty`, `privacy.savedSpots.browse` and
       // `privacy.savedSpots.readFailed` are deliberately absent: the first two are the state a
       // seeded plan is not in, and the third is a failure the design never draws. The unit test is

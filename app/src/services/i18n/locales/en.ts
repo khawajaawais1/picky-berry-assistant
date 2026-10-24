@@ -75,6 +75,9 @@ export const en = {
   'onboarding.forgotPassword.requested.body':
     'If an account uses {email}, the sign-in service’s reset link is the next step for that address. The app never stores your password.',
   'onboarding.forgotPassword.requested.heading': 'Reset request accepted.',
+  'onboarding.forgotPassword.requested.live.body':
+    'If an account uses {email}, the sign-in service’s reset link is on its way to that address. The app never stores your password.',
+  'onboarding.forgotPassword.requested.live.heading': 'Check your inbox.',
   'onboarding.forgotPassword.requested.test.body':
     'No sign-in service is connected here, so no reset email is sent. In the finished app, the link would go to this address.',
   'onboarding.forgotPassword.requested.test.title': 'Test build',

@@ -96,6 +96,23 @@ describe('screens on a Finnish device', () => {
     ).toBeOnTheScreen();
   });
 
+  it('renders the live reset confirmation in Finnish when a provider is configured', async () => {
+    await render(
+      <OnboardingForgotPasswordScreen availability="live" onRequestReset={async () => true} />,
+    );
+
+    await fireEvent.changeText(screen.getByLabelText('Sähköpostiosoite'), 'aino@example.fi');
+    await fireEvent.press(screen.getByRole('button', { name: 'Pyydä palautuslinkki' }));
+
+    expect(await screen.findByText('Tarkista sähköpostisi.')).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        'Jos osoitteella aino@example.fi on tili, kirjautumispalvelun palautuslinkki on matkalla tähän osoitteeseen. Sovellus ei koskaan tallenna salasanaasi.',
+      ),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText('Testiversio')).not.toBeOnTheScreen();
+  });
+
   it('renders the create-account screen in Finnish, accessibility labels included', async () => {
     await render(<OnboardingCreateAccountScreen onBack={() => {}} onSubmit={async () => true} />);
 
