@@ -100,9 +100,10 @@ keeps the request walkable outside production. It is a service rather than
 a feature because onboarding, the app shell and the profile all need it and none of them owns
 it. `services/location/` is the third: the position seam (ADR-045) — one port
 (`requestAvailability`, `watch`) with `expo-location` behind it, asking for the foreground
-permission only and keeping nothing. Like the session seam it is a service because more than
-one feature needs it (the visit domain reads fixes, and the map will) and none of them owns
-the device.
+permission only and keeping nothing. The watch's budget is `Accuracy.High` at a 50 m distance
+filter, with a 60 s ceiling on Android (ADR-063); no background task or ticker is added. Like the
+session seam it is a service because more than one feature needs it (the visit domain reads
+fixes, and the map will) and none of them owns the device.
 
 ## The target from the team plan (recorded, not built)
 
@@ -168,9 +169,9 @@ shared: components/ · config/ · constants/ · hooks/ · services/ · utils/
 ```
 
 The first product slice, `src/features/visits`, follows this shape: `domain/` holds
-zone containment and the visit lifecycle as pure functions over an immutable state,
-while a location source and any persistence are deliberately absent — they will
-arrive behind the feature's own boundary.
+zone containment and the visit lifecycle as pure functions over an immutable state, while any
+persistence is deliberately absent and the device is read through the shared position port
+(ADR-045, ADR-063) rather than inside the feature.
 
 Rules enforced in review:
 
@@ -184,8 +185,11 @@ Rules enforced in review:
 
 `atoms/` (AppText, AppButton) → `molecules/` (Card, InfoRow) → `organisms/` →
 `templates/` (Screen) → screens in `src/app/`. Components receive data and
-callbacks; they never fetch, authorise, or apply business rules. `organisms/` is
-currently empty and will fill as feature UI grows.
+callbacks; they never fetch, authorise, or apply business rules. `organisms/`
+currently holds the app shell's core navigation: a section of the interface
+composed from atoms and molecules, above a single reusable unit and below a page.
+Feature screens stay inside `features/<feature>/components/` and compose these
+shared layers through their feature's public API.
 
 ### 3.3 Theming
 
@@ -315,6 +319,13 @@ server-side for every resource.
   trusted from the client.
 - MFA is expected for privileged accounts once roles exist (SECURITY.md §5).
 
+**Implemented today:** the session seam (`services/session/`) has a stand-in provider and an
+in-memory session; sign-in and account creation still wait for the account service. The reset
+request is the one path that reaches a real provider: `firebase-password-reset.ts` calls Identity
+Toolkit's `accounts:sendOobCode` when `EXPO_PUBLIC_FIREBASE_API_KEY` is configured, and keeps no
+address, link or token (ADR-062). No ID token is verified yet because the account service does not
+exist.
+
 ## 8. Offline architecture (planned, design accepted in ADR-005)
 
 Capture flows must work without connectivity. Intended write path: validate
@@ -326,8 +337,13 @@ data, and media uploads must validate type/size before being persisted.
 
 ## 9. External services
 
-The team's stack names four providers, none of them integrated in the app yet:
+The team's stack names these providers, and one operation among them is integrated today:
 
+- **Firebase Authentication** — **integrated for the password-reset request only**:
+  `src/services/session/firebase-password-reset.ts` posts to Identity Toolkit's
+  `accounts:sendOobCode` when `EXPO_PUBLIC_FIREBASE_API_KEY` is configured, and the app keeps no
+  address, link or token. Sign-in, account creation and ID-token verification still wait for the
+  account service (ADR-054, ADR-062).
 - **Firebase Cloud Messaging** — push delivery for 6.7 (planned; the app sends no token).
 - **Protomaps / OpenStreetMap** — the PMTiles basemap the project hosts (ADR-031).
 - **FMI** and **Sentinel-2 (Copernicus)** — weather and NDVI, consumed by `../data/`, never
@@ -336,7 +352,7 @@ The team's stack names four providers, none of them integrated in the app yet:
   will upload through presigned URLs, never with a credential of its own.
 
 Any additional provider (analytics, crash reporting, payments) must be chosen through a
-documented comparison before integration. No third-party service is integrated today.
+documented comparison before integration. No other third-party service is integrated today.
 
 ## 10. Deployment architecture
 

@@ -157,9 +157,11 @@ _Avoid_: secret, login, hash (the app holds none), code (not v1's credential)
 An implementation that answers for a service that does not exist yet, accepted for exactly as
 long as that is true: a lifetime copied from the provider's own token, nothing persisted, and
 **nothing accepted in a production build**. There is one left — ADR-028's session provider, whose
-stand-in accepts any non-empty password outside production and verifies nothing (ADR-059), and
-accepts a reset address without sending anything (ADR-062). It is deleted, not disabled, when the
-account service lands; the code stand-in went with screen 04 on 2026-10-24.
+stand-in accepts any non-empty password outside production and verifies nothing (ADR-059). Its
+reset half is a stand-in only when no Firebase key is configured; with `EXPO_PUBLIC_FIREBASE_API_KEY`
+the reset request is Firebase's own adapter and sends the provider's email (ADR-062). It is
+deleted, not disabled, when the account service lands; the code stand-in went with screen 04 on
+2026-10-24.
 _Avoid_: mock, fake, stub, dummy, demo data (the **Marketplace demo** and **Season summary** are
 the design's own values — a different thing with a different word)
 

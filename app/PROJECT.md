@@ -353,6 +353,12 @@ What exists:
 - The picker's own plan (`src/services/saved-zones.ts`): the zones screen 07's bookmark saves,
   each with the berry whose layer it was saved under, stored on this phone only and removable by
   the same control (ADR-024, ADR-061).
+- The authentication seam (`src/services/session/`): one session port with a stand-in provider and
+  an in-memory session, `/sign-in` and `/forgot-password`, and the reset request's Firebase
+  adapter (`firebase-password-reset.ts`) — Identity Toolkit's `accounts:sendOobCode`, enabled by
+  `EXPO_PUBLIC_FIREBASE_API_KEY`; when configured it sends the provider's email and keeps no
+  address or token. Sign-in and account creation still wait for the account service (ADR-028,
+  ADR-054, ADR-062).
 - The first product slice, `src/features/visits`, as pure tested domain logic and
   the reference for the feature-module shape (single `index.ts` public API, pure
   `domain/` internals):
@@ -384,10 +390,12 @@ recording any departure”):
 
 - **The app draws the request; the provider owns the reset.** `/sign-in` gains “Forgot password?”,
   and `/forgot-password` asks for the address the account uses and hands it to the session port.
-  The provider sends the link, hosts the page where a new password is set and owns the token; the
-  app draws no new-password field and handles no reset token, so the way on after that page is
-  `/sign-in` ([ADR-062](docs/adr/ADR-062-password-reset-belongs-to-the-provider.md), answering
-  ADR-034 §1.5 and amending ADR-059 decision 4).
+  The adapter is `src/services/session/firebase-password-reset.ts`: Firebase Identity Toolkit's
+  `accounts:sendOobCode`, enabled by `EXPO_PUBLIC_FIREBASE_API_KEY`. When configured, it asks
+  Firebase to send the link; the provider hosts the page where a new password is set and owns the
+  token. The app draws no new-password field and handles no reset token, so the way on after that
+  page is `/sign-in` ([ADR-062](docs/adr/ADR-062-password-reset-belongs-to-the-provider.md),
+  answering ADR-034 §1.5 and amending ADR-059 decision 4).
 - **The framing is the sign-in screen’s, because there is no frame to keep.** The 76 px key tile,
   the onboarding header and back control, the design’s 54 px field and action and a text action
   back to sign-in; the copy is the app’s, in Finnish and English. Being frame-less, it is held to
@@ -401,10 +409,11 @@ recording any departure”):
 - **One new port operation, and nothing stored.** `SessionPort.requestPasswordReset(email)` joins
   `signIn`, `current()` and `signOut()`; it creates or changes no session and keeps no address,
   link or token. The password is still never stored.
-- **Verified**: `npm run verify` green (format, `tsc --noEmit`, ESLint, the unit suites including
-  the port and the screen), `npm run test:layout` green with the new `01c` entry measured in both
-  languages at both text sizes, and the browser journeys walk sign-in → request → confirmation →
-  sign-in and a production export with the reset action disabled.
+- **Verified**: `npm run verify` green (format, `tsc --noEmit`, ESLint, **1168 tests in 116
+  suites**, including the port, the Firebase adapter and the screen), `npm run test:layout` green
+  with the new `01c` entry measured in both languages at both text sizes, and the browser journeys
+  walk sign-in → request → confirmation → sign-in and a production export with the reset action
+  disabled.
 
 Done — **screen 07 prints the zone’s own updated time** (2026-10-24, asked for as “Show each
 zone’s own updated time on screen 07’s details, using the same timestamp the map now carries”):

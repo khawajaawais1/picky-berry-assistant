@@ -1,6 +1,6 @@
 # TESTING.md — Testing strategy
 
-Last updated: 2026-10-08 (initialization). Pairs with
+Last updated: 2026-10-24 (current state refreshed). Pairs with
 [DEFINITION_OF_DONE.md](DEFINITION_OF_DONE.md) and [ADR-004](docs/adr/ADR-004-tdd-and-test-stack.md).
 
 ## 1. Test-driven workflow (required)
@@ -166,11 +166,30 @@ when Maestro is added it will run on a build artifact rather than on every pull 
 
 ## 11. Current state
 
-106 suites, 1056 tests, all passing (2026-10-12), plus 199 browser checks in the development export
-and 3 in the production one (`npm run test:layout`, §12, last measured 2026-10-12). Every app-drawn
+118 suites, 1187 tests, all passing (2026-10-24), plus 200 browser checks in the development
+export (211 when the harness's own 11 measurement probes are counted) and 4 in the production one
+(`npm run test:layout`, §12, last measured 2026-10-24). Every app-drawn
 screen the design never drew is measured there — the sign-in screen, frame 14's two destinations,
 the copy those records are taken on and the saved plan the design's own row opens — each in both
-languages and at the largest text size. The index below is the initialization
+languages and at the largest text size.
+
+**The Firebase password-reset request (ADR-062) is covered at three levels:** the provider adapter
+(`src/services/session/__tests__/firebase-password-reset.test.ts`: endpoint, body, refusals and the
+no-key null), the availability rule (`src/services/session/__tests__/password-reset.test.ts`), and
+the app-drawn screen (`src/features/onboarding/components/__tests__/forgot-password-screen.test.tsx`:
+copy, stand-in notice, live confirmation and failure). The production export's disabled action is
+checked by `e2e/production-export.spec.ts`.
+
+**The watch budget's field instrument (ADR-063) is covered at two levels plus its gate:** the
+accumulator and its summary (`src/features/field-test/domain/__tests__/field-measurement.test.ts`:
+cadence arithmetic, stale and repeated fixes, the battery delta and its invalid states), the
+screen (`src/features/field-test/components/__tests__/field-test-screen.test.tsx`: the real watch
+mounted for a watch run and not for a control, the refusal on a charger or Low Power Mode, the
+summary and its share), and the production redirect (`e2e/production-export.spec.ts`). What no test
+here can supply is the measurement itself: the phone protocol, the values under test and the empty
+result sheet are [docs/field-test.md](docs/field-test.md), and no run has been recorded yet.
+
+The index below is the initialization
 slice's suite list
 (2026-10-09) and keeps the suites that carry a rule rather than a screen; every screen added
 since names its own suites in [PROJECT.md](PROJECT.md)'s “Current work”:

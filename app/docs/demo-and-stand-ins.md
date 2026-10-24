@@ -22,7 +22,7 @@ forced, because calling the 60-second resend wait “the design's sample” woul
 | **A · Design's sample** | The frame's own composition, repeated because there is no service behind it. Not invented by us; not observed by anyone. |
 | **B · Stand-in for a missing service** | A value or implementation answering a question the server, the OS or the provider will answer. Built to be swapped, not extended. |
 | **C · Real data** | Produced at runtime by the device or the user. |
-| **D · The app's own choice, awaiting an owner decision** | Neither the design's nor a stand-in for a service: a number this repository picked to make a drawn state reachable. |
+| **D · The app's own choice** | Neither the design's nor a stand-in for a service: a number this repository picked to make a drawn state reachable. Each row says whether the owner has decided it or it still awaits them. |
 | **E · Throwaway prototype** | Not product data at all. Deleted with the question it was built to ask. |
 
 **The gates.** Only **two** things are production-gated, both below. Everything else in
@@ -82,7 +82,7 @@ says so, not that this repository records it.
 | - | -------- | --------------------- | ---- | ---------- |
 | B2 | `createStandInSessionPort` behind the `SessionPort` seam (`signIn`, `current`, `signOut`, `requestPasswordReset`) | The account service and Firebase's credential — the account is the API's, the credential the provider's (ADR-054); the reset request belongs to the same provider (ADR-062) | Production: no credential is accepted, so no session is minted. The reset half is a stand-in only when no Firebase key is configured: then it accepts a reset address without sending anything, and a production build refuses it (G1). With a key, `firebase-password-reset.ts` takes the reset request in every environment and sends the email | Sign-in and account creation still wait for the account service; the reset's swap point has landed behind the same port (ADR-028, ADR-059, ADR-062) |
 | B3 | `createInMemorySessionStore` | A session store that survives the process | Not gated — the value is not a door, it is a session that vanishes on reload | `src/services/session/store.ts`; ADR-006's secure adapter is not installed (`expo-secure-store` is not a dependency) |
-| B5 | `DEFAULT_VISIT_POLICY` — `default-1`, 5 min dwell, 30 min grace, 1 day | The server-owned policy payload `parseVisitPolicy` validates | Not wired to any screen. `features/visits` is imported by nothing and `expo-location` is not installed | Replace with the fetched policy |
+| B5 | `DEFAULT_VISIT_POLICY` — `default-1`, 5 min dwell, 30 min grace, 1 day | The server-owned policy payload `parseVisitPolicy` validates | Not wired to any screen: `features/visits` is imported by nothing yet, though `expo-location` is installed behind the position seam (ADR-045) | Replace with the fetched policy |
 | B6 | No transport behind `src/services/report-queue.ts` | The sync the design's “sync when you're online” promises | Not gated — the queue holds the picker's own data and never drains. Nothing can reach the `synced` state the design draws | ADR-005; the queue stays as the capture half |
 | B7 | `assets/data/test-zones.json` behind the `ZoneSource` port (`services/test-zone-source.ts`) — the data team's 50-zone stub around Laajavuori, a copy of `data/test_zones.geojson` kept equal by a test | The zone service's `GET /zones` | **Not gated**: the scores are stand-ins, and the map and card say `test data` on the screen itself. No network, no location and nothing sent | The service's adapter behind the same port; no screen changes (ADR-053, ADR-057) |
 
@@ -109,12 +109,15 @@ so the rows that cite B2/B3/B5–B7 keep pointing at the same thing.
 
 ---
 
-## 5. D · The app's own choice, awaiting confirmation
+## 5. D · The app's own choice
 
 | # | Value | Why it exists | Recorded in |
 | - | ----- | ------------- | ----------- |
-| D2 | `SESSION_LIFETIME_MS` = 1 h | The provider owns a session's lifetime and there is no provider yet | `session.ts:24`; PROJECT.md known issue 23 / open questions |
-| D4 | `Accuracy.High` for the position watch, and nothing yet about its cadence | The platform's default (`Balanced`, ~100 m) would put a picker in a zone they are not in, and the decision the app actually needs — how precisely and how often to read a position, and at what battery cost — is one the owner has not been asked yet | `src/services/location/expo-source.ts`; [ADR-045](adr/ADR-045-a-position-behind-a-port-and-nothing-kept.md); [ADR-047](adr/ADR-047-the-consent-says-what-the-app-does.md) §2.3; PROJECT.md open question 21 |
+| D2 | `SESSION_LIFETIME_MS` = 1 h | The provider owns a session's lifetime and there is no provider yet — **awaiting the owner** | `session.ts:24`; PROJECT.md known issue 23 / open questions |
+| D4 | The foreground watch — `Accuracy.High`, a 50 m distance filter, a 60 s time ceiling on Android, foreground only | The platform's default (`Balanced`, ~100 m) would put a picker in a zone they are not in; `High` costs more battery, so the cadence caps a moving walk at one fix a minute on Android and takes no fix at all while the picker stands still. The trade-off is battery for boundary resolution, recorded rather than implied | **Decided 2026-10-24** — [ADR-063](adr/ADR-063-the-watch-has-a-cadence-and-an-accuracy-budget.md); `POSITION_WATCH_BUDGET` in `src/services/location/expo-source.ts`; [ADR-045](adr/ADR-045-a-position-behind-a-port-and-nothing-kept.md); [ADR-047](adr/ADR-047-the-consent-says-what-the-app-does.md) §2.3; PROJECT.md question 21 |
+
+D4 was the app's choice awaiting an owner; it became a recorded decision on 2026-10-24
+(ADR-063). D2 still awaits.
 
 D1 (the 60-second resend wait), D3 (the six-digit code and its expiry words) and D5 (the phone
 state's two strings) went with screen 04 on 2026-10-24
@@ -295,8 +298,9 @@ it is classed separately and not counted as demo data.
 
 **F7 — a whole domain built and unwired.** `features/visits` (the visit policy, the polygon
 containment and the visit lifecycle) is exported and tested, and imported by nothing; the policy's
-defaults are the owner's agreed numbers, and `expo-location` is not installed. It is the one place
-in the app where a stand-in exists for a service that nothing yet asks about (B5).
+defaults are the owner's agreed numbers, though `expo-location` is installed behind the position
+seam (ADR-045). It is the one place in the app where a stand-in exists for a service that nothing
+yet asks about (B5).
 
 ---
 
