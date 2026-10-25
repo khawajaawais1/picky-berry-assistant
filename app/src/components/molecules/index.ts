@@ -5,5 +5,6 @@ export { ChoiceChips, type ChoiceChipOption, type ChoiceChipsProps } from './cho
 export { FieldAction, type FieldActionProps } from './field-action';
 export { FormField, type FormFieldProps } from './form-field';
 export { InfoRow, type InfoRowProps } from './info-row';
+export { SignOutAction, type SignOutActionProps } from './sign-out-action';
 export { StatusMessage, type StatusMessageProps } from './status-message';
 export { TextAction, type TextActionProps } from './text-action';

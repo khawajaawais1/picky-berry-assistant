@@ -14,7 +14,7 @@ import { AccountSecurityScreen } from '../account-security-screen';
  * the app has. So the session's facts are stated as they are — where it is kept, how long it lasts,
  * what ends it — and the parts that do not exist are named rather than left out.
  */
-const SIGN_OUT_FAILED = 'Signing out did not finish. Nothing was removed.';
+const SIGN_OUT_FAILED = 'Signing out did not finish. Some records may still be here; try again.';
 const SIGN_OUT = 'Sign out';
 
 beforeEach(async () => {
@@ -131,7 +131,7 @@ describe('AccountSecurityScreen', () => {
     ).toBeOnTheScreen();
   });
 
-  it('signs out when the action is pressed', async () => {
+  it('signs out once the deletion is confirmed', async () => {
     const onSignOut = jest.fn().mockResolvedValue(undefined);
     const { rerender } = await render(<AccountSecurityScreen />);
 
@@ -142,20 +142,46 @@ describe('AccountSecurityScreen', () => {
     await rerender(<AccountSecurityScreen onSignOut={onSignOut} />);
     await fireEvent.press(screen.getByRole('button', { name: SIGN_OUT }));
 
+    // The first press names the deletion; only the confirmation runs it.
+    expect(onSignOut).not.toHaveBeenCalled();
+    expect(screen.getByText('Sign out of this phone?')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign out and delete' }));
+
     expect(onSignOut).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(screen.queryByText(SIGN_OUT_FAILED)).not.toBeOnTheScreen());
   });
 
-  it('says nothing was removed when signing out did not finish', async () => {
+  it('reports a sign-out that did not finish, and offers it again', async () => {
     const onSignOut = jest.fn().mockRejectedValue(new Error('the store refused'));
 
     await render(<AccountSecurityScreen onSignOut={onSignOut} />);
     await fireEvent.press(screen.getByRole('button', { name: SIGN_OUT }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign out and delete' }));
 
-    // The control's promise is a deletion, so a run that failed says the records are still there —
-    // and the action is offerable again rather than stuck.
+    // The run stopped part-way, so the copy cannot claim nothing went. The confirmation stays
+    // open with the action offered again rather than stuck.
     expect(await screen.findByText(SIGN_OUT_FAILED)).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: SIGN_OUT })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Sign out and delete' })).toBeOnTheScreen();
+  });
+
+  it('asks before signing out, and names the records the press deletes', async () => {
+    const onSignOut = jest.fn(async () => {});
+    await render(<AccountSecurityScreen onSignOut={onSignOut} />);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign out' }));
+
+    expect(onSignOut).not.toHaveBeenCalled();
+    expect(screen.getByText('Sign out of this phone?')).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        'Signing out deletes the saved spots, the visit reports waiting to sync and your consent record from this phone. They cannot be recovered here.',
+      ),
+    ).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign out and delete' }));
+
+    expect(onSignOut).toHaveBeenCalledTimes(1);
   });
 
   it('offers the back control only when there is somewhere to go back to', async () => {

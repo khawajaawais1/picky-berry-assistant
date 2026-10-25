@@ -1,9 +1,15 @@
 import { Feather } from '@expo/vector-icons';
-import { useState } from 'react';
 import { View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
-import { Callout, Card, InfoRow, StatusMessage, TextAction } from '@/components/molecules';
+import {
+  Callout,
+  Card,
+  InfoRow,
+  SignOutAction,
+  StatusMessage,
+  TextAction,
+} from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { layout, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -49,9 +55,9 @@ export type AccountSecurityScreenProps = {
  * open (AGENTS.md §11.2).
  *
  * **Sign out** is offered here as well as on the settings screen, and it is the same service behind
- * both: the records it deletes are named on the screen *before* the control is drawn, so nobody
- * meets a deletion they did not expect. Without a handler the control is not drawn at all — a
- * reading, not a promise.
+ * both: the records it deletes are named in the confirmation before the deletion runs, so nobody
+ * meets a loss they did not expect. Without a handler the control is not drawn at all — a reading,
+ * not a promise.
  *
  * **The session's own hour is the one thing on this screen that changes while it is open**, and this
  * is where it is said out loud (ADR-041). A session good for an hour is a session that can run out
@@ -71,8 +77,6 @@ export function AccountSecurityScreen({ onBack, onSignIn, onSignOut }: AccountSe
   const { t } = useTranslation();
   const { error: sessionError, loading, session } = useSession();
   const now = useNow();
-  const [signingOut, setSigningOut] = useState(false);
-  const [signOutFailed, setSignOutFailed] = useState(false);
 
   // The session's own rule, asked about the moment this render is for: `isExpired` counts the
   // instant of expiry as expired, and `remainingMilliseconds` is floored at zero, so neither has to
@@ -101,23 +105,6 @@ export function AccountSecurityScreen({ onBack, onSignIn, onSignOut }: AccountSe
       ? verified
       : interpolate(t('privacy.account.line'), { identifier: session.accountId, verified })
     : '';
-
-  const signOut = async () => {
-    if (!onSignOut || signingOut) return;
-
-    setSigningOut(true);
-    setSignOutFailed(false);
-
-    try {
-      await onSignOut();
-    } catch {
-      // Reported rather than swallowed: the control's promise is that the device no longer holds
-      // anything of the picker's, and a run that failed must not claim that.
-      setSignOutFailed(true);
-    } finally {
-      setSigningOut(false);
-    }
-  };
 
   return (
     <Screen
@@ -268,19 +255,8 @@ export function AccountSecurityScreen({ onBack, onSignIn, onSignOut }: AccountSe
           {t('privacy.accountSecurity.signOut.note')}
         </AppText>
 
-        <TextAction
-          align="center"
-          label={t('privacy.signOut')}
-          // No handler while it is working: an action that cannot act claims no role, and the second
-          // press a waiting screen invites would be a second sign-out.
-          onPress={onSignOut && !signingOut ? () => void signOut() : undefined}
-          testID="account-security-sign-out"
-        />
-
-        {signOutFailed ? (
-          <StatusMessage tone="danger" variant="caption">
-            {t('privacy.signOut.failed')}
-          </StatusMessage>
+        {onSignOut ? (
+          <SignOutAction onSignOut={onSignOut} testID="account-security-sign-out" />
         ) : null}
       </View>
     </Screen>

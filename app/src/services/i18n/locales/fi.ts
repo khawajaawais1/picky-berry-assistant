@@ -483,7 +483,14 @@ export const fi: Record<TranslationKey, string> = {
   'privacy.language.title': 'Kieli',
   'privacy.language.value': 'Suomi',
   'privacy.signOut': 'Kirjaudu ulos',
-  'privacy.signOut.failed': 'Uloskirjautuminen ei onnistunut. Mitään ei poistettu.',
+  // Poisto ei ole täällä peruutettavissa, joten se nimetään ennen kuin se tapahtuu.
+  'privacy.signOut.confirm.title': 'Kirjaudu ulos tältä laitteelta?',
+  'privacy.signOut.confirm.body':
+    'Uloskirjautuminen poistaa tältä laitteelta tallennetut paikat, synkronointia odottavat käyntiraportit ja suostumustietosi. Niitä ei voi palauttaa täältä.',
+  'privacy.signOut.confirm.action': 'Kirjaudu ulos ja poista tiedot',
+  'privacy.signOut.confirm.cancel': 'Jatka kirjautuneena',
+  'privacy.signOut.failed':
+    'Uloskirjautuminen ei valmistunut. Osa tiedoista voi olla yhä täällä; yritä uudelleen.',
 
   // Frame 14's two app-drawn rows and the screens behind them (ADR-039). Each screen's title is
   // also the frame's row label, as the saved-plan list's is.

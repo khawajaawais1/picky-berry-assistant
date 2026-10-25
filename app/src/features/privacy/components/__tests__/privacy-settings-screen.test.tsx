@@ -23,7 +23,7 @@ import { PrivacySettingsScreen } from '../privacy-settings-screen';
 const LABEL = 'Visit tracking while the app is open';
 const SAVE_FAILED = 'Your choice could not be saved.';
 const ACCOUNT_READ_FAILED = 'Your account could not be read.';
-const SIGN_OUT_FAILED = 'Signing out did not finish. Nothing was removed.';
+const SIGN_OUT_FAILED = 'Signing out did not finish. Some records may still be here; try again.';
 
 /**
  * The account the app is holding, as screen 03 leaves it behind: the name the sign-up collected
@@ -376,26 +376,46 @@ describe('PrivacySettingsScreen', () => {
     expect(screen.queryByRole('button', { name: 'Language' })).not.toBeOnTheScreen();
   });
 
-  it('signs out when the frame’s last control is reached', async () => {
+  it('signs out when the frame’s last control is confirmed', async () => {
     const onSignOut = jest.fn().mockResolvedValue(undefined);
 
     await render(<PrivacySettingsScreen onSignOut={onSignOut} />);
     await fireEvent.press(screen.getByRole('button', { name: 'Sign out' }));
 
+    // A deletion is named before it is done: the first press opens the confirmation, not the
+    // deletion (frontend review, 2026-10-25).
+    expect(onSignOut).not.toHaveBeenCalled();
+    expect(screen.getByText('Sign out of this phone?')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign out and delete' }));
+
     expect(onSignOut).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(screen.queryByText(SIGN_OUT_FAILED)).not.toBeOnTheScreen());
   });
 
-  it('says nothing was removed when signing out did not finish', async () => {
+  it('keeps the session when the confirmation is cancelled', async () => {
+    const onSignOut = jest.fn().mockResolvedValue(undefined);
+
+    await render(<PrivacySettingsScreen onSignOut={onSignOut} />);
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign out' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Keep me signed in' }));
+
+    expect(onSignOut).not.toHaveBeenCalled();
+    expect(screen.queryByText('Sign out of this phone?')).not.toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Sign out' })).toBeOnTheScreen();
+  });
+
+  it('reports a sign-out that did not finish, and offers it again', async () => {
     const onSignOut = jest.fn().mockRejectedValue(new Error('the store refused'));
 
     await render(<PrivacySettingsScreen onSignOut={onSignOut} />);
     await fireEvent.press(screen.getByRole('button', { name: 'Sign out' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign out and delete' }));
 
-    // What the control promises is the deletion, so a run that failed must say the data is
-    // still there — and must be offerable again rather than stuck.
+    // The run stopped part-way, so the copy cannot claim nothing went. The confirmation stays
+    // open with the action offered again rather than stuck.
     expect(await screen.findByText(SIGN_OUT_FAILED)).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: 'Sign out' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Sign out and delete' })).toBeOnTheScreen();
   });
 
   it('offers the frame’s back control only when there is somewhere to go back to', async () => {

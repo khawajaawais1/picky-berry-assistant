@@ -1,9 +1,8 @@
 import { Feather } from '@expo/vector-icons';
-import { useState } from 'react';
 import { Pressable, Switch, View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
-import { Callout, Card, Chip, StatusMessage, TextAction } from '@/components/molecules';
+import { Callout, Card, Chip, SignOutAction, StatusMessage } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { layout, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -109,8 +108,6 @@ export function PrivacySettingsScreen({
   const { reports } = useReportQueue();
   const { error: zonesError, loading: zonesLoading, zones } = useSavedZones();
   const { error: sessionError, loading: sessionLoading, session } = useSession();
-  const [signingOut, setSigningOut] = useState(false);
-  const [signOutFailed, setSignOutFailed] = useState(false);
 
   const consentLabel = t('privacy.visitTracking');
   const syncLabel = t('privacy.sync.title');
@@ -154,23 +151,6 @@ export function PrivacySettingsScreen({
           verified,
         })
     : '';
-
-  const signOut = async () => {
-    if (!onSignOut || signingOut) return;
-
-    setSigningOut(true);
-    setSignOutFailed(false);
-
-    try {
-      await onSignOut();
-    } catch {
-      // Reported rather than swallowed: the control's promise is that the device no longer holds
-      // anything of the picker's, and a run that failed must not claim that.
-      setSignOutFailed(true);
-    } finally {
-      setSigningOut(false);
-    }
-  };
 
   return (
     <Screen
@@ -329,20 +309,7 @@ export function PrivacySettingsScreen({
           </StatusMessage>
         ) : null}
 
-        <TextAction
-          align="center"
-          label={t('privacy.signOut')}
-          // No handler while it is working: an action that cannot act claims no role, and the
-          // second press a waiting screen invites would be a second sign-out.
-          onPress={onSignOut && !signingOut ? () => void signOut() : undefined}
-          testID="privacy-sign-out"
-        />
-
-        {signOutFailed ? (
-          <StatusMessage tone="danger" variant="caption">
-            {t('privacy.signOut.failed')}
-          </StatusMessage>
-        ) : null}
+        {onSignOut ? <SignOutAction onSignOut={onSignOut} testID="privacy-sign-out" /> : null}
       </View>
     </Screen>
   );

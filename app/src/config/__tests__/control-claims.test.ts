@@ -98,6 +98,11 @@ const LEDGER: readonly LedgerEntry[] = [
     why: 'The reveal control inside a password field: it acts on the field the caller passed, and its 44 px box is the target rather than the 20 px glyph (frontend review, 2026-10-25).',
   },
   {
+    file: 'src/components/molecules/sign-out-action.tsx',
+    offers: { button: 1, textAction: 2 },
+    why: 'Signing out: the control opens a confirmation that names the saved spots, the unsynced reports and the consent before it deletes them; “Keep me signed in” cancels, and the confirm action is busy and unavailable while the service runs. Shared by the profile and the account screen so the two cannot disagree about what a press costs (frontend review, 2026-10-25).',
+  },
+  {
     file: 'src/components/molecules/form-field.tsx',
     offers: { textField: 1 },
     why: 'The labelled field the forms are built from: the label, the field it wraps and the value the caller holds.',
@@ -289,13 +294,13 @@ const LEDGER: readonly LedgerEntry[] = [
   },
   {
     file: 'src/features/privacy/components/account-security-screen.tsx',
-    offers: { textAction: 2 },
-    why: 'Sign out is offered with no handler while it is working, and the way back in appears only when there is no session to carry on with.',
+    offers: { textAction: 1 },
+    why: 'The way back in is drawn when there is no session to carry on with; signing out is the shared `SignOutAction`, which confirms the deletion first (frontend review, 2026-10-25).',
   },
   {
     file: 'src/features/privacy/components/privacy-settings-screen.tsx',
-    offers: { pressable: 1, role: 1, switch: 1, textAction: 1 },
-    why: 'The visit-tracking switch writes the consent record, the setting rows are controls only where their route supplies a destination, the language row drops the chevron (ADR-017), and sign out is offered without a handler while it works.',
+    offers: { pressable: 1, role: 1, switch: 1 },
+    why: 'The visit-tracking switch writes the consent record, the setting rows are controls only where their route supplies a destination, the language row drops the chevron (ADR-017), and signing out is the shared `SignOutAction`, which confirms the deletion first (frontend review, 2026-10-25).',
   },
   {
     file: 'src/features/privacy/components/terms-privacy-screen.tsx',

@@ -566,7 +566,17 @@ export const en = {
   // The frame's last control, and the failure it has to be able to state: signing out deletes
   // what this device holds, so a run that did not finish is not one to pass over.
   'privacy.signOut': 'Sign out',
-  'privacy.signOut.failed': 'Signing out did not finish. Nothing was removed.',
+  // A deletion cannot be undone here, so it is named before it happens. The records are the three
+  // `src/services/sign-out.ts` clears; the copy must not promise a narrower loss.
+  'privacy.signOut.confirm.title': 'Sign out of this phone?',
+  'privacy.signOut.confirm.body':
+    'Signing out deletes the saved spots, the visit reports waiting to sync and your consent record from this phone. They cannot be recovered here.',
+  'privacy.signOut.confirm.action': 'Sign out and delete',
+  'privacy.signOut.confirm.cancel': 'Keep me signed in',
+  // The order in `sign-out.ts` drops the session last, so a run that stopped part-way may already
+  // have cleared some records: saying “nothing” would be a claim the app cannot make.
+  'privacy.signOut.failed':
+    'Signing out did not finish. Some records may still be here; try again.',
 
   // The two screens frame 14 draws rows for and no frame draws (nodes 5:23677 and 5:23688) —
   // “Account & security” and “Terms & privacy”. Both are app-drawn (ADR-039), so their words are
