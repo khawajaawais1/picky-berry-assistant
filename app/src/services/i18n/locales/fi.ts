@@ -489,6 +489,8 @@ export const fi: Record<TranslationKey, string> = {
   'privacy.savedSpots.subtitle.one': '{count} paikka · oletuksena yksityinen',
   'privacy.savedSpots.subtitle.many': '{count} paikkaa · oletuksena yksityisiä',
   'privacy.savedSpots.empty': 'Ei vielä tallennettuja paikkoja.',
+  'privacy.savedSpots.empty.body':
+    'Tallenna alue sen tietonäkymästä, niin se odottaa täällä – oletuksena yksityisenä.',
   'privacy.savedSpots.browse': 'Selaa alueita',
   'privacy.savedSpots.readFailed': 'Tallennettuja paikkoja ei voitu lukea.',
   // The row names the language the app is in, so this catalogue says its own name.

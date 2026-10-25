@@ -574,6 +574,8 @@ export const en = {
   'privacy.savedSpots.subtitle.one': '{count} spot · private by default',
   'privacy.savedSpots.subtitle.many': '{count} spots · private by default',
   'privacy.savedSpots.empty': 'No saved spots yet.',
+  'privacy.savedSpots.empty.body':
+    'Bookmark a zone on its details screen and it will wait here, private by default.',
   'privacy.savedSpots.browse': 'Browse zones',
   'privacy.savedSpots.readFailed': 'Your saved spots could not be read.',
   // Frame 14's own row, drawn as the reading it is: the app follows the device's language and

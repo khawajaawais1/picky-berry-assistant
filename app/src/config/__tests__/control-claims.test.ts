@@ -164,8 +164,8 @@ const LEDGER: readonly LedgerEntry[] = [
   },
   {
     file: 'src/features/discover/components/saved-spots-screen.tsx',
-    offers: { textAction: 1 },
-    why: 'The empty plan’s way to the map; the rows are `ZoneSourceRow`s, which the route gives a destination (the saved zone’s details), and the screen removes nothing at all.',
+    offers: { button: 1, role: 1 },
+    why: 'The empty plan’s “Browse zones” action, under a heading and a sentence that say how a spot gets here; the rows are `ZoneSourceRow`s, which the route gives a destination (the saved zone’s details), and the screen removes nothing at all (frontend review, 2026-10-25).',
   },
   {
     file: 'src/features/discover/components/season-insights-screen.tsx',
