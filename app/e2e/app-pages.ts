@@ -33,9 +33,15 @@ export function appPages(): AppPage[] {
         return walk(path);
       }
 
-      return entry.isFile() && entry.name.endsWith('.tsx') && entry.name !== '_layout.tsx'
-        ? [path.slice(APP.length + 1)]
-        : [];
+      // `_layout` mounts children and `+html` is the document shell the export is built into;
+      // neither is a route a browser navigates to.
+      const isPage =
+        entry.isFile() &&
+        entry.name.endsWith('.tsx') &&
+        entry.name !== '_layout.tsx' &&
+        entry.name !== '+html.tsx';
+
+      return isPage ? [path.slice(APP.length + 1)] : [];
     });
 
   return (

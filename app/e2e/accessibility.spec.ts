@@ -854,6 +854,9 @@ test.describe('the account and the plan in the built web app', () => {
     await page.getByRole('tab', { name: 'Profile' }).click();
     await expect(page).toHaveURL(/\/privacy-settings$/);
     await page.getByRole('button', { name: 'Sign out' }).click();
+    // The deletion is named before it happens; the first press only opens that confirmation
+    // (frontend review, 2026-10-25).
+    await page.getByRole('button', { name: 'Sign out and delete' }).click();
 
     // The app's front door: signing out lands on the welcome screen, whose own link is the way
     // back in (ADR-034 — the sign-in screen the design never drew).
