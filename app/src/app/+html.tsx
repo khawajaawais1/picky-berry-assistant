@@ -1,10 +1,15 @@
-import { ScrollViewStyleReset } from 'expo-router/html';
+import { ScrollViewStyleReset, useServerDocumentContext } from 'expo-router/html';
 import type { PropsWithChildren } from 'react';
 
 import { themes } from '@/constants/theme';
 
 /**
  * The web document's shell.
+ *
+ * SDK 58 requires a custom root HTML to render the document context it is given: `headNodes`
+ * carries the generated metadata and styles, and `bodyNodes` the font resources and JavaScript
+ * bundles. Omitting them produces valid-looking pages with no scripts, which do not hydrate at all
+ * — measured on this file's first version (frontend review, 2026-10-25).
  *
  * The app ships English and Finnish, but a static export can only be built in one of them: the
  * source language is declared here and the mounted app updates the label to the language it ended
@@ -16,8 +21,10 @@ import { themes } from '@/constants/theme';
  * not flash a white page; both colours come from the tokens, not from copies here.
  */
 export default function Root({ children }: PropsWithChildren) {
+  const { bodyAttributes, bodyNodes, headNodes, htmlAttributes } = useServerDocumentContext();
+
   return (
-    <html lang="en">
+    <html lang="en" {...htmlAttributes}>
       <head>
         <meta charSet="utf-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
@@ -32,8 +39,12 @@ export default function Root({ children }: PropsWithChildren) {
             ].join(''),
           }}
         />
+        {headNodes}
       </head>
-      <body>{children}</body>
+      <body {...bodyAttributes}>
+        {children}
+        {bodyNodes}
+      </body>
     </html>
   );
 }
