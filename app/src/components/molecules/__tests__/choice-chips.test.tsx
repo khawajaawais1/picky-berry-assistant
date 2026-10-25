@@ -33,6 +33,19 @@ describe('ChoiceChips', () => {
     expect(screen.getAllByRole('radio')).toHaveLength(2);
   });
 
+  it('grows the 36 px chip to the 44 px target with hit slop', async () => {
+    // The design's chip is 36 px tall. The row's 12 px gaps are wider than the 4 px the target
+    // needs on each side, so the grown targets cannot overlap.
+    await render(
+      <ChoiceChips label="How to sign up" onChange={() => {}} options={OPTIONS} value="email" />,
+    );
+
+    expect(screen.getByRole('radio', { name: 'Email' }).props.hitSlop).toMatchObject({
+      bottom: 4,
+      top: 4,
+    });
+  });
+
   it('reports the chosen option', async () => {
     const onChange = jest.fn();
     await render(

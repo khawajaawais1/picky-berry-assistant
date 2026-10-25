@@ -93,6 +93,11 @@ const LEDGER: readonly LedgerEntry[] = [
     why: 'A text field: it holds what is typed, which is the thing it claims.',
   },
   {
+    file: 'src/components/molecules/field-action.tsx',
+    offers: { pressable: 1, role: 1 },
+    why: 'The reveal control inside a password field: it acts on the field the caller passed, and its 44 px box is the target rather than the 20 px glyph (frontend review, 2026-10-25).',
+  },
+  {
     file: 'src/components/molecules/form-field.tsx',
     offers: { textField: 1 },
     why: 'The labelled field the forms are built from: the label, the field it wraps and the value the caller holds.',
@@ -119,8 +124,8 @@ const LEDGER: readonly LedgerEntry[] = [
   },
   {
     file: 'src/components/templates/screen.tsx',
-    offers: { pressable: 1, role: 1 },
-    why: 'The back control, drawn only when the route has somewhere to go back to.',
+    offers: { pressable: 1, role: 2 },
+    why: 'The back control, drawn only when the route has somewhere to go back to, and the screen title, announced as a heading rather than painted as text (frontend review, 2026-10-25). The heading is a reading, not a control.',
   },
   {
     file: 'src/features/discover/components/active-visit-screen.tsx',
@@ -253,11 +258,9 @@ const LEDGER: readonly LedgerEntry[] = [
       button: 1,
       checkbox: 1,
       formField: 3,
-      pressable: 1,
-      role: 1,
       textAction: 2,
     },
-    why: 'The name, address and password fields, the submit (gated by its own rules and the account seam), the consent checkbox, the terms link, the way to sign in and the show-password control — all of them local. The frame’s email/phone chips are gone with the phone flow (ADR-059).',
+    why: 'The name, address and password fields, the submit (gated by its own rules and the account seam), the consent checkbox, the terms link and the way to sign in — all of them local. The frame’s email/phone chips are gone with the phone flow (ADR-059); the show-password control is the shared `FieldAction` now, so this file draws no pressable of its own.',
   },
   {
     file: 'src/features/onboarding/components/location-consent-screen.tsx',
@@ -276,8 +279,8 @@ const LEDGER: readonly LedgerEntry[] = [
   },
   {
     file: 'src/features/onboarding/components/sign-in-screen.tsx',
-    offers: { button: 1, formField: 2, pressable: 1, role: 1, textAction: 2 },
-    why: 'The email and password are handed to the account seam, the show-password control acts on the field, “Forgot password?” opens the reset request (ADR-062), and the way to create an account opens screen 03; the action goes inert where nothing can answer it (ADR-054, ADR-059).',
+    offers: { button: 1, formField: 2, textAction: 2 },
+    why: 'The email and password are handed to the account seam, the show-password control is the shared `FieldAction`, “Forgot password?” opens the reset request (ADR-062), and the way to create an account opens screen 03; the action goes inert where nothing can answer it (ADR-054, ADR-059).',
   },
   {
     file: 'src/features/onboarding/components/welcome-screen.tsx',

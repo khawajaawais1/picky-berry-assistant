@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
-import { themes, typography } from '@/constants/theme';
+import { layout, themes, typography } from '@/constants/theme';
 
 import { TextAction } from '../text-action';
 
@@ -72,6 +72,17 @@ describe('TextAction', () => {
 
     expect(screen.getByText('Read terms & privacy')).toHaveStyle({
       fontSize: typography.caption.fontSize,
+    });
+  });
+
+  it('grows its 20 px label into the 44 px target a finger needs', async () => {
+    // The label is the design's 20 px line, but the control around it was only as tall as the
+    // text. AGENTS.md §11 asks for a 44 px target, and a full-width 20 px row is easy to miss.
+    await render(<TextAction label="Forgot password?" onPress={() => {}} testID="forgot" />);
+
+    expect(screen.getByTestId('forgot')).toHaveStyle({
+      justifyContent: 'center',
+      minHeight: layout.minTouchTarget,
     });
   });
 });

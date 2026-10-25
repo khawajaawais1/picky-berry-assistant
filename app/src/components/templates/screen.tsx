@@ -69,6 +69,9 @@ export function Screen({
             <Pressable
               accessibilityLabel={t('common.back')}
               accessibilityRole="button"
+              // The design's control is 32 px wide; 6 px of hit slop on each side is the 44 px
+              // target a finger gets without moving the header's geometry.
+              hitSlop={{ left: 6, right: 6 }}
               className="h-touch w-xl items-center justify-center"
               onPress={onBack}
             >

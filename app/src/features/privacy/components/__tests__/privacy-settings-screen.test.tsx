@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 
-import { spacing, typography } from '@/constants/theme';
+import { layout, spacing, typography } from '@/constants/theme';
 import { readPrivacyConsent, recordPrivacyConsent } from '@/services/privacy-consent';
 import { enqueueReport } from '@/services/report-queue';
 import { saveZone } from '@/services/saved-zones';
@@ -180,6 +180,15 @@ describe('PrivacySettingsScreen', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Offline maps & sync' }));
 
     expect(onOpenSync).toHaveBeenCalledTimes(1);
+  });
+
+  it('gives every settings row the 44 px target', async () => {
+    // The row is a 21 px line inside 6 px of padding: 33 px, short of the repo's floor.
+    await render(<PrivacySettingsScreen onOpenSync={() => {}} />);
+
+    expect(screen.getByTestId('privacy-sync-row')).toHaveStyle({
+      minHeight: layout.minTouchTarget,
+    });
   });
 
   it('shows whose settings these are, from the session the app is holding', async () => {

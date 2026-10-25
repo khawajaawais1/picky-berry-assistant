@@ -1,11 +1,18 @@
 import { Pressable, View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
+import { layout } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useTranslation } from '@/services/i18n';
 
 import { SPECIES, type Species } from '../domain/species';
 import { SPECIES_LABEL_KEY } from './species-copy';
+
+/** Grows the design's 36 px chip to the 44 px target; the row's 12 px gaps absorb it. */
+const CHIP_HIT_SLOP = {
+  bottom: (layout.minTouchTarget - layout.chipHeight) / 2,
+  top: (layout.minTouchTarget - layout.chipHeight) / 2,
+};
 
 export type SpeciesChipsProps = {
   /** The chips that are on, as identifiers: the filter compares species, never words. */
@@ -55,6 +62,7 @@ export function SpeciesChips({ selected, onToggle }: SpeciesChipsProps) {
             accessibilityState={{ checked: on }}
             aria-checked={on}
             className="h-chip flex-row items-center rounded-pill px-gap"
+            hitSlop={CHIP_HIT_SLOP}
             key={species}
             onPress={() => onToggle(species)}
             style={{

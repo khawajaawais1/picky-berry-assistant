@@ -1,9 +1,9 @@
 import { Feather } from '@expo/vector-icons';
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { AppButton, AppCheckbox, AppText } from '@/components/atoms';
-import { Callout, FormField, StatusMessage, TextAction } from '@/components/molecules';
+import { Callout, FieldAction, FormField, StatusMessage, TextAction } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { appEnvironment, type AppEnvironment } from '@/config/env';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -146,11 +146,10 @@ export function OnboardingCreateAccountScreen({
         <View className="w-full gap-section">
           <FormField
             accessory={
-              <Pressable
+              <FieldAction
                 accessibilityLabel={t(
                   passwordVisible ? 'common.hidePassword' : 'common.showPassword',
                 )}
-                accessibilityRole="button"
                 onPress={() => setPasswordVisible((visible) => !visible)}
               >
                 <Feather
@@ -158,7 +157,7 @@ export function OnboardingCreateAccountScreen({
                   name={passwordVisible ? 'eye' : 'eye-off'}
                   size={20}
                 />
-              </Pressable>
+              </FieldAction>
             }
             label={t('onboarding.createAccount.field.password')}
             onChangeText={(password) => setForm((current) => ({ ...current, password }))}

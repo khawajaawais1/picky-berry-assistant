@@ -95,6 +95,11 @@ describe('DiscoverScreen', () => {
     expect(screen.getByText('Discover nearby')).toBeOnTheScreen();
     expect(screen.getByTestId('zone-search-field')).toBeOnTheScreen();
     expect(screen.getByTestId('species-chips')).toBeOnTheScreen();
+    // The design's chips are 36 px tall; 4 px of hit slop on each side is the 44 px target.
+    expect(screen.getByRole('checkbox', { name: 'Lingonberry' }).props.hitSlop).toMatchObject({
+      bottom: 4,
+      top: 4,
+    });
     expect(screen.getByTestId('zone-map')).toBeOnTheScreen();
     expect(screen.getByTestId('zone-score-legend')).toBeOnTheScreen();
     expect(screen.getByTestId('zone-card')).toBeOnTheScreen();

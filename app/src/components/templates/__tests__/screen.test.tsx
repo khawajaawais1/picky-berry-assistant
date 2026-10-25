@@ -66,6 +66,11 @@ describe('Screen', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
 
     expect(onBack).toHaveBeenCalledTimes(1);
+    // The design's back control is 32 px wide; the target a finger gets is the repo's 44 px.
+    expect(screen.getByRole('button', { name: 'Back' }).props.hitSlop).toMatchObject({
+      left: 6,
+      right: 6,
+    });
   });
 
   it('shows no back control on a screen that cannot go back', async () => {

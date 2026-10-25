@@ -403,7 +403,11 @@ function SettingRow({
 
   if (!onPress) {
     return (
-      <View className="w-full flex-row items-center gap-gap py-setting" testID={testID}>
+      <View
+        className="w-full flex-row items-center gap-gap py-setting"
+        style={{ minHeight: layout.minTouchTarget }}
+        testID={testID}
+      >
         {content}
       </View>
     );
@@ -415,6 +419,7 @@ function SettingRow({
       accessibilityRole="button"
       className="w-full flex-row items-center gap-gap py-setting"
       onPress={onPress}
+      style={{ minHeight: layout.minTouchTarget }}
       testID={testID}
     >
       {content}
