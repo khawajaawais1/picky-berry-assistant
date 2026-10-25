@@ -1,4 +1,4 @@
-import { Feather, MaterialIcons } from '@expo/vector-icons';
+import { Feather, MaterialIcons } from '@/components/atoms/app-icon';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 
 import zoneSeason from '@/assets/images/zone-season.jpg';

@@ -1,4 +1,4 @@
-import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Feather, MaterialCommunityIcons } from '@/components/atoms/app-icon';
 import type { ReactNode } from 'react';
 import { Image, View } from 'react-native';
 

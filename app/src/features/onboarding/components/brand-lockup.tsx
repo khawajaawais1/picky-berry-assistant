@@ -1,4 +1,4 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@/components/atoms/app-icon';
 import { StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/atoms';

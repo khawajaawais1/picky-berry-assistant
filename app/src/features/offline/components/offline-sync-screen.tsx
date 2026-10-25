@@ -1,4 +1,4 @@
-import { Feather } from '@expo/vector-icons';
+import { Feather } from '@/components/atoms/app-icon';
 import { useNetworkState } from 'expo-network';
 import { View } from 'react-native';
 
