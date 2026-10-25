@@ -153,6 +153,16 @@ describe('OnboardingLocationConsentScreen', () => {
     expect(onContinue).not.toHaveBeenCalled();
   });
 
+  it('records a consent given by pressing the sentence', async () => {
+    await render(<OnboardingLocationConsentScreen />);
+
+    // The sentence is part of the control, not a label beside it (frontend review, 2026-10-25).
+    await fireEvent.press(screen.getByText(CONSENT));
+
+    await waitFor(() => expect(screen.getByTestId('location-consent-action')).not.toBeDisabled());
+    await expect(readPrivacyConsent()).resolves.toMatchObject({ visitTracking: true });
+  });
+
   it('records the decision, and reports it once the user has consented to visit tracking', async () => {
     const onContinue = jest.fn();
     await render(<OnboardingLocationConsentScreen onContinue={onContinue} />);

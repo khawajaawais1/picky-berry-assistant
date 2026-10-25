@@ -156,6 +156,14 @@ describe('OnboardingCreateAccountScreen', () => {
     expect(screen.getByRole('checkbox', { name: CONSENT })).not.toBeChecked();
   });
 
+  it('toggles consent from its sentence, not only from the glyph', async () => {
+    await render(<OnboardingCreateAccountScreen />);
+
+    await fireEvent.press(screen.getByText(CONSENT));
+
+    expect(screen.getByRole('checkbox', { name: CONSENT })).toBeChecked();
+  });
+
   it('will not submit an incomplete form', async () => {
     const onSubmit = jest.fn(async () => true);
     await render(<OnboardingCreateAccountScreen onSubmit={onSubmit} />);
@@ -236,6 +244,9 @@ describe('OnboardingCreateAccountScreen', () => {
 
     expect(onReadTerms).toHaveBeenCalledTimes(1);
     expect(onSignIn).toHaveBeenCalledTimes(1);
+    // The link sits under the checkbox row, outside its target: reading the terms is not
+    // consenting to them.
+    expect(screen.getByRole('checkbox', { name: CONSENT })).not.toBeChecked();
 
     await rerender(<OnboardingCreateAccountScreen />);
     expect(screen.queryByRole('button', { name: 'Read terms & privacy' })).not.toBeOnTheScreen();

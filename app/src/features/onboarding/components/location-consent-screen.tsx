@@ -108,16 +108,12 @@ export function OnboardingLocationConsentScreen({
           />
         </View>
 
-        <View className="w-full flex-row gap-gap">
-          <AppCheckbox
-            accessibilityLabel={consentCopy}
-            checked={visitTracking}
-            onChange={(next) => void record(next)}
-          />
-          <View className="flex-1">
-            <AppText variant="bodySmall">{consentCopy}</AppText>
-          </View>
-        </View>
+        <AppCheckbox
+          accessibilityLabel={consentCopy}
+          checked={visitTracking}
+          label={consentCopy}
+          onChange={(next) => void record(next)}
+        />
 
         <AppText tone="success" variant="caption">
           {t('onboarding.location.reassurance')}

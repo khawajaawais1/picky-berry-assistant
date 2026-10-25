@@ -170,21 +170,18 @@ export function OnboardingCreateAccountScreen({
           </AppText>
         </View>
 
-        <View className="w-full flex-row gap-gap">
-          <AppCheckbox
-            accessibilityLabel={consent}
-            checked={form.consent}
-            onChange={(agreed) => setForm((current) => ({ ...current, consent: agreed }))}
+        <AppCheckbox
+          accessibilityLabel={consent}
+          checked={form.consent}
+          label={consent}
+          onChange={(agreed) => setForm((current) => ({ ...current, consent: agreed }))}
+        >
+          <TextAction
+            label={t('onboarding.createAccount.readTerms')}
+            onPress={onReadTerms}
+            variant="caption"
           />
-          <View className="flex-1 gap-tight">
-            <AppText variant="bodySmall">{consent}</AppText>
-            <TextAction
-              label={t('onboarding.createAccount.readTerms')}
-              onPress={onReadTerms}
-              variant="caption"
-            />
-          </View>
-        </View>
+        </AppCheckbox>
 
         <AppButton
           busy={submitting}
