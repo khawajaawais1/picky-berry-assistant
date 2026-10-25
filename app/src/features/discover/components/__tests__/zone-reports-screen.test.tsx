@@ -89,7 +89,7 @@ describe('ZoneReportsScreen', () => {
     // frame's own order of facts, and the rating is the report's own answer on the design's 1–5
     // scale — not a score the app invented.
     expect(row.getByText('Lingonberry')).toBeOnTheScreen();
-    expect(row.getByText('28 Aug · 52 min · Yield 4 / 5 · 1.3 kg')).toBeOnTheScreen();
+    expect(row.getByText('28 Aug · 52 min · Rating 4 / 5 · 1.3 kg')).toBeOnTheScreen();
     expect(row.getByText('Queued')).toBeOnTheScreen();
   });
 
@@ -98,7 +98,7 @@ describe('ZoneReportsScreen', () => {
 
     await render(<ZoneReportsScreen />);
 
-    expect(await screen.findByText('28 Aug · 52 min · Yield 4 / 5')).toBeOnTheScreen();
+    expect(await screen.findByText('28 Aug · 52 min · Rating 4 / 5')).toBeOnTheScreen();
   });
 
   it('prints a species the catalogue has no word for as the identifier it is', async () => {

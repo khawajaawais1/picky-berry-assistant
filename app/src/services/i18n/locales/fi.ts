@@ -228,7 +228,8 @@ export const fi: Record<TranslationKey, string> = {
   'discover.details.reports.seeAll.a11y':
     'Näytä kaikki {count} raporttia · avaa tähän puhelimeen tallennetut raportit',
   'discover.details.reports.quote': '“Reitillä runsaasti kypsiä terttuja.”',
-  'discover.details.reports.meta': '{trust} havainto · {minutes} min sitten · Sato {yield} / {max}',
+  'discover.details.reports.meta':
+    '{trust} havainto · {minutes} min sitten · Arvosana {yield} / {max}',
   // Kept to one line: the frame gives this note a single line (342x17), and the first wording
   // (”…lähihavaintojen yhtäpitävyys.”) ran to two — the layout harness caught it.
   'discover.details.reports.scoring':
@@ -251,8 +252,8 @@ export const fi: Record<TranslationKey, string> = {
     'Suunnittelun malliviikkoon kuuluu {count} raporttia lähialueen poimijoilta. Sovellus näyttää vain tähän puhelimeen tallennetut:',
   'discover.zoneReports.held.one': '1 raportti tässä puhelimessa',
   'discover.zoneReports.held.many': '{count} raporttia tässä puhelimessa',
-  'discover.zoneReports.row.meta': '{date} · {minutes} min · Sato {yield} / {max} · {amount}',
-  'discover.zoneReports.row.metaNoAmount': '{date} · {minutes} min · Sato {yield} / {max}',
+  'discover.zoneReports.row.meta': '{date} · {minutes} min · Arvosana {yield} / {max} · {amount}',
+  'discover.zoneReports.row.metaNoAmount': '{date} · {minutes} min · Arvosana {yield} / {max}',
   'discover.zoneReports.empty':
     'Tälle alueelle ei ole vielä tallennettu raporttia tässä puhelimessa.',
   'discover.zoneReports.missing':
@@ -412,8 +413,8 @@ export const fi: Record<TranslationKey, string> = {
   'offline.waiting.one': 'Odottaa synkronointia · {count} raportti',
   'offline.waiting.many': 'Odottaa synkronointia · {count} raporttia',
   'offline.row.title': 'Alue {zone} · {species}',
-  'offline.row.meta': '{date} · {minutes} min · Sato {yield} / {max} · {amount}',
-  'offline.row.metaNoAmount': '{date} · {minutes} min · Sato {yield} / {max}',
+  'offline.row.meta': '{date} · {minutes} min · Arvosana {yield} / {max} · {amount}',
+  'offline.row.metaNoAmount': '{date} · {minutes} min · Arvosana {yield} / {max}',
   'offline.row.chip': 'Jonossa · käynti ja raportti',
   'offline.note':
     'Tallennettu tähän puhelimeen. Mitään ei ole lähetetty — synkronointi tulee palvelimen myötä.',

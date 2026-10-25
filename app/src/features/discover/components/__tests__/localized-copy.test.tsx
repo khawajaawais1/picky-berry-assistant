@@ -139,7 +139,9 @@ describe('the zone details screen on a Finnish device', () => {
     expect(screen.getByText('Tämän päivän näkymät')).toBeOnTheScreen();
     expect(screen.getByText('18°C · Heikko tuuli · Ennuste klo 08:00')).toBeOnTheScreen();
     expect(screen.getByText('Tuoreet havainnot')).toBeOnTheScreen();
-    expect(screen.getByText('Luotettu havainto · 38 min sitten · Sato 4 / 5')).toBeOnTheScreen();
+    expect(
+      screen.getByText('Luotettu havainto · 38 min sitten · Arvosana 4 / 5'),
+    ).toBeOnTheScreen();
     // The action that opens screen 08 names the same walk in Finnish notation.
     expect(screen.getByText('Reitille · 1,4 km')).toBeOnTheScreen();
     // …and the species row (frame 07's node `5:23047`) says what is found in the zone, in

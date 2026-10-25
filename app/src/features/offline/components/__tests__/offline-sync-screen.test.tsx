@@ -62,7 +62,7 @@ describe('OfflineSyncScreen', () => {
 
     expect(await screen.findByText('Waiting to sync · 1 report')).toBeOnTheScreen();
     expect(screen.getByText('Zone 14 · Lingonberry')).toBeOnTheScreen();
-    expect(screen.getByText('28 Aug · 52 min · Yield 4 / 5 · 1.3 kg')).toBeOnTheScreen();
+    expect(screen.getByText('28 Aug · 52 min · Rating 4 / 5 · 1.3 kg')).toBeOnTheScreen();
     expect(screen.getByText('Queued · visit + report')).toBeOnTheScreen();
 
     expect(screen.queryByText('Nothing is waiting to sync.')).not.toBeOnTheScreen();
@@ -83,7 +83,7 @@ describe('OfflineSyncScreen', () => {
 
     await render(<OfflineSyncScreen />);
 
-    expect(await screen.findByText('28 Aug · 52 min · Yield 4 / 5')).toBeOnTheScreen();
+    expect(await screen.findByText('28 Aug · 52 min · Rating 4 / 5')).toBeOnTheScreen();
   });
 
   it('says the reports are on the phone and that nothing has been sent', async () => {

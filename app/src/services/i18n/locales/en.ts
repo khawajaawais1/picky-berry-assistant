@@ -277,7 +277,7 @@ export const en = {
   'discover.details.reports.seeAll.a11y':
     'See all {count} reports · opens the reports saved on this phone',
   'discover.details.reports.quote': '“Plenty of ripe clusters near the trail.”',
-  'discover.details.reports.meta': '{trust} report · {minutes} min ago · {yield} / {max} yield',
+  'discover.details.reports.meta': '{trust} report · {minutes} min ago · {yield} / {max} rating',
   'discover.details.reports.scoring': 'Scores weight freshness, trust and nearby agreement.',
   'discover.details.reports.trust.trusted': 'Trusted',
   'discover.details.reports.trust.unverified': 'Unverified',
@@ -303,8 +303,8 @@ export const en = {
   // A report's own line, in the frame's own order of facts: its day, its length, the rating the
   // picker gave on the design's 1–5 scale, and the harvest they typed. A report saved without a
   // harvest uses `metaNoAmount` rather than printing a zero nobody recorded.
-  'discover.zoneReports.row.meta': '{date} · {minutes} min · Yield {yield} / {max} · {amount}',
-  'discover.zoneReports.row.metaNoAmount': '{date} · {minutes} min · Yield {yield} / {max}',
+  'discover.zoneReports.row.meta': '{date} · {minutes} min · Rating {yield} / {max} · {amount}',
+  'discover.zoneReports.row.metaNoAmount': '{date} · {minutes} min · Rating {yield} / {max}',
   'discover.zoneReports.empty': 'No report for this zone is saved on this phone yet.',
   // The design's eleven include other pickers' reports, and nothing returns one: the screen names
   // the service that would rather than standing the sample in for it.
@@ -515,8 +515,8 @@ export const en = {
   // The frame's own line (“28 Aug · 52 min · Yield 4 / 5 · 1.3 kg”), with the values the picker's
   // own report supplies: its rating is the design's 1–5 scale, and its harvest is what they typed.
   // A report with no harvest uses `metaNoAmount` rather than printing a zero nobody recorded.
-  'offline.row.meta': '{date} · {minutes} min · Yield {yield} / {max} · {amount}',
-  'offline.row.metaNoAmount': '{date} · {minutes} min · Yield {yield} / {max}',
+  'offline.row.meta': '{date} · {minutes} min · Rating {yield} / {max} · {amount}',
+  'offline.row.metaNoAmount': '{date} · {minutes} min · Rating {yield} / {max}',
   'offline.row.chip': 'Queued · visit + report',
   // The frame's own line here promises a retry (“Your report is safe and will retry
   // automatically”), and there is no transport to retry over yet (ADR-005). What is true is said
