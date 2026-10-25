@@ -219,7 +219,9 @@ CI carries the supply-chain controls:
 - **A pull request may not add a known-vulnerable dependency.** `dependency-review.yml`
   compares the dependency diff against the repository's dependency graph and fails on a
   new high or critical advisory; moderate stays a review item. It judges the change, not
-  the advisories already recorded in §17.
+  the advisories already recorded in §17. The graph is a repository setting an admin
+  controls: while it is off the job records a warning in its summary instead of blocking,
+  and it starts enforcing as soon as the setting is enabled.
 - **Code scanning** runs CodeQL over the TypeScript in `app/` and the Python in `data/`,
   on every pull request, every push to `main`, and weekly (the queries change too).
   Findings appear in the Security tab; a new language adds a matrix entry.

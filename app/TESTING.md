@@ -178,7 +178,9 @@ beside the app gate rather than behind it, so a red test does not hide a key (SE
 Three more workflows judge the change rather than the app: `dependency-review.yml` fails a
 pull request that adds a high-severity advisory, `codeql.yml` scans the app's TypeScript and
 the pipelines' Python on pull requests, `main` and weekly, and `actionlint.yml` lints the
-workflow YAML itself (actionlint 1.7.12, pinned by version and SHA-256). Dependabot is not a
+workflow YAML itself (actionlint 1.7.12, pinned by version and SHA-256). Dependency review
+needs the repository's dependency graph, an admin setting; while it is off the job records
+a warning rather than failing every pull request, and it enforces as soon as the graph is on. Dependabot is not a
 check: it opens grouped minor/patch updates weekly for npm, pip and the actions, so the gate
 above gets a regular chance to disagree. Device E2E is still not part of CI:
 when Maestro is added it will run on a build artifact rather than on every pull request.

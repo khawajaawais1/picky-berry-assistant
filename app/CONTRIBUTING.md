@@ -174,7 +174,8 @@ bundle exports (iOS + Android), for changes under `app/**` (or to the workflow) 
 every pull request. A separate workflow, `.github/workflows/secrets.yml`, runs gitleaks over the
 history on every pull request and push to `main` with no path filter, so a secret committed
 anywhere in the repository fails the build. `dependency-review.yml` fails a pull request that
-adds a high-severity advisory, `codeql.yml` scans TypeScript and Python on pull requests,
+adds a high-severity advisory (once the repository's dependency graph is enabled; until then
+it warns), `codeql.yml` scans TypeScript and Python on pull requests,
 `main` and weekly, and `actionlint.yml` lints the workflow YAML when it changes. Dependabot
 opens the grouped weekly dependency updates these checks then test. All of them only verify —
 none deploys or publishes. Fix red builds; do not skip or weaken the gate.
