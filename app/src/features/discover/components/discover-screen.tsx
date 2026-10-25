@@ -3,7 +3,7 @@ import { useDeferredValue, useMemo, useState } from 'react';
 import { View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
-import { StatusMessage } from '@/components/molecules';
+import { StatusMessage, TextAction } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { formatLongDate, interpolate, useTranslation } from '@/services/i18n';
@@ -103,7 +103,7 @@ export function DiscoverScreen({
   // the lit one clears it, which falls back to the pilot's berry rather than to “all berries”
   // — a single zone carries one score per berry, not one for a set of them.
   const scoreSpecies = species[0] ?? PILOT_ZONE_SPECIES;
-  const { status, updatedAt, zones } = useZones(zoneSource, scoreSpecies);
+  const { retry, status, updatedAt, zones } = useZones(zoneSource, scoreSpecies);
 
   // The field's own value is the picker's, immediately: a controlled input that lags is a
   // broken input. The **filter** is allowed to follow on a lower-priority render, because it
@@ -166,7 +166,7 @@ export function DiscoverScreen({
         {view === 'map' ? (
           <>
             <View className="w-full gap-tight">
-              <ZoneMap status={status} zones={matches} />
+              <ZoneMap onRetry={retry} status={status} zones={matches} />
               {updatedAt && matches.length > 0 ? (
                 <AppText testID="discover-updated" tone="muted" variant="metadata">
                   {interpolate(t('discover.map.updated'), {
@@ -190,6 +190,13 @@ export function DiscoverScreen({
               <StatusMessage testID="zone-list-status" tone="muted" variant="bodySmall">
                 {listStatus}
               </StatusMessage>
+            ) : null}
+            {status === 'error' ? (
+              <TextAction
+                label={t('discover.map.retry')}
+                onPress={retry}
+                testID="zone-list-retry"
+              />
             ) : null}
             <ZoneList species={scoreSpecies} zones={matches} />
           </>

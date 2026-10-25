@@ -82,6 +82,14 @@ async function renderScreen(props: DiscoverScreenProps = {}) {
   });
 }
 
+/** A source that fails once and answers the next read, which is what a retry is for. */
+function flakySource(): ZoneSource & { list: jest.Mock } {
+  const source = sourceOf(ZONES);
+  source.list.mockRejectedValueOnce(new Error('no docs'));
+
+  return source;
+}
+
 async function openList() {
   await fireEvent.press(screen.getByRole('button', { name: 'Show zone list' }));
 }
@@ -284,6 +292,37 @@ describe('DiscoverScreen', () => {
     expect(await screen.findByTestId('zone-list-status')).toHaveTextContent(
       'Zones could not be read',
     );
+  });
+
+  it('retries a failed read from the map', async () => {
+    const flaky = flakySource();
+
+    await render(<DiscoverScreen zoneSource={flaky} />, { wrapper: QueryProvider });
+
+    expect(await screen.findByTestId('zone-map-status')).toHaveTextContent(
+      'Zones could not be read',
+    );
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
+
+    expect(await screen.findByText('3 zones · test data')).toBeOnTheScreen();
+    expect(flaky.list).toHaveBeenCalledTimes(2);
+  });
+
+  it('retries a failed read from the list too', async () => {
+    const flaky = flakySource();
+
+    await render(<DiscoverScreen zoneSource={flaky} />, { wrapper: QueryProvider });
+    await openList();
+
+    expect(await screen.findByTestId('zone-list-status')).toHaveTextContent(
+      'Zones could not be read',
+    );
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
+
+    expect(await screen.findByTestId('zone-list-row-a')).toBeOnTheScreen();
+    expect(flaky.list).toHaveBeenCalledTimes(2);
   });
 
   it('opens the zone the card is reading, under the berry whose score it prints', async () => {

@@ -188,6 +188,16 @@ const LEDGER: readonly LedgerEntry[] = [
     why: 'Frame 06’s card hands its zone and score layer to frame 07; it is a control only where the route supplies that destination, and without a handler it returns the drawing, with no role and no chevron.',
   },
   {
+    file: 'src/features/discover/components/discover-screen.tsx',
+    offers: { textAction: 1 },
+    why: 'The list view’s retry after a failed read, wired to the same `useZones` refetch the map offers; every other control on the screen is a shared component with its own entry (frontend review, 2026-10-25).',
+  },
+  {
+    file: 'src/features/discover/components/zone-map.tsx',
+    offers: { textAction: 1 },
+    why: 'The map’s retry after a failed read: it is drawn only when the screen supplies the read again, and the map stays a drawing without one (frontend review, 2026-10-25).',
+  },
+  {
     file: 'src/features/discover/components/zone-details-screen.tsx',
     offers: { button: 1, pressable: 2, role: 2 },
     why: 'Navigate and Save zone act on this device, the bookmark waits while the record is read, and “See all 11” opens the zone’s own report list (ADR-044).',

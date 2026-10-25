@@ -234,18 +234,35 @@ describe('useZones', () => {
     });
   });
 
-  it('keeps what it read on the device, so the next launch can open with it', async () => {
-    const source = sourceThat(async () => [zone('stored', 61)]);
+  it('offers a retry that reads the source again after a failure', async () => {
+    // The map's error line used to have no action; the documented “press the chip again” did not
+    // refetch the berry already on screen (frontend review, 2026-10-25).
+    let attempts = 0;
+    const source: ZoneSource = {
+      list: async () => {
+        attempts += 1;
+
+        if (attempts === 1) {
+          throw new Error('no signal');
+        }
+
+        return [zone('retried', 74)];
+      },
+    };
 
     const { result } = await renderHook(() => useZones(source, 'bilberry'), {
-      wrapper: CachedProvider,
+      wrapper: QueryProvider,
+    });
+
+    await waitFor(() => expect(result.current.status).toBe('error'));
+
+    await act(async () => {
+      result.current.retry();
     });
 
     await waitFor(() => expect(result.current.status).toBe('ready'));
-    await waitFor(async () => {
-      const restored = await zonesQueryCachePersistence.persister.restoreClient();
-      expect(restored?.clientState.queries[0]?.state.data).toEqual([zone('stored', 61)]);
-    });
+    expect(result.current.zones.map(({ id }) => id)).toEqual(['retried']);
+    expect(attempts).toBe(2);
   });
 });
 

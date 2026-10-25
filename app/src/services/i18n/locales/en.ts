@@ -151,6 +151,9 @@ export const en = {
   'discover.map.loading': 'Loading zones…',
   'discover.map.unavailable': 'Zones could not be read',
   'discover.map.empty': 'No zones to show',
+  // The retry the error line owes the picker: waiting is not the only option when the source
+  // failed once (frontend review, 2026-10-25).
+  'discover.map.retry': 'Try again',
   // Expo Go has no MapLibre native binary (ADR-031). The map says so instead of letting the
   // package's import-time native-module lookup take the app down; the rest of the screen — the
   // card, the list and the filters — still reads the same zones.
