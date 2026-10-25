@@ -1,6 +1,7 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-import { useState, type ReactNode } from 'react';
+import * as Network from 'expo-network';
+import { useEffect, useState, type ReactNode } from 'react';
 
 import type { QueryCachePersistence } from './query-persister';
 
@@ -41,6 +42,9 @@ export function createQueryClient(): QueryClient {
     defaultOptions: {
       queries: {
         refetchOnWindowFocus: false,
+        // A read stays fresh for five minutes: a picker pressing back to the map, or a tab switch,
+        // should not re-read the zone service every time (frontend review, 2026-10-25).
+        staleTime: 5 * 60 * 1000,
       },
     },
   });
@@ -53,6 +57,18 @@ export function createQueryClient(): QueryClient {
  */
 export function QueryProvider({ children, persistOptions }: QueryProviderProps) {
   const [client] = useState(createQueryClient);
+
+  // TanStack Query treats the device as online until it is told otherwise; on a phone that means
+  // a failed read stays failed even after the signal returns. The listener is what lets
+  // `refetchOnReconnect` do its job in the forest (frontend review, 2026-10-25).
+  useEffect(() => {
+    const subscription = Network.addNetworkStateListener((state) => {
+      // The platform may not have an answer yet; only a definite “no connection” is offline.
+      onlineManager.setOnline(state.isConnected !== false);
+    });
+
+    return () => subscription.remove();
+  }, []);
 
   if (persistOptions) {
     return (

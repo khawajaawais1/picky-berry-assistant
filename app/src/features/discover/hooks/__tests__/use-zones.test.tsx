@@ -219,6 +219,13 @@ describe('useZones', () => {
     const { result } = await renderHook(() => useZones(source, 'bilberry'), {
       wrapper: CachedProvider,
     });
+    await waitFor(() => expect(result.current.status).toBe('ready'));
+
+    // A fresh answer is not re-read on mount any more (the cache keeps it for five minutes), so
+    // the refresh this test is about is asked for explicitly.
+    await act(async () => {
+      result.current.retry();
+    });
     await waitFor(() => expect(asked).toBe(1));
 
     await act(async () => reject(new Error('offline')));

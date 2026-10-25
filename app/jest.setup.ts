@@ -34,7 +34,10 @@ jest.mock('react-native-safe-area-context', () => {
 // not said”, which is what a screen must neither turn into a claim nor draw anything for; a test
 // that cares about the connection replaces this hook with its own answer (see
 // `features/offline/components/__tests__/offline-sync-screen.test.tsx`).
-jest.mock('expo-network', () => ({ useNetworkState: () => ({}) }));
+jest.mock('expo-network', () => ({
+  addNetworkStateListener: jest.fn(() => ({ remove: jest.fn() })),
+  useNetworkState: () => ({}),
+}));
 
 // AsyncStorage is a native module, so it is replaced by the in-memory mock the library
 // ships for tests. What is stored on a device is still a device concern; what the app does

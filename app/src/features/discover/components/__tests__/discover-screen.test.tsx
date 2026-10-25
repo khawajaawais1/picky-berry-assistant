@@ -255,9 +255,10 @@ describe('DiscoverScreen', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Lingonberry' }));
 
     // Pressing the lit chip clears it, and the screen falls back to the pilot's berry rather
-    // than inventing a combined score.
+    // than inventing a combined score. Its answer is still inside the cache's fresh window, so
+    // the screen reads it back instead of asking the source a third time.
     expect(await screen.findByText('53 / 100 yield')).toBeOnTheScreen();
-    expect(source.list).toHaveBeenLastCalledWith({ species: 'bilberry' });
+    expect(source.list).toHaveBeenCalledTimes(2);
   });
 
   it('leaves nothing when the chosen berry has no zones, and says why', async () => {
