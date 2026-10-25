@@ -142,25 +142,25 @@ a user has to their own data.
 Source: the bootstrap specification (deleted after review). Status legend: **planned** = not started,
 **partial** = exists in skeleton form only, **not implemented**.
 
-| #   | Capability                                              | Status          |
-| --- | ------------------------------------------------------- | --------------- |
-| 1   | Authentication and accounts                             | planned — **the first slice is specified** (2026-10-10): accounts as identity-provider subjects, one share record, one server-enforced access rule, all tested here (ADR-032, [docs/api-contract.md](docs/api-contract.md)). No backend, host, region or lawful basis yet (questions 3, 15, 16) |
-| 2   | Map and geographic zones                                | planned — the app-side contract (the payload, its validation, what the app may claim, staleness and offline) and the owner's calls (source, curation, geometry, licensing) are out as [to-questionnaire-zone-service.md](to-questionnaire-zone-service.md) (2026-10-10); the containment and visit rules they would run on are implemented and tested with no caller |
-| 3   | GPS visit detection (enter/leave zone → visit lifecycle) | **partial** — pure domain (containment + lifecycle) implemented and tested, and since 2026-10-12 the chain around it is real: position is readable through a port behind the picker's consent ([ADR-045](docs/adr/ADR-045-a-position-behind-a-port-and-nothing-kept.md): foreground only, nothing stored or logged), `presenceSamplesFor` joins a fix to the tracker, and `useVisitPresence` drives the tracker end to end ([ADR-046](docs/adr/ADR-046-the-tracker-gets-its-hook-and-the-zone-list-stays-out.md)), tested against scripted zones. The app still tracks nothing in the field — the hook ships no zone list (a scripted one would be invented geography), nothing returns real rings (known issue 14), and the map carries no geography (known issue 12) — so no watch runs in the app; persistence and UI not started |
-| 4   | Feedback capture, including photo/video evidence                | **partial** — the quick report's fields, its rating rule and the device queue; photo/video evidence is not started |
-| 5   | Yield / quality scoring                                  | planned         |
-| 6   | Trust scoring                                            | planned         |
-| 7   | Alerts and notifications (FCM)                           | planned         |
-| 8   | Analytics                                                | planned         |
-| 9   | Marketplace                                              | **partial** — the design's four frames (15–18) are built as a disclosed demo behind their own routes (ADR-026): a real search over the app's two demo listings, the listing with its seller, the sample thread and the demo order with its arithmetic. No listings service, seller account, chat transport or payment provider exists, so nothing is listed, sent, bought or held |
-| 10  | Rewards                                                  | planned         |
-| 11  | Safety features                                          | planned         |
-| 12  | Offline-first capture and synchronisation (v1 scope decided: capture only, no offline reads) | **partial** — reports are queued on the device (`src/services/report-queue.ts`) and listed back on screens 11 and 13; there is no transport, so nothing has ever been sent. Since 2026-10-24 the map's zones are the one read kept for offline use (`picky.zones-cache.v1`, `features/discover/services/zone-cache.ts`), which narrows decision 9's “no offline reads” to “no offline area or tile cache”; the team plan's §2.4 is the direction that made that read worth having |
-| 13  | Diagnostics (build/config visibility for developers)     | planned — initialization slice retired 2026-10-08 |
-| 14  | Design system primitives (atoms/molecules/templates)     | **partial** — tokens, four atoms, five molecules, the screen template |
-| 15  | Design screens (frames 01 and 03–18)                     | **partial** — every frame except 02 is built and rendered by a route; each frame's unbuilt parts need a service, a permission or an owner decision, and are recorded as decisions 15–23 (frames 15–18 as ADR-026); since 2026-10-12 each remaining part records what it waits on ([ADR-044](docs/adr/ADR-044-the-partial-frames-remaining-parts.md)) |
-| 15  | Localization (Finnish and English now, Swedish later)     | **partial** — the service, both catalogues and both built screens are localized and tested; the Finnish wording needs native review, and app metadata is not localized yet |
-| 16  | Shared spots with invited people (the design's “community map”) | planned — **recorded as a requirement candidate on 2026-10-10 at the owner's request**; needs a design frame, a server and the zone service before any code (open question 26). Two things exist without it being built: three throwaway readings behind `?variant=` on `/discover`, `/zone-details` and `/saved-spots` (`npm run prototype:community-map`, production-gated, deleted once the designer picks one), and the **access rule the server must enforce**, written and tested here (ADR-032) |
+| #   | Capability                                                                                   | Status                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| --- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Authentication and accounts                                                                  | planned — **the first slice is specified** (2026-10-10): accounts as identity-provider subjects, one share record, one server-enforced access rule, all tested here (ADR-032, [docs/api-contract.md](docs/api-contract.md)). No backend, host, region or lawful basis yet (questions 3, 15, 16)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 2   | Map and geographic zones                                                                     | planned — the app-side contract (the payload, its validation, what the app may claim, staleness and offline) and the owner's calls (source, curation, geometry, licensing) are out as [to-questionnaire-zone-service.md](to-questionnaire-zone-service.md) (2026-10-10); the containment and visit rules they would run on are implemented and tested with no caller                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 3   | GPS visit detection (enter/leave zone → visit lifecycle)                                     | **partial** — pure domain (containment + lifecycle) implemented and tested, and since 2026-10-12 the chain around it is real: position is readable through a port behind the picker's consent ([ADR-045](docs/adr/ADR-045-a-position-behind-a-port-and-nothing-kept.md): foreground only, nothing stored or logged), `presenceSamplesFor` joins a fix to the tracker, and `useVisitPresence` drives the tracker end to end ([ADR-046](docs/adr/ADR-046-the-tracker-gets-its-hook-and-the-zone-list-stays-out.md)), tested against scripted zones. The app still tracks nothing in the field — the hook ships no zone list (a scripted one would be invented geography), nothing returns real rings (known issue 14), and the map carries no geography (known issue 12) — so no watch runs in the app; persistence and UI not started |
+| 4   | Feedback capture, including photo/video evidence                                             | **partial** — the quick report's fields, its rating rule and the device queue; photo/video evidence is not started                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 5   | Yield / quality scoring                                                                      | planned                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 6   | Trust scoring                                                                                | planned                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 7   | Alerts and notifications (FCM)                                                               | planned                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 8   | Analytics                                                                                    | planned                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 9   | Marketplace                                                                                  | **partial** — the design's four frames (15–18) are built as a disclosed demo behind their own routes (ADR-026): a real search over the app's two demo listings, the listing with its seller, the sample thread and the demo order with its arithmetic. No listings service, seller account, chat transport or payment provider exists, so nothing is listed, sent, bought or held                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 10  | Rewards                                                                                      | planned                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 11  | Safety features                                                                              | planned                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 12  | Offline-first capture and synchronisation (v1 scope decided: capture only, no offline reads) | **partial** — reports are queued on the device (`src/services/report-queue.ts`) and listed back on screens 11 and 13; there is no transport, so nothing has ever been sent. Since 2026-10-24 the map's zones are the one read kept for offline use (`picky.zones-cache.v1`, `features/discover/services/zone-cache.ts`), which narrows decision 9's “no offline reads” to “no offline area or tile cache”; the team plan's §2.4 is the direction that made that read worth having                                                                                                                                                                                                                                                                                                                                                    |
+| 13  | Diagnostics (build/config visibility for developers)                                         | planned — initialization slice retired 2026-10-08                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 14  | Design system primitives (atoms/molecules/templates)                                         | **partial** — tokens, four atoms, five molecules, the screen template                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 15  | Design screens (frames 01 and 03–18)                                                         | **partial** — every frame except 02 is built and rendered by a route; each frame's unbuilt parts need a service, a permission or an owner decision, and are recorded as decisions 15–23 (frames 15–18 as ADR-026); since 2026-10-12 each remaining part records what it waits on ([ADR-044](docs/adr/ADR-044-the-partial-frames-remaining-parts.md))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 15  | Localization (Finnish and English now, Swedish later)                                        | **partial** — the service, both catalogues and both built screens are localized and tested; the Finnish wording needs native review, and app metadata is not localized yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 16  | Shared spots with invited people (the design's “community map”)                              | planned — **recorded as a requirement candidate on 2026-10-10 at the owner's request**; needs a design frame, a server and the zone service before any code (open question 26). Two things exist without it being built: three throwaway readings behind `?variant=` on `/discover`, `/zone-details` and `/saved-spots` (`npm run prototype:community-map`, production-gated, deleted once the designer picks one), and the **access rule the server must enforce**, written and tested here (ADR-032)                                                                                                                                                                                                                                                                                                                               |
 
 Future (unscoped, from the bootstrap specification): RDFLib/Berry ontology
 integration, YOLO-based image analysis, scikit-learn models, and any
@@ -244,21 +244,21 @@ review, and this is where a lint rule would go.
 
 Current, as implemented:
 
-| Area            | Choice                                                      |
-| --------------- | ----------------------------------------------------------- |
-| Mobile          | React Native 0.88.0 + Expo SDK 58.0.19, Expo Router 58       |
-| Language        | TypeScript 6.0.3, `strict`, path alias `@/*` → `src/*`       |
-| Runtime         | React 19.3.0, Hermes, new architecture                      |
-| Package manager | npm (lockfile committed at `app/package-lock.json`)         |
-| Tooling         | ESLint 9 flat config (`eslint-config-expo`), Prettier 3, `tsc --noEmit` |
-| Testing         | Jest 30 via `jest-expo` 58, React Native Testing Library 14  |
-| CI              | GitHub Actions — `../.github/workflows/mobile.yml`, path-filtered to `app/**`, with `working-directory: app` |
-| Backend         | The monorepo's sibling folder `../backend/` — one FastAPI modular monolith, PostgreSQL 17 + PostGIS + h3, S3/MinIO, FCM (Hassan); not serving the app yet |
-| Identity        | The account row is the API's; Firebase Authentication issues the credential (email + password; phone deferred). The API verifies ID tokens against Google's public keys (ADR-054) |
+| Area            | Choice                                                                                                                                                                                                                 |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mobile          | React Native 0.88.0 + Expo SDK 58.0.19, Expo Router 58                                                                                                                                                                 |
+| Language        | TypeScript 6.0.3, `strict`, path alias `@/*` → `src/*`                                                                                                                                                                 |
+| Runtime         | React 19.3.0, Hermes, new architecture                                                                                                                                                                                 |
+| Package manager | npm (lockfile committed at `app/package-lock.json`)                                                                                                                                                                    |
+| Tooling         | ESLint 9 flat config (`eslint-config-expo`), Prettier 3, `tsc --noEmit`                                                                                                                                                |
+| Testing         | Jest 30 via `jest-expo` 58, React Native Testing Library 14                                                                                                                                                            |
+| CI              | GitHub Actions — `../.github/workflows/mobile.yml`, path-filtered to `app/**`, with `working-directory: app`                                                                                                           |
+| Backend         | The monorepo's sibling folder `../backend/` — one FastAPI modular monolith, PostgreSQL 17 + PostGIS + h3, S3/MinIO, FCM (Hassan); not serving the app yet                                                              |
+| Identity        | The account row is the API's; Firebase Authentication issues the credential (email + password; phone deferred). The API verifies ID tokens against Google's public keys (ADR-054)                                      |
 | Design source   | Figma file “Picky” (`SFDhkQO0SDmWshHxpF6O7o`), reached through its remote MCP server via the project-scope `figma@claude-plugins-official` plugin (ADR-016). Inventory: [docs/design-source.md](docs/design-source.md) |
-| Localization    | Finnish + English, Swedish later, chosen by the OS per-app language setting. `expo-localization` 58.0.5 + typed catalogues in `src/services/i18n/` (ADR-017) |
-| Connectivity    | `expo-network` 58.0.4, read only to state the device's own network state (ADR-025); nothing about the connection is stored or sent |
-| Device data     | `AsyncStorage` values, versioned and read strictly: the consent record, the saved plan, the report queue and the map's zone cache (`picky.zones-cache.v1`); no database yet |
+| Localization    | Finnish + English, Swedish later, chosen by the OS per-app language setting. `expo-localization` 58.0.5 + typed catalogues in `src/services/i18n/` (ADR-017)                                                           |
+| Connectivity    | `expo-network` 58.0.4, read only to state the device's own network state (ADR-025); nothing about the connection is stored or sent                                                                                     |
+| Device data     | `AsyncStorage` values, versioned and read strictly: the consent record, the saved plan, the report queue and the map's zone cache (`picky.zones-cache.v1`); no database yet                                            |
 
 Backend technologies, as the team's architecture document fixes them: Python/FastAPI
 (one modular-monolith image), PostgreSQL 17 + PostGIS + h3, S3-compatible storage, RDFLib with
@@ -311,7 +311,7 @@ not. [ADR-051](docs/adr/ADR-051-the-team-mvp-plan-becomes-the-apps-target.md) re
 local database and the map are built behind them, and the Figma frames still decide what a screen
 looks like ([ADR-016](docs/adr/ADR-016-figma-mcp-design-source.md)). Three things the plan touches
 are still the owner's answers before the rest of it is built — the identity provider, the two
-meanings of *yield score*, and which of the built screens the MVP keeps (open questions 28–29);
+meanings of _yield score_, and which of the built screens the MVP keeps (open questions 28–29);
 the drawn map's retirement on screen 06 has since been answered (ADR-053). Where the plan and this
 repository disagree today is a table in the plan file, not a rewrite here.
 
@@ -322,18 +322,18 @@ Decisions and rationale: [docs/adr/](docs/adr/).
 
 Verified on 2026-10-25 in this repository:
 
-| Check                                        | Command                          | Result |
-| -------------------------------------------- | -------------------------------- | ------ |
-| Type checking                                | `npm run typecheck`              | pass   |
-| Linting                                      | `npm run lint`                   | pass (0 errors, 12 warnings in four files, 2026-10-24) |
-| Formatting                                   | `npm run format:check`           | pass   |
-| Unit/component tests                         | `npm test`                       | 120 suites, 1195 tests, pass (2026-10-25) |
-| Layout in both languages and both text sizes, plus the app shell (each route's destination, the swap between them, and no bar on onboarding), the built consent controls' states, the chip rows' `aria-checked`, **the accessibility tree of every route the app has (25 today) and of the state each press in the journeys leaves behind** (role, accessible name and declared state on every control, and the walk's own probe), the discover flow's destinations, the walk-through to the queued report listed back, the sign-up → account row → saved plan → account surface → notice → the copy → sign-out journey, **a screen read while its own action is in flight** (screen 10's save, with the app's storage given a device's timing), and — against a second `EXPO_PUBLIC_APP_ENV=production` export — that a shipped build accepts no credential, mounts no prototype on every route either prototype's readings borrow, and redirects the development-only field-test route | `npm run test:layout` | 211 checks in the development export and 4 in the production one, pass (2026-10-24) |
-| Expo dependency/config health                | `npm run doctor`                 | 20/20 checks pass (2026-10-24, after the SDK 58 upgrade: `expo` 58.0.19, React Native 0.88.0, React 19.3.0 and Expo Router 58.0.26) |
-| Production bundle builds                     | `npx expo export --platform ios` | pass (Hermes bundle, 5.8 MB, 2026-10-24) |
-| Android bundle builds                        | `npx expo export --platform android` | pass (Hermes bundle, 5.8 MB, 2026-10-24) |
-| Android demo APK                             | `npm run build:android:demo` (EAS) | built from this tree 2026-10-21 (see Deployment) |
-| Dev server + web render (browser, no console errors) | `npm start` + browser    | pass   |
+| Check                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Command                              | Result                                                                                                                              |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Type checking                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | `npm run typecheck`                  | pass                                                                                                                                |
+| Linting                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | `npm run lint`                       | pass (0 errors, 12 warnings in four files, 2026-10-24)                                                                              |
+| Formatting                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | `npm run format:check`               | pass                                                                                                                                |
+| Unit/component tests                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | `npm test`                           | 120 suites, 1195 tests, pass (2026-10-25)                                                                                           |
+| Layout in both languages and both text sizes, plus the app shell (each route's destination, the swap between them, and no bar on onboarding), the built consent controls' states, the chip rows' `aria-checked`, **the accessibility tree of every route the app has (25 today) and of the state each press in the journeys leaves behind** (role, accessible name and declared state on every control, and the walk's own probe), the discover flow's destinations, the walk-through to the queued report listed back, the sign-up → account row → saved plan → account surface → notice → the copy → sign-out journey, **a screen read while its own action is in flight** (screen 10's save, with the app's storage given a device's timing), and — against a second `EXPO_PUBLIC_APP_ENV=production` export — that a shipped build accepts no credential, mounts no prototype on every route either prototype's readings borrow, and redirects the development-only field-test route | `npm run test:layout`                | 211 checks in the development export and 4 in the production one, pass (2026-10-24)                                                 |
+| Expo dependency/config health                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | `npm run doctor`                     | 20/20 checks pass (2026-10-24, after the SDK 58 upgrade: `expo` 58.0.19, React Native 0.88.0, React 19.3.0 and Expo Router 58.0.26) |
+| Production bundle builds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | `npx expo export --platform ios`     | pass (Hermes bundle, 5.8 MB, 2026-10-24)                                                                                            |
+| Android bundle builds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `npx expo export --platform android` | pass (Hermes bundle, 5.8 MB, 2026-10-24)                                                                                            |
+| Android demo APK                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | `npm run build:android:demo` (EAS)   | built from this tree 2026-10-21 (see Deployment)                                                                                    |
+| Dev server + web render (browser, no console errors)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | `npm start` + browser                | pass                                                                                                                                |
 
 What exists:
 
@@ -401,7 +401,7 @@ recording any departure”):
   back to sign-in; the copy is the app’s, in Finnish and English. Being frame-less, it is held to
   “nothing is lost at 200 %” rather than to a frame’s line counts.
 - **No string claims a delivery, and the screen is not an account oracle.** The action says
-  “Request reset link”; the confirmation says the request was **accepted** and that *if* an
+  “Request reset link”; the confirmation says the request was **accepted** and that _if_ an
   account uses the address, the provider’s link is the next step. The stand-in sends nothing, so
   a non-production build adds a test-build note saying no email is sent, and a production build
   draws the action disabled. Every address gets the same words, and one failure line covers a
@@ -549,8 +549,8 @@ as “Make screen 07 read the zone source so screen 06's card can open a zone's 
 - **The demo week leaves the live card.** “11 reports this week” belongs to the design's sample
   and no source counts one; the demo path still prints it.
 - **The blocks with no source stay the design's sample and say so.** The outlook, freshest
-  report, walk and report list, and the frame's forecast disclaimer, are unchanged; one sentence   before them names the boundary. The no-id path — a bare URL alone since the saved plan reads
-   the source (ADR-060) — keeps the whole frame's sample, so nothing that worked stopped working.
+  report, walk and report list, and the frame's forecast disclaimer, are unchanged; one sentence before them names the boundary. The no-id path — a bare URL alone since the saved plan reads
+  the source (ADR-060) — keeps the whole frame's sample, so nothing that worked stopped working.
 - **What this leaves**: the saved plan's own move onto the source (done the next day,
   [ADR-060](docs/adr/ADR-060-the-saved-plan-reads-the-zone-source.md)); screen 08 and the report
   list are still the design's walk and week; and screen 06's list rows are still readings.
@@ -637,7 +637,7 @@ stay outside both”): the last instrument that could not see them, and one real
   (`label`, `title`, `eyebrow`, `placeholder`, `accessibilityLabel`). Comments, `report(…)` notes and
   interpolated strings are not copy, and only a parser tells them apart — measured: a plain text
   search over the three prototype files matches fifteen lines for this vocabulary, twelve of them the
-  word *background* inside a style property (`backgroundColor`, `colors.background`). The files are
+  word _background_ inside a style property (`backgroundColor`, `colors.background`). The files are
   found by walking `src` for a `prototype` folder, so a third prototype is scanned the day it exists.
 - **What it found, on its first run**: the sign-in reading A proposes the supporting line “We send
   six digits to your email or phone. No password to remember — and none to leak.” and the action
@@ -645,7 +645,7 @@ stay outside both”): the last instrument that could not see them, and one real
   rewrote because nothing in the app sends a code. A reading a designer may adopt was proposing
   exactly the claim the project had decided it cannot make, and no check could see it.
 - **Recorded, not reworded, and that is the decision this entry asks the owner to confirm.** The
-  readings are the design's own paper, the question reading A answers is the flow's *shape*, and the
+  readings are the design's own paper, the question reading A answers is the flow's _shape_, and the
   sign-in screen's wording is an open questionnaire's ([to-questionnaire-sign-in.md](to-questionnaire-sign-in.md)
   §1; §3 owns the words) — so this repository records the tension rather than inventing copy, the way
   the control audit recorded family 8 before the owner decided it. The guard is a **proposal ledger**:
@@ -667,12 +667,12 @@ last thin half, and the third state this reading has found that no settled readi
 
 - **Why nothing read it before, and why nothing could.** Every reading in the walk waits for the
   page to settle — that is what makes it a reading of a screen rather than of a load — and the frame
-  *inside* an action is exactly what settling waits out. Screen 10's “Save report offline” is the
+  _inside_ an action is exactly what settling waits out. Screen 10's “Save report offline” is the
   app's only action with a `busy` state, so it is the one frame where a screen reader is told
   something is unavailable **because it is working**, and the only place a person could read it was
   by hand.
 - **The harness gives the page the device's timing, and touches no product code.** On the web target
-  the app's storage is *not* asynchronous: `AsyncStorage`'s web implementation resolves its promise
+  the app's storage is _not_ asynchronous: `AsyncStorage`'s web implementation resolves its promise
   inside the task the press was handled in, so the busy frame lasted a microtask and never reached
   the DOM, while on a device it lasts as long as the write does. `e2e/platform-storage.ts` defers the
   reaction of the promises the app's storage layer creates — the same values in the same order, one
@@ -745,7 +745,7 @@ the choice in a test”): known issue 35, decided from measurement and closed wi
   map returned four labels — the two zone labels, the score badge, the position marker — that
   Chromium ignores, because a role-less `div` computes to `generic`, where ARIA forbids a name. So
   the container's own label reached nothing, the drawing was the exposed node, and the unnamed
-  images were the *same component* on three routes (`/discover`, `/route-to-zone`, `/active-visit`)
+  images were the _same component_ on three routes (`/discover`, `/route-to-zone`, `/active-visit`)
   — the only unnamed images in the app.
 - **The decision: content, not decoration.** The map is how Discover presents its zones, so it
   takes WCAG 1.1.1's text alternative rather than being hidden; the app already shipped the words
@@ -760,7 +760,7 @@ the choice in a test”): known issue 35, decided from measurement and closed wi
   named one and a hidden one must not), and the walk's planted-violation case on `/discover` now
   plants an unnamed drawing too, so the rule cannot quietly stop biting. It is the fourth rule the
   walk asks, beside role, name and state.
-- **One new known issue, from the same measurement**: the map's per-zone state *names* are ignored
+- **One new known issue, from the same measurement**: the map's per-zone state _names_ are ignored
   on the web target (known issue 36), because every fix for it is a design decision (a role on each
   label, the state as a visible word, or the pairing said in the map's own alternative) rather than
   a prop.
@@ -785,7 +785,7 @@ known issue 34, corrected in the primitive and closed at the guard.
   `disabled` still exposes its role, name and `disabled` state. One assertion was dropped after
   reading the RED output rather than worked around: `Pressable` normalises `accessibilityState` onto
   the host element whether or not one was passed, so “declares nothing” belongs in the role and name
-  assertions, and what a state reaches a *browser* as is the tree walk's reading.
+  assertions, and what a state reaches a _browser_ as is the tree walk's reading.
 - **The guard moved with it.** The ledger's entry for the file records no literal role any more (a
   change detector, as designed — it failed the moment the role stopped being a literal), its
   invariant now lists `AppButton` among the guarded primitives, and the comment says what a source
@@ -829,7 +829,7 @@ contract read systematically, over every screen the app has, instead of one scre
   must be reported, and a page whose controls are named, roled and stated must produce nothing — plus a
   planted violation inside the walk on a real screen. **What it cannot see is written down in the
   module**, so a later reader does not over-trust it: a state the app keeps in React state and declares
-  nowhere, whether a name is a *good* name, whether a screen that drew a reading should have drawn a
+  nowhere, whether a name is a _good_ name, whether a screen that drew a reading should have drawn a
   control, and an unnamed `img` (how this target renders the app's own SVG drawings) — not an
   actionable role, so not flagged here.
 - **Verified**: `npm run verify` green (format, `tsc --noEmit`, ESLint, **1053 tests in 106 suites**)
@@ -868,7 +868,7 @@ ledger is `src/config/__tests__/control-claims.test.ts`.
   the platform permission is asked there), and `AppButton` is the one primitive that claims a
   `button` role with no handler — a contract gap with no shipped site doing it today.
 - **One gap is named rather than closed**: the review-only prototype surfaces claim password,
-  biometric and recovery flows that exist nowhere, their copy is *literal* rather than catalogue
+  biometric and recovery flows that exist nowhere, their copy is _literal_ rather than catalogue
   keys, and neither the copy scan nor the layout harness reads them. They are gated out of a shipped
   build and the production export proves it, so the audit records the gap instead of inventing a
   guard for a surface nobody ships.
@@ -907,8 +907,8 @@ settings step the app never takes, and the action now names the map the press op
 - **A test's name was false too, and is corrected**: “will not continue to the system permission until
   the user has consented” claimed the screen asks the platform for something. It never has; it reads
   “will not continue until the user has consented”.
-- **Docs.** The ADR index and the decision table; the control audit's family 8 from *recorded — open* to
-  *fixed*; the copy audit's table with the new family; the design source's screen 05 with a fourth
+- **Docs.** The ADR index and the decision table; the control audit's family 8 from _recorded — open_ to
+  _fixed_; the copy audit's table with the new family; the design source's screen 05 with a fourth
   departure, the frame's label kept there as the drawn state; and known issue 33 closed.
 - **Verified**: `npm run verify` green (format, `tsc --noEmit`, ESLint, **107 suites, 1061 tests**) and
   `npm run test:layout` green — **204 checks** in the development export (screen 05's four measurements
@@ -928,7 +928,7 @@ and the copy audit.
   app's and that is the departure (§1.2); one screen for both journeys, because the **identifier** is
   what the copy follows (§2.1, §2.3); nothing on the screen says which journey the reader is on
   (§2.2); a title and a change action per identifier (§3.1, §3.2); the frame's foot card — which asks
-  whether the reader signed up by phone *instead* — on the email journey only (§3.3); the destination
+  whether the reader signed up by phone _instead_ — on the email journey only (§3.3); the destination
   printed as typed, which is what the line exists for (§3.4); and §4 deferred with the row it belongs
   to, since a failed resend cannot happen while nothing sends (§4.1, §4.2).
 - **What was built.** Two keys per language (`onboarding.verification.titlePhone` — “Verify your
@@ -947,7 +947,7 @@ and the copy audit.
 - **Where the frame keeps its authority.** Everything the drawn state contains is untouched: the two
   keys' words, the supporting line, the expiry note, the code field and the 54 px action. The 36 px
   symbol tile stays the frame's `mail-check` glyph on both states — swapping it is a drawing rather
-  than a wording, and there is no phone frame to take it from — recorded at ADR-049's *Anything else*
+  than a wording, and there is no phone frame to take it from — recorded at ADR-049's _Anything else_
   slot rather than invented.
 - **Measured like any other copy.** The layout harness gained `04b`, an entry reached by **walking
   screen 03's phone path** (the destination lives in the process, so it cannot be seeded into a URL) —
@@ -958,7 +958,7 @@ and the copy audit.
 - **The delivery claim stays closed.** Nothing in the new copy claims a send, an inbox or a code on
   its way: ADR-048 §2's sentences remain the per-branch wording, the resend row is still not drawn
   while no caller can send one, and the destination is still named.
-- **The audit's row 14 turns from *recorded and open* into *fixed*** — the frame's title and change
+- **The audit's row 14 turns from _recorded and open_ into _fixed_** — the frame's title and change
   action are now drawn only where they are true — with the standing check's two ledger reasons
   updated to say so and the mirror direction (a number named where the account may hold an address)
   kept as the one **named gap**.
@@ -978,10 +978,10 @@ family, added to the standing scan with its two keys recorded and its originals 
 
 - **The claim.** Screen 04 prints the frame's **email** state for both identifier kinds: the title
   “Verify your email” and the only way back to the field, “Change email address”, while screen 03 and
-  the sign-in screen take an address *or* a number (ADR-034 §1.2) — so on a phone journey the number
+  the sign-in screen take an address _or_ a number (ADR-034 §1.2) — so on a phone journey the number
   stands where an address would and two strings name an address anyway. The pass of 2026-10-12 read
   those screens and could not catch it: its vocabulary was written for claims about what the app
-  *does* (a message sent, a capture, a sync), and this claim is about **which identifier the account
+  _does_ (a message sent, a capture, a sync), and this claim is about **which identifier the account
   has** (ADR-049 §Context).
 - **The scan covers it without the copy changing.** `identifier-is-an-address` in
   `src/config/__tests__/copy-claims.test.ts`: the pattern is anchored on the screen's words about the
@@ -1006,8 +1006,8 @@ three surfaces, and the one frame control that carried the same claim removed wi
 ([ADR-048](docs/adr/ADR-048-the-verification-copy-claims-no-delivery.md)).
 
 - **The rule, and what it changed.** Nothing in the app sends a code — no transport, no account
-  service, and the flow runs on the stand-in of ADR-027 — so the copy says what the step is *for*
-  and names the destination the code *belongs to*: screen 04's heading (“Check your inbox.” →
+  service, and the flow runs on the stand-in of ADR-027 — so the copy says what the step is _for_
+  and names the destination the code _belongs to_: screen 04's heading (“Check your inbox.” →
   “Confirm it’s you.”), its supporting line (“the code we sent to {destination}” → “the code for
   {destination}”) and its phone note; the sign-in screen's supporting line (“We send six digits to
   your email or phone.” → “One identifier, then six digits.”) and its action (“Send me a code” →
@@ -1236,7 +1236,7 @@ Done — **the copy the app owed, the session's own hour, and the last half of f
   tiles and forecast, its storage meter, both actions and its last-sync line are on the screen —
   with the eyebrow's season-demo disclosure and a sentence above the block saying the figures are the
   design's own sample and that this phone has downloaded nothing. The figures live in one `DEMO_*`
-  module whose two descriptions of the region cannot disagree (the region's weight *is* the storage
+  module whose two descriptions of the region cannot disagree (the region's weight _is_ the storage
   it occupies, and the meter's fill is computed from the same two numbers), and neither action claims
   a role, because there is no transport to retry over and no region store to manage. The queue above
   them stays the picker's own record.
@@ -1480,7 +1480,7 @@ promises (“I can turn it off in Privacy settings”) — the part of frame 14
 (node 5:23613) that can be real today: its header, its “GPS trails are never public”
 status message and the “Background visit tracking” row that switches the same record off
 again. A consent is written when the user decides and never on a read; a write that fails
-is reported and the control falls back to what is *stored*, so a switch can never claim a
+is reported and the control falls back to what is _stored_, so a switch can never claim a
 consent that was not kept; and an unreadable or unknown value reads as no consent, never
 as a yes. The frame's own values became a token (`spacing.setting` 6, the padding of all
 six of its settings rows), and the whole flow was driven in the built web app rather than
@@ -1541,7 +1541,7 @@ about one place. **The card's chevron now exists, and only because the destinati
 card claims a button role, draws the frame's chevron and carries an accessible name saying where
 it leads only when the route gives it somewhere to go, and the feature still imports no router
 (the route supplies the navigation). **What the frame draws and still cannot act is not drawn**:
-its **species row** is now built, but as *what this zone is reported for* — data from the zone,
+its **species row** is now built, but as _what this zone is reported for_ — data from the zone,
 the first berry in the frame's accent fill, and no role on any chip, because a single zone's
 screen has nothing for a species to filter (the filter is screen 06's) — and “See all 11” is
 rendered as the design's words rather than as a control, so nothing announces an action it cannot
@@ -1756,7 +1756,7 @@ runs in the app**: nothing can use a fix yet, so the app reads nothing at all.
 - 2026-10-08 — Project initialization: structure, tooling, documentation, ADRs,
   CI, verified skeleton.
 - 2026-10-08 — All of the above committed as `feat: land the initialized Picky
-  mobile app` (78 files) plus a `docs:` follow-up, together with the design-token
+mobile app` (78 files) plus a `docs:` follow-up, together with the design-token
   alignment extracted from the Figma source (palette, spacing, radii, measured type
   metrics).
 - 2026-10-08 — Pushed to GitHub and **verified there**: the first Mobile CI run on
@@ -1779,7 +1779,7 @@ runs in the app**: nothing can use a fix yet, so the app reads nothing at all.
    marketplace screens — the screens that use it are what covers it, and it has no test of its own.
    `src/config/env.ts` keeps its direct tests and is read by the gates that need it
    (`appEnvironment()` decides whether the stand-in accepts a credential and whether a prototype mounts);
-   what has no screen is a *validation failure* — entry 2 below.
+   what has no screen is a _validation failure_ — entry 2 below.
 2. No `.env` is committed (correctly) and `src/config/env.ts` validates it when
    called, but nothing renders that state any more: the retired diagnostics card was
    the only screen that surfaced configuration problems.
@@ -1798,497 +1798,497 @@ runs in the app**: nothing can use a fix yet, so the app reads nothing at all.
    and no screen depends on it. Its rules are therefore verified by tests only, and
    the calendar-day split uses a device-local day ordinal that is approximate across
    daylight-saving transitions until open question 10 is answered.
-11. **Frame 14 is built almost to the end of what the app can be true about** (finished
-   2026-10-10). Drawn: the header; the **account row**, filled from the session the sign-up
-   produced rather than from the frame's example (ADR-029); the “Use Picky as” card with both
-   of the frame's chips as readings and the design's own note; the frame's **settings card**
-   with the **“Saved spots” row** in it — its label, the frame's subtitle counting the plan,
-   the count and the chevron — opening the list the design never drew (ADR-030); the status
-   message; the frame's own group of rows (**visit tracking while the app is open** — the frame's
-   “background visit tracking”, renamed to what the app does, ADR-047 — **offline maps &
-   sync**, **language**), drawn where the frame draws them: outside a card, at the content
-   column's full width and 5 px apart (node 5:23663), which is what the Finnish label needs;
-   and **sign out**, the frame's last control.   Its group of rows is complete since 2026-10-11:
-   **“Account & security”** and **“Terms & privacy”** are drawn where the frame draws them, each
-   opening the screen the design never drew ([ADR-039](docs/adr/ADR-039-frame-14s-two-remaining-rows-get-their-screens.md))
-   — the account surface, which states the session's own facts and names what is missing, and the
-   notice, which names every record the phone holds and how each one goes away. What is still not
-   drawn is the **“Default spot visibility”** block (Private/Shared/Public describe how *other
-   people* see a spot — invites, a community map, a sharing model the app does not have), so it
-   claims no role (AGENTS.md §11.2). The screen is reached the way the design reaches it — the
-   Profile destination of the app shell (ADR-022) — and what its account row and sign out still owe
-   is recorded in 27 and 29.
-10. The large-text measurement stops at 200 % (Android's maximum and WCAG 1.4.4's
-   requirement; ADR-019). iOS accessibility sizes go beyond it, and icon glyphs are not
-   measured at all: `react-native-web` ignores the props that control their scaling, so what
-   a glyph or the berry mark does at 200 % on a device is a check only a device can make —
-   the same gap ADR-018 records for platform fonts.
+10. **Frame 14 is built almost to the end of what the app can be true about** (finished
+    2026-10-10). Drawn: the header; the **account row**, filled from the session the sign-up
+    produced rather than from the frame's example (ADR-029); the “Use Picky as” card with both
+    of the frame's chips as readings and the design's own note; the frame's **settings card**
+    with the **“Saved spots” row** in it — its label, the frame's subtitle counting the plan,
+    the count and the chevron — opening the list the design never drew (ADR-030); the status
+    message; the frame's own group of rows (**visit tracking while the app is open** — the frame's
+    “background visit tracking”, renamed to what the app does, ADR-047 — **offline maps &
+    sync**, **language**), drawn where the frame draws them: outside a card, at the content
+    column's full width and 5 px apart (node 5:23663), which is what the Finnish label needs;
+    and **sign out**, the frame's last control. Its group of rows is complete since 2026-10-11:
+    **“Account & security”** and **“Terms & privacy”** are drawn where the frame draws them, each
+    opening the screen the design never drew ([ADR-039](docs/adr/ADR-039-frame-14s-two-remaining-rows-get-their-screens.md))
+    — the account surface, which states the session's own facts and names what is missing, and the
+    notice, which names every record the phone holds and how each one goes away. What is still not
+    drawn is the **“Default spot visibility”** block (Private/Shared/Public describe how _other
+    people_ see a spot — invites, a community map, a sharing model the app does not have), so it
+    claims no role (AGENTS.md §11.2). The screen is reached the way the design reaches it — the
+    Profile destination of the app shell (ADR-022) — and what its account row and sign out still owe
+    is recorded in 27 and 29.
+11. The large-text measurement stops at 200 % (Android's maximum and WCAG 1.4.4's
+    requirement; ADR-019). iOS accessibility sizes go beyond it, and icon glyphs are not
+    measured at all: `react-native-web` ignores the props that control their scaling, so what
+    a glyph or the berry mark does at 200 % on a device is a check only a device can make —
+    the same gap ADR-018 records for platform fonts.
 
 12. **The core navigation is built; what each destination would add is the part still open.**
-   Frames 06–14 all draw the same tab bar (Discover, Visits, Alerts, Profile) with one item
-   current, and since 2026-10-10 one app shell renders it over those nine screens, each mapped
-   to the route that exists (`src/app/(app)/_layout.tsx`, ADR-022). What the owner has not yet
-   answered is the shape inside it — one stack or four (open question 22). Screen 06 is now
-   complete apart from one control: its search field, its species chips (the frame's three plus
-   the pilot's crowberry), its map/list
-   toggle, the zone list behind it and its download glyph are built and really filter (the map
-   draws only the zones the two controls leave, the list holds the same ones, and a line says
-   how many are left). What is **not** built is its **recentre control**, because the map does
-   not pan or follow the device, so there is nothing to recentre — it arrives with the position
-   capture and the pannable map, not before (AGENTS.md §11.2). What that wording left out, and a
-   reading of the code on 2026-10-12 found: even with a position source and a map that pans, the
-   control has nowhere to recentre *to* — the drawing's paths are the frame's own 342×300
-   coordinates, not latitude and longitude (ADR-021), so a real fix has no honest place on it.
-   As of 2026-10-22 the map **has** geographic coordinates ([ADR-053](docs/adr/ADR-053-the-discover-map-is-real-geography.md)):
-   screen 06 renders the pilot stub's 50 rings with MapLibre React Native on the device and the
-   same rings as an SVG on the web export, through a `ZoneSource` port. The recentre control is
-   still not drawn, now because every map gesture is deliberately off until the control exists —
-   a map that can be dragged away from the pilot area with no way back is worse than one that
-   stays put. Three things remain open on this screen: no basemap (known issue 30), the card and
-   list still read `DEMO_ZONES` while the map reads the source (issue 14), and the two filters
-   narrow the card/list rather than the map.
+    Frames 06–14 all draw the same tab bar (Discover, Visits, Alerts, Profile) with one item
+    current, and since 2026-10-10 one app shell renders it over those nine screens, each mapped
+    to the route that exists (`src/app/(app)/_layout.tsx`, ADR-022). What the owner has not yet
+    answered is the shape inside it — one stack or four (open question 22). Screen 06 is now
+    complete apart from one control: its search field, its species chips (the frame's three plus
+    the pilot's crowberry), its map/list
+    toggle, the zone list behind it and its download glyph are built and really filter (the map
+    draws only the zones the two controls leave, the list holds the same ones, and a line says
+    how many are left). What is **not** built is its **recentre control**, because the map does
+    not pan or follow the device, so there is nothing to recentre — it arrives with the position
+    capture and the pannable map, not before (AGENTS.md §11.2). What that wording left out, and a
+    reading of the code on 2026-10-12 found: even with a position source and a map that pans, the
+    control has nowhere to recentre _to_ — the drawing's paths are the frame's own 342×300
+    coordinates, not latitude and longitude (ADR-021), so a real fix has no honest place on it.
+    As of 2026-10-22 the map **has** geographic coordinates ([ADR-053](docs/adr/ADR-053-the-discover-map-is-real-geography.md)):
+    screen 06 renders the pilot stub's 50 rings with MapLibre React Native on the device and the
+    same rings as an SVG on the web export, through a `ZoneSource` port. The recentre control is
+    still not drawn, now because every map gesture is deliberately off until the control exists —
+    a map that can be dragged away from the pilot area with no way back is worse than one that
+    stays put. Three things remain open on this screen: no basemap (known issue 30), the card and
+    list still read `DEMO_ZONES` while the map reads the source (issue 14), and the two filters
+    narrow the card/list rather than the map.
 
 13. **The map's five score bands reach a sighted user through colour, and the map prints no
-figure per zone.** The legend names the five ranges in words and says what the faded treatment
-means, but a colour-blind user cannot separate the bands by hue, and a sighted user cannot read a
-zone's exact score from the map at all — the list and the card carry the numbers. A score label
-on tap (and a second, non-colour signal) is the fix when the design draws one; the map carries a
-text alternative naming what it shows, not fifty accessible zone names.
+    figure per zone.** The legend names the five ranges in words and says what the faded treatment
+    means, but a colour-blind user cannot separate the bands by hue, and a sighted user cannot read a
+    zone's exact score from the map at all — the list and the card carry the numbers. A score label
+    on tap (and a second, non-colour signal) is the fix when the design draws one; the map carries a
+    text alternative naming what it shows, not fifty accessible zone names.
 
 14. **Screen 06 reads one zone source; screens 08–09 still read the sample.**
-   Since 2026-10-22 the 50 pilot zones arrive through `ZoneSource` from the data team's stub
-   (`data/test_zones.geojson`, copied into the app and kept equal by a test), and the map says
-   “test data” (ADR-053). Since 2026-10-23 the **card, the list and both filters read that same
-   answer** ([ADR-057](docs/adr/ADR-057-screen-06-reads-one-zone-source.md)): the field filters by
-   zone name, the species chips choose the score layer one berry at a time, and the card reads the
-   first zone left. Two consequences are recorded rather than hidden: the card's walking distance
-   and report age are gone (nothing supplies them), and — since 2026-10-24 — **the card opens
-   screen 07 again**, because that screen now reads the same source ([ADR-058](docs/adr/ADR-058-screen-07-reads-the-zone-source.md)).
-   Since 2026-10-24 the **saved plan reads the same answer** too
-   ([ADR-060](docs/adr/ADR-060-the-saved-plan-reads-the-zone-source.md)), so no surface of the
-   picker's own plan draws `DEMO_ZONES` any more. Screens 08–09 still read it. When a zone service
-   exists it replaces the adapter and the demo constant. What that service has to
-   return — and the calls about where polygons come from, who curates them, whether a smaller unit
-   is curated below a zone and what their geometry is authoritative about — are asked in
-   [to-questionnaire-zone-service.md](to-questionnaire-zone-service.md) (2026-10-10). What a
-   *shared* spot is (a name the sharer types onto a grant, or the zone the service already names)
-   is [to-questionnaire-community-map.md](to-questionnaire-community-map.md) §1.2 — the two
-   documents were divided along that seam on 2026-10-10 so neither asks it twice.
+    Since 2026-10-22 the 50 pilot zones arrive through `ZoneSource` from the data team's stub
+    (`data/test_zones.geojson`, copied into the app and kept equal by a test), and the map says
+    “test data” (ADR-053). Since 2026-10-23 the **card, the list and both filters read that same
+    answer** ([ADR-057](docs/adr/ADR-057-screen-06-reads-one-zone-source.md)): the field filters by
+    zone name, the species chips choose the score layer one berry at a time, and the card reads the
+    first zone left. Two consequences are recorded rather than hidden: the card's walking distance
+    and report age are gone (nothing supplies them), and — since 2026-10-24 — **the card opens
+    screen 07 again**, because that screen now reads the same source ([ADR-058](docs/adr/ADR-058-screen-07-reads-the-zone-source.md)).
+    Since 2026-10-24 the **saved plan reads the same answer** too
+    ([ADR-060](docs/adr/ADR-060-the-saved-plan-reads-the-zone-source.md)), so no surface of the
+    picker's own plan draws `DEMO_ZONES` any more. Screens 08–09 still read it. When a zone service
+    exists it replaces the adapter and the demo constant. What that service has to
+    return — and the calls about where polygons come from, who curates them, whether a smaller unit
+    is curated below a zone and what their geometry is authoritative about — are asked in
+    [to-questionnaire-zone-service.md](to-questionnaire-zone-service.md) (2026-10-10). What a
+    _shared_ spot is (a name the sharer types onto a grant, or the zone the service already names)
+    is [to-questionnaire-community-map.md](to-questionnaire-community-map.md) §1.2 — the two
+    documents were divided along that seam on 2026-10-10 so neither asks it twice.
 
 15. **Screen 07 (Zone details) reads the zone source, and keeps the design's sample where no
-   source exists.** Since 2026-10-24 ([ADR-058](docs/adr/ADR-058-screen-07-reads-the-zone-source.md))
-   the card frame 06 opens hands over a zone id and a berry, and the screen asks the same
-   `ZoneSource` for that answer: the zone's own name, its scored species (the read berry first),
-   its score, confidence and one of the map's four season words. The design's week of reports is
-   gone from that reading, because no source counts one. Under the yield card the screen prints
-   **the zone's own score timestamp** — the `updated_at` the map's line reads, in the same words,
-   omitted when the payload carries none — so the two screens state one age for one answer. The
-   **outlook, freshest report, walk and
-   report list** have no source at all and stay the design's sample, disclosed by one sentence
-   before them and the eyebrow's “SEASON DEMO”; `DEMO_ZONE_DETAILS` still supplies them, and the
-   frame's forecast disclaimer stays. Loading, a failed read and an id the source does not answer
-   to are three sentences — never the demo zone's figures. **Without a zone id** (a bare URL
-   alone since the saved plan reads the source — [ADR-060](docs/adr/ADR-060-the-saved-plan-reads-the-zone-source.md))
-   the whole screen is still the design's sample, as it was since 2026-10-10; that path is the last
-   demo on this screen, kept for a deep link the app cannot fill.
+    source exists.** Since 2026-10-24 ([ADR-058](docs/adr/ADR-058-screen-07-reads-the-zone-source.md))
+    the card frame 06 opens hands over a zone id and a berry, and the screen asks the same
+    `ZoneSource` for that answer: the zone's own name, its scored species (the read berry first),
+    its score, confidence and one of the map's four season words. The design's week of reports is
+    gone from that reading, because no source counts one. Under the yield card the screen prints
+    **the zone's own score timestamp** — the `updated_at` the map's line reads, in the same words,
+    omitted when the payload carries none — so the two screens state one age for one answer. The
+    **outlook, freshest report, walk and
+    report list** have no source at all and stay the design's sample, disclosed by one sentence
+    before them and the eyebrow's “SEASON DEMO”; `DEMO_ZONE_DETAILS` still supplies them, and the
+    frame's forecast disclaimer stays. Loading, a failed read and an id the source does not answer
+    to are three sentences — never the demo zone's figures. **Without a zone id** (a bare URL
+    alone since the saved plan reads the source — [ADR-060](docs/adr/ADR-060-the-saved-plan-reads-the-zone-source.md))
+    the whole screen is still the design's sample, as it was since 2026-10-10; that path is the last
+    demo on this screen, kept for a deep link the app cannot fill.
 
-   The season photograph and the frame's structure are unchanged.
-   Its **species row** (frame node `5:23047`) is built as data — on the source path the berries
-   the payload scored for that zone, the read berry first; on the sample path the demo zone's two
-   — so the frame's third chip (“More”) is not drawn, because the row is what grows here and a
-   species has nothing to narrow on a single zone's screen (the app's species are offered where
-   one is chosen: screen 10). **“Save zone”** is real since 2026-10-10: the frame's own bookmark
-   writes and removes the picker's plan on this device (ADR-024), and it says what its next press
-   does. **“Navigate · 1.4 km”** opens screen 08; and **“See all 11”** opens the zone's own report
-   list since 2026-10-12 — an app-drawn screen (`/zone-reports`) the design never drew, because the
-   frame's eleven are its own sample week and nothing returns another picker's report
-   ([ADR-044](docs/adr/ADR-044-the-partial-frames-remaining-parts.md)). The link stays the frame's own
-   words where no list is wired, and states — on the screen it opens — the difference between the
-   design's week and what this phone holds.
+The season photograph and the frame's structure are unchanged.
+Its **species row** (frame node `5:23047`) is built as data — on the source path the berries
+the payload scored for that zone, the read berry first; on the sample path the demo zone's two
+— so the frame's third chip (“More”) is not drawn, because the row is what grows here and a
+species has nothing to narrow on a single zone's screen (the app's species are offered where
+one is chosen: screen 10). **“Save zone”** is real since 2026-10-10: the frame's own bookmark
+writes and removes the picker's plan on this device (ADR-024), and it says what its next press
+does. **“Navigate · 1.4 km”** opens screen 08; and **“See all 11”** opens the zone's own report
+list since 2026-10-12 — an app-drawn screen (`/zone-reports`) the design never drew, because the
+frame's eleven are its own sample week and nothing returns another picker's report
+([ADR-044](docs/adr/ADR-044-the-partial-frames-remaining-parts.md)). The link stays the frame's own
+words where no list is wired, and states — on the screen it opens — the difference between the
+design's week and what this phone holds.
 
-   The plan's own surface exists since 2026-10-10: frame 14's “Saved spots” row opens the list
-   the design never drew — the record in the order it was made, each zone as the same row frame
-   06's list draws, opening that zone's screen (ADR-030). Since 2026-10-24 its rows resolve
-   against the zone source, so a saved zone shows the name and figures the map shows and opens
-   its details (ADR-060). What it does **not** have yet is an
-   export path (open question 23), and the lawful basis for storing the plan is owed with every
-   other field (open question 15). The figures themselves — the score, the week's report
-   count, the temperature, the report and its age — are invented: there is no zone service, no
-   weather source and no report stream, and the frame's demo is what the app repeats until there
-   is one.   A Finnish reviewer's reading of the new copy is due with the rest of the catalogue
-   (open question 13).
+The plan's own surface exists since 2026-10-10: frame 14's “Saved spots” row opens the list
+the design never drew — the record in the order it was made, each zone as the same row frame
+06's list draws, opening that zone's screen (ADR-030). Since 2026-10-24 its rows resolve
+against the zone source, so a saved zone shows the name and figures the map shows and opens
+its details (ADR-060). What it does **not** have yet is an
+export path (open question 23), and the lawful basis for storing the plan is owed with every
+other field (open question 15). The figures themselves — the score, the week's report
+count, the temperature, the report and its age — are invented: there is no zone service, no
+weather source and no report stream, and the frame's demo is what the app repeats until there
+is one. A Finnish reviewer's reading of the new copy is due with the rest of the catalogue
+(open question 13).
 
 16. **Screen 08 (Route to zone) is built in part.** Both of its actions are real now — “Start
-   walking” opens screen 09 and “Cancel route” goes back, and its **core navigation** is the app
-   shell (ADR-022) — but its figures are the design's sample, so the header carries the
-   “SEASON DEMO” disclosure frame 06's map carries (2026-10-10). Its **offline note** used to be
-   the frame's own claim about a tile cache this app does not have (“Laajavuori tiles and zone
-   boundaries are cached.”); since 2026-10-10 it says what the app can be true about instead — the
-   boundaries are drawn from data on the device, and the tile cache it does not have is named as
-   missing — and its glyph is informational rather than a download. Nothing computes the walk
-   either: `DEMO_ROUTE` (1.4 km, 22 minutes, a right turn in 180 m, arrival 10:03) is the frame's
-   own sample, tied by test to the zone frames 06, 07 and 09 tell their story about.
+    walking” opens screen 09 and “Cancel route” goes back, and its **core navigation** is the app
+    shell (ADR-022) — but its figures are the design's sample, so the header carries the
+    “SEASON DEMO” disclosure frame 06's map carries (2026-10-10). Its **offline note** used to be
+    the frame's own claim about a tile cache this app does not have (“Laajavuori tiles and zone
+    boundaries are cached.”); since 2026-10-10 it says what the app can be true about instead — the
+    boundaries are drawn from data on the device, and the tile cache it does not have is named as
+    missing — and its glyph is informational rather than a download. Nothing computes the walk
+    either: `DEMO_ROUTE` (1.4 km, 22 minutes, a right turn in 180 m, arrival 10:03) is the frame's
+    own sample, tied by test to the zone frames 06, 07 and 09 tell their story about.
 
 17. **Screen 09 (Active visit) is built in part.** What is real: the timer (it starts at the
-   frame's own 42:17 and counts up), the pause that holds it without counting the paused time, the
-   arrival time read back off the timer's own start instant, and “End visit” leading to the report.
-   What is the design's sample or absent: the visit itself is `DEMO_ACTIVE_VISIT` (there is no
-   position source and nothing detects an arrival — the frame's “Arrival detected automatically”
-   is the design's claim about a tracker this app does not have yet, and its arrival note's second
-   sentence says timing runs **while the app is open** where the frame promised the background
-   (ADR-047 §1)); the frame's **recentre control** is not
-   drawn (the map does not move, the app reads no position and the drawing carries no geographic
-   coordinates — ADR-021, and known issue 12 reads what that costs); and the species in the status label is the design's own
-   demo sentence, like the zone card's, while the header carries the same “SEASON DEMO” disclosure
-   frame 06's map makes (2026-10-10). A Finnish reviewer's reading of the new copy is due with
-   the rest of the catalogue (open question 13).
+    frame's own 42:17 and counts up), the pause that holds it without counting the paused time, the
+    arrival time read back off the timer's own start instant, and “End visit” leading to the report.
+    What is the design's sample or absent: the visit itself is `DEMO_ACTIVE_VISIT` (there is no
+    position source and nothing detects an arrival — the frame's “Arrival detected automatically”
+    is the design's claim about a tracker this app does not have yet, and its arrival note's second
+    sentence says timing runs **while the app is open** where the frame promised the background
+    (ADR-047 §1)); the frame's **recentre control** is not
+    drawn (the map does not move, the app reads no position and the drawing carries no geographic
+    coordinates — ADR-021, and known issue 12 reads what that costs); and the species in the status label is the design's own
+    demo sentence, like the zone card's, while the header carries the same “SEASON DEMO” disclosure
+    frame 06's map makes (2026-10-10). A Finnish reviewer's reading of the new copy is due with
+    the rest of the catalogue (open question 13).
 
 18. **Screen 10 (Post-visit feedback) is built in part.** The report is real — its fields, its
-   five-way rating, its validation and the write to the device — and since 2026-10-09 it is
-   **listed back** on screens 11 and 13, which is what makes the queue a record rather than a
-   promise. Its third species chip **“More”** is real since 2026-10-10: the design names three
-   berries in its own chips, and since 2026-10-22 the app's vocabulary carries the pilot's fourth
-   (crowberry), so the chip reveals the rest of the vocabulary instead of opening an index that
-   does not exist, and a report about any of the four can be saved. One part of the frame is still not built: the **“Add a berry photo”
-   row** (the owner deferred evidence media on 2026-10-09: it needs an image picker, camera
-   permissions and its own security rules, decision 17). The visit it reports on is the design's
-   own sample (`DEMO_VISIT_WINDOW` and the demo zone), so its header carries the “SEASON DEMO”
-   disclosure frame 06's map makes (2026-10-10), and its core navigation is the app shell
-   (ADR-022).
+    five-way rating, its validation and the write to the device — and since 2026-10-09 it is
+    **listed back** on screens 11 and 13, which is what makes the queue a record rather than a
+    promise. Its third species chip **“More”** is real since 2026-10-10: the design names three
+    berries in its own chips, and since 2026-10-22 the app's vocabulary carries the pilot's fourth
+    (crowberry), so the chip reveals the rest of the vocabulary instead of opening an index that
+    does not exist, and a report about any of the four can be saved. One part of the frame is still not built: the **“Add a berry photo”
+    row** (the owner deferred evidence media on 2026-10-09: it needs an image picker, camera
+    permissions and its own security rules, decision 17). The visit it reports on is the design's
+    own sample (`DEMO_VISIT_WINDOW` and the demo zone), so its header carries the “SEASON DEMO”
+    disclosure frame 06's map makes (2026-10-10), and its core navigation is the app shell
+    (ADR-022).
 
-   **The sample reaches further than the screen, which is known issue 26 below:** two of a saved
-   report's six fields — the zone it is about and its 52 minutes — come from the demo, so a report
-   the picker saves as their own carries values they did not choose, and screens 11 and 13 print
-   them back. Recorded as finding F1 in [docs/demo-and-stand-ins.md](docs/demo-and-stand-ins.md);
-   the fix is a visit that measures itself.
+**The sample reaches further than the screen, which is known issue 26 below:** two of a saved
+report's six fields — the zone it is about and its 52 minutes — come from the demo, so a report
+the picker saves as their own carries values they did not choose, and screens 11 and 13 print
+them back. Recorded as finding F1 in [docs/demo-and-stand-ins.md](docs/demo-and-stand-ins.md);
+the fix is a visit that measures itself.
 
-   One open question the connection rule raises for this screen: its **offline note** reads
-   “Offline · ready to queue” — the frame's own words for the *save path* (the same words its
-   button carries, “Save report offline”), not an assertion about the device — and it is drawn
-   whether or not a connection is up, because the report is queued on the device in either case.
-   Now that the app can observe the connection (ADR-025), the note *could* be drawn only when the
-   device reports no connection; that needs the owner's wording for the connected case (the frame
-   draws only the offline one) before it is “Offline” for some pickers and something else for the
-   rest. Recorded as a question rather than decided in code.
+One open question the connection rule raises for this screen: its **offline note** reads
+“Offline · ready to queue” — the frame's own words for the _save path_ (the same words its
+button carries, “Save report offline”), not an assertion about the device — and it is drawn
+whether or not a connection is up, because the report is queued on the device in either case.
+Now that the app can observe the connection (ADR-025), the note _could_ be drawn only when the
+device reports no connection; that needs the owner's wording for the connected case (the frame
+draws only the offline one) before it is “Offline” for some pickers and something else for the
+rest. Recorded as a question rather than decided in code.
 
 19. **Screen 11 (Visits and analytics) is built in part, and its figures are the design's sample.**
-   The frame tells two kinds of thing, and the screen keeps them apart: its **summary card and
-   harvest chart are the design's demo month** (`DEMO_SEASON_TOTALS`, `DEMO_HARVEST_BY_VISIT` —
-   there is no analytics service, and the eyebrow says so with the same “SEASON DEMO” disclosure
-   frame 06's eyebrow already makes), while its **visit history lists the reports this device is
-   holding**, newest first, above the design's three sample visits. What is absent: the frame's
-   **period chips are a real choice** since 2026-10-11: they filter that history — the first is the
-   month the design's own three sample visits are in, the second is everything the phone holds, and
-   the screen opens on the second because that is the period holding the visit screen 10 has just
-   saved ([ADR-043](docs/adr/ADR-043-three-waiting-frame-parts-get-their-answers.md)). The two lines
-   under the history's heading state what is showing — the period and how many visits it holds, and,
-   whenever the month chip leaves any out, how many — so a filtered-off visit is counted rather than
-   dropped in silence. The screen still aggregates nothing: a visit's month is read in UTC the way
-   every date the app prints is, and the summary above the list remains the design's sample month
-   under the eyebrow's disclosure. Its core navigation is the app shell (ADR-022). One harness
-   finding: the
-   Finnish chip row was cut off at the largest text size and now wraps.
+    The frame tells two kinds of thing, and the screen keeps them apart: its **summary card and
+    harvest chart are the design's demo month** (`DEMO_SEASON_TOTALS`, `DEMO_HARVEST_BY_VISIT` —
+    there is no analytics service, and the eyebrow says so with the same “SEASON DEMO” disclosure
+    frame 06's eyebrow already makes), while its **visit history lists the reports this device is
+    holding**, newest first, above the design's three sample visits. What is absent: the frame's
+    **period chips are a real choice** since 2026-10-11: they filter that history — the first is the
+    month the design's own three sample visits are in, the second is everything the phone holds, and
+    the screen opens on the second because that is the period holding the visit screen 10 has just
+    saved ([ADR-043](docs/adr/ADR-043-three-waiting-frame-parts-get-their-answers.md)). The two lines
+    under the history's heading state what is showing — the period and how many visits it holds, and,
+    whenever the month chip leaves any out, how many — so a filtered-off visit is counted rather than
+    dropped in silence. The screen still aggregates nothing: a visit's month is read in UTC the way
+    every date the app prints is, and the summary above the list remains the design's sample month
+    under the eyebrow's disclosure. Its core navigation is the app shell (ADR-022). One harness
+    finding: the
+    Finnish chip row was cut off at the largest text size and now wraps.
 
 20. **Screen 12 (Alerts and forecast) is built in part, and its alert is the design's sample.**
-   Nothing observes weather, a season or other pickers' reports, so “Ripe bilberries 1.8 km north”
-   and its three reasons are the frame's own story, recorded as a demo like frame 07's forecast
-   and frame 08's offline note. Its header carries the same “SEASON DEMO” disclosure frame 06's map
-   makes (2026-10-10), and the frame's closing sentence has said what is true since that date — “A
-   sample alert. No weather, season or report source is connected yet, and a harvest is never
-   guaranteed.” — because the frame's own wording claimed a forecast assembled from three sources,
-   none of which exists. Its **alert-preferences card is drawn as the design's own sample** since
-   2026-10-11: the frame's four settings (its own push row, its 3 km radius, its 21:00–07:00 quiet
-   hours and bilberry plus one species) sit in one `DEMO_*` module, printed through the app's own
-   notation — the radius by `formatRadius`, whole kilometres, because the frame sets a number where
-   its headline prints a measured distance — and a line on the card says the settings are the
-   design's and that nothing reads them. Nothing on it can act: the switch is a **figure** with no
-   role (nothing delivers an alert and no permission is asked for) and the three rows below it are
-   readings that drop the chevron the frame draws, for the reason frame 13's rows drop theirs
-   ([ADR-043](docs/adr/ADR-043-three-waiting-frame-parts-get-their-answers.md)). What is absent: its
-   **“View Zone 18” action**, which stayed absent when the owner asked for the frame to be finished:
-   it needs a zone source, or a zone the design never drew, because the app's demo composition has
-   no Zone 18 ([ADR-044](docs/adr/ADR-044-the-partial-frames-remaining-parts.md)). Its core
-   navigation is the app shell (ADR-022). One harness finding: the Finnish context line ran
-   to two lines where the frame draws one, so the Finnish states the reading alone.
+    Nothing observes weather, a season or other pickers' reports, so “Ripe bilberries 1.8 km north”
+    and its three reasons are the frame's own story, recorded as a demo like frame 07's forecast
+    and frame 08's offline note. Its header carries the same “SEASON DEMO” disclosure frame 06's map
+    makes (2026-10-10), and the frame's closing sentence has said what is true since that date — “A
+    sample alert. No weather, season or report source is connected yet, and a harvest is never
+    guaranteed.” — because the frame's own wording claimed a forecast assembled from three sources,
+    none of which exists. Its **alert-preferences card is drawn as the design's own sample** since
+    2026-10-11: the frame's four settings (its own push row, its 3 km radius, its 21:00–07:00 quiet
+    hours and bilberry plus one species) sit in one `DEMO_*` module, printed through the app's own
+    notation — the radius by `formatRadius`, whole kilometres, because the frame sets a number where
+    its headline prints a measured distance — and a line on the card says the settings are the
+    design's and that nothing reads them. Nothing on it can act: the switch is a **figure** with no
+    role (nothing delivers an alert and no permission is asked for) and the three rows below it are
+    readings that drop the chevron the frame draws, for the reason frame 13's rows drop theirs
+    ([ADR-043](docs/adr/ADR-043-three-waiting-frame-parts-get-their-answers.md)). What is absent: its
+    **“View Zone 18” action**, which stayed absent when the owner asked for the frame to be finished:
+    it needs a zone source, or a zone the design never drew, because the app's demo composition has
+    no Zone 18 ([ADR-044](docs/adr/ADR-044-the-partial-frames-remaining-parts.md)). Its core
+    navigation is the app shell (ADR-022). One harness finding: the Finnish context line ran
+    to two lines where the frame draws one, so the Finnish states the reading alone.
 
 21. **Screen 13 (Downloads) is built in part: the sync centre is the queue, and nothing syncs.**
-   The screen lists the reports this device is holding, with the frame's own heading, each row's
-   own line and its chip — the answer to “how does the user get a copy?” that AGENTS.md §11 asks of
-   a stored field. Where the frame promises a retry it says what is true instead: the report is on
-   this phone and nothing has been sent, because there is no transport (ADR-005). Its **“You're
-   offline” status message** is real since 2026-10-10: the app reads the device's own network state
-   and draws the frame's sentence only when the device reports no reachable connection (ADR-025).
-   Its **downloaded region, cached tiles and forecast, storage meter, last-sync line and two actions
-   are drawn, and none of them is real**: since 2026-10-11 they are the design's own sample, named as
-   such on the screen itself — the eyebrow's season-demo disclosure and a sentence above the block
-   ([ADR-042](docs/adr/ADR-042-frame-13s-region-is-the-designs-sample.md)) — with the frame's figures
-   in one `DEMO_*` module, the meter's fill computed from the two numbers it prints, and neither
-   action claiming a role (there is still no tile cache, no forecast download, no storage measurement
-   and no transport: ADR-031 and known issue 30 record what has to be true first). Its core
-   navigation, as everywhere. One harness finding: the Finnish chip was clipped by the frame's
-   36 px chip height at the largest text size, so the chip's height is a floor now. Frame 14's own
-   **“Offline maps & sync” row is built with it** — it carries the queue's count and opens this
-   screen,   so the reports a device is holding are reachable inside the app rather than only by
-   route.
+    The screen lists the reports this device is holding, with the frame's own heading, each row's
+    own line and its chip — the answer to “how does the user get a copy?” that AGENTS.md §11 asks of
+    a stored field. Where the frame promises a retry it says what is true instead: the report is on
+    this phone and nothing has been sent, because there is no transport (ADR-005). Its **“You're
+    offline” status message** is real since 2026-10-10: the app reads the device's own network state
+    and draws the frame's sentence only when the device reports no reachable connection (ADR-025).
+    Its **downloaded region, cached tiles and forecast, storage meter, last-sync line and two actions
+    are drawn, and none of them is real**: since 2026-10-11 they are the design's own sample, named as
+    such on the screen itself — the eyebrow's season-demo disclosure and a sentence above the block
+    ([ADR-042](docs/adr/ADR-042-frame-13s-region-is-the-designs-sample.md)) — with the frame's figures
+    in one `DEMO_*` module, the meter's fill computed from the two numbers it prints, and neither
+    action claiming a role (there is still no tile cache, no forecast download, no storage measurement
+    and no transport: ADR-031 and known issue 30 record what has to be true first). Its core
+    navigation, as everywhere. One harness finding: the Finnish chip was clipped by the frame's
+    36 px chip height at the largest text size, so the chip's height is a floor now. Frame 14's own
+    **“Offline maps & sync” row is built with it** — it carries the queue's count and opens this
+    screen, so the reports a device is holding are reachable inside the app rather than only by
+    route.
 
 22. **Frames 15–18 are built, and nothing in the app can walk to them.** The four
-   marketplace screens exist behind their routes and are measured like every other screen
-   (ADR-026), but the design draws them **outside the core navigation** (no bar, “OUTSIDE
-   CORE”, and no destination marked current), so a user reaches them only by typing the URL —
-   the same gap known issue 11 records for the privacy screen, except that the design has an
-   entry point for that one and none for this one. Also still absent on each screen, and each
-   recorded in the ADR: there is no listings service or seller account (the two listings are
-   the frame's own composition), no chat transport (the thread is the design's sample exchange
-   and the composer is drawn without a role), and   no payment provider (the order is arithmetic
-   over the frame's figures, and the two actions that would release or freeze money are not drawn;
-   their strings stay out of the catalogue, and frame 15's three filter chips and its sliders glyph
-   stay out with them, because every one of the frame's filters leaves both of the app's two
-   listings — [ADR-044](docs/adr/ADR-044-the-partial-frames-remaining-parts.md) records both parts
-   waiting on the service that would make them act). One harness finding on the way: the disclosure row used to stretch whatever a frame
-   put beside its chip into the space that was left, which clipped the Finnish mode line and the
-   seller badge at 200 %; the row wraps instead.
+    marketplace screens exist behind their routes and are measured like every other screen
+    (ADR-026), but the design draws them **outside the core navigation** (no bar, “OUTSIDE
+    CORE”, and no destination marked current), so a user reaches them only by typing the URL —
+    the same gap known issue 11 records for the privacy screen, except that the design has an
+    entry point for that one and none for this one. Also still absent on each screen, and each
+    recorded in the ADR: there is no listings service or seller account (the two listings are
+    the frame's own composition), no chat transport (the thread is the design's sample exchange
+    and the composer is drawn without a role), and no payment provider (the order is arithmetic
+    over the frame's figures, and the two actions that would release or freeze money are not drawn;
+    their strings stay out of the catalogue, and frame 15's three filter chips and its sliders glyph
+    stay out with them, because every one of the frame's filters leaves both of the app's two
+    listings — [ADR-044](docs/adr/ADR-044-the-partial-frames-remaining-parts.md) records both parts
+    waiting on the service that would make them act). One harness finding on the way: the disclosure row used to stretch whatever a frame
+    put beside its chip into the space that was left, which clipped the Finnish mode line and the
+    seller badge at 200 %; the row wraps instead.
 
 23. **The sign-in screen exists; the account service behind it does not.** The design file never
-   drew the screen — frames 01–18 are the whole inventory (docs/design-source.md) and none of them
-   signs a user in — and frames 01's and 03's own “Already have an account? Sign in” links had no
-   destination for as long as the app had no way in. Since 2026-10-11 both links open `/sign-in`,
-   an app-drawn screen built from the design owner's answers to §1.1, §1.2, §1.3, §1.6, §1.7 and
-   §2.1, outside the app shell, with a returning user landing in the app rather than on screen 05
-   ([ADR-034](docs/adr/ADR-034-signing-in-the-frame-the-journey-and-the-session.md)). Since
-   2026-10-24 its credential is **email + password** — no code screen sits behind it — and it is
-   wired to the session port like screen 03
-   ([ADR-059](docs/adr/ADR-059-email-password-replaces-the-code-screen.md)). What is still owed:
-   **the account service** (decided in [ADR-054](docs/adr/ADR-054-the-account-belongs-to-the-api.md)
-   — the API owns the account, Firebase issues the credential) is what can check a password, so the
-   flow runs on a stand-in that verifies nothing and accepts no credential in a production build
-   (known issue 24) and the session lives in memory (known issue 25); a sign-in carries **no
-   name**, so a returning account is named by its identifier until the provider can answer with
-   the account's own ([ADR-038](docs/adr/ADR-038-a-session-may-carry-no-name.md)); and §1.4 (which
-   states the frame must draw) and §2.2–§4 of
-   [to-questionnaire-sign-in.md](to-questionnaire-sign-in.md) are still unanswered, each keeping
-   its part unbuilt rather than defaulted. **Password recovery's request is wired** (2026-10-24):
-   `/sign-in` opens the app-drawn request at `/forgot-password`, which calls the Firebase adapter
-   behind the same port when `EXPO_PUBLIC_FIREBASE_API_KEY` is set; without it, the stand-in keeps
-   the journey walkable outside production, sends nothing and says so
-   ([ADR-062](docs/adr/ADR-062-password-reset-belongs-to-the-provider.md)). §1.5 is answered;
-   the Firebase project's email template and key remain deployment configuration. One piece of scaffolding also stays behind:
-   `npm run prototype:sign-in` still opens **three throwaway readings of the screen**
-   (`/create-account?variant=A|B|C`, switchable from a floating bar) — prototype code, no tests,
-   hard-coded English, ignored in a `production` build — because the switch that mounts them is
-   shared with the community map's own three readings, whose question is still open. The sign-in
-   set is deleted with the switch that mounts both
-   (`src/components/prototype/`, `src/features/onboarding/components/prototype/`).
+    drew the screen — frames 01–18 are the whole inventory (docs/design-source.md) and none of them
+    signs a user in — and frames 01's and 03's own “Already have an account? Sign in” links had no
+    destination for as long as the app had no way in. Since 2026-10-11 both links open `/sign-in`,
+    an app-drawn screen built from the design owner's answers to §1.1, §1.2, §1.3, §1.6, §1.7 and
+    §2.1, outside the app shell, with a returning user landing in the app rather than on screen 05
+    ([ADR-034](docs/adr/ADR-034-signing-in-the-frame-the-journey-and-the-session.md)). Since
+    2026-10-24 its credential is **email + password** — no code screen sits behind it — and it is
+    wired to the session port like screen 03
+    ([ADR-059](docs/adr/ADR-059-email-password-replaces-the-code-screen.md)). What is still owed:
+    **the account service** (decided in [ADR-054](docs/adr/ADR-054-the-account-belongs-to-the-api.md)
+    — the API owns the account, Firebase issues the credential) is what can check a password, so the
+    flow runs on a stand-in that verifies nothing and accepts no credential in a production build
+    (known issue 24) and the session lives in memory (known issue 25); a sign-in carries **no
+    name**, so a returning account is named by its identifier until the provider can answer with
+    the account's own ([ADR-038](docs/adr/ADR-038-a-session-may-carry-no-name.md)); and §1.4 (which
+    states the frame must draw) and §2.2–§4 of
+    [to-questionnaire-sign-in.md](to-questionnaire-sign-in.md) are still unanswered, each keeping
+    its part unbuilt rather than defaulted. **Password recovery's request is wired** (2026-10-24):
+    `/sign-in` opens the app-drawn request at `/forgot-password`, which calls the Firebase adapter
+    behind the same port when `EXPO_PUBLIC_FIREBASE_API_KEY` is set; without it, the stand-in keeps
+    the journey walkable outside production, sends nothing and says so
+    ([ADR-062](docs/adr/ADR-062-password-reset-belongs-to-the-provider.md)). §1.5 is answered;
+    the Firebase project's email template and key remain deployment configuration. One piece of scaffolding also stays behind:
+    `npm run prototype:sign-in` still opens **three throwaway readings of the screen**
+    (`/create-account?variant=A|B|C`, switchable from a floating bar) — prototype code, no tests,
+    hard-coded English, ignored in a `production` build — because the switch that mounts them is
+    shared with the community map's own three readings, whose question is still open. The sign-in
+    set is deleted with the switch that mounts both
+    (`src/components/prototype/`, `src/features/onboarding/components/prototype/`).
 
 24. **The credential is a stand-in until the account service exists (re-cut 2026-10-24).**
-   Screen 03 and `/sign-in` hand an email + password to the session port, and `/forgot-password`
-   asks the same port for a reset link — a link Firebase really sends when the public key is
-   configured, and a stand-in sends nothing when it is not
-   ([ADR-054](docs/adr/ADR-054-the-account-belongs-to-the-api.md) decides the real credential).
-   The sign-in stand-in cannot check a password and does not pretend to: outside a **production**
-   build it accepts **any non-empty password** and issues a session; in a production build it
-   accepts **nothing**, and screens 03 and `/sign-in` draw their action disabled because no
-   service can answer there. `/forgot-password` is disabled in production only when no Firebase
-   key is configured. Without a key the reset request is accepted outside production and sends
-   nothing, with a test-build note saying so; with a key, Firebase sends the email and the
-   confirmation changes to “Check your inbox.” Nothing is stored but the session, nothing is
-   logged, and no password, address or reset token is kept.
-   To walk the flow: open `/create-account` in a development build, fill the form and press “Create
-   account” — the app opens screen 05; open `/sign-in`, type any email and a non-empty password,
-   and the app opens the map; press “Forgot password?” to walk the reset request. **The `000000` code and screen 04 are gone**,
-   deleted rather than left behind ([ADR-059](docs/adr/ADR-059-email-password-replaces-the-code-screen.md)
-   retires ADR-027), and the `pending-verification` hand-off, the countdown and the code field went
-   with them.
+    Screen 03 and `/sign-in` hand an email + password to the session port, and `/forgot-password`
+    asks the same port for a reset link — a link Firebase really sends when the public key is
+    configured, and a stand-in sends nothing when it is not
+    ([ADR-054](docs/adr/ADR-054-the-account-belongs-to-the-api.md) decides the real credential).
+    The sign-in stand-in cannot check a password and does not pretend to: outside a **production**
+    build it accepts **any non-empty password** and issues a session; in a production build it
+    accepts **nothing**, and screens 03 and `/sign-in` draw their action disabled because no
+    service can answer there. `/forgot-password` is disabled in production only when no Firebase
+    key is configured. Without a key the reset request is accepted outside production and sends
+    nothing, with a test-build note saying so; with a key, Firebase sends the email and the
+    confirmation changes to “Check your inbox.” Nothing is stored but the session, nothing is
+    logged, and no password, address or reset token is kept.
+    To walk the flow: open `/create-account` in a development build, fill the form and press “Create
+    account” — the app opens screen 05; open `/sign-in`, type any email and a non-empty password,
+    and the app opens the map; press “Forgot password?” to walk the reset request. **The `000000` code and screen 04 are gone**,
+    deleted rather than left behind ([ADR-059](docs/adr/ADR-059-email-password-replaces-the-code-screen.md)
+    retires ADR-027), and the `pending-verification` hand-off, the countdown and the code field went
+    with them.
 
 25. **A session exists, and almost nothing uses it yet.** The seam is built
-   ([ADR-028](docs/adr/ADR-028-an-authentication-seam-behind-a-port.md)): one port
-   (`sessionPort`, `src/services/session/`) with a stand-in provider behind it; screen 03 and
-   `/sign-in` establish a session through it (`/sign-in` since 2026-10-11 — ADR-034, known issue
-   23), and `/forgot-password` asks it for a reset link (ADR-062). What is deliberately **not**
-   there:
-   **no route guard or redirect** — nothing gates `(app)` on a session: the settings screen and the
-   account screen *read* `current()` and say whose account the app is holding, and the shell renders
-   whether or not anyone is signed in — **no persistence** (the session is in memory and a reload
-   loses it, which is what
-   keeps ADR-006's secure-store adapter unbuilt-but-not-dodged — open question 25), **no server**
-   (the provider talks to nothing), and — until 2026-10-11 — **no session expiry a user could meet**:
-   the rule was implemented, tested and injectable but no screen observed it. The account surface now
-   does ([ADR-041](docs/adr/ADR-041-a-session-that-can-run-out-says-so.md)): it shows the time left in
-   the hour, states the end and offers the way back in. Screens 03 and `/sign-in` each have **one
-   failure line for two causes** — a refused credential and a session the app could not keep —
-   because the design draws no error treatment at all (open question 11).
+    ([ADR-028](docs/adr/ADR-028-an-authentication-seam-behind-a-port.md)): one port
+    (`sessionPort`, `src/services/session/`) with a stand-in provider behind it; screen 03 and
+    `/sign-in` establish a session through it (`/sign-in` since 2026-10-11 — ADR-034, known issue
+    23), and `/forgot-password` asks it for a reset link (ADR-062). What is deliberately **not**
+    there:
+    **no route guard or redirect** — nothing gates `(app)` on a session: the settings screen and the
+    account screen _read_ `current()` and say whose account the app is holding, and the shell renders
+    whether or not anyone is signed in — **no persistence** (the session is in memory and a reload
+    loses it, which is what
+    keeps ADR-006's secure-store adapter unbuilt-but-not-dodged — open question 25), **no server**
+    (the provider talks to nothing), and — until 2026-10-11 — **no session expiry a user could meet**:
+    the rule was implemented, tested and injectable but no screen observed it. The account surface now
+    does ([ADR-041](docs/adr/ADR-041-a-session-that-can-run-out-says-so.md)): it shows the time left in
+    the hour, states the end and offers the way back in. Screens 03 and `/sign-in` each have **one
+    failure line for two causes** — a refused credential and a session the app could not keep —
+    because the design draws no error treatment at all (open question 11).
 
 26. **A saved report carries two of the design's sample values.** Frame 10's report is the
-   picker's own data except for the visit it belongs to: `buildVisitReport` stamps every entry
-   with `DEMO_ACTIVE_VISIT.zoneId` (the demo zone, Z14) and with 52 minutes read off
-   `DEMO_VISIT_WINDOW`, so a queue entry — and the rows screens 11 and 13 print back from it —
-   states a zone and a duration the picker never chose, in a zone the app cannot know they were
-   in. It is the one place in the app where a demo value is **stored** rather than displayed, and
-   it is finding F1 in [docs/demo-and-stand-ins.md](docs/demo-and-stand-ins.md). The fix is the
-   visit that measures itself: the zone arrives from position capture and the duration from the
-   timer screen 09 already runs; until then a saved report's zone and length are the design's.
+    picker's own data except for the visit it belongs to: `buildVisitReport` stamps every entry
+    with `DEMO_ACTIVE_VISIT.zoneId` (the demo zone, Z14) and with 52 minutes read off
+    `DEMO_VISIT_WINDOW`, so a queue entry — and the rows screens 11 and 13 print back from it —
+    states a zone and a duration the picker never chose, in a zone the app cannot know they were
+    in. It is the one place in the app where a demo value is **stored** rather than displayed, and
+    it is finding F1 in [docs/demo-and-stand-ins.md](docs/demo-and-stand-ins.md). The fix is the
+    visit that measures itself: the zone arrives from position capture and the duration from the
+    timer screen 09 already runs; until then a saved report's zone and length are the design's.
 
 27. **The account row states a verification nothing has performed, and the name it shows awaits
-   its lawful basis.** Frame 14's own line is “aino@example.fi · Email verified”, and the app
-   draws it from the session's identifier: an address reads as “Email verified”, a number as
-   “Phone verified” (`features/privacy/domain/profile.ts`). Since screen 04 was retired on
-   2026-10-24 **nothing verifies anything at all** — the app collects an email + password, hands
-   it to the stand-in and never confirms the address — so the claim is purely the frame's until
-   the provider's email verification exists ([ADR-054](docs/adr/ADR-054-the-account-belongs-to-the-api.md),
-   [ADR-059](docs/adr/ADR-059-email-password-replaces-the-code-screen.md)). The
-   row's other half — the name screen 03 collects and the session now carries (ADR-029) — is
-   personal data, and its lawful basis is contract, recorded with the other purposes in
-   [ADR-055](docs/adr/ADR-055-retention-and-processors.md); the ADR records the purpose (the
-   account's own name, shown to its owner) and the four answers, not the basis.
+    its lawful basis.** Frame 14's own line is “aino@example.fi · Email verified”, and the app
+    draws it from the session's identifier: an address reads as “Email verified”, a number as
+    “Phone verified” (`features/privacy/domain/profile.ts`). Since screen 04 was retired on
+    2026-10-24 **nothing verifies anything at all** — the app collects an email + password, hands
+    it to the stand-in and never confirms the address — so the claim is purely the frame's until
+    the provider's email verification exists ([ADR-054](docs/adr/ADR-054-the-account-belongs-to-the-api.md),
+    [ADR-059](docs/adr/ADR-059-email-password-replaces-the-code-screen.md)). The
+    row's other half — the name screen 03 collects and the session now carries (ADR-029) — is
+    personal data, and its lawful basis is contract, recorded with the other purposes in
+    [ADR-055](docs/adr/ADR-055-retention-and-processors.md); the ADR records the purpose (the
+    account's own name, shown to its owner) and the four answers, not the basis.
 
 28. **The plan's list is a screen the app designed, and its rows now read the zone source.**
-   ADR-024 left the surface of the saved-zone record open because no frame was drawn for it;
-   ADR-030 builds it from the app's own vocabulary and says so. It drew the design's demo zones
-   until 2026-10-24, when it was moved onto the source
-   ([ADR-060](docs/adr/ADR-060-the-saved-plan-reads-the-zone-source.md)): a zone saved from
-   screen 07 shows the name, score and season the map shows, and its row opens that zone's
-   details with the same berry the row printed. Since the same day the record also **keeps the
-   berry it was saved under**
-   ([ADR-061](docs/adr/ADR-061-the-saved-zone-remembers-its-berry.md)), so a plan may mix layers
-   and each row is read from its own; a plan written before that is shown under the pilot berry.
-   The record's order is kept, an identifier the
-   source does not answer to is still named rather than dropped (with no role, because no screen
-   has its figures), and an empty plan says it is empty and offers frame 06's map. There is no
-   fallback to `DEMO_ZONES`: an old development id shows as itself rather than as a demo zone's
-   figures. The **export path** open question 23 carried for both device-side records exists
-   since 2026-10-11 ([ADR-040](docs/adr/ADR-040-the-copy-the-app-owes-is-a-document.md)): the copy
-   handed to the platform's own share sheet carries the plan, the consent, the queued reports and the
-   account. What the record still owes is the lawful basis (open question 15), which is the owner's.
+    ADR-024 left the surface of the saved-zone record open because no frame was drawn for it;
+    ADR-030 builds it from the app's own vocabulary and says so. It drew the design's demo zones
+    until 2026-10-24, when it was moved onto the source
+    ([ADR-060](docs/adr/ADR-060-the-saved-plan-reads-the-zone-source.md)): a zone saved from
+    screen 07 shows the name, score and season the map shows, and its row opens that zone's
+    details with the same berry the row printed. Since the same day the record also **keeps the
+    berry it was saved under**
+    ([ADR-061](docs/adr/ADR-061-the-saved-zone-remembers-its-berry.md)), so a plan may mix layers
+    and each row is read from its own; a plan written before that is shown under the pilot berry.
+    The record's order is kept, an identifier the
+    source does not answer to is still named rather than dropped (with no role, because no screen
+    has its figures), and an empty plan says it is empty and offers frame 06's map. There is no
+    fallback to `DEMO_ZONES`: an old development id shows as itself rather than as a demo zone's
+    figures. The **export path** open question 23 carried for both device-side records exists
+    since 2026-10-11 ([ADR-040](docs/adr/ADR-040-the-copy-the-app-owes-is-a-document.md)): the copy
+    handed to the platform's own share sheet carries the plan, the consent, the queued reports and the
+    account. What the record still owes is the lawful basis (open question 15), which is the owner's.
 
 29. **Sign out deletes the device's records, and that is this repository's assumption rather than
-   the owner's decision.** The frame draws “Sign out” and says nothing about what it means; the
-   app makes it mean the account is gone **and** the device holds nothing of the picker's: the
-   session is dropped and the consent, the queued reports and the saved plan are deleted
-   (`src/services/sign-out.ts`, `src/app/(app)/privacy-settings.tsx`). A run that fails is stated
-   rather than claimed, and the user lands on the app's front door. Two parts of that are the
-   owner's to confirm: whether those device
-   records should survive a sign-out at all (the reports are not the account's data, and a picker
-   who signs out and back in may expect their plan), and what signs a user out besides this
-   control — the session's expiry (open question 25).
+    the owner's decision.** The frame draws “Sign out” and says nothing about what it means; the
+    app makes it mean the account is gone **and** the device holds nothing of the picker's: the
+    session is dropped and the consent, the queued reports and the saved plan are deleted
+    (`src/services/sign-out.ts`, `src/app/(app)/privacy-settings.tsx`). A run that fails is stated
+    rather than claimed, and the user lands on the app's front door. Two parts of that are the
+    owner's to confirm: whether those device
+    records should survive a sign-out at all (the reports are not the account's data, and a picker
+    who signs out and back in may expect their plan), and what signs a user out besides this
+    control — the session's expiry (open question 25).
 
 30. **The real basemap is decided and deliberately not built; screen 06 now ships without one.**
-   [ADR-031](docs/adr/ADR-031-a-real-basemap-osm-derived-tiles-we-host.md) records the shape —
-   OSM-derived vector tiles hosted by this project (Protomaps PMTiles), rendered by MapLibre React
-   Native. Since 2026-10-22 the map screen is real geography over the pilot stub's rings with a
-   background-only style: no tile source, no network, no attribution owed (ADR-053). That closes
-   the "no zone geometry to draw" half of this issue for screen 06; the basemap itself still waits
-   on the **tile host** (a PMTiles file
-   on object storage plus whatever refreshes it, whose region is the backend's open question 16);
-   and a **verified answer for the offline region** frame 13 draws — hosting the tiles ourselves
-   makes it possible without touching anyone's tile server, but MapLibre React Native's offline
-   behaviour has not been spiked. Two constraints are easy to miss and are recorded there: the
-   library is a **development build** (never Expo Go) and has **no web target**, so a screen
-   carrying the basemap needs a fallback in the layout harness (ADR-018/019); and the ODbL
-   attribution (“© OpenStreetMap contributors”) is part of the map wherever it is drawn.
+    [ADR-031](docs/adr/ADR-031-a-real-basemap-osm-derived-tiles-we-host.md) records the shape —
+    OSM-derived vector tiles hosted by this project (Protomaps PMTiles), rendered by MapLibre React
+    Native. Since 2026-10-22 the map screen is real geography over the pilot stub's rings with a
+    background-only style: no tile source, no network, no attribution owed (ADR-053). That closes
+    the "no zone geometry to draw" half of this issue for screen 06; the basemap itself still waits
+    on the **tile host** (a PMTiles file
+    on object storage plus whatever refreshes it, whose region is the backend's open question 16);
+    and a **verified answer for the offline region** frame 13 draws — hosting the tiles ourselves
+    makes it possible without touching anyone's tile server, but MapLibre React Native's offline
+    behaviour has not been spiked. Two constraints are easy to miss and are recorded there: the
+    library is a **development build** (never Expo Go) and has **no web target**, so a screen
+    carrying the basemap needs a fallback in the layout harness (ADR-018/019); and the ODbL
+    attribution (“© OpenStreetMap contributors”) is part of the map wherever it is drawn.
 
 31. **The sharing rule exists, and nothing calls it — there is still no server.**
-   [ADR-032](docs/adr/ADR-032-the-first-backend-slice.md) specifies the first backend slice, and the
-   rule is written and tested here (`src/features/sharing`, 24 cases), but **no screen imports it**:
-   shared spots have no design frame, and no screen may be built before one exists (open question
-   26, “Recorded requirement” §3). So it is a *contract*, not a feature — it sends nothing, stores
-   nothing, and its only caller today is its own test file. Three things stand between it and a
-   working feature: the **frame**, the **host** (an EU region and a data-processing agreement —
-   questions 3 and 16), and a **lawful basis** for the account identifiers a share connects
-   (question 15). The app's own position is unchanged: nothing is sent anywhere (SECURITY.md §17),
-   and because a client check is never authorisation the server has to implement the rule rather
-   than the app (SECURITY.md §3).
+    [ADR-032](docs/adr/ADR-032-the-first-backend-slice.md) specifies the first backend slice, and the
+    rule is written and tested here (`src/features/sharing`, 24 cases), but **no screen imports it**:
+    shared spots have no design frame, and no screen may be built before one exists (open question
+    26, “Recorded requirement” §3). So it is a _contract_, not a feature — it sends nothing, stores
+    nothing, and its only caller today is its own test file. Three things stand between it and a
+    working feature: the **frame**, the **host** (an EU region and a data-processing agreement —
+    questions 3 and 16), and a **lawful basis** for the account identifiers a share connects
+    (question 15). The app's own position is unchanged: nothing is sent anywhere (SECURITY.md §17),
+    and because a client check is never authorisation the server has to implement the rule rather
+    than the app (SECURITY.md §3).
 
 32. **The verification copy said a message was sent, and the app has never sent one — corrected
-   on 2026-10-12.** Screen 04's heading read “Check your inbox.” and its supporting line “Enter the
-   6-digit code **we sent** to {destination} to confirm it’s you.”
-   (`onboarding.verification.heading`/`.supporting`), its phone note said the code arrives “by SMS”
-   (`onboarding.verification.phoneNote.body`), the sign-in screen said “**We send** six digits…” with
-   an action “Send me a code” (`onboarding.signIn.supporting`/`.action`), and the account surface
-   repeated the claim (`privacy.accountSecurity.reach.body`, and the notice's account record,
-   `privacy.termsPrivacy.record.account.value`). Nothing is sent: there is no transport at all, the
-   flow runs on the stand-in code (known issue 24, refused in a production build), and the notice's
-   own line says the app “sends nothing anywhere” — so the app contradicted itself on the screens a
-   picker reads first. Found by the copy-claims audit of 2026-10-12
-   ([docs/copy-claims-audit.md](docs/copy-claims-audit.md), row 3). **All seven strings were
-   rewritten in both languages** when the owner asked for the wording
-   ([ADR-048](docs/adr/ADR-048-the-verification-copy-claims-no-delivery.md)): each now says what the
-   step is for and names the destination the code belongs to, the frame's own words come back on the
-   branch that earns them (email, SMS, or nothing), the claims guard's family is empty and asserted
-   empty, and the frame's resend row is not drawn because no caller can send a code. What stayed
-   open beside it: a development build's screen still cannot tell a picker which code works (known
-   issue 24) and the account row's “Email verified” still claims a verification no service made
-   (known issue 27).
+    on 2026-10-12.** Screen 04's heading read “Check your inbox.” and its supporting line “Enter the
+    6-digit code **we sent** to {destination} to confirm it’s you.”
+    (`onboarding.verification.heading`/`.supporting`), its phone note said the code arrives “by SMS”
+    (`onboarding.verification.phoneNote.body`), the sign-in screen said “**We send** six digits…” with
+    an action “Send me a code” (`onboarding.signIn.supporting`/`.action`), and the account surface
+    repeated the claim (`privacy.accountSecurity.reach.body`, and the notice's account record,
+    `privacy.termsPrivacy.record.account.value`). Nothing is sent: there is no transport at all, the
+    flow runs on the stand-in code (known issue 24, refused in a production build), and the notice's
+    own line says the app “sends nothing anywhere” — so the app contradicted itself on the screens a
+    picker reads first. Found by the copy-claims audit of 2026-10-12
+    ([docs/copy-claims-audit.md](docs/copy-claims-audit.md), row 3). **All seven strings were
+    rewritten in both languages** when the owner asked for the wording
+    ([ADR-048](docs/adr/ADR-048-the-verification-copy-claims-no-delivery.md)): each now says what the
+    step is for and names the destination the code belongs to, the frame's own words come back on the
+    branch that earns them (email, SMS, or nothing), the claims guard's family is empty and asserted
+    empty, and the frame's resend row is not drawn because no caller can send a code. What stayed
+    open beside it: a development build's screen still cannot tell a picker which code works (known
+    issue 24) and the account row's “Email verified” still claims a verification no service made
+    (known issue 27).
 
 33. **Screen 05's continue action named a settings step the app never takes — corrected
-   2026-10-13.** The consent screen's primary action read “Continue to location settings” /
-   “Jatka sijaintiasetuksiin” (`onboarding.location.action`, the frame's own words), while the press
-   recorded the consent and opened the app — the same destination its “Skip without tracking” action
-   has. No location-settings screen exists: the platform's own permission is asked **in** the app the
-   first time a screen reads a position
-   ([ADR-045](docs/adr/ADR-045-a-position-behind-a-port-and-nothing-kept.md)), which is what the
-   consent screen's own copy already says (ADR-047 §1). Found by the control-claims audit of
-   2026-10-12 ([docs/control-claims-audit.md](docs/control-claims-audit.md), family 8) and left
-   open deliberately then, because the label is the frame's and the choice was the owner's. Decided
-   on 2026-10-13 ([ADR-050](docs/adr/ADR-050-screen-05s-continue-action-says-what-the-press-does.md)):
-   the action says where the press leads — “Continue to the map” / “Jatka kartalle”, the map being
-   the illustration the screen draws above it — and no settings surface is built for it to open. The
-   frame's own words are kept as the branch that earns them: if a journey ever really does lead to a
-   platform settings surface (a refusal the platform will not re-ask is the realistic case), they are
-   that journey's label. The claim cannot come back quietly — the copy scan holds it as
-   `a-settings-step-the-app-never-takes`, **empty and asserted empty**, with the defect as it shipped
-   among its planted originals in both languages.
+    2026-10-13.** The consent screen's primary action read “Continue to location settings” /
+    “Jatka sijaintiasetuksiin” (`onboarding.location.action`, the frame's own words), while the press
+    recorded the consent and opened the app — the same destination its “Skip without tracking” action
+    has. No location-settings screen exists: the platform's own permission is asked **in** the app the
+    first time a screen reads a position
+    ([ADR-045](docs/adr/ADR-045-a-position-behind-a-port-and-nothing-kept.md)), which is what the
+    consent screen's own copy already says (ADR-047 §1). Found by the control-claims audit of
+    2026-10-12 ([docs/control-claims-audit.md](docs/control-claims-audit.md), family 8) and left
+    open deliberately then, because the label is the frame's and the choice was the owner's. Decided
+    on 2026-10-13 ([ADR-050](docs/adr/ADR-050-screen-05s-continue-action-says-what-the-press-does.md)):
+    the action says where the press leads — “Continue to the map” / “Jatka kartalle”, the map being
+    the illustration the screen draws above it — and no settings surface is built for it to open. The
+    frame's own words are kept as the branch that earns them: if a journey ever really does lead to a
+    platform settings surface (a refusal the platform will not re-ask is the realistic case), they are
+    that journey's label. The claim cannot come back quietly — the copy scan holds it as
+    `a-settings-step-the-app-never-takes`, **empty and asserted empty**, with the defect as it shipped
+    among its planted originals in both languages.
 34. **`AppButton` was the one interactive primitive that claims a role with no handler — corrected
-   2026-10-12.** Its `button` role, accessible name and disabled state were unconditional, so a
-   caller that passed no `onPress` would ship an inert button that announces itself as one. Every
-   other primitive in the app drops what it cannot back: `TextAction` drops its role **and** its
-   name without a handler, `SettingRow`, `ZoneRow`, `ZoneCard` and `ListingCard` return their plain
-   drawing (no role, no chevron), the sync-centre button is not drawn, and frame 12's switch is a
-   figure rather than a `Switch`. **No shipped screen did it** — every `AppButton` site passes a
-   handler (14 of them, read again as part of the fix) — so it was a gap in the primitive's contract
-   rather than a control in the field. It now follows `TextAction`'s rule: with no `onPress` the
-   action is the frame's drawing of one and claims no role, no name and no state, and takes no place
-   in the tab order (`react-native-web` gives every `Pressable` `tabIndex = disabled ? -1 : 0`,
-   which is what made frame 15's count line a keyboard stop that led nowhere); with a handler it
-   keeps all three plus the disabled/busy state, because an action waiting on a state is still an
-   action. Held by `src/components/atoms/__tests__/app-button.test.tsx` (both halves, so a fix
-   cannot overshoot into dropping a disabled action's name) and by the ledger in
-   `src/config/__tests__/control-claims.test.ts`, whose guard invariant now asserts this site too
-   ([docs/control-claims-audit.md](docs/control-claims-audit.md), family 9, now **Kept**).
+    2026-10-12.** Its `button` role, accessible name and disabled state were unconditional, so a
+    caller that passed no `onPress` would ship an inert button that announces itself as one. Every
+    other primitive in the app drops what it cannot back: `TextAction` drops its role **and** its
+    name without a handler, `SettingRow`, `ZoneRow`, `ZoneCard` and `ListingCard` return their plain
+    drawing (no role, no chevron), the sync-centre button is not drawn, and frame 12's switch is a
+    figure rather than a `Switch`. **No shipped screen did it** — every `AppButton` site passes a
+    handler (14 of them, read again as part of the fix) — so it was a gap in the primitive's contract
+    rather than a control in the field. It now follows `TextAction`'s rule: with no `onPress` the
+    action is the frame's drawing of one and claims no role, no name and no state, and takes no place
+    in the tab order (`react-native-web` gives every `Pressable` `tabIndex = disabled ? -1 : 0`,
+    which is what made frame 15's count line a keyboard stop that led nowhere); with a handler it
+    keeps all three plus the disabled/busy state, because an action waiting on a state is still an
+    action. Held by `src/components/atoms/__tests__/app-button.test.tsx` (both halves, so a fix
+    cannot overshoot into dropping a disabled action's name) and by the ledger in
+    `src/config/__tests__/control-claims.test.ts`, whose guard invariant now asserts this site too
+    ([docs/control-claims-audit.md](docs/control-claims-audit.md), family 9, now **Kept**).
 
 35. **The discover map reached the accessibility tree as one unnamed image — decided and fixed
-   2026-10-12: the map is content, and its drawing carries a text alternative.** The walk read
-   `/discover`'s, `/route-to-zone`'s and `/active-visit`'s trees as a single `- img` with no name:
-   the map drawing ([ADR-021](docs/adr/ADR-021-draw-the-map-from-the-designs-geometry.md)) was the
-   node a screen reader could only announce as “image”, on three shipped screens. **The decision:**
-   it is *content*, not decoration — it is how Discover presents its zones, so WCAG 1.1.1 asks a
-   text alternative of it, and hiding it would have removed the screen's primary presentation. What
-   made the decision cheap is that the app already shipped the words for it (`discover.map.label`,
-   “Map of nearby berry zones”), on the container, where — measured in the built export — they
-   reached **nothing**: a role-less `div` computes to `generic` and Chromium ignores `aria-label`
-   there, while the `<svg>` is the node a browser exposes. The drawing now carries that name (the
-   platform reads `accessibilityLabel`, the web target `aria-label`, the same double spelling
-   `AppCheckbox` and `ChoiceChips` use for their states) and its role as an image, and the map's own
-   words stay beside it as text. **The rule that replaces the blind spot:** the walk now reports any
-   image node in the tree with no accessible name — an image is either named content or hidden
-   decoration, and unnamed is neither — so this cannot come back on a screen nobody has walked yet.
-   Held by the map's unit test (the drawing carries the name, and its labels are untouched), by
-   three checks in `e2e/accessibility.spec.ts` that read the built tree on all three routes, and by
-   a planted unnamed drawing inside the walk's planted-violation case.
+    2026-10-12: the map is content, and its drawing carries a text alternative.** The walk read
+    `/discover`'s, `/route-to-zone`'s and `/active-visit`'s trees as a single `- img` with no name:
+    the map drawing ([ADR-021](docs/adr/ADR-021-draw-the-map-from-the-designs-geometry.md)) was the
+    node a screen reader could only announce as “image”, on three shipped screens. **The decision:**
+    it is _content_, not decoration — it is how Discover presents its zones, so WCAG 1.1.1 asks a
+    text alternative of it, and hiding it would have removed the screen's primary presentation. What
+    made the decision cheap is that the app already shipped the words for it (`discover.map.label`,
+    “Map of nearby berry zones”), on the container, where — measured in the built export — they
+    reached **nothing**: a role-less `div` computes to `generic` and Chromium ignores `aria-label`
+    there, while the `<svg>` is the node a browser exposes. The drawing now carries that name (the
+    platform reads `accessibilityLabel`, the web target `aria-label`, the same double spelling
+    `AppCheckbox` and `ChoiceChips` use for their states) and its role as an image, and the map's own
+    words stay beside it as text. **The rule that replaces the blind spot:** the walk now reports any
+    image node in the tree with no accessible name — an image is either named content or hidden
+    decoration, and unnamed is neither — so this cannot come back on a screen nobody has walked yet.
+    Held by the map's unit test (the drawing carries the name, and its labels are untouched), by
+    three checks in `e2e/accessibility.spec.ts` that read the built tree on all three routes, and by
+    a planted unnamed drawing inside the walk's planted-violation case.
 
 36. **The map's per-zone state names reach a native screen reader and not a web one — measured,
-   recorded, not fixed.** The four labels the map positions over its drawing (two zone labels, the
-   score badge, the position marker) carry `aria-label`s, and Chromium ignores every one of them:
-   React Native renders them as role-less `div`s, which compute to `generic`, where ARIA forbids a
-   name. On `/discover` the tree therefore reads the map as one flat text run — “Laajavuori
-   Tuomiojärvi Z09 Z21 78 · Z14 …” — beside the named drawing, so a web screen reader hears the
-   zone ids and, separately, the legend's three state words, and **never the pairing between them**
-   (which state Z09 is in). On a device the platform reads `accessibilityLabel` from these labels —
-   that is the contract the map's unit test holds — so this is the web target's half of the
-   contract, like the `aria-checked` defects before it. It is not fixed here because
-   every fix is a design decision rather than a prop: give each label a role that permits a name
-   (an image with the state in its alternative), render the state as a word beside the zone id (a
-   drawing the frame does not draw), or say the zones' states in the map's own text alternative and
-   drop the per-label names. The frame's map carries state in colour alone, so whichever it is, it
-   is also the answer to the state-glyph question ADR-021 left open.
+    recorded, not fixed.** The four labels the map positions over its drawing (two zone labels, the
+    score badge, the position marker) carry `aria-label`s, and Chromium ignores every one of them:
+    React Native renders them as role-less `div`s, which compute to `generic`, where ARIA forbids a
+    name. On `/discover` the tree therefore reads the map as one flat text run — “Laajavuori
+    Tuomiojärvi Z09 Z21 78 · Z14 …” — beside the named drawing, so a web screen reader hears the
+    zone ids and, separately, the legend's three state words, and **never the pairing between them**
+    (which state Z09 is in). On a device the platform reads `accessibilityLabel` from these labels —
+    that is the contract the map's unit test holds — so this is the web target's half of the
+    contract, like the `aria-checked` defects before it. It is not fixed here because
+    every fix is a design decision rather than a prop: give each label a role that permits a name
+    (an image with the state in its alternative), render the state as a word beside the zone id (a
+    drawing the frame does not draw), or say the zones' states in the map's own text alternative and
+    drop the per-label names. The frame's map carries state in colour alone, so whichever it is, it
+    is also the answer to the state-glyph question ADR-021 left open.
 
 ## Constraints
 
@@ -2300,71 +2300,72 @@ text alternative naming what it shows, not fifty accessible zone names.
 
 ## Important decisions
 
-| ADR | Decision |
-| --- | --- |
-| [ADR-001](docs/adr/ADR-001-mobile-framework.md) | React Native + Expo instead of Flutter |
-| [ADR-002](docs/adr/ADR-002-feature-based-modules.md) | Feature-based modules with a public entry point |
-| [ADR-003](docs/adr/ADR-003-atomic-design.md) | Atomic Design for UI composition |
-| [ADR-004](docs/adr/ADR-004-tdd-and-test-stack.md) | TDD with Jest + React Native Testing Library |
-| [ADR-005](docs/adr/ADR-005-offline-first-sync.md) | Offline-first capture with idempotent sync (design accepted, not implemented) |
-| [ADR-006](docs/adr/ADR-006-secure-credential-storage.md) | Credentials in platform secure storage, never in plain storage |
-| [ADR-007](docs/adr/ADR-007-repository-layout.md) | Single app package now; workspace when the backend lands |
-| [ADR-008](docs/adr/ADR-008-quality-tooling-and-ci.md) | ESLint + Prettier + Jest gates in CI; hooks deferred |
-| [ADR-009](docs/adr/ADR-009-scoring-model.md) | Per-visit yield score; server-only per-user trust score (band + reasons to its subject); score-gated access is server-side and auditable |
-| [ADR-010](docs/adr/ADR-010-position-retention.md) | Position retention: derived per-segment centroids, never movement traces; verification is probabilistic |
-| [ADR-011](docs/adr/ADR-011-backend-in-repo.md) | The backend joins this repository as `apps/api`; no npm workspace yet |
-| [ADR-012](docs/adr/ADR-012-privileged-surface.md) | Privileged capabilities stay out of the field app; they live in a separate operator surface |
-| [ADR-013](docs/adr/ADR-013-identity-provider.md) | Firebase Authentication for field users; tokens prove identity, never privilege (superseded by ADR-054) |
-| [ADR-014](docs/adr/ADR-014-retention-policy.md) | 12-month retention for visit, position and media data; scores outlive inputs only without personal data (superseded by ADR-055) |
-| [ADR-015](docs/adr/ADR-015-mobile-only-repository.md) | This repository is the mobile app at the root; supersedes ADR-007 and ADR-011 (itself superseded by ADR-052) |
-| [ADR-052](docs/adr/ADR-052-the-app-lives-in-the-team-monorepo.md) | The app lives in the team monorepo at `app/`: path-filtered CI, `main` as the only long-lived branch, app docs stay with the app; supersedes ADR-015 |
-| [ADR-016](docs/adr/ADR-016-figma-mcp-design-source.md) | Figma is the design source, reached through its remote MCP server (project-scope plugin; no write tools by default) |
-| [ADR-017](docs/adr/ADR-017-localization.md) | Finnish and English by the OS language setting, typed catalogues, no in-app picker |
-| [ADR-018](docs/adr/ADR-018-measure-layout-in-both-languages.md) | Layout measured in every shipped language by a browser harness in CI (Playwright on the static web export) |
-| [ADR-019](docs/adr/ADR-019-measure-at-the-largest-system-text-size.md) | Layout also measured at the largest system text size (200 %), and controls that must grow take a minimum height |
-| [ADR-020](docs/adr/ADR-020-record-consent-on-device.md) | Consent is recorded on the device (versioned key, written only on a decision, fail-closed on an unreadable value) and withdrawn on the privacy settings screen; it is sent nowhere |
-| [ADR-021](docs/adr/ADR-021-draw-the-map-from-the-designs-geometry.md) | The core map is drawn from the design's own geometry with `react-native-svg`, not by a map provider; the words on it are components, and nothing on it is a control yet — **still the map on frames 08 and 09; superseded for screen 06 by ADR-053** |
-| [ADR-053](docs/adr/ADR-053-the-discover-map-is-real-geography.md) | Screen 06's map is real geography through a `ZoneSource` port: MapLibre React Native on the device, the same rings drawn as an SVG on the web export (MapLibre has no web target), five yield-score bands with low confidence faded, no basemap or tile host yet, and every gesture off until the recentre control exists |
-| [ADR-022](docs/adr/ADR-022-one-app-shell-for-the-core-navigation.md) | One app shell owns the core navigation: it holds the tab routing over the nine screens the design gives the bar to, and an item keeps a quarter of the bar as its minimum so the bar wraps at the largest text size |
-| [ADR-023](docs/adr/ADR-023-the-local-gate-runs-the-formatting-check.md) | `npm run verify` runs the formatting check too, and a test keeps the local gate and CI's list of checks equal |
-| [ADR-024](docs/adr/ADR-024-saved-zones-on-the-device.md) | The picker's saved zones are a versioned record on the device, written and removed by frame 07's own bookmark, sent nowhere; the plan has no list surface yet because the design gives it none |
-| [ADR-025](docs/adr/ADR-025-observe-the-devices-connection.md) | The app reads the device's network state through `expo-network` and draws frame 13's “You're offline” only when the device reports no reachable connection; an unanswered platform is never guessed into a claim |
-| [ADR-026](docs/adr/ADR-026-marketplace-screens-as-a-disclosed-demo.md) | The four planned-marketplace frames are built as a disclosed demo outside the app shell: the design's own composition is the data, nothing acts that cannot act, and no payment, transport or listing service is invented |
-| [ADR-027](docs/adr/ADR-027-a-stand-in-verification-code.md) | Screen 04 accepts one stand-in code (`000000`) outside production builds, so the flow past it can be walked while the account service is decided and built; a production build accepts nothing and offers no verification |
-| [ADR-028](docs/adr/ADR-028-an-authentication-seam-behind-a-port.md) | One session port (`signIn`, `current`, `signOut`) with a stand-in provider behind it — the seam between the screens and the identity provider, so a signed-in app can be built before Firebase is decided |
-| [ADR-029](docs/adr/ADR-029-the-session-carries-the-accounts-name.md) | The session carries the account's name, so the account surface can say whose it is and the name screen 03 collects has a purpose; only the password stays behind |
-| [ADR-030](docs/adr/ADR-030-the-saved-plan-gets-a-screen.md) | The saved plan gets a screen under the Profile destination — the record in its own order, drawn from the app's own vocabulary because the design never drew it — so frame 14's row counts a surface that really exists |
-| [ADR-031](docs/adr/ADR-031-a-real-basemap-osm-derived-tiles-we-host.md) | The real basemap will be OSM-derived vector tiles **the project hosts itself** (Protomaps PMTiles), drawn by MapLibre React Native: no third-party tile host, no new processor, and nothing built until a zone service exists |
-| [ADR-032](docs/adr/ADR-032-the-first-backend-slice.md) | The first backend slice is one share record and one access rule: written and tested **here** as the specification the server enforces, accounts are identity-provider subjects and nothing else (no account row, no name, no address), every refusal is one answer on the wire, recipients become recipients by redeeming the sharer's own link, and nothing is deployed or processed |
-| [ADR-033](docs/adr/ADR-033-the-first-backend-slices-deployment-decisions.md) | **Proposed, no decision yet** — the four decisions ADR-032 left blocking (host and operator, region and DPAs, lawful basis per field, invite mechanics) get one skeleton to be filled with the owner's answers the day they arrive |
-| [ADR-034](docs/adr/ADR-034-signing-in-the-frame-the-journey-and-the-session.md) | **Recorded in part (2026-10-11)** — §1.1, §1.2, §1.3, §1.6, §1.7 and §2.1 answered and the sign-in screen built from them (one identifier field, then frame 04's code screen, outside the app shell, landing in the app); §1.4, §1.5 and §2.2–§4 still pending |
-| [ADR-035](docs/adr/ADR-035-shared-spots-the-frame-and-the-sharing-model.md) | **Proposed, no decision yet** — what a shared spot is, what to draw around it and what it commits us to get one skeleton to be filled with the designer's and owner's answers the day they arrive |
-| [ADR-036](docs/adr/ADR-036-the-zone-service-what-it-must-return.md) | **Proposed, no decision yet** — what a zone service must return (§1, this repository's reading to confirm or correct) and the calls about polygons, curation, ground truth and hosting (§2) get one skeleton to be filled with the owner's answers the day they arrive |
-| [ADR-037](docs/adr/ADR-037-what-a-share-points-at-if-the-sharer-names-the-place.md) | **Proposed, no decision yet** — the branch of “what a shared spot is” where the sharer names the place gets its follow-up prepared in advance: the grant's record carries the name and the read rule does not change, activated or withdrawn by §1.2's answer |
-| [ADR-038](docs/adr/ADR-038-a-session-may-carry-no-name.md) | A session may carry no name: the field is `string \| null`, an absent credential name means a returning account rather than a blank one, and a screen names such an account by its identifier instead of inventing a person |
-| [ADR-039](docs/adr/ADR-039-frame-14s-two-remaining-rows-get-their-screens.md) | Frame 14's two remaining rows get the screens behind them — an account surface that states the session's own facts and a device notice that answers the four questions per stored record — and neither invents terms, a notice or a control no service can carry |
-| [ADR-040](docs/adr/ADR-040-the-copy-the-app-owes-is-a-document.md) | The copy the app owes its users is one versioned JSON document (`picky.personal-data.v1`, the app's own field names, `incomplete` when a read failed), taken from an app-drawn screen and handed to the platform's own share sheet: the app picks no destination, uploads nothing, stores nothing new and creates no processor |
-| [ADR-041](docs/adr/ADR-041-a-session-that-can-run-out-says-so.md) | A session that can run out says so while it is running out: the account surface reads the clock once a second, shows the time left through the session's own pure rules, states the end and offers the way back in — and nothing is extended or refreshed silently |
-| [ADR-042](docs/adr/ADR-042-frame-13s-region-is-the-designs-sample.md) | Frame 13's downloaded region, tiles, forecast, storage meter, two actions and last-sync line are drawn as the design's own sample, labelled on the screen and kept in one `DEMO_*` module; the queue above them stays the picker's own record |
-| [ADR-043](docs/adr/ADR-043-three-waiting-frame-parts-get-their-answers.md) | Three parts of the frames that were waiting on a decision: frame 11's two period chips become a real choice filtering the visit history (the screen opens on “All visits”, the period and its count are stated, and a visit the period leaves out is counted rather than hidden), screen 03's terms link opens the device notice, and frame 12's alert preferences are drawn as the design's own sample — its switch a figure, its rows readings, no chevron on a row that opens nothing, and “View Zone 18” still absent |
-| [ADR-047](docs/adr/ADR-047-the-consent-says-what-the-app-does.md) | The consent says what the app does, and the background half goes to the owner: the copy on screen 05, frame 14's switch, the notice's row and screen 09's note state visit tracking while the app is open, the stored field is renamed `visitTracking` under a v2 key (amending ADR-020's field name, not its decision) and a record from the old shape is refused and cleared rather than migrated — with the background-permission decision, its five slots and what each answer changes in code, recorded as the owner's | Accepted in part (2026-10-12); §2 answered “no” by ADR-056 (2026-10-23) |
-| [ADR-046](docs/adr/ADR-046-the-tracker-gets-its-hook-and-the-zone-list-stays-out.md) | The tracker gets its hook and the zone list stays out of the app: `useVisitPresence` wires fix → containment → samples → visits with every rule still a pure function of its own, a fix is folded where it arrives (so no state is written in an effect and a repeated fix makes no second visit), the device gate stays the only gate, the visit id is the app's own UUID — and the scripted zone list the owner asked for lives in tests, because a scripted list in the app would be invented geography |
-| [ADR-045](docs/adr/ADR-045-a-position-behind-a-port-and-nothing-kept.md) | A position behind a port, read only with the picker's consent and only in the foreground, kept nowhere and logged nowhere: `expo-location` behind `PositionSource`, `granted`/`denied`/`unavailable` with anything that is not a yes never read as one, a guard that fails if a background-permission switch appears in `app.json`, and a pure rule that closes the zone left before opening the zone entered — while the frames' recentre control stays absent with the corrected reason: the drawing carries no geography, so it waits on the real basemap beside a position source |
-| [ADR-044](docs/adr/ADR-044-the-partial-frames-remaining-parts.md) | The partial frames' remaining parts: frame 07's “See all 11” opens an app-drawn screen that states the design's sample week and lists the reports this phone holds for the zone (the queue's own zone identity read through one function, another zone's report never printed under this zone's name, the missing report service named, a failed read stated) with the frame's label kept and the accessible name saying where it leads — and the five parts that need a position source, a map that moves, a zone source, a listings service or a payment provider stay absent, recorded with what has to exist first |
-| [ADR-048](docs/adr/ADR-048-the-verification-copy-claims-no-delivery.md) | The verification copy claims no delivery: the seven strings that said a code was sent — screen 04's heading, supporting line and phone note, the sign-in screen's supporting line and its action, the account surface's reach line and the device notice's account record — say what the step is for and name the destination the code belongs to, with the frame's own words recorded as the branch that earns them (email, SMS, or nothing), the resend row drawn only where a caller can send a code, and the claims guard's family empty and asserted empty | Accepted (2026-10-12) |
-| [ADR-049](docs/adr/ADR-049-screen-04s-phone-states-and-the-words-that-follow-them.md) | Screen 04's phone states and the words that follow them — which screen a phone sign-up and a phone sign-in see, the title, the change action, the foot card and the destination as printed when the code travels to a number, and the resend wait behind them — in one place to be recorded the day the design owner's and owner's answers arrive | **Recorded in part (2026-10-13)** — every slot holds this repository's **assumed** answer, built at the owner's instruction: two keys per language, the branch passed into the screen, the shared identifier rule moved to `src/utils/identifier.ts`, a harness entry reached by walking screen 03's phone path, and a walk that carries a number into the state — with the departure from the frame recorded; the design owner's and owner's own answers are still owed and supersede any of them, slot by slot |
-| [ADR-050](docs/adr/ADR-050-screen-05s-continue-action-says-what-the-press-does.md) | Screen 05's continue action says what the press does: “Continue to the map” / “Jatka kartalle” in place of the frame's settings step, no settings surface built for it to open, and the frame's own words kept as the label for the journey that really does lead to one | Accepted (2026-10-13) |
-| [ADR-051](docs/adr/ADR-051-the-team-mvp-plan-becomes-the-apps-target.md) | The team's MVP plan is the app's target: one FastAPI backend behind a generated OpenAPI client, TanStack Query over a Drizzle/SQLite cache with an outbox and a sync engine, MapLibre with real zone geometry and offline packs, and the plan's visit state machine — while the Figma frames still decide what a screen looks like and nothing built is deleted by adopting it | **Proposed (2026-10-22)**: direction adopted on the owner's instruction; the identity provider, the drawn map's retirement, the two meanings of *yield score* and the MVP's screen list are the owner's answers before the first build step |
-| [ADR-054](docs/adr/ADR-054-the-account-belongs-to-the-api.md) | The account belongs to the team's API and Firebase issues the credential: one account row keyed by the provider subject (locale, consent, the session's name), email + password at Firebase with no password, hash or reset token in our database, ID tokens verified by the API, `/auth/login` a token exchange if the name is kept, registration idempotent and recoverable across the two systems, phone deferred, deletion spanning both | Accepted (2026-10-23; supersedes ADR-013) |
-| [ADR-055](docs/adr/ADR-055-retention-and-processors.md) | Retention and processors: 12 months for visits, segments, centroids, reports and media; aggregates without personal data may outlive them; backups 30 days; crash reports 90 days in Sentry's EU region; server logs 30 days; EU-only processors; lawful basis per purpose; server-side export, delete and restriction owed before a beta | Accepted (2026-10-23; supersedes ADR-014; answers ADR-010 decision 4 and ADR-047 §2.4–2.5) |
-| [ADR-056](docs/adr/ADR-056-background-capture-is-out-of-scope.md) | Background capture is out of scope for v1: no iOS “Always”, no Android background location, no foreground service and no background task; the permission guard is the enforcement, the frames' promise stays a recorded departure, foreground detection is unchanged, and the plan's background task is deferred to a future ADR rather than dropped | Accepted (2026-10-23; supersedes ADR-047 §2) |
-| [ADR-057](docs/adr/ADR-057-screen-06-reads-one-zone-source.md) | Screen 06 reads one zone source: the screen asks the port once and hands the same answer to the map, card and list; the field filters by zone name and the single-select species chips choose the score layer; the card and rows are readings, and the frame's walk distance and card-to-zone-screen link are dropped until screen 07 reads the source | Accepted (2026-10-23; amends ADR-053; extended by ADR-058, which links the card again) |
-| [ADR-058](docs/adr/ADR-058-screen-07-reads-the-zone-source.md) | Screen 07 reads the zone source: the card hands over its zone and score layer and links again; the name, species, score, confidence and ripeness come from the port, the demo week leaves the yield card, and the outlook, report, walk and report list stay the design's sample behind a sentence saying so — with an unknown id stated rather than filled from the demo, and the no-id path kept for the saved plan until it reads the source | Accepted (2026-10-24; extends ADR-057) |
-| [ADR-059](docs/adr/ADR-059-email-password-replaces-the-code-screen.md) | Email + password replaces the code screen: screen 03 is one email-only form keeping the frame's composition, screen 04 and its route, domain, countdown, code field and `000000` stand-in are deleted, `/sign-in` is re-cut to email + password, and the standing session port accepts any non-empty password outside production (verifying nothing) while a production build accepts none — the password is never stored | Accepted (2026-10-24; retires ADR-027, extends ADR-054/028/034, amends ADR-054 decision 8, supersedes ADR-049 and the screen-04 half of ADR-048) |
-| [ADR-060](docs/adr/ADR-060-the-saved-plan-reads-the-zone-source.md) | The saved plan reads the zone source: the record's identifiers resolve against the same `ZoneSource` answer frame 06 and screen 07 read (for the pilot berry, since the record stores a place and not a layer), so a saved zone shows its name and opens its details again; the record's order and its unknown ids survive, an identifier the source does not answer to is named and claims no role, there is no fallback to `DEMO_ZONES`, both reads must finish before an id is called unknown, and screen 07's no-id demo is the bare URL's alone | Accepted (2026-10-24; supersedes ADR-030 decisions 3 and 6 and ADR-058 decision 6's saved-plan half; amended by ADR-061) |
-| [ADR-061](docs/adr/ADR-061-the-saved-zone-remembers-its-berry.md) | The saved zone remembers its berry: the bookmark writes the score layer screen 07 is reading, the record keeps it as an additive optional field under `picky.saved-zones.v1` (a pre-widening plan shows the pilot layer rather than an invented one), the plan asks the source once per saved berry and resolves each row from its own answer, a pending berry hides the rows and a failed one is stated while answered layers list, and the row and the details it opens use the saved berry together | Accepted (2026-10-24; extends ADR-060 decision 4 and ADR-024, amends ADR-024 decision 1's per-zone shape) |
-| [ADR-062](docs/adr/ADR-062-password-reset-belongs-to-the-provider.md) | Password reset asks the provider, and the app keeps no token: `/sign-in` gains “Forgot password?”, an app-drawn request screen keeps the sign-in framing, `SessionPort.requestPasswordReset` is the one new operation, the provider sends the email and hosts the new-password page, the stand-in accepts outside production and says no email was sent, no string claims a delivery or reveals an account, and a production build cannot request a link | Accepted (2026-10-24; answers ADR-034 §1.5, amends ADR-059 decision 4, extends ADR-028 and ADR-048) |
-| [ADR-063](docs/adr/ADR-063-the-watch-has-a-cadence-and-an-accuracy-budget.md) | The foreground watch has a budget: high accuracy, a 50 m distance filter, and a 60 s time ceiling on Android (iOS filters by distance alone), foreground only — chosen for kilometre-scale zone boundaries against a 5-minute dwell, with the battery cost, the sub-50 m movement it can miss and the platform asymmetry recorded, and no ticker or background capture added | Accepted (2026-10-24; answers ADR-045 decision 8's foreground half, ADR-047 §2.3 and PROJECT open question 21; extends ADR-046 and ADR-056) |
+| ADR                                                                                   | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [ADR-001](docs/adr/ADR-001-mobile-framework.md)                                       | React Native + Expo instead of Flutter                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| [ADR-002](docs/adr/ADR-002-feature-based-modules.md)                                  | Feature-based modules with a public entry point                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| [ADR-003](docs/adr/ADR-003-atomic-design.md)                                          | Atomic Design for UI composition                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| [ADR-004](docs/adr/ADR-004-tdd-and-test-stack.md)                                     | TDD with Jest + React Native Testing Library                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| [ADR-005](docs/adr/ADR-005-offline-first-sync.md)                                     | Offline-first capture with idempotent sync (design accepted, not implemented)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| [ADR-006](docs/adr/ADR-006-secure-credential-storage.md)                              | Credentials in platform secure storage, never in plain storage                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| [ADR-007](docs/adr/ADR-007-repository-layout.md)                                      | Single app package now; workspace when the backend lands                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| [ADR-008](docs/adr/ADR-008-quality-tooling-and-ci.md)                                 | ESLint + Prettier + Jest gates in CI; hooks deferred                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| [ADR-009](docs/adr/ADR-009-scoring-model.md)                                          | Per-visit yield score; server-only per-user trust score (band + reasons to its subject); score-gated access is server-side and auditable                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| [ADR-010](docs/adr/ADR-010-position-retention.md)                                     | Position retention: derived per-segment centroids, never movement traces; verification is probabilistic                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| [ADR-011](docs/adr/ADR-011-backend-in-repo.md)                                        | The backend joins this repository as `apps/api`; no npm workspace yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| [ADR-012](docs/adr/ADR-012-privileged-surface.md)                                     | Privileged capabilities stay out of the field app; they live in a separate operator surface                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| [ADR-013](docs/adr/ADR-013-identity-provider.md)                                      | Firebase Authentication for field users; tokens prove identity, never privilege (superseded by ADR-054)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| [ADR-014](docs/adr/ADR-014-retention-policy.md)                                       | 12-month retention for visit, position and media data; scores outlive inputs only without personal data (superseded by ADR-055)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| [ADR-015](docs/adr/ADR-015-mobile-only-repository.md)                                 | This repository is the mobile app at the root; supersedes ADR-007 and ADR-011 (itself superseded by ADR-052)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| [ADR-052](docs/adr/ADR-052-the-app-lives-in-the-team-monorepo.md)                     | The app lives in the team monorepo at `app/`: path-filtered CI, `main` as the only long-lived branch, app docs stay with the app; supersedes ADR-015                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| [ADR-016](docs/adr/ADR-016-figma-mcp-design-source.md)                                | Figma is the design source, reached through its remote MCP server (project-scope plugin; no write tools by default)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| [ADR-017](docs/adr/ADR-017-localization.md)                                           | Finnish and English by the OS language setting, typed catalogues, no in-app picker                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| [ADR-018](docs/adr/ADR-018-measure-layout-in-both-languages.md)                       | Layout measured in every shipped language by a browser harness in CI (Playwright on the static web export)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| [ADR-019](docs/adr/ADR-019-measure-at-the-largest-system-text-size.md)                | Layout also measured at the largest system text size (200 %), and controls that must grow take a minimum height                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| [ADR-020](docs/adr/ADR-020-record-consent-on-device.md)                               | Consent is recorded on the device (versioned key, written only on a decision, fail-closed on an unreadable value) and withdrawn on the privacy settings screen; it is sent nowhere                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| [ADR-021](docs/adr/ADR-021-draw-the-map-from-the-designs-geometry.md)                 | The core map is drawn from the design's own geometry with `react-native-svg`, not by a map provider; the words on it are components, and nothing on it is a control yet — **still the map on frames 08 and 09; superseded for screen 06 by ADR-053**                                                                                                                                                                                                                                                                                                                                                                   |
+| [ADR-053](docs/adr/ADR-053-the-discover-map-is-real-geography.md)                     | Screen 06's map is real geography through a `ZoneSource` port: MapLibre React Native on the device, the same rings drawn as an SVG on the web export (MapLibre has no web target), five yield-score bands with low confidence faded, no basemap or tile host yet, and every gesture off until the recentre control exists                                                                                                                                                                                                                                                                                              |
+| [ADR-022](docs/adr/ADR-022-one-app-shell-for-the-core-navigation.md)                  | One app shell owns the core navigation: it holds the tab routing over the nine screens the design gives the bar to, and an item keeps a quarter of the bar as its minimum so the bar wraps at the largest text size                                                                                                                                                                                                                                                                                                                                                                                                    |
+| [ADR-023](docs/adr/ADR-023-the-local-gate-runs-the-formatting-check.md)               | `npm run verify` runs the formatting check too, and a test keeps the local gate and CI's list of checks equal                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| [ADR-024](docs/adr/ADR-024-saved-zones-on-the-device.md)                              | The picker's saved zones are a versioned record on the device, written and removed by frame 07's own bookmark, sent nowhere; the plan has no list surface yet because the design gives it none                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| [ADR-025](docs/adr/ADR-025-observe-the-devices-connection.md)                         | The app reads the device's network state through `expo-network` and draws frame 13's “You're offline” only when the device reports no reachable connection; an unanswered platform is never guessed into a claim                                                                                                                                                                                                                                                                                                                                                                                                       |
+| [ADR-026](docs/adr/ADR-026-marketplace-screens-as-a-disclosed-demo.md)                | The four planned-marketplace frames are built as a disclosed demo outside the app shell: the design's own composition is the data, nothing acts that cannot act, and no payment, transport or listing service is invented                                                                                                                                                                                                                                                                                                                                                                                              |
+| [ADR-027](docs/adr/ADR-027-a-stand-in-verification-code.md)                           | Screen 04 accepts one stand-in code (`000000`) outside production builds, so the flow past it can be walked while the account service is decided and built; a production build accepts nothing and offers no verification                                                                                                                                                                                                                                                                                                                                                                                              |
+| [ADR-028](docs/adr/ADR-028-an-authentication-seam-behind-a-port.md)                   | One session port (`signIn`, `current`, `signOut`) with a stand-in provider behind it — the seam between the screens and the identity provider, so a signed-in app can be built before Firebase is decided                                                                                                                                                                                                                                                                                                                                                                                                              |
+| [ADR-029](docs/adr/ADR-029-the-session-carries-the-accounts-name.md)                  | The session carries the account's name, so the account surface can say whose it is and the name screen 03 collects has a purpose; only the password stays behind                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| [ADR-030](docs/adr/ADR-030-the-saved-plan-gets-a-screen.md)                           | The saved plan gets a screen under the Profile destination — the record in its own order, drawn from the app's own vocabulary because the design never drew it — so frame 14's row counts a surface that really exists                                                                                                                                                                                                                                                                                                                                                                                                 |
+| [ADR-031](docs/adr/ADR-031-a-real-basemap-osm-derived-tiles-we-host.md)               | The real basemap will be OSM-derived vector tiles **the project hosts itself** (Protomaps PMTiles), drawn by MapLibre React Native: no third-party tile host, no new processor, and nothing built until a zone service exists                                                                                                                                                                                                                                                                                                                                                                                          |
+| [ADR-032](docs/adr/ADR-032-the-first-backend-slice.md)                                | The first backend slice is one share record and one access rule: written and tested **here** as the specification the server enforces, accounts are identity-provider subjects and nothing else (no account row, no name, no address), every refusal is one answer on the wire, recipients become recipients by redeeming the sharer's own link, and nothing is deployed or processed                                                                                                                                                                                                                                  |
+| [ADR-033](docs/adr/ADR-033-the-first-backend-slices-deployment-decisions.md)          | **Proposed, no decision yet** — the four decisions ADR-032 left blocking (host and operator, region and DPAs, lawful basis per field, invite mechanics) get one skeleton to be filled with the owner's answers the day they arrive                                                                                                                                                                                                                                                                                                                                                                                     |
+| [ADR-034](docs/adr/ADR-034-signing-in-the-frame-the-journey-and-the-session.md)       | **Recorded in part (2026-10-11)** — §1.1, §1.2, §1.3, §1.6, §1.7 and §2.1 answered and the sign-in screen built from them (one identifier field, then frame 04's code screen, outside the app shell, landing in the app); §1.4, §1.5 and §2.2–§4 still pending                                                                                                                                                                                                                                                                                                                                                         |
+| [ADR-035](docs/adr/ADR-035-shared-spots-the-frame-and-the-sharing-model.md)           | **Proposed, no decision yet** — what a shared spot is, what to draw around it and what it commits us to get one skeleton to be filled with the designer's and owner's answers the day they arrive                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| [ADR-036](docs/adr/ADR-036-the-zone-service-what-it-must-return.md)                   | **Proposed, no decision yet** — what a zone service must return (§1, this repository's reading to confirm or correct) and the calls about polygons, curation, ground truth and hosting (§2) get one skeleton to be filled with the owner's answers the day they arrive                                                                                                                                                                                                                                                                                                                                                 |
+| [ADR-037](docs/adr/ADR-037-what-a-share-points-at-if-the-sharer-names-the-place.md)   | **Proposed, no decision yet** — the branch of “what a shared spot is” where the sharer names the place gets its follow-up prepared in advance: the grant's record carries the name and the read rule does not change, activated or withdrawn by §1.2's answer                                                                                                                                                                                                                                                                                                                                                          |
+| [ADR-038](docs/adr/ADR-038-a-session-may-carry-no-name.md)                            | A session may carry no name: the field is `string \| null`, an absent credential name means a returning account rather than a blank one, and a screen names such an account by its identifier instead of inventing a person                                                                                                                                                                                                                                                                                                                                                                                            |
+| [ADR-039](docs/adr/ADR-039-frame-14s-two-remaining-rows-get-their-screens.md)         | Frame 14's two remaining rows get the screens behind them — an account surface that states the session's own facts and a device notice that answers the four questions per stored record — and neither invents terms, a notice or a control no service can carry                                                                                                                                                                                                                                                                                                                                                       |
+| [ADR-040](docs/adr/ADR-040-the-copy-the-app-owes-is-a-document.md)                    | The copy the app owes its users is one versioned JSON document (`picky.personal-data.v1`, the app's own field names, `incomplete` when a read failed), taken from an app-drawn screen and handed to the platform's own share sheet: the app picks no destination, uploads nothing, stores nothing new and creates no processor                                                                                                                                                                                                                                                                                         |
+| [ADR-041](docs/adr/ADR-041-a-session-that-can-run-out-says-so.md)                     | A session that can run out says so while it is running out: the account surface reads the clock once a second, shows the time left through the session's own pure rules, states the end and offers the way back in — and nothing is extended or refreshed silently                                                                                                                                                                                                                                                                                                                                                     |
+| [ADR-042](docs/adr/ADR-042-frame-13s-region-is-the-designs-sample.md)                 | Frame 13's downloaded region, tiles, forecast, storage meter, two actions and last-sync line are drawn as the design's own sample, labelled on the screen and kept in one `DEMO_*` module; the queue above them stays the picker's own record                                                                                                                                                                                                                                                                                                                                                                          |
+| [ADR-043](docs/adr/ADR-043-three-waiting-frame-parts-get-their-answers.md)            | Three parts of the frames that were waiting on a decision: frame 11's two period chips become a real choice filtering the visit history (the screen opens on “All visits”, the period and its count are stated, and a visit the period leaves out is counted rather than hidden), screen 03's terms link opens the device notice, and frame 12's alert preferences are drawn as the design's own sample — its switch a figure, its rows readings, no chevron on a row that opens nothing, and “View Zone 18” still absent                                                                                              |
+| [ADR-047](docs/adr/ADR-047-the-consent-says-what-the-app-does.md)                     | The consent says what the app does, and the background half goes to the owner: the copy on screen 05, frame 14's switch, the notice's row and screen 09's note state visit tracking while the app is open, the stored field is renamed `visitTracking` under a v2 key (amending ADR-020's field name, not its decision) and a record from the old shape is refused and cleared rather than migrated — with the background-permission decision, its five slots and what each answer changes in code, recorded as the owner's                                                                                            | Accepted in part (2026-10-12); §2 answered “no” by ADR-056 (2026-10-23)                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| [ADR-046](docs/adr/ADR-046-the-tracker-gets-its-hook-and-the-zone-list-stays-out.md)  | The tracker gets its hook and the zone list stays out of the app: `useVisitPresence` wires fix → containment → samples → visits with every rule still a pure function of its own, a fix is folded where it arrives (so no state is written in an effect and a repeated fix makes no second visit), the device gate stays the only gate, the visit id is the app's own UUID — and the scripted zone list the owner asked for lives in tests, because a scripted list in the app would be invented geography                                                                                                             |
+| [ADR-045](docs/adr/ADR-045-a-position-behind-a-port-and-nothing-kept.md)              | A position behind a port, read only with the picker's consent and only in the foreground, kept nowhere and logged nowhere: `expo-location` behind `PositionSource`, `granted`/`denied`/`unavailable` with anything that is not a yes never read as one, a guard that fails if a background-permission switch appears in `app.json`, and a pure rule that closes the zone left before opening the zone entered — while the frames' recentre control stays absent with the corrected reason: the drawing carries no geography, so it waits on the real basemap beside a position source                                  |
+| [ADR-044](docs/adr/ADR-044-the-partial-frames-remaining-parts.md)                     | The partial frames' remaining parts: frame 07's “See all 11” opens an app-drawn screen that states the design's sample week and lists the reports this phone holds for the zone (the queue's own zone identity read through one function, another zone's report never printed under this zone's name, the missing report service named, a failed read stated) with the frame's label kept and the accessible name saying where it leads — and the five parts that need a position source, a map that moves, a zone source, a listings service or a payment provider stay absent, recorded with what has to exist first |
+| [ADR-048](docs/adr/ADR-048-the-verification-copy-claims-no-delivery.md)               | The verification copy claims no delivery: the seven strings that said a code was sent — screen 04's heading, supporting line and phone note, the sign-in screen's supporting line and its action, the account surface's reach line and the device notice's account record — say what the step is for and name the destination the code belongs to, with the frame's own words recorded as the branch that earns them (email, SMS, or nothing), the resend row drawn only where a caller can send a code, and the claims guard's family empty and asserted empty                                                        | Accepted (2026-10-12)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| [ADR-049](docs/adr/ADR-049-screen-04s-phone-states-and-the-words-that-follow-them.md) | Screen 04's phone states and the words that follow them — which screen a phone sign-up and a phone sign-in see, the title, the change action, the foot card and the destination as printed when the code travels to a number, and the resend wait behind them — in one place to be recorded the day the design owner's and owner's answers arrive                                                                                                                                                                                                                                                                      | **Recorded in part (2026-10-13)** — every slot holds this repository's **assumed** answer, built at the owner's instruction: two keys per language, the branch passed into the screen, the shared identifier rule moved to `src/utils/identifier.ts`, a harness entry reached by walking screen 03's phone path, and a walk that carries a number into the state — with the departure from the frame recorded; the design owner's and owner's own answers are still owed and supersede any of them, slot by slot |
+| [ADR-050](docs/adr/ADR-050-screen-05s-continue-action-says-what-the-press-does.md)    | Screen 05's continue action says what the press does: “Continue to the map” / “Jatka kartalle” in place of the frame's settings step, no settings surface built for it to open, and the frame's own words kept as the label for the journey that really does lead to one                                                                                                                                                                                                                                                                                                                                               | Accepted (2026-10-13)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| [ADR-051](docs/adr/ADR-051-the-team-mvp-plan-becomes-the-apps-target.md)              | The team's MVP plan is the app's target: one FastAPI backend behind a generated OpenAPI client, TanStack Query over a Drizzle/SQLite cache with an outbox and a sync engine, MapLibre with real zone geometry and offline packs, and the plan's visit state machine — while the Figma frames still decide what a screen looks like and nothing built is deleted by adopting it                                                                                                                                                                                                                                         | **Proposed (2026-10-22)**: direction adopted on the owner's instruction; the identity provider, the drawn map's retirement, the two meanings of _yield score_ and the MVP's screen list are the owner's answers before the first build step                                                                                                                                                                                                                                                                      |
+| [ADR-054](docs/adr/ADR-054-the-account-belongs-to-the-api.md)                         | The account belongs to the team's API and Firebase issues the credential: one account row keyed by the provider subject (locale, consent, the session's name), email + password at Firebase with no password, hash or reset token in our database, ID tokens verified by the API, `/auth/login` a token exchange if the name is kept, registration idempotent and recoverable across the two systems, phone deferred, deletion spanning both                                                                                                                                                                           | Accepted (2026-10-23; supersedes ADR-013)                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| [ADR-055](docs/adr/ADR-055-retention-and-processors.md)                               | Retention and processors: 12 months for visits, segments, centroids, reports and media; aggregates without personal data may outlive them; backups 30 days; crash reports 90 days in Sentry's EU region; server logs 30 days; EU-only processors; lawful basis per purpose; server-side export, delete and restriction owed before a beta                                                                                                                                                                                                                                                                              | Accepted (2026-10-23; supersedes ADR-014; answers ADR-010 decision 4 and ADR-047 §2.4–2.5)                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| [ADR-056](docs/adr/ADR-056-background-capture-is-out-of-scope.md)                     | Background capture is out of scope for v1: no iOS “Always”, no Android background location, no foreground service and no background task; the permission guard is the enforcement, the frames' promise stays a recorded departure, foreground detection is unchanged, and the plan's background task is deferred to a future ADR rather than dropped                                                                                                                                                                                                                                                                   | Accepted (2026-10-23; supersedes ADR-047 §2)                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| [ADR-057](docs/adr/ADR-057-screen-06-reads-one-zone-source.md)                        | Screen 06 reads one zone source: the screen asks the port once and hands the same answer to the map, card and list; the field filters by zone name and the single-select species chips choose the score layer; the card and rows are readings, and the frame's walk distance and card-to-zone-screen link are dropped until screen 07 reads the source                                                                                                                                                                                                                                                                 | Accepted (2026-10-23; amends ADR-053; extended by ADR-058, which links the card again)                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| [ADR-058](docs/adr/ADR-058-screen-07-reads-the-zone-source.md)                        | Screen 07 reads the zone source: the card hands over its zone and score layer and links again; the name, species, score, confidence and ripeness come from the port, the demo week leaves the yield card, and the outlook, report, walk and report list stay the design's sample behind a sentence saying so — with an unknown id stated rather than filled from the demo, and the no-id path kept for the saved plan until it reads the source                                                                                                                                                                        | Accepted (2026-10-24; extends ADR-057)                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| [ADR-059](docs/adr/ADR-059-email-password-replaces-the-code-screen.md)                | Email + password replaces the code screen: screen 03 is one email-only form keeping the frame's composition, screen 04 and its route, domain, countdown, code field and `000000` stand-in are deleted, `/sign-in` is re-cut to email + password, and the standing session port accepts any non-empty password outside production (verifying nothing) while a production build accepts none — the password is never stored                                                                                                                                                                                              | Accepted (2026-10-24; retires ADR-027, extends ADR-054/028/034, amends ADR-054 decision 8, supersedes ADR-049 and the screen-04 half of ADR-048)                                                                                                                                                                                                                                                                                                                                                                 |
+| [ADR-060](docs/adr/ADR-060-the-saved-plan-reads-the-zone-source.md)                   | The saved plan reads the zone source: the record's identifiers resolve against the same `ZoneSource` answer frame 06 and screen 07 read (for the pilot berry, since the record stores a place and not a layer), so a saved zone shows its name and opens its details again; the record's order and its unknown ids survive, an identifier the source does not answer to is named and claims no role, there is no fallback to `DEMO_ZONES`, both reads must finish before an id is called unknown, and screen 07's no-id demo is the bare URL's alone                                                                   | Accepted (2026-10-24; supersedes ADR-030 decisions 3 and 6 and ADR-058 decision 6's saved-plan half; amended by ADR-061)                                                                                                                                                                                                                                                                                                                                                                                         |
+| [ADR-061](docs/adr/ADR-061-the-saved-zone-remembers-its-berry.md)                     | The saved zone remembers its berry: the bookmark writes the score layer screen 07 is reading, the record keeps it as an additive optional field under `picky.saved-zones.v1` (a pre-widening plan shows the pilot layer rather than an invented one), the plan asks the source once per saved berry and resolves each row from its own answer, a pending berry hides the rows and a failed one is stated while answered layers list, and the row and the details it opens use the saved berry together                                                                                                                 | Accepted (2026-10-24; extends ADR-060 decision 4 and ADR-024, amends ADR-024 decision 1's per-zone shape)                                                                                                                                                                                                                                                                                                                                                                                                        |
+| [ADR-062](docs/adr/ADR-062-password-reset-belongs-to-the-provider.md)                 | Password reset asks the provider, and the app keeps no token: `/sign-in` gains “Forgot password?”, an app-drawn request screen keeps the sign-in framing, `SessionPort.requestPasswordReset` is the one new operation, the provider sends the email and hosts the new-password page, the stand-in accepts outside production and says no email was sent, no string claims a delivery or reveals an account, and a production build cannot request a link                                                                                                                                                               | Accepted (2026-10-24; answers ADR-034 §1.5, amends ADR-059 decision 4, extends ADR-028 and ADR-048)                                                                                                                                                                                                                                                                                                                                                                                                              |
+| [ADR-063](docs/adr/ADR-063-the-watch-has-a-cadence-and-an-accuracy-budget.md)         | The foreground watch has a budget: high accuracy, a 50 m distance filter, and a 60 s time ceiling on Android (iOS filters by distance alone), foreground only — chosen for kilometre-scale zone boundaries against a 5-minute dwell, with the battery cost, the sub-50 m movement it can miss and the platform asymmetry recorded, and no ticker or background capture added                                                                                                                                                                                                                                           | Accepted (2026-10-24; answers ADR-045 decision 8's foreground half, ADR-047 §2.3 and PROJECT open question 21; extends ADR-046 and ADR-056)                                                                                                                                                                                                                                                                                                                                                                      |
+| [ADR-064](docs/adr/ADR-064-a-yield-score-is-a-zone-forecast.md)                       | A yield score is the zone's 0–100 forecast; a picker's 1–5 plentifulness answer is a harvest rating, and the app's report copy says so                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Accepted (2026-10-25)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 
 ## Deployment
 
@@ -2375,11 +2376,11 @@ EAS is configured as of 2026-10-21: the project is `@salmanprottoy/picky-mobile-
 profiles, and `android.package` is `fi.picky.app` (open question 4; the iOS bundle identifier
 is still unset, so an iOS build needs that decision first).
 
-| Profile | What it makes | Use |
-| ------- | ------------- | --- |
-| `development` | APK with the dev client, internal distribution | A development build on a phone, connecting to `npm start` |
-| `preview` | **APK, internal distribution**, `EXPO_PUBLIC_APP_ENV=preview` | The demo build shared with testers: download link, sideload, no dev server |
-| `production` | AAB (Play Store), `EXPO_PUBLIC_APP_ENV=production` | Not ready: the production gate is deliberate (ADR-027) |
+| Profile       | What it makes                                                 | Use                                                                        |
+| ------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `development` | APK with the dev client, internal distribution                | A development build on a phone, connecting to `npm start`                  |
+| `preview`     | **APK, internal distribution**, `EXPO_PUBLIC_APP_ENV=preview` | The demo build shared with testers: download link, sideload, no dev server |
+| `production`  | AAB (Play Store), `EXPO_PUBLIC_APP_ENV=production`            | Not ready: the production gate is deliberate (ADR-027)                     |
 
 The first demo APK was built from this tree on 2026-10-21, **before** the SDK 58 upgrade; the
 build page below is that pre-upgrade artifact. A fresh `npm run build:android:demo` produces an APK
@@ -2426,7 +2427,7 @@ These block or shape feature work and need an owner decision:
    `picky-berry-assistant/`, and the API is its sibling `../backend/` (ADR-052); what remains
    open is only deployment — which host, who operates it, and how its secrets are managed, all
    the team's (`../deploy/`, `../docs/architecture.md`). [ADR-032](docs/adr/ADR-032-the-first-backend-slice.md)
-   fixes the first slice's *shape* and leaves this question exactly where it is: the host under
+   fixes the first slice's _shape_ and leaves this question exactly where it is: the host under
    evaluation is a managed SQL database in an EU region behind a small TypeScript API, and
    choosing it is this question's answer, not a repository decision. Asked of the owner,
    with the slice's other blockers, in
@@ -2442,14 +2443,14 @@ These block or shape feature work and need an owner decision:
 6. ~~Marketplace/rewards payments~~ — **resolved**: no real money in v1 (PROJECT.md
    decision 14). Still open: what a non-monetary reward can actually be exchanged
    for, given it must not become a currency by accident.
-7. Offline conflict policy: the v1 *scope* is decided (capture only), but not what
+7. Offline conflict policy: the v1 _scope_ is decided (capture only), but not what
    happens when a queued visit or feedback is rejected by the server after the user
    has already seen it accepted locally, nor what the user is shown.
 8. ~~Berry ontology~~ — **resolved**: research-only for v1 (decision 18).
 9. **Zone overlap** (new, found while designing containment): zones are curated
    polygons, but nothing yet says what happens when a point is inside two of them.
-   The assumption is no longer buried in the implementation: containment decides *which
-   zones contain the point* and takes the *choice* as a rule the caller supplies
+   The assumption is no longer buried in the implementation: containment decides _which
+   zones contain the point_ and takes the _choice_ as a rule the caller supplies
    (`ZoneResolution` in `src/features/visits/domain/zone-containment.ts`), the
    server's order being the named default — the behaviour to date, not a requirement.
    The cases for a curated unit below a zone are written
@@ -2457,7 +2458,7 @@ These block or shape feature work and need an owner decision:
    rewrite of the geometry. Asked, with the rest of the geometry model (nesting, boundary
    margins, whether anything curated exists below a zone, what a zone is authoritative about), in
    [to-questionnaire-zone-service.md](to-questionnaire-zone-service.md) §2.4–§2.5 — the
-   *shared*-spot half of “nesting” is asked once, and there:
+   _shared_-spot half of “nesting” is asked once, and there:
    [to-questionnaire-community-map.md](to-questionnaire-community-map.md) §1.2.
 10. **Which clock decides the calendar-day span** (new, from decision 16): the device's
     local timezone, a fixed business timezone, or UTC. The tracker takes the day
@@ -2508,7 +2509,7 @@ These block or shape feature work and need an owner decision:
     needed before GPS capture ships — systematic location monitoring is a likely
     high-risk case (SECURITY.md §16). The engineering side is ready for the decision;
     the decision itself is not ours to make. For the first slice's own tables it is asked
-    field by field in    [to-questionnaire-backend.md](to-questionnaire-backend.md).
+    field by field in [to-questionnaire-backend.md](to-questionnaire-backend.md).
     **Answered in part (2026-10-23)**: the lawful basis per purpose is recorded in
     [ADR-055](docs/adr/ADR-055-retention-and-processors.md) decision 9 (contract for the account,
     consent for tracking, legitimate interest for anti-fraud and security, with the balancing test
@@ -2581,7 +2582,7 @@ These block or shape feature work and need an owner decision:
     becomes demonstrable to anyone but the device it was given on** — it is sent nowhere
     today, and whether the server needs to know it (and how that survives a reinstall) is
     part of the lawful-basis decision. Also open: the frame draws the consent ticked, and
-    this app ships it unchecked; the owner has not been asked to confirm that departure    the way screen 03's is asked about (open question 11).
+    this app ships it unchecked; the owner has not been asked to confirm that departure the way screen 03's is asked about (open question 11).
     **Answered in part (2026-10-12)**: the app asks the platform for the **foreground** permission
     only — no “Always”, no Android background location and no foreground service — and reads nothing
     until the picker's own consent record says yes ([ADR-045](docs/adr/ADR-045-a-position-behind-a-port-and-nothing-kept.md)).
@@ -2614,36 +2615,36 @@ These block or shape feature work and need an owner decision:
     empty — no phone has run it yet. What remains here is the notice and the design's ticked row.
 
 22. **The core navigation's shape — what is answered, and what is still the owner's.** The design
-draws the same tab bar on frames 06–14 (Discover, Visits, Alerts, Profile) but says nothing about
-how it behaves. Three parts of that were open, and two are settled by what exists: the
-destinations are not placeholders (all four are built screens), and a push from onboarding keeps the bar
-(screen 05's action leads into the shell). **Built 2026-10-10 as an assumption, since the owner
-was not asked**: one shell over the nine screens, one stack, switching a destination navigating
-rather than pushing (ADR-022) — recorded here because AGENTS.md §8 asks a decision this size to be
-an owner's. **Still open, and one click to change**: whether the four destinations stay one stack
-or each keeps its own history. Related and just as blocking for screen 06's own controls: nothing
-returns a zone, a species or a yield score, so its search field, its species chips and its card's
-numbers are the design's demo — open is where zones come from, who may report on them and what a
-score means once the server owns it (decisions 9 and 10). The filter itself is real and needs no
-service to be useful: it narrows the app's own demo zones by a place, a zone or a species, and
-the day a zone source exists it narrows that instead.
+    draws the same tab bar on frames 06–14 (Discover, Visits, Alerts, Profile) but says nothing about
+    how it behaves. Three parts of that were open, and two are settled by what exists: the
+    destinations are not placeholders (all four are built screens), and a push from onboarding keeps the bar
+    (screen 05's action leads into the shell). **Built 2026-10-10 as an assumption, since the owner
+    was not asked**: one shell over the nine screens, one stack, switching a destination navigating
+    rather than pushing (ADR-022) — recorded here because AGENTS.md §8 asks a decision this size to be
+    an owner's. **Still open, and one click to change**: whether the four destinations stay one stack
+    or each keeps its own history. Related and just as blocking for screen 06's own controls: nothing
+    returns a zone, a species or a yield score, so its search field, its species chips and its card's
+    numbers are the design's demo — open is where zones come from, who may report on them and what a
+    score means once the server owns it (decisions 9 and 10). The filter itself is real and needs no
+    service to be useful: it narrows the app's own demo zones by a place, a zone or a species, and
+    the day a zone source exists it narrows that instead.
 
 23. **The report queue's remaining open parts: portability, and the lawful basis it sits under.**
-Since 2026-10-09 the app queues the picker's report on the device
-(`src/services/report-queue.ts`), because the owner chose that over leaving frame 10's save action
-unbuilt. The **list half is answered**: frame 13's sync centre (`src/app/downloads.tsx`) and
-frame 11's visit history (`src/app/visits.tsx`) both read the queue back, with each report's own
-values, so the user can see everything the app keeps about a visit on the device that holds it. Two
-things were owed: an **export or portability path** (a copy the user can take somewhere else —
-the screens show the record, they do not yet hand it over; a “share the queued report” action or a
-file export would answer it), and the **lawful basis** (open question 15), which has to be recorded
-before a release that stores any picker's data at all. The **portability path was answered on
-2026-10-11**: the notice's own row opens a screen where the copy is taken and the app hands it to
-the **platform's own share sheet** — one versioned document holding the consent, the plan, the
-queued reports and the account, with `incomplete: true` when a read failed
-([ADR-040](docs/adr/ADR-040-the-copy-the-app-owes-is-a-document.md)). The app picks no destination
-and uploads nothing, so no processor and no lawful basis are created by it; what is still owed is
-the basis for the records themselves (open question 15).
+    Since 2026-10-09 the app queues the picker's report on the device
+    (`src/services/report-queue.ts`), because the owner chose that over leaving frame 10's save action
+    unbuilt. The **list half is answered**: frame 13's sync centre (`src/app/downloads.tsx`) and
+    frame 11's visit history (`src/app/visits.tsx`) both read the queue back, with each report's own
+    values, so the user can see everything the app keeps about a visit on the device that holds it. Two
+    things were owed: an **export or portability path** (a copy the user can take somewhere else —
+    the screens show the record, they do not yet hand it over; a “share the queued report” action or a
+    file export would answer it), and the **lawful basis** (open question 15), which has to be recorded
+    before a release that stores any picker's data at all. The **portability path was answered on
+    2026-10-11**: the notice's own row opens a screen where the copy is taken and the app hands it to
+    the **platform's own share sheet** — one versioned document holding the consent, the plan, the
+    queued reports and the account, with `incomplete: true` when a read failed
+    ([ADR-040](docs/adr/ADR-040-the-copy-the-app-owes-is-a-document.md)). The app picks no destination
+    and uploads nothing, so no processor and no lawful basis are created by it; what is still owed is
+    the basis for the records themselves (open question 15).
 
 Since 2026-10-10 the app keeps a second record of its own: the picker's **saved zones**, written by
 frame 07's bookmark and removed by the same control (ADR-024). Of the two things that were owed for
@@ -2664,7 +2665,7 @@ frame should be drawn for it), and where an exported copy would go.
     and seller accounts** (who may list, with what identity and what personal data), the **chat
     transport** (messages are personal data, and a seller's data needs its own lawful basis), the
     **payment provider** with its region, DPA and escrow semantics (open questions 3, 6, 16), and
-    whether **Buyer** becomes a real role — CONTEXT.md records it as *not a v1 role*, and the
+    whether **Buyer** becomes a real role — CONTEXT.md records it as _not a v1 role_, and the
     frames' own “Buyer mode · Preview” is the design's word, not a role the app has.
 
 25. **How long a session lasts, where it is kept, and on what basis.** The seam exists
@@ -2695,7 +2696,7 @@ frame should be drawn for it), and where an exported copy would go.
     on 2026-10-10 and chose exactly what frame 14 already describes — spots, shared with people you
     invite, never a position (see “Recorded requirement” above). What is open is the shape, and it
     is asked of the design owner and the project owner in
-    [to-questionnaire-community-map.md](to-questionnaire-community-map.md): **what a *shared* spot
+    [to-questionnaire-community-map.md](to-questionnaire-community-map.md): **what a _shared_ spot
     is** (the design's word against this app's one geographic thing, a **Zone** — which is also what
     CONTEXT.md leaves unsettled, while the app's own copy already calls the saved plan “Saved
     spots”; the two candidate answers are a name the sharer types onto the grant ADR-032 specifies,
@@ -2730,10 +2731,10 @@ frame should be drawn for it), and where an exported copy would go.
     ([ADR-036](docs/adr/ADR-036-the-zone-service-what-it-must-return.md), still Proposed) is the only
     thing that changes on the day it answers. This repository read “a scripted zone list standing in
     for the service” as a **test fixture** and ships no zone list at all, because a list of
-    latitude/longitude polygons inside the app is *invented geography*: it claims a place is a curated
+    latitude/longitude polygons inside the app is _invented geography_: it claims a place is a curated
     zone, which is what ADR-021 and the demo-disclosure rule keep off surfaces the picker reads as
-    true. **Open, and asked rather than assumed:** whether the owner wants the tracker to *run in the
-    app* before the service exists — which means a disclosed demo list (the mechanism
+    true. **Open, and asked rather than assumed:** whether the owner wants the tracker to _run in the
+    app_ before the service exists — which means a disclosed demo list (the mechanism
     [ADR-042](docs/adr/ADR-042-frame-13s-region-is-the-designs-sample.md) already uses for the
     downloaded region, class D in [demo-and-stand-ins.md](docs/demo-and-stand-ins.md)) plus a screen
     that asks for a fix — or whether it stays a fixture until real rings arrive (known issue 14).
@@ -2743,7 +2744,7 @@ frame should be drawn for it), and where an exported copy would go.
     sign in against its FastAPI (`POST /auth/register`, `/auth/login`, email + password, with a
     consent screen and the language on register), while this repository decided Firebase
     Authentication ([ADR-013](docs/adr/ADR-013-identity-provider.md)) and holds **no password**
-    (CONTEXT.md, *Credential*). Both cannot be the answer. The plan's choice brings a credential this
+    (CONTEXT.md, _Credential_). Both cannot be the answer. The plan's choice brings a credential this
     app has never stored, a reset story, and its own lawful basis and retention; Firebase keeps the
     provider that ADR-013 chose, and would need its ID tokens accepted by the team's API. Asked, not
     assumed ([ADR-051](docs/adr/ADR-051-the-team-mvp-plan-becomes-the-apps-target.md) §4): which
@@ -2761,7 +2762,7 @@ frame should be drawn for it), and where an exported copy would go.
     it. Still open:
     because the plan lists **eight** screens against this app's **23 routes**, which of the built
     screens the MVP keeps (marketplace, route to zone, saved spots, the device notice, the copy
-    screen). The same question owns the **two meanings of *yield score***: the plan's zone-level
+    screen). The same question owns the **two meanings of _yield score_**: the plan's zone-level
     0–100 forecast (now **Zone yield score** in CONTEXT.md) and this repository's per-visit estimate.
     The plan's app shows the first; screens 07 and 10 currently use the second's words.
 

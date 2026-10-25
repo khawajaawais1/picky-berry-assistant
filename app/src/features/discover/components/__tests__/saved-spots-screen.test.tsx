@@ -169,6 +169,12 @@ describe('SavedSpotsScreen', () => {
     await renderScreen({ onBrowseZones });
 
     expect(await screen.findByText(EMPTY)).toBeOnTheScreen();
+    // The empty state says how a spot gets here; a bare sentence over an empty screen does not.
+    expect(
+      screen.getByText(
+        'Bookmark a zone on its details screen and it will wait here, private by default.',
+      ),
+    ).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('button', { name: 'Browse zones' }));
     expect(onBrowseZones).toHaveBeenCalledTimes(1);
   });

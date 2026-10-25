@@ -42,10 +42,11 @@ const ROOT = join(__dirname, '..', '..', '..');
 const INVENTORY = 'docs/design-source.md';
 
 /**
- * The two files under `src/app/` that are not screens: a navigator mounts its children, and the
- * `+not-found` route is Expo Router's own fallback rather than a frame's screen.
+ * The files under `src/app/` that are not screens: a navigator mounts its children, the
+ * `+not-found` route is Expo Router's own fallback rather than a frame's screen, and `+html` is the
+ * document shell the static export is built into, not a route anyone navigates to.
  */
-const NOT_SCREENS = new Set(['_layout.tsx', '+not-found.tsx']);
+const NOT_SCREENS = new Set(['_layout.tsx', '+not-found.tsx', '+html.tsx']);
 
 function read(relativePath: string): string {
   return readFileSync(join(ROOT, relativePath), 'utf8');

@@ -1,4 +1,4 @@
-import { Feather } from '@expo/vector-icons';
+import { Feather } from '@/components/atoms/app-icon';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -9,7 +9,7 @@ import { layout, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { interpolate, useTranslation } from '@/services/i18n';
 
-import { DEMO_ACTIVE_VISIT, formatClockTime, formatElapsed } from '../domain/active-visit';
+import { DEMO_ACTIVE_VISIT, formatElapsed } from '../domain/active-visit';
 import { CARD_ZONE_STATE, DEMO_ZONES } from '../domain/zone';
 import { useElapsedMs } from '../hooks/use-elapsed-ms';
 import { DesignZoneMap } from './design-zone-map';
@@ -79,7 +79,7 @@ export function ActiveVisitScreen({ onBack, onEnd }: ActiveVisitScreenProps) {
           testID="visit-arrival-note"
           title={t('discover.visit.arrived.title')}
         >
-          {interpolate(t('discover.visit.arrived.body'), { time: formatClockTime(startedAtMs) })}
+          {interpolate(t('discover.visit.arrived.body'), { time: DEMO_ACTIVE_VISIT.arrival })}
         </Callout>
 
         <DesignZoneMap height={layout.visitMapHeight} />

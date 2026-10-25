@@ -41,7 +41,7 @@ describe('the sync centre on a Finnish device', () => {
     expect(await screen.findByText('Odottaa synkronointia · 1 raportti')).toBeOnTheScreen();
     expect(screen.getByText('Alue 14 · Puolukka')).toBeOnTheScreen();
     // “28.8.”, not “28 Aug”: the day is the language's, and the harvest is the picker's own text.
-    expect(screen.getByText('28.8. · 52 min · Sato 4 / 5 · 1,3 kg')).toBeOnTheScreen();
+    expect(screen.getByText('28.8. · 52 min · Arvosana 4 / 5 · 1,3 kg')).toBeOnTheScreen();
     expect(screen.getByText('Jonossa · käynti ja raportti')).toBeOnTheScreen();
     expect(
       screen.getByText(

@@ -181,6 +181,20 @@ describe('ActiveVisitScreen', () => {
     expect(screen.queryByRole('button', { name: 'Back' })).not.toBeOnTheScreen();
   });
 
+  it('keeps the demo arrival fixed, so the static page and the phone agree', async () => {
+    // The line used to be the timer's start read back as a wall clock, computed at render: the
+    // static export printed the build's time and the phone printed the load's, which is a
+    // hydration mismatch as well as a false detection (frontend review, 2026-10-25).
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2027, 0, 1, 18, 0, 0));
+
+    await render(<ActiveVisitScreen />);
+
+    expect(
+      screen.getByText('You entered the zone at 10:03. Timing runs while the app is open.'),
+    ).toBeOnTheScreen();
+  });
+
   it('paints the arrival note in the frame’s success tint', async () => {
     useFrameClock();
 

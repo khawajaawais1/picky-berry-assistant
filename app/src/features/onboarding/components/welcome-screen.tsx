@@ -1,7 +1,7 @@
-import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Feather, MaterialCommunityIcons } from '@/components/atoms/app-icon';
 import { Image, View } from 'react-native';
 
-import heroImage from '@/assets/images/welcome-berries.png';
+import heroImage from '@/assets/images/welcome-berries.jpg';
 import { AppButton, AppText } from '@/components/atoms';
 import { TextAction } from '@/components/molecules';
 import { Screen } from '@/components/templates';

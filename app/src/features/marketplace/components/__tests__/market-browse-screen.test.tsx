@@ -70,8 +70,12 @@ describe('MarketBrowseScreen', () => {
   it('says how many listings it is showing, and says when it found none', async () => {
     await render(<MarketBrowseScreen />);
 
-    // The frame's own line (node 5:23828) with the number the app can answer for.
+    // The frame's own line (node 5:23828) with the number the app can answer for, painted as a
+    // reading rather than a link: there is no listing index behind it (frontend review, 2026-10-25).
     expect(screen.getByText('Browse 2 local listings')).toBeOnTheScreen();
+    expect(screen.getByTestId('market-browse-count')).toHaveStyle({
+      color: themes.light.colors.textMuted,
+    });
 
     await fireEvent.changeText(screen.getByLabelText('Berries near Jyväskylä'), 'lingon');
 

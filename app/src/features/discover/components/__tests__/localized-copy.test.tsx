@@ -64,9 +64,9 @@ describe('the discover screen on a Finnish device', () => {
     // The frame's two controls and the row under the card, all in Finnish: the field's own
     // promise, the berries the chips ask for, and the words on the map/list row.
     expect(screen.getByLabelText('Hae paikkaa tai aluetta')).toBeOnTheScreen();
-    expect(screen.getByRole('checkbox', { name: 'Puolukka' })).toBeOnTheScreen();
-    expect(screen.getByRole('checkbox', { name: 'Mustikka' })).toBeOnTheScreen();
-    expect(screen.getByRole('checkbox', { name: 'Lakka' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Puolukka' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Mustikka' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Lakka' })).toBeOnTheScreen();
     expect(screen.getByText('Kartta valittuna')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Näytä alueluettelo' })).toBeOnTheScreen();
 
@@ -95,7 +95,7 @@ describe('the discover screen on a Finnish device', () => {
     await render(<DiscoverScreen />, { wrapper: QueryProvider });
     await screen.findByText('Sato 53 / 100');
 
-    await fireEvent.press(screen.getByRole('checkbox', { name: 'Puolukka' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Puolukka' }));
 
     // The same zone, the lingonberry score the stub carries, said in Finnish.
     expect(await screen.findByText('Laajavuori 1 · Puolukka')).toBeOnTheScreen();
@@ -139,7 +139,9 @@ describe('the zone details screen on a Finnish device', () => {
     expect(screen.getByText('Tämän päivän näkymät')).toBeOnTheScreen();
     expect(screen.getByText('18°C · Heikko tuuli · Ennuste klo 08:00')).toBeOnTheScreen();
     expect(screen.getByText('Tuoreet havainnot')).toBeOnTheScreen();
-    expect(screen.getByText('Luotettu havainto · 38 min sitten · Sato 4 / 5')).toBeOnTheScreen();
+    expect(
+      screen.getByText('Luotettu havainto · 38 min sitten · Arvosana 4 / 5'),
+    ).toBeOnTheScreen();
     // The action that opens screen 08 names the same walk in Finnish notation.
     expect(screen.getByText('Reitille · 1,4 km')).toBeOnTheScreen();
     // …and the species row (frame 07's node `5:23047`) says what is found in the zone, in

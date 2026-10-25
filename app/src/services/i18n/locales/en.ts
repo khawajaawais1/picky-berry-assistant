@@ -18,6 +18,18 @@ export const en = {
   // has a failure state, and a store the device will not let the app read must never be shown as
   // an empty list the user did not write (the same reason screens 10 and 14 report their writes).
   'common.readFailed': 'Your saved visits could not be read.',
+  // A store still being read is not an empty one: screens say this rather than a count of zero.
+  'common.loading': 'Loading…',
+  'common.on': 'On',
+  'common.off': 'Off',
+  // The route error boundary (frontend review, 2026-10-25). It says the data on the phone is
+  // untouched and gives a way out; it never prints the thrown error.
+  'error.eyebrow': 'PICKY · SOMETHING WENT WRONG',
+  'error.title': 'This screen hit a problem',
+  'error.body':
+    'Nothing was lost: your saved spots and reports are still on this phone. Try again, or go back.',
+  'error.retry': 'Try again',
+  'error.home': 'Go back',
   'common.hidePassword': 'Hide password',
   'common.showPassword': 'Show password',
 
@@ -151,6 +163,9 @@ export const en = {
   'discover.map.loading': 'Loading zones…',
   'discover.map.unavailable': 'Zones could not be read',
   'discover.map.empty': 'No zones to show',
+  // The retry the error line owes the picker: waiting is not the only option when the source
+  // failed once (frontend review, 2026-10-25).
+  'discover.map.retry': 'Try again',
   // Expo Go has no MapLibre native binary (ADR-031). The map says so instead of letting the
   // package's import-time native-module lookup take the app down; the rest of the screen — the
   // card, the list and the filters — still reads the same zones.
@@ -262,7 +277,7 @@ export const en = {
   'discover.details.reports.seeAll.a11y':
     'See all {count} reports · opens the reports saved on this phone',
   'discover.details.reports.quote': '“Plenty of ripe clusters near the trail.”',
-  'discover.details.reports.meta': '{trust} report · {minutes} min ago · {yield} / {max} yield',
+  'discover.details.reports.meta': '{trust} report · {minutes} min ago · {yield} / {max} rating',
   'discover.details.reports.scoring': 'Scores weight freshness, trust and nearby agreement.',
   'discover.details.reports.trust.trusted': 'Trusted',
   'discover.details.reports.trust.unverified': 'Unverified',
@@ -288,8 +303,8 @@ export const en = {
   // A report's own line, in the frame's own order of facts: its day, its length, the rating the
   // picker gave on the design's 1–5 scale, and the harvest they typed. A report saved without a
   // harvest uses `metaNoAmount` rather than printing a zero nobody recorded.
-  'discover.zoneReports.row.meta': '{date} · {minutes} min · Yield {yield} / {max} · {amount}',
-  'discover.zoneReports.row.metaNoAmount': '{date} · {minutes} min · Yield {yield} / {max}',
+  'discover.zoneReports.row.meta': '{date} · {minutes} min · Rating {yield} / {max} · {amount}',
+  'discover.zoneReports.row.metaNoAmount': '{date} · {minutes} min · Rating {yield} / {max}',
   'discover.zoneReports.empty': 'No report for this zone is saved on this phone yet.',
   // The design's eleven include other pickers' reports, and nothing returns one: the screen names
   // the service that would rather than standing the sample in for it.
@@ -363,6 +378,8 @@ export const en = {
   // press does, because “More” alone names nothing a screen reader can act on.
   'report.species.more': 'More',
   'report.species.more.a11y': 'Show all species',
+  'report.species.fewer': 'Fewer',
+  'report.species.fewer.a11y': 'Show fewer species',
   'report.plentiful': 'How plentiful were the berries?',
   'report.rating.none': 'None',
   'report.rating.few': 'Few',
@@ -498,8 +515,8 @@ export const en = {
   // The frame's own line (“28 Aug · 52 min · Yield 4 / 5 · 1.3 kg”), with the values the picker's
   // own report supplies: its rating is the design's 1–5 scale, and its harvest is what they typed.
   // A report with no harvest uses `metaNoAmount` rather than printing a zero nobody recorded.
-  'offline.row.meta': '{date} · {minutes} min · Yield {yield} / {max} · {amount}',
-  'offline.row.metaNoAmount': '{date} · {minutes} min · Yield {yield} / {max}',
+  'offline.row.meta': '{date} · {minutes} min · Rating {yield} / {max} · {amount}',
+  'offline.row.metaNoAmount': '{date} · {minutes} min · Rating {yield} / {max}',
   'offline.row.chip': 'Queued · visit + report',
   // The frame's own line here promises a retry (“Your report is safe and will retry
   // automatically”), and there is no transport to retry over yet (ADR-005). What is true is said
@@ -557,6 +574,8 @@ export const en = {
   'privacy.savedSpots.subtitle.one': '{count} spot · private by default',
   'privacy.savedSpots.subtitle.many': '{count} spots · private by default',
   'privacy.savedSpots.empty': 'No saved spots yet.',
+  'privacy.savedSpots.empty.body':
+    'Bookmark a zone on its details screen and it will wait here, private by default.',
   'privacy.savedSpots.browse': 'Browse zones',
   'privacy.savedSpots.readFailed': 'Your saved spots could not be read.',
   // Frame 14's own row, drawn as the reading it is: the app follows the device's language and
@@ -566,7 +585,17 @@ export const en = {
   // The frame's last control, and the failure it has to be able to state: signing out deletes
   // what this device holds, so a run that did not finish is not one to pass over.
   'privacy.signOut': 'Sign out',
-  'privacy.signOut.failed': 'Signing out did not finish. Nothing was removed.',
+  // A deletion cannot be undone here, so it is named before it happens. The records are the three
+  // `src/services/sign-out.ts` clears; the copy must not promise a narrower loss.
+  'privacy.signOut.confirm.title': 'Sign out of this phone?',
+  'privacy.signOut.confirm.body':
+    'Signing out deletes the saved spots, the visit reports waiting to sync and your consent record from this phone. They cannot be recovered here.',
+  'privacy.signOut.confirm.action': 'Sign out and delete',
+  'privacy.signOut.confirm.cancel': 'Keep me signed in',
+  // The order in `sign-out.ts` drops the session last, so a run that stopped part-way may already
+  // have cleared some records: saying “nothing” would be a claim the app cannot make.
+  'privacy.signOut.failed':
+    'Signing out did not finish. Some records may still be here; try again.',
 
   // The two screens frame 14 draws rows for and no frame draws (nodes 5:23677 and 5:23688) —
   // “Account & security” and “Terms & privacy”. Both are app-drawn (ADR-039), so their words are

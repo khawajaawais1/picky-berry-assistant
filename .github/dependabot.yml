@@ -19,6 +19,24 @@ updates:
       minor-and-patch:
         patterns: ["*"]
         update-types: ["minor", "patch"]
+    # Expo SDK 58 pins the React runtime and its native peers. A bump here fails
+    # `expo-doctor`; they move with `npx expo install` during an SDK upgrade, not weekly.
+    # Majors below need their tooling ecosystem to catch up before they can be read.
+    ignore:
+      - dependency-name: expo
+      - dependency-name: "expo-*"
+      - dependency-name: "@expo/*"
+      - dependency-name: react
+      - dependency-name: react-dom
+      - dependency-name: react-native
+      - dependency-name: "react-native-*"
+      - dependency-name: "@react-native-*"
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      - dependency-name: tailwindcss
+        update-types: ["version-update:semver-major"]
     commit-message:
       prefix: chore
       include: scope

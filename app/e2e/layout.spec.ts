@@ -752,7 +752,7 @@ const SCREENS: readonly Screen[] = [
         key: 'offline.row.title',
         values: { species: { key: 'report.species.lingonberry' }, zone: '14' },
       },
-      // The frame's own line: “28 Aug · 52 min · Yield 4 / 5 · 1.3 kg” (306x18, node 5:23583).
+      // The frame's own line: “28 Aug · 52 min · Rating 4 / 5 · 1.3 kg” (306x18, node 5:23583).
       // Its day is a value the app formats per language, so both forms are given here.
       {
         what: 'the queued row’s own line',

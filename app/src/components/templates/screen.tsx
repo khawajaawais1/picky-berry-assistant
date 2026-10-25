@@ -1,4 +1,4 @@
-import { Feather } from '@expo/vector-icons';
+import { Feather } from '@/components/atoms/app-icon';
 import type { ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, type ViewProps } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
@@ -69,6 +69,9 @@ export function Screen({
             <Pressable
               accessibilityLabel={t('common.back')}
               accessibilityRole="button"
+              // The design's control is 32 px wide; 6 px of hit slop on each side is the 44 px
+              // target a finger gets without moving the header's geometry.
+              hitSlop={{ left: 6, right: 6 }}
               className="h-touch w-xl items-center justify-center"
               onPress={onBack}
             >
@@ -81,7 +84,11 @@ export function Screen({
                 {eyebrow}
               </AppText>
             ) : null}
-            {title ? <AppText variant="subtitle">{title}</AppText> : null}
+            {title ? (
+              <AppText accessibilityRole="header" variant="subtitle">
+                {title}
+              </AppText>
+            ) : null}
             {subtitle ? (
               <AppText variant="body" tone="muted">
                 {subtitle}
@@ -105,8 +112,11 @@ export function Screen({
     >
       {scroll ? (
         <ScrollView
+          automaticallyAdjustKeyboardInsets
           contentContainerStyle={styles.scrollContent}
+          keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
+          testID="screen-scroll"
         >
           {content}
         </ScrollView>

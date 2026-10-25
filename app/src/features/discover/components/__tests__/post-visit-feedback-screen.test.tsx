@@ -66,7 +66,7 @@ describe('PostVisitFeedbackScreen', () => {
     expect(screen.queryByRole('radio', { name: 'Cloudberry' })).not.toBeOnTheScreen();
   });
 
-  it('reveals the rest of the species vocabulary with the frame’s third chip', async () => {
+  it('reveals the rest of the species vocabulary, and closes again from the same chip', async () => {
     await render(<PostVisitFeedbackScreen />);
 
     // The chip says what the frame says, and names the action for assistive technology.
@@ -85,8 +85,30 @@ describe('PostVisitFeedbackScreen', () => {
       { checked: false },
     );
     expect(screen.getByRole('radio', { name: 'Lingonberry' })).toBeOnTheScreen();
-    // Nothing is left to reveal, so the disclosure is gone rather than claiming another press.
-    expect(screen.queryByRole('button', { name: 'Show all species' })).not.toBeOnTheScreen();
+
+    // The disclosure stays mounted and becomes the control that closes what it opened; a chip
+    // that unmounts itself can never report `expanded: true` and drops web focus with it
+    // (frontend review, 2026-10-25).
+    const fewer = screen.getByRole('button', { name: 'Show fewer species' });
+    expect(fewer).toHaveTextContent('Fewer');
+    expect(fewer.props.accessibilityState).toMatchObject({ expanded: true });
+
+    await fireEvent.press(fewer);
+
+    expect(screen.queryByRole('radio', { name: 'Crowberry' })).not.toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Show all species' })).toHaveTextContent('More');
+  });
+
+  it('keeps the chosen berry on the row when the disclosure closes', async () => {
+    await render(<PostVisitFeedbackScreen />);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Show all species' }));
+    await fireEvent.press(screen.getByRole('radio', { name: 'Cloudberry' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Show fewer species' }));
+
+    // Collapsing may not hide the answer the row is carrying.
+    expect(screen.getByRole('radio', { name: 'Cloudberry' })).toBeChecked();
+    expect(screen.queryByRole('radio', { name: 'Crowberry' })).not.toBeOnTheScreen();
   });
 
   it('reports the species the picker revealed', async () => {

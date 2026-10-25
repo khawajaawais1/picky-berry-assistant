@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { layout, radii, themes } from '@/constants/theme';
 
@@ -81,6 +81,18 @@ describe('ZoneMap', () => {
     // The two states are different sentences, which is the point: a failed read is not an
     // empty world.
     expect(empty.toJSON()).not.toEqual(failed.toJSON());
+  });
+
+  it('offers a retry only when its caller has somewhere to send the press', async () => {
+    const onRetry = jest.fn();
+    const { rerender } = await render(<ZoneMap onRetry={onRetry} status="error" zones={[]} />);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
+    expect(onRetry).toHaveBeenCalledTimes(1);
+
+    // A drawing of an action with no handler claims no role (AGENTS.md §11.2).
+    await rerender(<ZoneMap status="error" zones={[]} />);
+    expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeOnTheScreen();
   });
 
   it('names the drawing, so the map is not an unnamed image', async () => {

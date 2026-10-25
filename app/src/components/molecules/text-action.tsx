@@ -1,6 +1,7 @@
 import { Pressable } from 'react-native';
 
 import type { TypographyVariant } from '@/constants/theme';
+import { layout } from '@/constants/theme';
 
 import { AppText } from '../atoms';
 
@@ -51,6 +52,13 @@ export function TextAction({
       // An action that cannot act is not a tab stop either: a keyboard or a screen reader has to
       // land on something that does something.
       tabIndex={onPress === undefined ? -1 : 0}
+      // The label is the design's 20 px line; the target is the repo's 44 px floor (AGENTS.md
+      // §11). The box grows around the copy without changing its metrics.
+      style={{
+        justifyContent: 'center',
+        minHeight: layout.minTouchTarget,
+        minWidth: layout.minTouchTarget,
+      }}
       testID={testID}
     >
       <AppText style={{ fontWeight: '600' }} tone="accent" variant={variant}>

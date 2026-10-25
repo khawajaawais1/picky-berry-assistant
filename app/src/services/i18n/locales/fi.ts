@@ -11,6 +11,15 @@ import type { TranslationKey } from './en';
 export const fi: Record<TranslationKey, string> = {
   'common.back': 'Takaisin',
   'common.readFailed': 'Tallennettuja käyntejä ei voitu lukea.',
+  'common.loading': 'Ladataan…',
+  'common.on': 'Päällä',
+  'common.off': 'Pois',
+  'error.eyebrow': 'PICKY · JOTAIN MENI PIELEEN',
+  'error.title': 'Tämä näkymä kohtasi ongelman',
+  'error.body':
+    'Mitään ei hävinnyt: tallennetut paikat ja raportit ovat yhä tällä puhelimella. Yritä uudelleen tai palaa takaisin.',
+  'error.retry': 'Yritä uudelleen',
+  'error.home': 'Palaa takaisin',
   'common.hidePassword': 'Piilota salasana',
   'common.showPassword': 'Näytä salasana',
 
@@ -138,6 +147,7 @@ export const fi: Record<TranslationKey, string> = {
   'discover.map.loading': 'Ladataan alueita…',
   'discover.map.unavailable': 'Alueita ei voitu lukea',
   'discover.map.empty': 'Ei näytettäviä alueita',
+  'discover.map.retry': 'Yritä uudelleen',
   // Expo Go does not contain MapLibre's native binary, so the map explains the build it needs
   // rather than taking the app down at import time.
   'discover.map.requiresDevelopmentBuild':
@@ -218,7 +228,8 @@ export const fi: Record<TranslationKey, string> = {
   'discover.details.reports.seeAll.a11y':
     'Näytä kaikki {count} raporttia · avaa tähän puhelimeen tallennetut raportit',
   'discover.details.reports.quote': '“Reitillä runsaasti kypsiä terttuja.”',
-  'discover.details.reports.meta': '{trust} havainto · {minutes} min sitten · Sato {yield} / {max}',
+  'discover.details.reports.meta':
+    '{trust} havainto · {minutes} min sitten · Arvosana {yield} / {max}',
   // Kept to one line: the frame gives this note a single line (342x17), and the first wording
   // (”…lähihavaintojen yhtäpitävyys.”) ran to two — the layout harness caught it.
   'discover.details.reports.scoring':
@@ -241,8 +252,8 @@ export const fi: Record<TranslationKey, string> = {
     'Suunnittelun malliviikkoon kuuluu {count} raporttia lähialueen poimijoilta. Sovellus näyttää vain tähän puhelimeen tallennetut:',
   'discover.zoneReports.held.one': '1 raportti tässä puhelimessa',
   'discover.zoneReports.held.many': '{count} raporttia tässä puhelimessa',
-  'discover.zoneReports.row.meta': '{date} · {minutes} min · Sato {yield} / {max} · {amount}',
-  'discover.zoneReports.row.metaNoAmount': '{date} · {minutes} min · Sato {yield} / {max}',
+  'discover.zoneReports.row.meta': '{date} · {minutes} min · Arvosana {yield} / {max} · {amount}',
+  'discover.zoneReports.row.metaNoAmount': '{date} · {minutes} min · Arvosana {yield} / {max}',
   'discover.zoneReports.empty':
     'Tälle alueelle ei ole vielä tallennettu raporttia tässä puhelimessa.',
   'discover.zoneReports.missing':
@@ -322,6 +333,8 @@ export const fi: Record<TranslationKey, string> = {
   // the press does.
   'report.species.more': 'Lisää',
   'report.species.more.a11y': 'Näytä kaikki lajit',
+  'report.species.fewer': 'Vähemmän',
+  'report.species.fewer.a11y': 'Näytä vähemmän lajeja',
   'report.plentiful': 'Kuinka runsaasti marjoja oli?',
   'report.rating.none': 'Ei yhtään',
   'report.rating.few': 'Vähän',
@@ -400,8 +413,8 @@ export const fi: Record<TranslationKey, string> = {
   'offline.waiting.one': 'Odottaa synkronointia · {count} raportti',
   'offline.waiting.many': 'Odottaa synkronointia · {count} raporttia',
   'offline.row.title': 'Alue {zone} · {species}',
-  'offline.row.meta': '{date} · {minutes} min · Sato {yield} / {max} · {amount}',
-  'offline.row.metaNoAmount': '{date} · {minutes} min · Sato {yield} / {max}',
+  'offline.row.meta': '{date} · {minutes} min · Arvosana {yield} / {max} · {amount}',
+  'offline.row.metaNoAmount': '{date} · {minutes} min · Arvosana {yield} / {max}',
   'offline.row.chip': 'Jonossa · käynti ja raportti',
   'offline.note':
     'Tallennettu tähän puhelimeen. Mitään ei ole lähetetty — synkronointi tulee palvelimen myötä.',
@@ -477,13 +490,22 @@ export const fi: Record<TranslationKey, string> = {
   'privacy.savedSpots.subtitle.one': '{count} paikka · oletuksena yksityinen',
   'privacy.savedSpots.subtitle.many': '{count} paikkaa · oletuksena yksityisiä',
   'privacy.savedSpots.empty': 'Ei vielä tallennettuja paikkoja.',
+  'privacy.savedSpots.empty.body':
+    'Tallenna alue sen tietonäkymästä, niin se odottaa täällä – oletuksena yksityisenä.',
   'privacy.savedSpots.browse': 'Selaa alueita',
   'privacy.savedSpots.readFailed': 'Tallennettuja paikkoja ei voitu lukea.',
   // The row names the language the app is in, so this catalogue says its own name.
   'privacy.language.title': 'Kieli',
   'privacy.language.value': 'Suomi',
   'privacy.signOut': 'Kirjaudu ulos',
-  'privacy.signOut.failed': 'Uloskirjautuminen ei onnistunut. Mitään ei poistettu.',
+  // Poisto ei ole täällä peruutettavissa, joten se nimetään ennen kuin se tapahtuu.
+  'privacy.signOut.confirm.title': 'Kirjaudu ulos tältä laitteelta?',
+  'privacy.signOut.confirm.body':
+    'Uloskirjautuminen poistaa tältä laitteelta tallennetut paikat, synkronointia odottavat käyntiraportit ja suostumustietosi. Niitä ei voi palauttaa täältä.',
+  'privacy.signOut.confirm.action': 'Kirjaudu ulos ja poista tiedot',
+  'privacy.signOut.confirm.cancel': 'Jatka kirjautuneena',
+  'privacy.signOut.failed':
+    'Uloskirjautuminen ei valmistunut. Osa tiedoista voi olla yhä täällä; yritä uudelleen.',
 
   // Frame 14's two app-drawn rows and the screens behind them (ADR-039). Each screen's title is
   // also the frame's row label, as the saved-plan list's is.

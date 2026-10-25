@@ -1,9 +1,11 @@
+import { Feather } from '@/components/atoms/app-icon';
 import { View } from 'react-native';
 
-import { AppText } from '@/components/atoms';
-import { Card, TextAction } from '@/components/molecules';
+import { AppButton, AppText } from '@/components/atoms';
+import { Card, StatusMessage } from '@/components/molecules';
 import { Screen } from '@/components/templates';
-import { spacing } from '@/constants/theme';
+import { layout, spacing } from '@/constants/theme';
+import { useAppTheme } from '@/hooks/use-app-theme';
 import { useSavedZones } from '@/hooks/use-saved-zones';
 import { useTranslation } from '@/services/i18n';
 
@@ -60,6 +62,7 @@ export function SavedSpotsScreen({
   onOpenZone,
   zoneSource = testZoneSource,
 }: SavedSpotsScreenProps) {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
   const { error, loading, zones: saved } = useSavedZones();
   const answers = useZoneAnswers(zoneSource, savedPlanSpecies(saved));
@@ -80,28 +83,48 @@ export function SavedSpotsScreen({
     >
       <View className="w-full gap-gap">
         {error ? (
-          <AppText testID="saved-spots-error" tone="danger" variant="caption">
+          <StatusMessage testID="saved-spots-error" tone="danger" variant="caption">
             {t('privacy.savedSpots.readFailed')}
-          </AppText>
+          </StatusMessage>
         ) : null}
 
         {emptyPlan ? (
-          <>
-            <AppText tone="muted" variant="bodySmall">
+          <View className="w-full items-center gap-gap py-xl" testID="saved-spots-empty">
+            <View
+              className="items-center justify-center rounded-lg"
+              style={{
+                backgroundColor: colors.accentMuted,
+                height: layout.symbolTile,
+                width: layout.symbolTile,
+              }}
+            >
+              <Feather color={colors.accent} name="bookmark" size={32} />
+            </View>
+
+            <AppText
+              accessibilityRole="header"
+              style={{ textAlign: 'center' }}
+              variant="cardHeading"
+            >
               {t('privacy.savedSpots.empty')}
             </AppText>
-            <TextAction
+
+            <AppText style={{ textAlign: 'center' }} tone="muted" variant="bodySmall">
+              {t('privacy.savedSpots.empty.body')}
+            </AppText>
+
+            <AppButton
               label={t('privacy.savedSpots.browse')}
               onPress={onBrowseZones}
               testID="saved-spots-browse"
             />
-          </>
+          </View>
         ) : null}
 
         {zonesFailed ? (
-          <AppText testID="saved-spots-zones-error" tone="danger" variant="caption">
+          <StatusMessage testID="saved-spots-zones-error" tone="danger" variant="caption">
             {t('discover.map.unavailable')}
-          </AppText>
+          </StatusMessage>
         ) : null}
 
         {!loading && !error && !waiting

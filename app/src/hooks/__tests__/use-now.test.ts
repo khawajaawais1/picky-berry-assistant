@@ -51,6 +51,22 @@ describe('useNow', () => {
     expect(result.current.getTime()).toBe(START.getTime() + 60 * 60 * 1000 + 1000);
   });
 
+  it('can run at a slower cadence for a reading in whole minutes', async () => {
+    // The account screen says how many minutes a session has left. A tick every second is sixty
+    // renders a minute for a digit that changes once (frontend review, 2026-10-25).
+    const { result } = await renderHook(() => useNow(15_000));
+
+    await act(async () => {
+      jest.advanceTimersByTime(14_999);
+    });
+    expect(result.current.getTime()).toBe(START.getTime());
+
+    await act(async () => {
+      jest.advanceTimersByTime(1);
+    });
+    expect(result.current.getTime()).toBe(START.getTime() + 15_000);
+  });
+
   it('stops when the screen is gone', async () => {
     // The whole environment's timers are not a usable signal — the runner and React keep their own —
     // so what is asserted is that the effect's cleanup runs on unmount and clears a timer there.

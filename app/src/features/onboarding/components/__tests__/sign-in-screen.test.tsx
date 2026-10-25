@@ -90,6 +90,8 @@ describe('OnboardingSignInScreen', () => {
     expect(
       await screen.findByText('That email and password didn’t match. Try again.'),
     ).toBeOnTheScreen();
+    // The refusal is announced, not only painted: the line is a live region (WCAG 4.1.3).
+    expect(screen.getByTestId('sign-in-failed').props.role).toBe('status');
   });
 
   it('says the same thing when the session could not be kept', async () => {

@@ -1,9 +1,9 @@
-import { Feather } from '@expo/vector-icons';
+import { Feather } from '@/components/atoms/app-icon';
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { AppButton, AppText } from '@/components/atoms';
-import { FormField, TextAction } from '@/components/molecules';
+import { FieldAction, FormField, StatusMessage, TextAction } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { appEnvironment, type AppEnvironment } from '@/config/env';
 import { layout } from '@/constants/theme';
@@ -140,11 +140,10 @@ export function OnboardingSignInScreen({
 
         <FormField
           accessory={
-            <Pressable
+            <FieldAction
               accessibilityLabel={t(
                 passwordVisible ? 'common.hidePassword' : 'common.showPassword',
               )}
-              accessibilityRole="button"
               onPress={() => setPasswordVisible((visible) => !visible)}
             >
               <Feather
@@ -152,7 +151,7 @@ export function OnboardingSignInScreen({
                 name={passwordVisible ? 'eye' : 'eye-off'}
                 size={20}
               />
-            </Pressable>
+            </FieldAction>
           }
           autoCapitalize="none"
           autoComplete="current-password"
@@ -178,9 +177,9 @@ export function OnboardingSignInScreen({
         />
 
         {signInFailed ? (
-          <AppText testID="sign-in-failed" tone="danger" variant="bodySmall">
+          <StatusMessage testID="sign-in-failed" tone="danger" variant="bodySmall">
             {t('onboarding.signIn.failed')}
-          </AppText>
+          </StatusMessage>
         ) : null}
 
         <TextAction

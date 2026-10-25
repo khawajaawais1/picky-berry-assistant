@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
-import { recordPrivacyConsent } from '@/services/privacy-consent';
+import { recordPrivacyConsent, CONSENT_STORAGE_KEY } from '@/services/privacy-consent';
 import { enqueueReport } from '@/services/report-queue';
 import { saveZone } from '@/services/saved-zones';
 import { sessionPort } from '@/services/session';
@@ -83,6 +83,39 @@ describe('TermsPrivacyScreen', () => {
     expect(
       screen.getByText('Listed in the sync centre; signing out deletes them.'),
     ).toBeOnTheScreen();
+  });
+
+  it('draws no partial list while a store is still being read', async () => {
+    // The queue has answered but the consent read has not. A read in flight is neither “held” nor
+    // “nothing held”, so the screen may name no record until every store has settled (frontend
+    // review, 2026-10-25).
+    await enqueueReport({
+      amountText: '1.3 kg',
+      minutes: 52,
+      recordedAt: '2026-08-28T10:55:00.000Z',
+      speciesId: 'lingonberry',
+      yieldRating: 4,
+      zoneId: 'Z14',
+    });
+
+    const getItem = AsyncStorage.getItem as jest.Mock;
+    const original = getItem.getMockImplementation();
+
+    getItem.mockImplementation((key: string) =>
+      key === CONSENT_STORAGE_KEY
+        ? new Promise<string | null>(() => {})
+        : (original?.(key) ?? Promise.resolve(null)),
+    );
+
+    try {
+      await render(<TermsPrivacyScreen />);
+
+      expect(screen.getByTestId('terms-privacy-loading')).toHaveTextContent('Loading…');
+      expect(screen.queryByText('Visits waiting to sync')).not.toBeOnTheScreen();
+      expect(screen.queryByText('Nothing of yours is on this phone yet.')).not.toBeOnTheScreen();
+    } finally {
+      getItem.mockImplementation(original);
+    }
   });
 
   it('says the phone holds nothing rather than drawing an empty list', async () => {

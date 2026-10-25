@@ -1,4 +1,4 @@
-import { Feather } from '@expo/vector-icons';
+import { Feather } from '@/components/atoms/app-icon';
 
 import { AppTextInput } from '@/components/atoms';
 import { layout } from '@/constants/theme';

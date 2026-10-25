@@ -25,7 +25,8 @@ import { zonesQueryKey } from '../services/zone-cache';
  *   rather than a loading line in a place with no signal.
  * - **the retry policy is none.** A failed read is said so at once; three retries with
  *   backoff would leave the map blank for seconds before the screen could tell the picker
- *   what happened. Pressing the chip again is the retry.
+ *   what happened. The screen offers an explicit `retry` instead: pressing a different chip is
+ *   not one, because the berry already on screen keeps the same query key.
  *
  * A refresh that fails does not take the previous answer with it: the data a query already
  * held is still the last thing the app read, and the map keeps drawing it. That is the
@@ -53,10 +54,15 @@ export type ZonesState = {
   zones: readonly Zone[];
   /** The oldest score timestamp on the answer, or `null` when it cannot state one. */
   updatedAt: string | null;
+  /**
+   * Asks the source the same question again. The screen offers this where a read failed: no
+   * other control re-reads the berry already on screen.
+   */
+  retry: () => void;
 };
 
-const LOADING: ZonesState = { status: 'loading', zones: [], updatedAt: null };
-const FAILED: ZonesState = { status: 'error', zones: [], updatedAt: null };
+const LOADING = { status: 'loading', zones: [], updatedAt: null } as const;
+const FAILED = { status: 'error', zones: [], updatedAt: null } as const;
 
 /**
  * The oldest timestamp every zone carries, or `null` if the answer cannot state one.
@@ -110,17 +116,25 @@ function zonesQuery(source: ZoneSource, species: Species) {
 
 export function useZones(source: ZoneSource, species: Species): ZonesState {
   const query = useQuery(zonesQuery(source, species));
+  const retry = () => {
+    void query.refetch();
+  };
 
   // Data outranks a failed refresh. A query keeps the data it already had when a later read
   // rejects (`status` becomes `error`, `data` does not disappear), and blanking the map then
   // would turn “the phone could not reach the source” into “there are no berries here”.
   if (query.data !== undefined) {
-    return { status: 'ready', zones: query.data, updatedAt: oldestUpdatedAt(query.data) };
+    return {
+      status: 'ready',
+      zones: query.data,
+      updatedAt: oldestUpdatedAt(query.data),
+      retry,
+    };
   }
 
   // No data at all: either nothing has been read yet, or the read failed. Those are different
   // sentences on screen, and `error` is the one that says the source did not answer.
-  return query.isError ? FAILED : LOADING;
+  return query.isError ? { ...FAILED, retry } : { ...LOADING, retry };
 }
 
 /**

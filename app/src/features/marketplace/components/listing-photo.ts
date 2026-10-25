@@ -1,8 +1,8 @@
 import type { ImageSourcePropType } from 'react-native';
 
-import blueberriesCard from '@/assets/images/market-blueberries-card.png';
-import blueberriesDetail from '@/assets/images/market-blueberries-detail.png';
-import lingonberriesCard from '@/assets/images/market-lingonberries-card.png';
+import blueberriesCard from '@/assets/images/market-blueberries-card.jpg';
+import blueberriesDetail from '@/assets/images/market-blueberries-detail.jpg';
+import lingonberriesCard from '@/assets/images/market-lingonberries-card.jpg';
 
 /**
  * The one table that turns a listing into its photograph, so the card and the listing's own screen

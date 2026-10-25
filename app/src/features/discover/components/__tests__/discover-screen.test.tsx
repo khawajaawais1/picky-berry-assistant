@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import { layout, radii, themes } from '@/constants/theme';
 import { QueryProvider } from '@/services/query-client';
@@ -82,6 +82,14 @@ async function renderScreen(props: DiscoverScreenProps = {}) {
   });
 }
 
+/** A source that fails once and answers the next read, which is what a retry is for. */
+function flakySource(): ZoneSource & { list: jest.Mock } {
+  const source = sourceOf(ZONES);
+  source.list.mockRejectedValueOnce(new Error('no docs'));
+
+  return source;
+}
+
 async function openList() {
   await fireEvent.press(screen.getByRole('button', { name: 'Show zone list' }));
 }
@@ -95,6 +103,11 @@ describe('DiscoverScreen', () => {
     expect(screen.getByText('Discover nearby')).toBeOnTheScreen();
     expect(screen.getByTestId('zone-search-field')).toBeOnTheScreen();
     expect(screen.getByTestId('species-chips')).toBeOnTheScreen();
+    // The design's chips are 36 px tall; 4 px of hit slop on each side is the 44 px target.
+    expect(screen.getByRole('button', { name: 'Lingonberry' }).props.hitSlop).toMatchObject({
+      bottom: 4,
+      top: 4,
+    });
     expect(screen.getByTestId('zone-map')).toBeOnTheScreen();
     expect(screen.getByTestId('zone-score-legend')).toBeOnTheScreen();
     expect(screen.getByTestId('zone-card')).toBeOnTheScreen();
@@ -225,28 +238,34 @@ describe('DiscoverScreen', () => {
     await render(<DiscoverScreen zoneSource={source} />, { wrapper: QueryProvider });
     await screen.findByText('53 / 100 yield');
 
-    await fireEvent.press(screen.getByRole('checkbox', { name: 'Lingonberry' }));
+    const lingonberry = screen.getByRole('button', { name: 'Lingonberry' });
+    expect(lingonberry.props.accessibilityState).toMatchObject({ selected: false });
 
-    // The card now reads the berry the chip asked for — the same zone, its other score.
+    await fireEvent.press(lingonberry);
+
+    // The card now reads the berry the chip asked for — the same zone, its other score, and the
+    // chip's pressed state says which layer is on (frontend review, 2026-10-25).
+    expect(lingonberry.props.accessibilityState).toMatchObject({ selected: true });
     expect(await screen.findByText('Laajavuori 1 · Lingonberry')).toBeOnTheScreen();
     expect(screen.getByText('70 / 100 yield')).toBeOnTheScreen();
     expect(screen.getByText('High confidence')).toBeOnTheScreen();
     expect(screen.getByText('Ripe now')).toBeOnTheScreen();
     expect(source.list).toHaveBeenLastCalledWith({ species: 'lingonberry' });
 
-    await fireEvent.press(screen.getByRole('checkbox', { name: 'Lingonberry' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Lingonberry' }));
 
     // Pressing the lit chip clears it, and the screen falls back to the pilot's berry rather
-    // than inventing a combined score.
+    // than inventing a combined score. Its answer is still inside the cache's fresh window, so
+    // the screen reads it back instead of asking the source a third time.
     expect(await screen.findByText('53 / 100 yield')).toBeOnTheScreen();
-    expect(source.list).toHaveBeenLastCalledWith({ species: 'bilberry' });
+    expect(source.list).toHaveBeenCalledTimes(2);
   });
 
   it('leaves nothing when the chosen berry has no zones, and says why', async () => {
     await renderScreen();
     await screen.findByText('3 zones · test data');
 
-    await fireEvent.press(screen.getByRole('checkbox', { name: 'Crowberry' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Crowberry' }));
 
     expect(await screen.findByText('No zones to show')).toBeOnTheScreen();
     expect(screen.queryByTestId('zone-card')).not.toBeOnTheScreen();
@@ -281,6 +300,39 @@ describe('DiscoverScreen', () => {
     );
   });
 
+  it('retries a failed read from the map', async () => {
+    const flaky = flakySource();
+
+    await render(<DiscoverScreen zoneSource={flaky} />, { wrapper: QueryProvider });
+
+    // The map's status element exists during the load too, so the failure is waited for, not
+    // read from the first render.
+    await waitFor(() =>
+      expect(screen.getByTestId('zone-map-status')).toHaveTextContent('Zones could not be read'),
+    );
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
+
+    expect(await screen.findByText('3 zones · test data')).toBeOnTheScreen();
+    expect(flaky.list).toHaveBeenCalledTimes(2);
+  });
+
+  it('retries a failed read from the list too', async () => {
+    const flaky = flakySource();
+
+    await render(<DiscoverScreen zoneSource={flaky} />, { wrapper: QueryProvider });
+    await openList();
+
+    await waitFor(() =>
+      expect(screen.getByTestId('zone-list-status')).toHaveTextContent('Zones could not be read'),
+    );
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
+
+    expect(await screen.findByTestId('zone-list-row-a')).toBeOnTheScreen();
+    expect(flaky.list).toHaveBeenCalledTimes(2);
+  });
+
   it('opens the zone the card is reading, under the berry whose score it prints', async () => {
     const onOpenZone = jest.fn();
     await renderScreen({ onOpenZone });
@@ -292,7 +344,7 @@ describe('DiscoverScreen', () => {
     // it opens reads the same record rather than another zone's figures.
     expect(onOpenZone).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'a' }), 'bilberry');
 
-    await fireEvent.press(screen.getByRole('checkbox', { name: 'Lingonberry' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Lingonberry' }));
     await screen.findByText('70 / 100 yield');
     await fireEvent.press(screen.getByRole('button', { name: 'Open zone Laajavuori 1 details' }));
 
@@ -313,8 +365,10 @@ describe('DiscoverScreen', () => {
 
     await openList();
 
-    // Only the view toggle is a control here (no back, no download glyph in this render).
-    expect(screen.getAllByRole('button')).toHaveLength(1);
+    // The view toggle and the four score-layer toggles are controls here (no back, no download
+    // glyph in this render); the zone card itself is a reading.
+    expect(screen.getAllByRole('button')).toHaveLength(5);
+    expect(screen.queryByRole('button', { name: /Open zone/ })).not.toBeOnTheScreen();
   });
 
   it('switches back to the map the frame’s toggle names', async () => {

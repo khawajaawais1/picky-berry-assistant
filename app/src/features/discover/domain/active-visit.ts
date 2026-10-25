@@ -15,6 +15,9 @@ export const DEMO_ACTIVE_VISIT = {
   zoneId: DEMO_ZONE_DETAILS.zoneId,
   /** The frame's own reading (node `5:23226`, “00:42:17”): a visit 42 minutes 17 seconds old. */
   elapsedMs: 42 * 60_000 + 17_000,
+  /** The frame's own arrival time (node `5:23203`). A fixed demo value, so the static page and
+   *  the phone say the same thing; a computed wall clock would differ by the build time. */
+  arrival: '10:03',
 } as const;
 
 const pad2 = (value: number) => String(value).padStart(2, '0');
