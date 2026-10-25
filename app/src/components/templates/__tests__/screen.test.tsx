@@ -16,6 +16,19 @@ describe('Screen', () => {
     expect(screen.getByText('content')).toBeOnTheScreen();
   });
 
+  it('announces its title as the screen’s heading', async () => {
+    // A screen title that is only painted is a title no assistive technology can navigate to:
+    // the heading rotor and a browser's heading list stayed empty on every screen (frontend
+    // review, 2026-10-25). The role is the contract; it does not change the design's metrics.
+    await render(
+      <Screen title="Discover nearby">
+        <AppText>content</AppText>
+      </Screen>,
+    );
+
+    expect(screen.getByRole('header', { name: 'Discover nearby' })).toBeOnTheScreen();
+  });
+
   it('renders without a heading', async () => {
     await render(
       <Screen scroll={false}>
@@ -53,6 +66,11 @@ describe('Screen', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
 
     expect(onBack).toHaveBeenCalledTimes(1);
+    // The design's back control is 32 px wide; the target a finger gets is the repo's 44 px.
+    expect(screen.getByRole('button', { name: 'Back' }).props.hitSlop).toMatchObject({
+      left: 6,
+      right: 6,
+    });
   });
 
   it('shows no back control on a screen that cannot go back', async () => {
@@ -93,6 +111,21 @@ describe('Screen', () => {
       bottom: 'off',
       top: 'additive',
     });
+  });
+
+  it('keeps the keyboard from covering the fields it is open for', async () => {
+    // A form's submit sits at the bottom of the column; with the keyboard open it was still under
+    // the thumb, because the template only kept taps working (frontend review, 2026-10-25).
+    await render(
+      <Screen title="Create your account">
+        <AppText>content</AppText>
+      </Screen>,
+    );
+
+    const scroller = screen.getByTestId('screen-scroll');
+
+    expect(scroller.props.automaticallyAdjustKeyboardInsets).toBe(true);
+    expect(scroller.props.keyboardDismissMode).toBe('on-drag');
   });
 
   it('renders children in both scroll modes', async () => {

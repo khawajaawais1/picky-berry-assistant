@@ -1,8 +1,8 @@
-import { Feather } from '@expo/vector-icons';
+import { Feather } from '@/components/atoms/app-icon';
 import { View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
-import { Callout, Card, InfoRow, TextAction } from '@/components/molecules';
+import { Callout, Card, InfoRow, StatusMessage, TextAction } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -121,26 +121,32 @@ export function TermsPrivacyScreen({ onBack, onOpenYourData }: TermsPrivacyScree
             {t('privacy.termsPrivacy.held.title')}
           </AppText>
 
-          {records.length === 0 && !readFailed && !loading ? (
+          {loading ? (
+            // A read still in flight is neither “held” nor “nothing held”: the list names no
+            // record until every store has answered (frontend review, 2026-10-25).
+            <StatusMessage testID="terms-privacy-loading" tone="muted" variant="bodySmall">
+              {t('common.loading')}
+            </StatusMessage>
+          ) : records.length === 0 && !readFailed ? (
             <AppText testID="terms-privacy-empty" tone="muted" variant="bodySmall">
               {t('privacy.termsPrivacy.held.empty')}
             </AppText>
-          ) : null}
-
-          {records.map((record) => (
-            <InfoRow
-              hint={t(RECORD_COPY[record].hint)}
-              key={record}
-              label={t(RECORD_COPY[record].label)}
-              value={t(RECORD_COPY[record].value)}
-            />
-          ))}
+          ) : (
+            records.map((record) => (
+              <InfoRow
+                hint={t(RECORD_COPY[record].hint)}
+                key={record}
+                label={t(RECORD_COPY[record].label)}
+                value={t(RECORD_COPY[record].value)}
+              />
+            ))
+          )}
         </Card>
 
         {readFailed ? (
-          <AppText testID="terms-privacy-read-failed" tone="danger" variant="caption">
+          <StatusMessage testID="terms-privacy-read-failed" tone="danger" variant="caption">
             {t('privacy.termsPrivacy.held.readFailed')}
-          </AppText>
+          </StatusMessage>
         ) : null}
 
         {/* The drawer of rights, each row the thing and where it is. */}

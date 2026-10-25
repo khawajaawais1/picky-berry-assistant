@@ -1,9 +1,9 @@
-import { Feather } from '@expo/vector-icons';
+import { Feather } from '@/components/atoms/app-icon';
 import { useNetworkState } from 'expo-network';
 import { View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
-import { Callout } from '@/components/molecules';
+import { Callout, StatusMessage } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { radii, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -100,17 +100,17 @@ function DownloadAction({ label, tone }: { label: string; tone: 'primary' | 'sec
     <View
       className="min-h-action w-full flex-row items-center justify-center gap-sm rounded-control px-md"
       style={{
-        backgroundColor: primary ? colors.accent : colors.surface,
+        // The design draws two actions; the app has no transport to honour either. They are
+        // painted as drawings — a muted fill and muted words — so the screen's real action is
+        // not confused with the sample (frontend review, 2026-10-25).
+        backgroundColor: colors.surfaceMuted,
         borderColor: colors.border,
-        borderWidth: primary ? 0 : 1,
+        borderWidth: 1,
       }}
       testID={`offline-action-${tone}`}
     >
-      {primary ? <Feather color={colors.onAccent} name="refresh-cw" size={20} /> : null}
-      <AppText
-        style={{ color: primary ? colors.onAccent : colors.accent, fontWeight: '600' }}
-        variant="body"
-      >
+      {primary ? <Feather color={colors.textMuted} name="refresh-cw" size={20} /> : null}
+      <AppText style={{ color: colors.textMuted, fontWeight: '600' }} variant="body">
         {label}
       </AppText>
     </View>
@@ -259,7 +259,7 @@ export function OfflineSyncScreen({ onBack }: OfflineSyncScreenProps) {
           style={{ backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }}
           testID="offline-queued"
         >
-          {!loading && rows.length === 0 ? (
+          {!loading && !error && rows.length === 0 ? (
             <AppText tone="muted" variant="bodySmall">
               {t('offline.empty')}
             </AppText>
@@ -289,9 +289,9 @@ export function OfflineSyncScreen({ onBack }: OfflineSyncScreenProps) {
           ) : null}
 
           {error ? (
-            <AppText testID="offline-read-failed" tone="danger" variant="bodySmall">
+            <StatusMessage testID="offline-read-failed" tone="danger" variant="bodySmall">
               {t('common.readFailed')}
-            </AppText>
+            </StatusMessage>
           ) : null}
         </View>
       </View>

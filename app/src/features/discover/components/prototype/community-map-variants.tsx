@@ -1,4 +1,4 @@
-import { Feather } from '@expo/vector-icons';
+import { Feather } from '@/components/atoms/app-icon';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 

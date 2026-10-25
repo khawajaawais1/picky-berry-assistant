@@ -1,4 +1,4 @@
-import { Feather } from '@expo/vector-icons';
+import { Feather } from '@/components/atoms/app-icon';
 import { View } from 'react-native';
 
 import { AppButton, AppText } from '@/components/atoms';
@@ -68,12 +68,7 @@ export function MarketChatScreen({ onBack, onOpenOrder }: MarketChatScreenProps)
     );
 
   return (
-    <Screen
-      edges={['top']}
-      eyebrow={t('market.eyebrow.chat')}
-      onBack={onBack}
-      title={listing.seller.name}
-    >
+    <Screen eyebrow={t('market.eyebrow.chat')} onBack={onBack} title={listing.seller.name}>
       <View className="w-full gap-section">
         <MarketDisclosure>
           {listing.seller.verified ? (

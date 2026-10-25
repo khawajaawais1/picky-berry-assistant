@@ -14,7 +14,7 @@ import { AccountSecurityScreen } from '../account-security-screen';
  * the app has. So the session's facts are stated as they are — where it is kept, how long it lasts,
  * what ends it — and the parts that do not exist are named rather than left out.
  */
-const SIGN_OUT_FAILED = 'Signing out did not finish. Nothing was removed.';
+const SIGN_OUT_FAILED = 'Signing out did not finish. Some records may still be here; try again.';
 const SIGN_OUT = 'Sign out';
 
 beforeEach(async () => {
@@ -131,7 +131,7 @@ describe('AccountSecurityScreen', () => {
     ).toBeOnTheScreen();
   });
 
-  it('signs out when the action is pressed', async () => {
+  it('signs out once the deletion is confirmed', async () => {
     const onSignOut = jest.fn().mockResolvedValue(undefined);
     const { rerender } = await render(<AccountSecurityScreen />);
 
@@ -142,20 +142,46 @@ describe('AccountSecurityScreen', () => {
     await rerender(<AccountSecurityScreen onSignOut={onSignOut} />);
     await fireEvent.press(screen.getByRole('button', { name: SIGN_OUT }));
 
+    // The first press names the deletion; only the confirmation runs it.
+    expect(onSignOut).not.toHaveBeenCalled();
+    expect(screen.getByText('Sign out of this phone?')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign out and delete' }));
+
     expect(onSignOut).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(screen.queryByText(SIGN_OUT_FAILED)).not.toBeOnTheScreen());
   });
 
-  it('says nothing was removed when signing out did not finish', async () => {
+  it('reports a sign-out that did not finish, and offers it again', async () => {
     const onSignOut = jest.fn().mockRejectedValue(new Error('the store refused'));
 
     await render(<AccountSecurityScreen onSignOut={onSignOut} />);
     await fireEvent.press(screen.getByRole('button', { name: SIGN_OUT }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign out and delete' }));
 
-    // The control's promise is a deletion, so a run that failed says the records are still there —
-    // and the action is offerable again rather than stuck.
+    // The run stopped part-way, so the copy cannot claim nothing went. The confirmation stays
+    // open with the action offered again rather than stuck.
     expect(await screen.findByText(SIGN_OUT_FAILED)).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: SIGN_OUT })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Sign out and delete' })).toBeOnTheScreen();
+  });
+
+  it('asks before signing out, and names the records the press deletes', async () => {
+    const onSignOut = jest.fn(async () => {});
+    await render(<AccountSecurityScreen onSignOut={onSignOut} />);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign out' }));
+
+    expect(onSignOut).not.toHaveBeenCalled();
+    expect(screen.getByText('Sign out of this phone?')).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        'Signing out deletes the saved spots, the visit reports waiting to sync and your consent record from this phone. They cannot be recovered here.',
+      ),
+    ).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign out and delete' }));
+
+    expect(onSignOut).toHaveBeenCalledTimes(1);
   });
 
   it('offers the back control only when there is somewhere to go back to', async () => {
@@ -194,14 +220,15 @@ describe('AccountSecurityScreen, as the session’s hour runs out', () => {
   });
 
   /**
-   * Moves the clock to `moment` and lets the next second pass, so the screen re-reads at
-   * `moment + 1s` — which is what makes it look again. A jump on its own would leave the interval
-   * pending; a second-by-second walk would fire thousands of ticks for an hour of clock.
+   * Moves the clock to `moment` and lets the next tick pass, so the screen re-reads at
+   * `moment + 15s` — which is what makes it look again. A jump on its own would leave the interval
+   * pending; a second-by-second walk would fire thousands of ticks for an hour of clock. The screen
+   * ticks every fifteen seconds because its reading is in whole minutes.
    */
   async function moveTo(moment: Date) {
     await act(async () => {
       jest.setSystemTime(moment);
-      jest.advanceTimersByTime(1000);
+      jest.advanceTimersByTime(15_000);
     });
   }
 
@@ -234,9 +261,9 @@ describe('AccountSecurityScreen, as the session’s hour runs out', () => {
     await render(<AccountSecurityScreen />);
     await screen.findByText('Time left');
 
-    // One second before the end the session is still the app's, and the row still says whose it is
-    // (the tick lands at `moment + 1s`, so this reads the last live second).
-    await moveTo(new Date(START.getTime() + SESSION_LIFETIME_MS - 2000));
+    // The tick lands fifteen seconds after the moment it is given, so this reads the last second
+    // before expiry:
+    await moveTo(new Date(START.getTime() + SESSION_LIFETIME_MS - 16_000));
     expect(screen.getByTestId('account-security-row')).toBeOnTheScreen();
     expect(screen.queryByText('This session has ended')).not.toBeOnTheScreen();
   });

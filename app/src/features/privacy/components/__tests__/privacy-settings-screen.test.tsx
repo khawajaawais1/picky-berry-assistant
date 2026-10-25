@@ -1,9 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 
-import { spacing, typography } from '@/constants/theme';
+import { layout, spacing, typography } from '@/constants/theme';
 import { readPrivacyConsent, recordPrivacyConsent } from '@/services/privacy-consent';
-import { enqueueReport } from '@/services/report-queue';
+import { enqueueReport, REPORT_QUEUE_STORAGE_KEY } from '@/services/report-queue';
 import { saveZone } from '@/services/saved-zones';
 import { sessionPort } from '@/services/session';
 
@@ -23,7 +23,7 @@ import { PrivacySettingsScreen } from '../privacy-settings-screen';
 const LABEL = 'Visit tracking while the app is open';
 const SAVE_FAILED = 'Your choice could not be saved.';
 const ACCOUNT_READ_FAILED = 'Your account could not be read.';
-const SIGN_OUT_FAILED = 'Signing out did not finish. Nothing was removed.';
+const SIGN_OUT_FAILED = 'Signing out did not finish. Some records may still be here; try again.';
 
 /**
  * The account the app is holding, as screen 03 leaves it behind: the name the sign-up collected
@@ -168,18 +168,67 @@ describe('PrivacySettingsScreen', () => {
     expect(await screen.findByText('1 queued')).toBeOnTheScreen();
   });
 
+  it('does not report the queue as zero while it is still being read', async () => {
+    // An unanswered read is not a zero: the row printed “0 queued” before the device had
+    // answered (frontend review, 2026-10-25).
+    const getItem = AsyncStorage.getItem as jest.Mock;
+    const original = getItem.getMockImplementation();
+
+    getItem.mockImplementation((key: string) =>
+      key === REPORT_QUEUE_STORAGE_KEY
+        ? new Promise<string | null>(() => {})
+        : (original?.(key) ?? Promise.resolve(null)),
+    );
+
+    try {
+      await render(<PrivacySettingsScreen />);
+
+      expect(screen.queryByText('0 queued')).not.toBeOnTheScreen();
+    } finally {
+      getItem.mockImplementation(original);
+    }
+  });
+
+  it('names a setting by its value as well as its label', async () => {
+    // `accessibilityLabel={label}` replaced the row's children, so “Offline maps & sync” was
+    // announced without the count that is the row's point (frontend review, 2026-10-25).
+    await enqueueReport({
+      amountText: '1.3 kg',
+      minutes: 52,
+      recordedAt: '2026-08-28T10:55:00.000Z',
+      speciesId: 'lingonberry',
+      yieldRating: 4,
+      zoneId: 'Z14',
+    });
+
+    await render(<PrivacySettingsScreen onOpenSync={() => {}} />);
+
+    expect(
+      await screen.findByRole('button', { name: 'Offline maps & sync, 1 queued' }),
+    ).toBeOnTheScreen();
+  });
+
   it('is a reading rather than a control until the route can open the sync centre', async () => {
     const onOpenSync = jest.fn();
     const { rerender } = await render(<PrivacySettingsScreen />);
 
     // With nowhere to navigate to, the row is drawn as the reading it is: no role, no press.
     expect(screen.getByTestId('privacy-sync-row')).toBeOnTheScreen();
-    expect(screen.queryByRole('button', { name: 'Offline maps & sync' })).not.toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: /^Offline maps & sync/ })).not.toBeOnTheScreen();
 
     await rerender(<PrivacySettingsScreen onOpenSync={onOpenSync} />);
-    await fireEvent.press(screen.getByRole('button', { name: 'Offline maps & sync' }));
+    await fireEvent.press(screen.getByRole('button', { name: /^Offline maps & sync/ }));
 
     expect(onOpenSync).toHaveBeenCalledTimes(1);
+  });
+
+  it('gives every settings row the 44 px target', async () => {
+    // The row is a 21 px line inside 6 px of padding: 33 px, short of the repo's floor.
+    await render(<PrivacySettingsScreen onOpenSync={() => {}} />);
+
+    expect(screen.getByTestId('privacy-sync-row')).toHaveStyle({
+      minHeight: layout.minTouchTarget,
+    });
   });
 
   it('shows whose settings these are, from the session the app is holding', async () => {
@@ -323,10 +372,10 @@ describe('PrivacySettingsScreen', () => {
 
     // With nowhere to navigate to, the row is drawn as the reading it is: no role, no press.
     expect(screen.getByTestId('privacy-saved-spots-row')).toBeOnTheScreen();
-    expect(screen.queryByRole('button', { name: 'Saved spots' })).not.toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: /^Saved spots/ })).not.toBeOnTheScreen();
 
     await rerender(<PrivacySettingsScreen onOpenSavedSpots={onOpenSavedSpots} />);
-    await fireEvent.press(screen.getByRole('button', { name: 'Saved spots' }));
+    await fireEvent.press(screen.getByRole('button', { name: /^Saved spots/ }));
 
     expect(onOpenSavedSpots).toHaveBeenCalledTimes(1);
   });
@@ -367,26 +416,46 @@ describe('PrivacySettingsScreen', () => {
     expect(screen.queryByRole('button', { name: 'Language' })).not.toBeOnTheScreen();
   });
 
-  it('signs out when the frame’s last control is reached', async () => {
+  it('signs out when the frame’s last control is confirmed', async () => {
     const onSignOut = jest.fn().mockResolvedValue(undefined);
 
     await render(<PrivacySettingsScreen onSignOut={onSignOut} />);
     await fireEvent.press(screen.getByRole('button', { name: 'Sign out' }));
 
+    // A deletion is named before it is done: the first press opens the confirmation, not the
+    // deletion (frontend review, 2026-10-25).
+    expect(onSignOut).not.toHaveBeenCalled();
+    expect(screen.getByText('Sign out of this phone?')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign out and delete' }));
+
     expect(onSignOut).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(screen.queryByText(SIGN_OUT_FAILED)).not.toBeOnTheScreen());
   });
 
-  it('says nothing was removed when signing out did not finish', async () => {
+  it('keeps the session when the confirmation is cancelled', async () => {
+    const onSignOut = jest.fn().mockResolvedValue(undefined);
+
+    await render(<PrivacySettingsScreen onSignOut={onSignOut} />);
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign out' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Keep me signed in' }));
+
+    expect(onSignOut).not.toHaveBeenCalled();
+    expect(screen.queryByText('Sign out of this phone?')).not.toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Sign out' })).toBeOnTheScreen();
+  });
+
+  it('reports a sign-out that did not finish, and offers it again', async () => {
     const onSignOut = jest.fn().mockRejectedValue(new Error('the store refused'));
 
     await render(<PrivacySettingsScreen onSignOut={onSignOut} />);
     await fireEvent.press(screen.getByRole('button', { name: 'Sign out' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign out and delete' }));
 
-    // What the control promises is the deletion, so a run that failed must say the data is
-    // still there — and must be offerable again rather than stuck.
+    // The run stopped part-way, so the copy cannot claim nothing went. The confirmation stays
+    // open with the action offered again rather than stuck.
     expect(await screen.findByText(SIGN_OUT_FAILED)).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: 'Sign out' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Sign out and delete' })).toBeOnTheScreen();
   });
 
   it('offers the frame’s back control only when there is somewhere to go back to', async () => {

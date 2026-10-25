@@ -1,9 +1,9 @@
-import { Feather } from '@expo/vector-icons';
+import { Feather } from '@/components/atoms/app-icon';
 import { useState } from 'react';
 import { View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
-import { Callout, Card, InfoRow, TextAction } from '@/components/molecules';
+import { Callout, Card, InfoRow, StatusMessage, TextAction } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -180,10 +180,10 @@ export function YourDataScreen({ onBack, onShare }: YourDataScreenProps) {
         </Card>
 
         {readFailed ? (
-          <AppText testID="your-data-read-failed" tone="danger" variant="caption">
+          <StatusMessage testID="your-data-read-failed" tone="danger" variant="caption">
             {/* The notice's own sentence, reused: it is the same fact about the same device. */}
             {t('privacy.termsPrivacy.held.readFailed')}
-          </AppText>
+          </StatusMessage>
         ) : null}
 
         <Card

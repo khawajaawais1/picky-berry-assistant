@@ -1,8 +1,15 @@
 import { Pressable, View } from 'react-native';
 
+import { layout } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 
 import { AppText } from '../atoms';
+
+/** Grows the design's 36 px chip to the 44 px target; the row's 12 px gaps absorb it. */
+const CHIP_HIT_SLOP = {
+  bottom: (layout.minTouchTarget - layout.chipHeight) / 2,
+  top: (layout.minTouchTarget - layout.chipHeight) / 2,
+};
 
 export type ChoiceChipOption<Value extends string> = {
   label: string;
@@ -60,6 +67,7 @@ export function ChoiceChips<Value extends string>({
             accessibilityState={{ checked: selected }}
             aria-checked={selected}
             className="h-chip flex-row items-center rounded-pill px-gap"
+            hitSlop={CHIP_HIT_SLOP}
             key={option.value}
             onPress={() => onChange(option.value)}
             style={{

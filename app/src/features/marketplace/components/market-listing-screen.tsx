@@ -1,4 +1,4 @@
-import { Feather } from '@expo/vector-icons';
+import { Feather } from '@/components/atoms/app-icon';
 import { Image, View } from 'react-native';
 
 import { AppButton, AppText } from '@/components/atoms';
@@ -56,12 +56,7 @@ export function MarketListingScreen({
   const species = speciesLabelKey(listing.species);
 
   return (
-    <Screen
-      edges={['top']}
-      eyebrow={t('market.eyebrow.listing')}
-      onBack={onBack}
-      title={listing.name}
-    >
+    <Screen eyebrow={t('market.eyebrow.listing')} onBack={onBack} title={listing.name}>
       <View className="w-full gap-section">
         <MarketDisclosure>
           <AppText tone="muted" variant="metadata">

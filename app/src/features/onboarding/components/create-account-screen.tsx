@@ -1,9 +1,9 @@
-import { Feather } from '@expo/vector-icons';
+import { Feather } from '@/components/atoms/app-icon';
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { AppButton, AppCheckbox, AppText } from '@/components/atoms';
-import { Callout, FormField, TextAction } from '@/components/molecules';
+import { Callout, FieldAction, FormField, StatusMessage, TextAction } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { appEnvironment, type AppEnvironment } from '@/config/env';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -146,11 +146,10 @@ export function OnboardingCreateAccountScreen({
         <View className="w-full gap-section">
           <FormField
             accessory={
-              <Pressable
+              <FieldAction
                 accessibilityLabel={t(
                   passwordVisible ? 'common.hidePassword' : 'common.showPassword',
                 )}
-                accessibilityRole="button"
                 onPress={() => setPasswordVisible((visible) => !visible)}
               >
                 <Feather
@@ -158,7 +157,7 @@ export function OnboardingCreateAccountScreen({
                   name={passwordVisible ? 'eye' : 'eye-off'}
                   size={20}
                 />
-              </Pressable>
+              </FieldAction>
             }
             label={t('onboarding.createAccount.field.password')}
             onChangeText={(password) => setForm((current) => ({ ...current, password }))}
@@ -171,21 +170,18 @@ export function OnboardingCreateAccountScreen({
           </AppText>
         </View>
 
-        <View className="w-full flex-row gap-gap">
-          <AppCheckbox
-            accessibilityLabel={consent}
-            checked={form.consent}
-            onChange={(agreed) => setForm((current) => ({ ...current, consent: agreed }))}
+        <AppCheckbox
+          accessibilityLabel={consent}
+          checked={form.consent}
+          label={consent}
+          onChange={(agreed) => setForm((current) => ({ ...current, consent: agreed }))}
+        >
+          <TextAction
+            label={t('onboarding.createAccount.readTerms')}
+            onPress={onReadTerms}
+            variant="caption"
           />
-          <View className="flex-1 gap-tight">
-            <AppText variant="bodySmall">{consent}</AppText>
-            <TextAction
-              label={t('onboarding.createAccount.readTerms')}
-              onPress={onReadTerms}
-              variant="caption"
-            />
-          </View>
-        </View>
+        </AppCheckbox>
 
         <AppButton
           busy={submitting}
@@ -196,9 +192,9 @@ export function OnboardingCreateAccountScreen({
         />
 
         {submissionFailed ? (
-          <AppText testID="create-account-failed" tone="danger" variant="bodySmall">
+          <StatusMessage testID="create-account-failed" tone="danger" variant="bodySmall">
             {t('onboarding.createAccount.failed')}
-          </AppText>
+          </StatusMessage>
         ) : null}
 
         <TextAction

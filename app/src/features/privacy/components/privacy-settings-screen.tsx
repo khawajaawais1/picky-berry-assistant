@@ -1,9 +1,8 @@
-import { Feather } from '@expo/vector-icons';
-import { useState } from 'react';
+import { Feather } from '@/components/atoms/app-icon';
 import { Pressable, Switch, View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
-import { Callout, Card, Chip, TextAction } from '@/components/molecules';
+import { Callout, Card, Chip, SignOutAction, StatusMessage } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { layout, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -106,17 +105,19 @@ export function PrivacySettingsScreen({
   const { colors } = useAppTheme();
   const { t } = useTranslation();
   const { consent, error, loading, record } = usePrivacyConsent();
-  const { reports } = useReportQueue();
+  const { error: queueError, loading: queueLoading, reports } = useReportQueue();
   const { error: zonesError, loading: zonesLoading, zones } = useSavedZones();
   const { error: sessionError, loading: sessionLoading, session } = useSession();
-  const [signingOut, setSigningOut] = useState(false);
-  const [signOutFailed, setSignOutFailed] = useState(false);
 
   const consentLabel = t('privacy.visitTracking');
   const syncLabel = t('privacy.sync.title');
   // The frame prints the row's own value (“1 queued”): how many reports are still on this phone,
-  // which is the same queue screen 13 lists.
-  const syncValue = interpolate(t('privacy.sync.value'), { count: String(reports.length) });
+  // which is the same queue screen 13 lists. An unanswered or failed read is not a zero, so the row
+  // prints nothing until the queue has actually answered (frontend review, 2026-10-25).
+  const syncValue =
+    queueLoading || queueError
+      ? undefined
+      : interpolate(t('privacy.sync.value'), { count: String(reports.length) });
   // The frame prints the plan's own count on its saved-spots row, and its subtitle says the same
   // count in words (“4 spots · private by default”). While the record is being read, or when it
   // could not be read at all, the screen prints neither: an unknown count is not zero, and a
@@ -154,23 +155,6 @@ export function PrivacySettingsScreen({
           verified,
         })
     : '';
-
-  const signOut = async () => {
-    if (!onSignOut || signingOut) return;
-
-    setSigningOut(true);
-    setSignOutFailed(false);
-
-    try {
-      await onSignOut();
-    } catch {
-      // Reported rather than swallowed: the control's promise is that the device no longer holds
-      // anything of the picker's, and a run that failed must not claim that.
-      setSignOutFailed(true);
-    } finally {
-      setSigningOut(false);
-    }
-  };
 
   return (
     <Screen
@@ -319,30 +303,17 @@ export function PrivacySettingsScreen({
         </View>
 
         {error ? (
-          <AppText tone="danger" variant="caption">
+          <StatusMessage tone="danger" variant="caption">
             {t('privacy.saveFailed')}
-          </AppText>
+          </StatusMessage>
         ) : null}
         {sessionError ? (
-          <AppText testID="privacy-account-error" tone="danger" variant="caption">
+          <StatusMessage testID="privacy-account-error" tone="danger" variant="caption">
             {t('privacy.account.readFailed')}
-          </AppText>
+          </StatusMessage>
         ) : null}
 
-        <TextAction
-          align="center"
-          label={t('privacy.signOut')}
-          // No handler while it is working: an action that cannot act claims no role, and the
-          // second press a waiting screen invites would be a second sign-out.
-          onPress={onSignOut && !signingOut ? () => void signOut() : undefined}
-          testID="privacy-sign-out"
-        />
-
-        {signOutFailed ? (
-          <AppText tone="danger" variant="caption">
-            {t('privacy.signOut.failed')}
-          </AppText>
-        ) : null}
+        {onSignOut ? <SignOutAction onSignOut={onSignOut} testID="privacy-sign-out" /> : null}
       </View>
     </Screen>
   );
@@ -380,6 +351,9 @@ function SettingRow({
   value?: string;
 }) {
   const { colors } = useAppTheme();
+  // A row's value is part of what the row says: “Offline maps & sync” without “1 queued” is a
+  // setting announced with its point removed (frontend review, 2026-10-25).
+  const accessibleName = value === undefined ? label : `${label}, ${value}`;
 
   const content = (
     <>
@@ -403,7 +377,11 @@ function SettingRow({
 
   if (!onPress) {
     return (
-      <View className="w-full flex-row items-center gap-gap py-setting" testID={testID}>
+      <View
+        className="w-full flex-row items-center gap-gap py-setting"
+        style={{ minHeight: layout.minTouchTarget }}
+        testID={testID}
+      >
         {content}
       </View>
     );
@@ -411,10 +389,11 @@ function SettingRow({
 
   return (
     <Pressable
-      accessibilityLabel={label}
+      accessibilityLabel={accessibleName}
       accessibilityRole="button"
       className="w-full flex-row items-center gap-gap py-setting"
       onPress={onPress}
+      style={{ minHeight: layout.minTouchTarget }}
       testID={testID}
     >
       {content}

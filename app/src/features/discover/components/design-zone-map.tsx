@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -102,7 +102,7 @@ const BASE_PAINT: Record<
  *   composition; the labels keep their own size and are anchored to it, and the map's own
  *   scale line is anchored to the bottom edge so it grows upward instead of being clipped.
  */
-export function DesignZoneMap({
+export const DesignZoneMap = memo(function DesignZoneMap({
   height = layout.mapHeight,
   route = false,
   zones,
@@ -311,7 +311,7 @@ export function DesignZoneMap({
       </AppText>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   score: {

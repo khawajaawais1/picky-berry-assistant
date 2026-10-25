@@ -581,7 +581,7 @@ test.describe('the visit flow in the built web app', () => {
     await expect(page.getByText('Waiting to sync · 1 report')).toBeVisible();
     const row = page.getByTestId('offline-report-0');
     await expect(row).toContainText('Zone 14 · Lingonberry');
-    await expect(row).toContainText('52 min · Yield 4 / 5');
+    await expect(row).toContainText('52 min · Rating 4 / 5');
     await expect(row).toContainText('Queued · visit + report');
 
     // What the frame promises here is a retry (“will retry automatically”), and nothing has been
@@ -790,7 +790,9 @@ test.describe('the account and the plan in the built web app', () => {
     await expect(page).toHaveURL(/\/zone-details\?/);
     await expect(page).toHaveURL(/zone=cc0e7929-de9f-516a-9049-7a25a1a6d092/);
     await expect(page).toHaveURL(/species=lingonberry/);
-    await expect(page.getByText('Laajavuori 1')).toBeVisible();
+    // The saved-plan row and the zone screen's heading both carry the zone name now that the
+    // shell keeps previous screens mounted for its transition; the heading is the new screen.
+    await expect(page.getByRole('heading', { name: 'Laajavuori 1' })).toBeVisible();
     // The zone's own score timestamp, the same field the map prints: the details screen keeps
     // the answer's age rather than the moment it was opened.
     await expect(page.getByTestId('zone-details-updated')).toHaveText('Last updated 3 August 2026');
@@ -854,6 +856,9 @@ test.describe('the account and the plan in the built web app', () => {
     await page.getByRole('tab', { name: 'Profile' }).click();
     await expect(page).toHaveURL(/\/privacy-settings$/);
     await page.getByRole('button', { name: 'Sign out' }).click();
+    // The deletion is named before it happens; the first press only opens that confirmation
+    // (frontend review, 2026-10-25).
+    await page.getByRole('button', { name: 'Sign out and delete' }).click();
 
     // The app's front door: signing out lands on the welcome screen, whose own link is the way
     // back in (ADR-034 — the sign-in screen the design never drew).

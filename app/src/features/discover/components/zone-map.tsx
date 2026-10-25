@@ -1,6 +1,7 @@
 import { View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
+import { StatusMessage, TextAction } from '@/components/molecules';
 import { layout, radii, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { interpolate, useTranslation } from '@/services/i18n';
@@ -12,6 +13,11 @@ import { ZoneMapCanvas } from './zone-map-canvas';
 export type ZoneMapProps = {
   /** The height the screen gives it: the design's 300 on frame 06. */
   height?: number;
+  /**
+   * Reads the source again after a failed one. Without it the failure is a reading and draws no
+   * action: a control that cannot act claims no role (AGENTS.md §11.2).
+   */
+  onRetry?: () => void;
   /** Why there may be no polygons — the screen asks the source once and passes the answer. */
   status: ZonesStatus;
   /** The zones the screen's controls left: the map draws exactly what the list would show. */
@@ -39,7 +45,7 @@ export type ZoneMapProps = {
  *   carries a text alternative naming what it shows; the zone-by-zone reading is the list
  *   the screen's toggle opens.
  */
-export function ZoneMap({ height = layout.mapHeight, status, zones }: ZoneMapProps) {
+export function ZoneMap({ height = layout.mapHeight, onRetry, status, zones }: ZoneMapProps) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
 
@@ -65,10 +71,17 @@ export function ZoneMap({ height = layout.mapHeight, status, zones }: ZoneMapPro
         {hasZones ? (
           <ZoneMapCanvas height={height} label={t('discover.map.label')} zones={zones} />
         ) : (
-          <View className="flex-1 items-center justify-center px-section">
-            <AppText testID="zone-map-status" tone="muted" variant="bodySmall">
+          <View className="flex-1 items-center justify-center gap-gap px-section">
+            <StatusMessage testID="zone-map-status" tone="muted" variant="bodySmall">
               {statusLine}
-            </AppText>
+            </StatusMessage>
+            {status === 'error' && onRetry ? (
+              <TextAction
+                label={t('discover.map.retry')}
+                onPress={onRetry}
+                testID="zone-map-retry"
+              />
+            ) : null}
           </View>
         )}
       </View>

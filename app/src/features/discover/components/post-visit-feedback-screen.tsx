@@ -1,9 +1,9 @@
-import { Feather } from '@expo/vector-icons';
+import { Feather } from '@/components/atoms/app-icon';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { AppButton, AppText } from '@/components/atoms';
-import { Callout, ChoiceChips, FormField, TextAction } from '@/components/molecules';
+import { Callout, ChoiceChips, FormField, StatusMessage, TextAction } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { interpolate, useTranslation } from '@/services/i18n';
@@ -52,8 +52,10 @@ export type PostVisitFeedbackScreenProps = {
  * The frame's third species chip, **“More”**, is real: the design names three berries in its own
  * chips, and the app's vocabulary adds the pilot's fourth (crowberry), so pressing it reveals
  * the rest of the vocabulary the app can name (`REPORT_SPECIES_MORE`) rather than opening an
- * index it does not have. It is a disclosure, so it announces itself as one and disappears once
- * the row holds every species.
+ * index it does not have. It is a disclosure, so it announces itself as one and stays on the row
+ * as “Fewer” once the vocabulary is open — a chip that unmounted itself could never report
+ * `expanded: true` and dropped web focus with it (frontend review, 2026-10-25). A chosen berry
+ * outside the design's two stays on the collapsed row.
  *
  * Saving is real: `onSave` writes the report to the device's queue (`src/services/report-queue`)
  * and a failed write is reported on the screen. The report is the picker's own data and is
@@ -79,10 +81,13 @@ export function PostVisitFeedbackScreen({ onBack, onSave, onSkip }: PostVisitFee
     5: t(RATING_MEANING_KEY[5]),
   } satisfies Record<YieldRating, string>;
 
-  // The frame's row: its two chips, and the third one that reveals the rest of the vocabulary.
+  // The frame's row: its two chips, and the third one that opens and closes the rest of the
+  // vocabulary. A chosen species outside the two stays on the row when it closes: a disclosure
+  // may hide choices, never the answer it is carrying.
+  const allSpecies: readonly ReportSpecies[] = [...REPORT_SPECIES, ...REPORT_SPECIES_MORE];
   const speciesOptions: readonly ReportSpecies[] = showAllSpecies
-    ? [...REPORT_SPECIES, ...REPORT_SPECIES_MORE]
-    : REPORT_SPECIES;
+    ? allSpecies
+    : allSpecies.filter((species, index) => index < REPORT_SPECIES.length || species === speciesId);
 
   async function save() {
     if (!onSave) {
@@ -143,26 +148,29 @@ export function PostVisitFeedbackScreen({ onBack, onSave, onSkip }: PostVisitFee
             value={speciesId}
           />
 
-          {showAllSpecies ? null : (
-            <Pressable
-              accessibilityLabel={t('report.species.more.a11y')}
-              accessibilityRole="button"
-              // The row now holds the design's two chips; the disclosure has not been used yet.
-              accessibilityState={{ expanded: false }}
-              className="h-chip flex-row items-center rounded-pill px-gap"
-              onPress={() => setShowAllSpecies(true)}
-              style={{
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-                borderWidth: 1,
-              }}
-              testID="report-species-more"
-            >
-              <AppText style={{ color: colors.textMuted, fontWeight: '600' }} variant="label">
-                {t('report.species.more')}
-              </AppText>
-            </Pressable>
-          )}
+          <Pressable
+            accessibilityLabel={t(
+              showAllSpecies ? 'report.species.fewer.a11y' : 'report.species.more.a11y',
+            )}
+            accessibilityRole="button"
+            // One control opens and closes the row, so the state it reports is the state it is
+            // in. Stated twice on purpose, as the checkbox and the chips are: `accessibilityState`
+            // for the platforms, `aria-expanded` for the web target.
+            accessibilityState={{ expanded: showAllSpecies }}
+            aria-expanded={showAllSpecies}
+            className="h-chip flex-row items-center rounded-pill px-gap"
+            onPress={() => setShowAllSpecies((open) => !open)}
+            style={{
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              borderWidth: 1,
+            }}
+            testID="report-species-more"
+          >
+            <AppText style={{ color: colors.textMuted, fontWeight: '600' }} variant="label">
+              {t(showAllSpecies ? 'report.species.fewer' : 'report.species.more')}
+            </AppText>
+          </Pressable>
         </View>
 
         <YieldRatingRow
@@ -190,9 +198,9 @@ export function PostVisitFeedbackScreen({ onBack, onSave, onSkip }: PostVisitFee
         </Callout>
 
         {failed ? (
-          <AppText testID="report-save-failed" tone="danger" variant="bodySmall">
+          <StatusMessage testID="report-save-failed" tone="danger" variant="bodySmall">
             {t('report.saveFailed')}
-          </AppText>
+          </StatusMessage>
         ) : null}
 
         {onSave ? (

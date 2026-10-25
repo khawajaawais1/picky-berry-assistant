@@ -1,7 +1,15 @@
-import { Slot, usePathname, useRouter, type Href } from 'expo-router';
+import {
+  router,
+  Stack,
+  usePathname,
+  useRouter,
+  type ErrorBoundaryProps,
+  type Href,
+} from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { CoreNavigation, type CoreNavKey } from '@/components/organisms';
+import { ErrorScreen } from '@/components/templates';
 import { useAppTheme } from '@/hooks/use-app-theme';
 
 /**
@@ -68,6 +76,14 @@ const ACTIVE_TAB: Record<string, CoreNavKey> = {
   '/your-data': 'profile',
 };
 
+/**
+ * A screen in the shell that throws falls back here: the same fallback as the root's, with the
+ * shell's home as the way out, so the user is not sent back through onboarding.
+ */
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  return <ErrorScreen error={error} onHome={() => router.replace('/discover')} onRetry={retry} />;
+}
+
 export default function AppShellLayout() {
   const pathname = usePathname();
   const router = useRouter();
@@ -76,7 +92,12 @@ export default function AppShellLayout() {
 
   return (
     <View style={[styles.shell, { backgroundColor: colors.background }]}>
-      <Slot />
+      {/*
+        A nested stack, not a Slot: the shell swaps routes itself, which made every bottom-bar
+        change a hard cut with no transition (reported twice from Expo Go, 2026-10-25). The stack
+        gives each screen the platform's own fade; the bar stays outside it, so it never moves.
+      */}
+      <Stack screenOptions={{ animation: 'fade', headerShown: false }} />
       {activeKey ? (
         <CoreNavigation
           activeKey={activeKey}

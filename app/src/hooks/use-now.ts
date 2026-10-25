@@ -14,20 +14,22 @@ import { useEffect, useState } from 'react';
  * corrects itself, and the interval is cleared on unmount so a screen the user has left does not go
  * on re-rendering in the background.
  *
- * Why a whole second: it is the granularity a reading in minutes needs to cross its own boundary on
- * time, it is the tick frame 09's timer already uses, and a faster clock would be a re-render a
- * second nobody can see.
+ * The default is a whole second: frame 09's timer crosses a second boundary and should do it on
+ * time. A screen whose reading is in whole minutes can ask for a slower cadence: the account surface
+ * uses fifteen seconds, because a one-second tick there is sixty re-renders a minute for a digit that
+ * changes once (frontend review, 2026-10-25). The cost is that an expiry can be noticed up to that
+ * long after it happens, which fifteen seconds keeps small for an hour-long session.
  */
 const TICK_MS = 1000;
 
-export function useNow(): Date {
+export function useNow(intervalMs = TICK_MS): Date {
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
-    const interval = setInterval(() => setNow(new Date()), TICK_MS);
+    const interval = setInterval(() => setNow(new Date()), intervalMs);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [intervalMs]);
 
   return now;
 }

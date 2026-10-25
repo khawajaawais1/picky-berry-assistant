@@ -1,4 +1,4 @@
-import { Feather } from '@expo/vector-icons';
+import { Feather } from '@/components/atoms/app-icon';
 import { View } from 'react-native';
 
 import { AppButton, AppText } from '@/components/atoms';
@@ -69,12 +69,7 @@ export function MarketOrderScreen({ onBack, onMessageSeller }: MarketOrderScreen
   const total = orderTotalCents(DEMO_ORDER, listing);
 
   return (
-    <Screen
-      edges={['top']}
-      eyebrow={t('market.eyebrow.order')}
-      onBack={onBack}
-      title={t('market.order.title')}
-    >
+    <Screen eyebrow={t('market.eyebrow.order')} onBack={onBack} title={t('market.order.title')}>
       <View className="w-full gap-section">
         <MarketDisclosure>
           <Chip label={t('market.order.testMode')} tone="warning" />

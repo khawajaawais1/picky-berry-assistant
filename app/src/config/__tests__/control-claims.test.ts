@@ -93,6 +93,16 @@ const LEDGER: readonly LedgerEntry[] = [
     why: 'A text field: it holds what is typed, which is the thing it claims.',
   },
   {
+    file: 'src/components/molecules/field-action.tsx',
+    offers: { pressable: 1, role: 1 },
+    why: 'The reveal control inside a password field: it acts on the field the caller passed, and its 44 px box is the target rather than the 20 px glyph (frontend review, 2026-10-25).',
+  },
+  {
+    file: 'src/components/molecules/sign-out-action.tsx',
+    offers: { button: 1, textAction: 2 },
+    why: 'Signing out: the control opens a confirmation that names the saved spots, the unsynced reports and the consent before it deletes them; “Keep me signed in” cancels, and the confirm action is busy and unavailable while the service runs. Shared by the profile and the account screen so the two cannot disagree about what a press costs (frontend review, 2026-10-25).',
+  },
+  {
     file: 'src/components/molecules/form-field.tsx',
     offers: { textField: 1 },
     why: 'The labelled field the forms are built from: the label, the field it wraps and the value the caller holds.',
@@ -118,9 +128,14 @@ const LEDGER: readonly LedgerEntry[] = [
     why: 'The review tool that pages through the design readings; it is mounted only outside a production build (the production export proves it is absent).',
   },
   {
+    file: 'src/components/templates/error-screen.tsx',
+    offers: { button: 1, role: 1, textAction: 1 },
+    why: 'The route error fallback: “Try again” runs the router’s reset, “Go back” opens the shell’s home, and the title is the screen’s heading. It prints no error text (frontend review, 2026-10-25).',
+  },
+  {
     file: 'src/components/templates/screen.tsx',
-    offers: { pressable: 1, role: 1 },
-    why: 'The back control, drawn only when the route has somewhere to go back to.',
+    offers: { pressable: 1, role: 2 },
+    why: 'The back control, drawn only when the route has somewhere to go back to, and the screen title, announced as a heading rather than painted as text (frontend review, 2026-10-25). The heading is a reading, not a control.',
   },
   {
     file: 'src/features/discover/components/active-visit-screen.tsx',
@@ -149,8 +164,8 @@ const LEDGER: readonly LedgerEntry[] = [
   },
   {
     file: 'src/features/discover/components/saved-spots-screen.tsx',
-    offers: { textAction: 1 },
-    why: 'The empty plan’s way to the map; the rows are `ZoneSourceRow`s, which the route gives a destination (the saved zone’s details), and the screen removes nothing at all.',
+    offers: { button: 1, role: 1 },
+    why: 'The empty plan’s “Browse zones” action, under a heading and a sentence that say how a spot gets here; the rows are `ZoneSourceRow`s, which the route gives a destination (the saved zone’s details), and the screen removes nothing at all (frontend review, 2026-10-25).',
   },
   {
     file: 'src/features/discover/components/season-insights-screen.tsx',
@@ -176,6 +191,16 @@ const LEDGER: readonly LedgerEntry[] = [
     file: 'src/features/discover/components/zone-card.tsx',
     offers: { pressable: 1, role: 1 },
     why: 'Frame 06’s card hands its zone and score layer to frame 07; it is a control only where the route supplies that destination, and without a handler it returns the drawing, with no role and no chevron.',
+  },
+  {
+    file: 'src/features/discover/components/discover-screen.tsx',
+    offers: { textAction: 1 },
+    why: 'The list view’s retry after a failed read, wired to the same `useZones` refetch the map offers; every other control on the screen is a shared component with its own entry (frontend review, 2026-10-25).',
+  },
+  {
+    file: 'src/features/discover/components/zone-map.tsx',
+    offers: { textAction: 1 },
+    why: 'The map’s retry after a failed read: it is drawn only when the screen supplies the read again, and the map stays a drawing without one (frontend review, 2026-10-25).',
   },
   {
     file: 'src/features/discover/components/zone-details-screen.tsx',
@@ -223,11 +248,6 @@ const LEDGER: readonly LedgerEntry[] = [
     why: 'The same guard as the zone row: only the one listing the app has a screen for is a button, and that press opens it.',
   },
   {
-    file: 'src/features/marketplace/components/market-browse-screen.tsx',
-    offers: { textAction: 1 },
-    why: 'Readings throughout: the filter chips are `Chip`s, the count action has no handler, and the listings are cards whose handler the screen supplies only for the demo listing.',
-  },
-  {
     file: 'src/features/marketplace/components/market-search-field.tsx',
     offers: { textField: 1 },
     why: 'Frame 15’s search field, the same component at the marketplace’s metrics, narrowing the two listings as it is typed; the frame’s sliders glyph is not drawn, because no filter sheet exists.',
@@ -253,11 +273,9 @@ const LEDGER: readonly LedgerEntry[] = [
       button: 1,
       checkbox: 1,
       formField: 3,
-      pressable: 1,
-      role: 1,
       textAction: 2,
     },
-    why: 'The name, address and password fields, the submit (gated by its own rules and the account seam), the consent checkbox, the terms link, the way to sign in and the show-password control — all of them local. The frame’s email/phone chips are gone with the phone flow (ADR-059).',
+    why: 'The name, address and password fields, the submit (gated by its own rules and the account seam), the consent checkbox, the terms link and the way to sign in — all of them local. The frame’s email/phone chips are gone with the phone flow (ADR-059); the show-password control is the shared `FieldAction` now, so this file draws no pressable of its own.',
   },
   {
     file: 'src/features/onboarding/components/location-consent-screen.tsx',
@@ -276,8 +294,8 @@ const LEDGER: readonly LedgerEntry[] = [
   },
   {
     file: 'src/features/onboarding/components/sign-in-screen.tsx',
-    offers: { button: 1, formField: 2, pressable: 1, role: 1, textAction: 2 },
-    why: 'The email and password are handed to the account seam, the show-password control acts on the field, “Forgot password?” opens the reset request (ADR-062), and the way to create an account opens screen 03; the action goes inert where nothing can answer it (ADR-054, ADR-059).',
+    offers: { button: 1, formField: 2, textAction: 2 },
+    why: 'The email and password are handed to the account seam, the show-password control is the shared `FieldAction`, “Forgot password?” opens the reset request (ADR-062), and the way to create an account opens screen 03; the action goes inert where nothing can answer it (ADR-054, ADR-059).',
   },
   {
     file: 'src/features/onboarding/components/welcome-screen.tsx',
@@ -286,13 +304,13 @@ const LEDGER: readonly LedgerEntry[] = [
   },
   {
     file: 'src/features/privacy/components/account-security-screen.tsx',
-    offers: { textAction: 2 },
-    why: 'Sign out is offered with no handler while it is working, and the way back in appears only when there is no session to carry on with.',
+    offers: { textAction: 1 },
+    why: 'The way back in is drawn when there is no session to carry on with; signing out is the shared `SignOutAction`, which confirms the deletion first (frontend review, 2026-10-25).',
   },
   {
     file: 'src/features/privacy/components/privacy-settings-screen.tsx',
-    offers: { pressable: 1, role: 1, switch: 1, textAction: 1 },
-    why: 'The visit-tracking switch writes the consent record, the setting rows are controls only where their route supplies a destination, the language row drops the chevron (ADR-017), and sign out is offered without a handler while it works.',
+    offers: { pressable: 1, role: 1, switch: 1 },
+    why: 'The visit-tracking switch writes the consent record, the setting rows are controls only where their route supplies a destination, the language row drops the chevron (ADR-017), and signing out is the shared `SignOutAction`, which confirms the deletion first (frontend review, 2026-10-25).',
   },
   {
     file: 'src/features/privacy/components/terms-privacy-screen.tsx',
@@ -422,7 +440,7 @@ describe('the controls the app offers', () => {
       },
       {
         file: 'src/features/marketplace/components/market-browse-screen.tsx',
-        why: 'Frame 15: its three filter chips would leave the app’s two listings unchanged, and its count action opens no index — both claim nothing (ADR-026).',
+        why: 'Frame 15: its three filter chips would leave the app’s two listings unchanged, and its count line opens no index — both claim nothing (ADR-026).',
       },
       {
         file: 'src/components/molecules/chip.tsx',

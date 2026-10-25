@@ -1,7 +1,8 @@
-import { Feather } from '@expo/vector-icons';
+import { Feather } from '@/components/atoms/app-icon';
 import { View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
+import { StatusMessage } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useReportQueue } from '@/hooks/use-report-queue';
@@ -45,7 +46,7 @@ export type ZoneReportsScreenProps = {
 export function ZoneReportsScreen({ onBack }: ZoneReportsScreenProps) {
   const { colors } = useAppTheme();
   const { locale, t } = useTranslation();
-  const { error, reports } = useReportQueue();
+  const { error, loading, reports } = useReportQueue();
 
   // The zone the frame's own card is about: the same lookup frame 07 does, so the two screens
   // cannot name different zones for one story.
@@ -69,31 +70,39 @@ export function ZoneReportsScreen({ onBack }: ZoneReportsScreenProps) {
           })}
         </AppText>
 
-        <AppText testID="zone-reports-count" tone="muted" variant="metadata">
-          {interpolate(t(zoneReportCountLabelKey(rows.length)), { count: String(rows.length) })}
-        </AppText>
-
-        {rows.length === 0 ? (
-          <AppText testID="zone-reports-empty" variant="bodySmall">
-            {t('discover.zoneReports.empty')}
-          </AppText>
-        ) : (
-          <View className="w-full gap-md">
-            {rows.map((row, index) => (
-              <ReportRow
-                index={index}
-                key={`${row.recordedAt}-${row.speciesId}-${index}`}
-                row={row}
-              />
-            ))}
-          </View>
-        )}
-
-        {error ? (
-          <AppText testID="zone-reports-read-failed" tone="danger" variant="bodySmall">
+        {loading ? (
+          <StatusMessage testID="zone-reports-loading" tone="muted" variant="bodySmall">
+            {t('common.loading')}
+          </StatusMessage>
+        ) : error ? (
+          <StatusMessage testID="zone-reports-read-failed" tone="danger" variant="bodySmall">
             {t('common.readFailed')}
-          </AppText>
-        ) : null}
+          </StatusMessage>
+        ) : (
+          <>
+            <AppText testID="zone-reports-count" tone="muted" variant="metadata">
+              {interpolate(t(zoneReportCountLabelKey(rows.length)), {
+                count: String(rows.length),
+              })}
+            </AppText>
+
+            {rows.length === 0 ? (
+              <AppText testID="zone-reports-empty" variant="bodySmall">
+                {t('discover.zoneReports.empty')}
+              </AppText>
+            ) : (
+              <View className="w-full gap-md">
+                {rows.map((row, index) => (
+                  <ReportRow
+                    index={index}
+                    key={`${row.recordedAt}-${row.speciesId}-${index}`}
+                    row={row}
+                  />
+                ))}
+              </View>
+            )}
+          </>
+        )}
 
         {/* The other half of the design's own list, named rather than faked: the zone's reports
             from other pickers need the report service, which does not exist. */}

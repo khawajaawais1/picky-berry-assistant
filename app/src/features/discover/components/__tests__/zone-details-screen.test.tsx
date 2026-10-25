@@ -138,7 +138,7 @@ describe('ZoneDetailsScreen', () => {
 
     expect(screen.getByText('Fresh from pickers')).toBeOnTheScreen();
     expect(screen.getByText('“Plenty of ripe clusters near the trail.”')).toBeOnTheScreen();
-    expect(screen.getByText('Trusted report · 38 min ago · 4 / 5 yield')).toBeOnTheScreen();
+    expect(screen.getByText('Trusted report · 38 min ago · 4 / 5 rating')).toBeOnTheScreen();
     expect(
       screen.getByText('Scores weight freshness, trust and nearby agreement.'),
     ).toBeOnTheScreen();

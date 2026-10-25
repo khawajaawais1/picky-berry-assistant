@@ -1,4 +1,4 @@
-import { Feather } from '@expo/vector-icons';
+import { Feather } from '@/components/atoms/app-icon';
 import { View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
@@ -162,7 +162,21 @@ export function AlertsScreen({ onBack }: AlertsScreenProps) {
             {t('discover.alert.preferences.title')}
           </AppText>
 
-          <View className="w-full flex-row items-center gap-gap py-setting">
+          {/*
+            The frame's switch is a figure, not a control: nothing delivers an alert and no
+            permission is asked for. It is still a reading whose state matters, so the row is one
+            accessible group named with its answer rather than a switch that goes nowhere
+            (frontend review, 2026-10-25).
+          */}
+          <View
+            accessibilityLabel={`${t('discover.alert.preferences.push')}, ${t(
+              DEMO_ALERT_PREFERENCES.pushAlerts ? 'common.on' : 'common.off',
+            )}`}
+            accessible
+            className="w-full flex-row items-center gap-gap py-setting"
+            role="group"
+            testID="alert-preferences-push"
+          >
             <AppText className="flex-1" variant="cardTitle">
               {t('discover.alert.preferences.push')}
             </AppText>
