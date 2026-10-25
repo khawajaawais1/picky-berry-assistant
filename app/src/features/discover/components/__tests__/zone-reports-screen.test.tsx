@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { render, screen, within } from '@testing-library/react-native';
 
-import { enqueueReport } from '@/services/report-queue';
+import { enqueueReport, REPORT_QUEUE_STORAGE_KEY } from '@/services/report-queue';
 
 import { ZoneReportsScreen } from '../zone-reports-screen';
 
@@ -53,6 +53,29 @@ describe('ZoneReportsScreen', () => {
     expect(await screen.findByTestId('zone-reports-count')).toHaveTextContent(
       '1 report on this phone',
     );
+  });
+
+  it('claims nothing about the phone while the queue is still being read', async () => {
+    // The queue used to be read as zero while its read was in flight, so the screen said “0
+    // reports on this phone” before the phone had answered (frontend review, 2026-10-25).
+    const getItem = AsyncStorage.getItem as jest.Mock;
+    const original = getItem.getMockImplementation();
+
+    getItem.mockImplementation((key: string) =>
+      key === REPORT_QUEUE_STORAGE_KEY
+        ? new Promise<string | null>(() => {})
+        : (original?.(key) ?? Promise.resolve(null)),
+    );
+
+    try {
+      await render(<ZoneReportsScreen />);
+
+      expect(screen.getByTestId('zone-reports-loading')).toHaveTextContent('Loading…');
+      expect(screen.queryByTestId('zone-reports-count')).not.toBeOnTheScreen();
+      expect(screen.queryByTestId('zone-reports-empty')).not.toBeOnTheScreen();
+    } finally {
+      getItem.mockImplementation(original);
+    }
   });
 
   it('lists the picker’s own report as the frame’s rows print one', async () => {

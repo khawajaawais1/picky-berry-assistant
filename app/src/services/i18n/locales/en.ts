@@ -18,6 +18,8 @@ export const en = {
   // has a failure state, and a store the device will not let the app read must never be shown as
   // an empty list the user did not write (the same reason screens 10 and 14 report their writes).
   'common.readFailed': 'Your saved visits could not be read.',
+  // A store still being read is not an empty one: screens say this rather than a count of zero.
+  'common.loading': 'Loading…',
   'common.hidePassword': 'Hide password',
   'common.showPassword': 'Show password',
 

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import { layout, radii, themes } from '@/constants/theme';
 import { QueryProvider } from '@/services/query-client';
@@ -299,8 +299,10 @@ describe('DiscoverScreen', () => {
 
     await render(<DiscoverScreen zoneSource={flaky} />, { wrapper: QueryProvider });
 
-    expect(await screen.findByTestId('zone-map-status')).toHaveTextContent(
-      'Zones could not be read',
+    // The map's status element exists during the load too, so the failure is waited for, not
+    // read from the first render.
+    await waitFor(() =>
+      expect(screen.getByTestId('zone-map-status')).toHaveTextContent('Zones could not be read'),
     );
 
     await fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
@@ -315,8 +317,8 @@ describe('DiscoverScreen', () => {
     await render(<DiscoverScreen zoneSource={flaky} />, { wrapper: QueryProvider });
     await openList();
 
-    expect(await screen.findByTestId('zone-list-status')).toHaveTextContent(
-      'Zones could not be read',
+    await waitFor(() =>
+      expect(screen.getByTestId('zone-list-status')).toHaveTextContent('Zones could not be read'),
     );
 
     await fireEvent.press(screen.getByRole('button', { name: 'Try again' }));

@@ -259,7 +259,7 @@ export function OfflineSyncScreen({ onBack }: OfflineSyncScreenProps) {
           style={{ backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }}
           testID="offline-queued"
         >
-          {!loading && rows.length === 0 ? (
+          {!loading && !error && rows.length === 0 ? (
             <AppText tone="muted" variant="bodySmall">
               {t('offline.empty')}
             </AppText>

@@ -105,15 +105,19 @@ export function PrivacySettingsScreen({
   const { colors } = useAppTheme();
   const { t } = useTranslation();
   const { consent, error, loading, record } = usePrivacyConsent();
-  const { reports } = useReportQueue();
+  const { error: queueError, loading: queueLoading, reports } = useReportQueue();
   const { error: zonesError, loading: zonesLoading, zones } = useSavedZones();
   const { error: sessionError, loading: sessionLoading, session } = useSession();
 
   const consentLabel = t('privacy.visitTracking');
   const syncLabel = t('privacy.sync.title');
   // The frame prints the row's own value (“1 queued”): how many reports are still on this phone,
-  // which is the same queue screen 13 lists.
-  const syncValue = interpolate(t('privacy.sync.value'), { count: String(reports.length) });
+  // which is the same queue screen 13 lists. An unanswered or failed read is not a zero, so the row
+  // prints nothing until the queue has actually answered (frontend review, 2026-10-25).
+  const syncValue =
+    queueLoading || queueError
+      ? undefined
+      : interpolate(t('privacy.sync.value'), { count: String(reports.length) });
   // The frame prints the plan's own count on its saved-spots row, and its subtitle says the same
   // count in words (“4 spots · private by default”). While the record is being read, or when it
   // could not be read at all, the screen prints neither: an unknown count is not zero, and a

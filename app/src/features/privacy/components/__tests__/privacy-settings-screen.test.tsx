@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 
 import { layout, spacing, typography } from '@/constants/theme';
 import { readPrivacyConsent, recordPrivacyConsent } from '@/services/privacy-consent';
-import { enqueueReport } from '@/services/report-queue';
+import { enqueueReport, REPORT_QUEUE_STORAGE_KEY } from '@/services/report-queue';
 import { saveZone } from '@/services/saved-zones';
 import { sessionPort } from '@/services/session';
 
@@ -166,6 +166,27 @@ describe('PrivacySettingsScreen', () => {
     // Frame 14 prints “1 queued” on this row, and the count is the same queue screen 13 lists.
     expect(screen.getByText('Offline maps & sync')).toBeOnTheScreen();
     expect(await screen.findByText('1 queued')).toBeOnTheScreen();
+  });
+
+  it('does not report the queue as zero while it is still being read', async () => {
+    // An unanswered read is not a zero: the row printed “0 queued” before the device had
+    // answered (frontend review, 2026-10-25).
+    const getItem = AsyncStorage.getItem as jest.Mock;
+    const original = getItem.getMockImplementation();
+
+    getItem.mockImplementation((key: string) =>
+      key === REPORT_QUEUE_STORAGE_KEY
+        ? new Promise<string | null>(() => {})
+        : (original?.(key) ?? Promise.resolve(null)),
+    );
+
+    try {
+      await render(<PrivacySettingsScreen />);
+
+      expect(screen.queryByText('0 queued')).not.toBeOnTheScreen();
+    } finally {
+      getItem.mockImplementation(original);
+    }
   });
 
   it('is a reading rather than a control until the route can open the sync centre', async () => {

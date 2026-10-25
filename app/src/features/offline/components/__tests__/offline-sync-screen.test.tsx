@@ -107,6 +107,9 @@ describe('OfflineSyncScreen', () => {
     await render(<OfflineSyncScreen />);
 
     expect(await screen.findByText('Your saved visits could not be read.')).toBeOnTheScreen();
+    // An unreadable queue is not an empty one: the false-empty sentence must not sit above the
+    // failure (frontend review, 2026-10-25).
+    expect(screen.queryByText('Nothing is waiting to sync.')).not.toBeOnTheScreen();
 
     jest.restoreAllMocks();
   });
