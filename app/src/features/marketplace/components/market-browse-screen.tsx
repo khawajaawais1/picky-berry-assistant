@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
-import { Chip, TextAction } from '@/components/molecules';
+import { Chip } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { interpolate, useTranslation } from '@/services/i18n';
@@ -100,20 +100,21 @@ export function MarketBrowseScreen({ onOpenListing }: MarketBrowseScreenProps) {
         {/* The frame's own text action (node `5:23828`, “Browse 12 local listings”), with the number
             the app can answer for. It opens nothing — there is no listing index behind it — so it
             claims no role, the way frame 07's “See all 11” is drawn as the design's words. */}
-        <TextAction
-          align="center"
-          label={
-            count === 0
-              ? t('market.browse.none')
-              : interpolate(
-                  count === 1 ? t('market.browse.count.one') : t('market.browse.count.many'),
-                  {
-                    count: String(count),
-                  },
-                )
-          }
+        <AppText
+          style={{ textAlign: 'center' }}
           testID="market-browse-count"
-        />
+          tone="muted"
+          variant="bodySmall"
+        >
+          {count === 0
+            ? t('market.browse.none')
+            : interpolate(
+                count === 1 ? t('market.browse.count.one') : t('market.browse.count.many'),
+                {
+                  count: String(count),
+                },
+              )}
+        </AppText>
       </View>
     </Screen>
   );

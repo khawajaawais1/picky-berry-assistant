@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { render, screen, waitFor } from '@testing-library/react-native';
 import { useNetworkState } from 'expo-network';
 
+import { themes } from '@/constants/theme';
 import { enqueueReport } from '@/services/report-queue';
 
 import { OfflineSyncScreen } from '../offline-sync-screen';
@@ -186,6 +187,12 @@ describe('OfflineSyncScreen', () => {
     // The frame's words are drawn; the button role it would need to be a control is not.
     expect(screen.getByText('Retry sync')).toBeOnTheScreen();
     expect(screen.getByText('Manage downloaded regions')).toBeOnTheScreen();
+    // Painted as drawings, not as the screen's primary action: a filled accent button that does
+    // nothing invites the tap it cannot honour (frontend review, 2026-10-25).
+    expect(screen.getByTestId('offline-action-primary')).toHaveStyle({
+      backgroundColor: themes.light.colors.surfaceMuted,
+    });
+    expect(screen.getByText('Retry sync')).toHaveStyle({ color: themes.light.colors.textMuted });
     expect(screen.queryByRole('button', { name: 'Retry sync' })).not.toBeOnTheScreen();
     expect(
       screen.queryByRole('button', { name: 'Manage downloaded regions' }),

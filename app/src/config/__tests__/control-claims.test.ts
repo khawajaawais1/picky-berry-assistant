@@ -248,11 +248,6 @@ const LEDGER: readonly LedgerEntry[] = [
     why: 'The same guard as the zone row: only the one listing the app has a screen for is a button, and that press opens it.',
   },
   {
-    file: 'src/features/marketplace/components/market-browse-screen.tsx',
-    offers: { textAction: 1 },
-    why: 'Readings throughout: the filter chips are `Chip`s, the count action has no handler, and the listings are cards whose handler the screen supplies only for the demo listing.',
-  },
-  {
     file: 'src/features/marketplace/components/market-search-field.tsx',
     offers: { textField: 1 },
     why: 'Frame 15’s search field, the same component at the marketplace’s metrics, narrowing the two listings as it is typed; the frame’s sliders glyph is not drawn, because no filter sheet exists.',
@@ -445,7 +440,7 @@ describe('the controls the app offers', () => {
       },
       {
         file: 'src/features/marketplace/components/market-browse-screen.tsx',
-        why: 'Frame 15: its three filter chips would leave the app’s two listings unchanged, and its count action opens no index — both claim nothing (ADR-026).',
+        why: 'Frame 15: its three filter chips would leave the app’s two listings unchanged, and its count line opens no index — both claim nothing (ADR-026).',
       },
       {
         file: 'src/components/molecules/chip.tsx',
