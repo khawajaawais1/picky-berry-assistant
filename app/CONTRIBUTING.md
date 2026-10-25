@@ -137,7 +137,8 @@ is not obvious, never commit secrets, never commit generated artifacts
 - The description states: what changed, why, how it was verified (paste the
   commands and results), security impact, and anything deliberately left out.
 - All CI checks must be green: typecheck, lint, format, tests, expo-doctor, the
-  Playwright layout/accessibility harness, the native bundle exports and the secret scan.
+  Playwright layout/accessibility harness, the native bundle exports, the secret scan,
+  dependency review, CodeQL and actionlint.
 - Do not merge your own PR unless the repository owner has explicitly allowed it.
 
 ## Code review requirements
@@ -172,8 +173,11 @@ format check, tests and expo-doctor, then the Playwright layout/accessibility jo
 bundle exports (iOS + Android), for changes under `app/**` (or to the workflow) on `main` and on
 every pull request. A separate workflow, `.github/workflows/secrets.yml`, runs gitleaks over the
 history on every pull request and push to `main` with no path filter, so a secret committed
-anywhere in the repository fails the build. Both only verify — they never deploy or publish.
-Fix red builds; do not skip or weaken the gate.
+anywhere in the repository fails the build. `dependency-review.yml` fails a pull request that
+adds a high-severity advisory, `codeql.yml` scans TypeScript and Python on pull requests,
+`main` and weekly, and `actionlint.yml` lints the workflow YAML when it changes. Dependabot
+opens the grouped weekly dependency updates these checks then test. All of them only verify —
+none deploys or publishes. Fix red builds; do not skip or weaken the gate.
 
 Because `mobile.yml` is path-filtered, a pull request that touches only documentation or
 another folder will not start it. That is the same convention as `data.yml`; if the mobile

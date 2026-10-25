@@ -1,0 +1,33 @@
+name: dependency review
+
+# Runs on every pull request, with no path filter: a dependency arrives through a lockfile,
+# a Dockerfile or a workflow, and the check is cheap enough to answer for all three.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  # The action posts its summary on the pull request when it fails.
+  pull-requests: write
+
+concurrency:
+  group: dependency-review-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: Review dependency changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      # The repository's dependency graph is what this compares against. A vulnerability
+      # already present in `main` is not re-reported here; this gate is about what the pull
+      # request adds or changes (SECURITY.md §14). `high` matches the severity the audit in
+      # §17 treats as blocking; moderate advisories stay a review item.
+      - name: Review the dependency diff
+        uses: actions/dependency-review-action@v5
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: on-failure

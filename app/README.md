@@ -49,7 +49,7 @@ root: it runs the same gate, the Playwright layout/accessibility harness and the
 exports for changes under `app/**` or the workflow on `main` and on every pull request. A
 separate [`.github/workflows/secrets.yml`](../.github/workflows/secrets.yml) runs the gitleaks
 secret scan over the history on every pull request and push to `main`, with no path filter.
-Both only verify — they never deploy or publish.
+Dependency review, CodeQL and actionlint run beside them. None of them deploys or publishes.
 
 ## Layout
 

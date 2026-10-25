@@ -175,7 +175,12 @@ every pull request and every push to `main`. It has no `paths:` filter, so a cha
 `backend/`, `data/` or `deploy/` starts it too; the scanner is pinned by version and SHA-256,
 `.gitleaks.toml` extends the default rules, and a committed credential fails the build. It runs
 beside the app gate rather than behind it, so a red test does not hide a key (SECURITY.md §9).
-Device E2E is still not part of CI:
+Three more workflows judge the change rather than the app: `dependency-review.yml` fails a
+pull request that adds a high-severity advisory, `codeql.yml` scans the app's TypeScript and
+the pipelines' Python on pull requests, `main` and weekly, and `actionlint.yml` lints the
+workflow YAML itself (actionlint 1.7.12, pinned by version and SHA-256). Dependabot is not a
+check: it opens grouped minor/patch updates weekly for npm, pip and the actions, so the gate
+above gets a regular chance to disagree. Device E2E is still not part of CI:
 when Maestro is added it will run on a build artifact rather than on every pull request.
 
 ## 11. Current state
