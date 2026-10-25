@@ -324,6 +324,8 @@ export const fi: Record<TranslationKey, string> = {
   // the press does.
   'report.species.more': 'Lisää',
   'report.species.more.a11y': 'Näytä kaikki lajit',
+  'report.species.fewer': 'Vähemmän',
+  'report.species.fewer.a11y': 'Näytä vähemmän lajeja',
   'report.plentiful': 'Kuinka runsaasti marjoja oli?',
   'report.rating.none': 'Ei yhtään',
   'report.rating.few': 'Vähän',

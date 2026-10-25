@@ -368,6 +368,8 @@ export const en = {
   // press does, because “More” alone names nothing a screen reader can act on.
   'report.species.more': 'More',
   'report.species.more.a11y': 'Show all species',
+  'report.species.fewer': 'Fewer',
+  'report.species.fewer.a11y': 'Show fewer species',
   'report.plentiful': 'How plentiful were the berries?',
   'report.rating.none': 'None',
   'report.rating.few': 'Few',
