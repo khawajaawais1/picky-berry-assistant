@@ -1,6 +1,7 @@
 import { View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
+import { StatusMessage } from '@/components/molecules';
 import { layout, radii, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { interpolate, useTranslation } from '@/services/i18n';
@@ -66,9 +67,9 @@ export function ZoneMap({ height = layout.mapHeight, status, zones }: ZoneMapPro
           <ZoneMapCanvas height={height} label={t('discover.map.label')} zones={zones} />
         ) : (
           <View className="flex-1 items-center justify-center px-section">
-            <AppText testID="zone-map-status" tone="muted" variant="bodySmall">
+            <StatusMessage testID="zone-map-status" tone="muted" variant="bodySmall">
               {statusLine}
-            </AppText>
+            </StatusMessage>
           </View>
         )}
       </View>

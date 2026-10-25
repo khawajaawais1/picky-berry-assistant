@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
-import { Card, TextAction } from '@/components/molecules';
+import { Card, StatusMessage, TextAction } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { spacing } from '@/constants/theme';
 import { useSavedZones } from '@/hooks/use-saved-zones';
@@ -80,9 +80,9 @@ export function SavedSpotsScreen({
     >
       <View className="w-full gap-gap">
         {error ? (
-          <AppText testID="saved-spots-error" tone="danger" variant="caption">
+          <StatusMessage testID="saved-spots-error" tone="danger" variant="caption">
             {t('privacy.savedSpots.readFailed')}
-          </AppText>
+          </StatusMessage>
         ) : null}
 
         {emptyPlan ? (
@@ -99,9 +99,9 @@ export function SavedSpotsScreen({
         ) : null}
 
         {zonesFailed ? (
-          <AppText testID="saved-spots-zones-error" tone="danger" variant="caption">
+          <StatusMessage testID="saved-spots-zones-error" tone="danger" variant="caption">
             {t('discover.map.unavailable')}
-          </AppText>
+          </StatusMessage>
         ) : null}
 
         {!loading && !error && !waiting

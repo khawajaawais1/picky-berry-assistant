@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
-import { ChoiceChips, type ChoiceChipOption } from '@/components/molecules';
+import { ChoiceChips, StatusMessage, type ChoiceChipOption } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { layout, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -189,9 +189,9 @@ export function SeasonInsightsScreen({ onBack }: SeasonInsightsScreenProps) {
         </View>
 
         {error ? (
-          <AppText testID="season-read-failed" tone="danger" variant="bodySmall">
+          <StatusMessage testID="season-read-failed" tone="danger" variant="bodySmall">
             {t('common.readFailed')}
-          </AppText>
+          </StatusMessage>
         ) : null}
 
         <AppText tone="muted" variant="metadata">

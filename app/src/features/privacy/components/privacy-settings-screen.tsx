@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Pressable, Switch, View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
-import { Callout, Card, Chip, TextAction } from '@/components/molecules';
+import { Callout, Card, Chip, StatusMessage, TextAction } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { layout, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -319,14 +319,14 @@ export function PrivacySettingsScreen({
         </View>
 
         {error ? (
-          <AppText tone="danger" variant="caption">
+          <StatusMessage tone="danger" variant="caption">
             {t('privacy.saveFailed')}
-          </AppText>
+          </StatusMessage>
         ) : null}
         {sessionError ? (
-          <AppText testID="privacy-account-error" tone="danger" variant="caption">
+          <StatusMessage testID="privacy-account-error" tone="danger" variant="caption">
             {t('privacy.account.readFailed')}
-          </AppText>
+          </StatusMessage>
         ) : null}
 
         <TextAction
@@ -339,9 +339,9 @@ export function PrivacySettingsScreen({
         />
 
         {signOutFailed ? (
-          <AppText tone="danger" variant="caption">
+          <StatusMessage tone="danger" variant="caption">
             {t('privacy.signOut.failed')}
-          </AppText>
+          </StatusMessage>
         ) : null}
       </View>
     </Screen>

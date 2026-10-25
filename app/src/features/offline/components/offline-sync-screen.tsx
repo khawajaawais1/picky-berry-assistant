@@ -3,7 +3,7 @@ import { useNetworkState } from 'expo-network';
 import { View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
-import { Callout } from '@/components/molecules';
+import { Callout, StatusMessage } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { radii, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -289,9 +289,9 @@ export function OfflineSyncScreen({ onBack }: OfflineSyncScreenProps) {
           ) : null}
 
           {error ? (
-            <AppText testID="offline-read-failed" tone="danger" variant="bodySmall">
+            <StatusMessage testID="offline-read-failed" tone="danger" variant="bodySmall">
               {t('common.readFailed')}
-            </AppText>
+            </StatusMessage>
           ) : null}
         </View>
       </View>

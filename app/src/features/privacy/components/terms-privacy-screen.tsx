@@ -2,7 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
-import { Callout, Card, InfoRow, TextAction } from '@/components/molecules';
+import { Callout, Card, InfoRow, StatusMessage, TextAction } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -138,9 +138,9 @@ export function TermsPrivacyScreen({ onBack, onOpenYourData }: TermsPrivacyScree
         </Card>
 
         {readFailed ? (
-          <AppText testID="terms-privacy-read-failed" tone="danger" variant="caption">
+          <StatusMessage testID="terms-privacy-read-failed" tone="danger" variant="caption">
             {t('privacy.termsPrivacy.held.readFailed')}
-          </AppText>
+          </StatusMessage>
         ) : null}
 
         {/* The drawer of rights, each row the thing and where it is. */}

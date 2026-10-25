@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { AppButton, AppText } from '@/components/atoms';
-import { FormField, TextAction } from '@/components/molecules';
+import { FormField, StatusMessage, TextAction } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { appEnvironment, type AppEnvironment } from '@/config/env';
 import { layout } from '@/constants/theme';
@@ -178,9 +178,9 @@ export function OnboardingSignInScreen({
         />
 
         {signInFailed ? (
-          <AppText testID="sign-in-failed" tone="danger" variant="bodySmall">
+          <StatusMessage testID="sign-in-failed" tone="danger" variant="bodySmall">
             {t('onboarding.signIn.failed')}
-          </AppText>
+          </StatusMessage>
         ) : null}
 
         <TextAction

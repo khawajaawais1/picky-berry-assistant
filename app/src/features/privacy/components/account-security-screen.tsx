@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
-import { Callout, Card, InfoRow, TextAction } from '@/components/molecules';
+import { Callout, Card, InfoRow, StatusMessage, TextAction } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { layout, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -177,9 +177,9 @@ export function AccountSecurityScreen({ onBack, onSignIn, onSignOut }: AccountSe
         ) : null}
 
         {sessionError ? (
-          <AppText testID="account-security-error" tone="danger" variant="caption">
+          <StatusMessage testID="account-security-error" tone="danger" variant="caption">
             {t('privacy.account.readFailed')}
-          </AppText>
+          </StatusMessage>
         ) : null}
 
         <Callout
@@ -278,9 +278,9 @@ export function AccountSecurityScreen({ onBack, onSignIn, onSignOut }: AccountSe
         />
 
         {signOutFailed ? (
-          <AppText tone="danger" variant="caption">
+          <StatusMessage tone="danger" variant="caption">
             {t('privacy.signOut.failed')}
-          </AppText>
+          </StatusMessage>
         ) : null}
       </View>
     </Screen>

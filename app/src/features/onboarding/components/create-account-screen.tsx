@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { AppButton, AppCheckbox, AppText } from '@/components/atoms';
-import { Callout, FormField, TextAction } from '@/components/molecules';
+import { Callout, FormField, StatusMessage, TextAction } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { appEnvironment, type AppEnvironment } from '@/config/env';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -196,9 +196,9 @@ export function OnboardingCreateAccountScreen({
         />
 
         {submissionFailed ? (
-          <AppText testID="create-account-failed" tone="danger" variant="bodySmall">
+          <StatusMessage testID="create-account-failed" tone="danger" variant="bodySmall">
             {t('onboarding.createAccount.failed')}
-          </AppText>
+          </StatusMessage>
         ) : null}
 
         <TextAction

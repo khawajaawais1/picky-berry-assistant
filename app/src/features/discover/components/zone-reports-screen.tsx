@@ -2,6 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
+import { StatusMessage } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useReportQueue } from '@/hooks/use-report-queue';
@@ -90,9 +91,9 @@ export function ZoneReportsScreen({ onBack }: ZoneReportsScreenProps) {
         )}
 
         {error ? (
-          <AppText testID="zone-reports-read-failed" tone="danger" variant="bodySmall">
+          <StatusMessage testID="zone-reports-read-failed" tone="danger" variant="bodySmall">
             {t('common.readFailed')}
-          </AppText>
+          </StatusMessage>
         ) : null}
 
         {/* The other half of the design's own list, named rather than faked: the zone's reports

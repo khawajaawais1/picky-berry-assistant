@@ -3,6 +3,7 @@ import { useDeferredValue, useMemo, useState } from 'react';
 import { View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
+import { StatusMessage } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { formatLongDate, interpolate, useTranslation } from '@/services/i18n';
@@ -150,7 +151,7 @@ export function DiscoverScreen({
             picker has to be told what it did — and the empty answer is the case that must never
             be shown as “nothing happened”. */}
         {filtering ? (
-          <AppText testID="discover-filter-status" tone="muted" variant="bodySmall">
+          <StatusMessage testID="discover-filter-status" tone="muted" variant="bodySmall">
             {matches.length === 0
               ? t('discover.filter.none')
               : interpolate(
@@ -159,7 +160,7 @@ export function DiscoverScreen({
                     : t('discover.filter.matches'),
                   { count: String(matches.length) },
                 )}
-          </AppText>
+          </StatusMessage>
         ) : null}
 
         {view === 'map' ? (
@@ -186,9 +187,9 @@ export function DiscoverScreen({
         ) : (
           <>
             {listStatus ? (
-              <AppText testID="zone-list-status" tone="muted" variant="bodySmall">
+              <StatusMessage testID="zone-list-status" tone="muted" variant="bodySmall">
                 {listStatus}
-              </AppText>
+              </StatusMessage>
             ) : null}
             <ZoneList species={scoreSpecies} zones={matches} />
           </>

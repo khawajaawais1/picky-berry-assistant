@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import { AppButton, AppText } from '@/components/atoms';
-import { Callout, FormField, TextAction } from '@/components/molecules';
+import { Callout, FormField, StatusMessage, TextAction } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { layout } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -207,9 +207,9 @@ export function OnboardingForgotPasswordScreen({
             />
 
             {requestFailed ? (
-              <AppText testID="forgot-password-failed" tone="danger" variant="bodySmall">
+              <StatusMessage testID="forgot-password-failed" tone="danger" variant="bodySmall">
                 {t('onboarding.forgotPassword.failed')}
-              </AppText>
+              </StatusMessage>
             ) : null}
 
             {onSignIn ? (

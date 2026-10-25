@@ -3,7 +3,7 @@ import { Image, Pressable, StyleSheet, View } from 'react-native';
 
 import zoneSeason from '@/assets/images/zone-season.png';
 import { AppButton, AppText } from '@/components/atoms';
-import { Card } from '@/components/molecules';
+import { Card, StatusMessage } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { layout, radii, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -234,13 +234,13 @@ function SourceZoneDetails({
         onBack={onBack}
         title={t('discover.details.pendingTitle')}
       >
-        <AppText testID="zone-details-status" tone="muted" variant="bodySmall">
+        <StatusMessage testID="zone-details-status" tone="muted" variant="bodySmall">
           {status === 'loading'
             ? t('discover.map.loading')
             : status === 'error'
               ? t('discover.map.unavailable')
               : t('discover.details.unknown')}
-        </AppText>
+        </StatusMessage>
       </Screen>
     );
   }
@@ -548,9 +548,9 @@ function DetailsView({
         </View>
 
         {saveError ? (
-          <AppText testID="zone-details-save-failed" tone="danger" variant="bodySmall">
+          <StatusMessage testID="zone-details-save-failed" tone="danger" variant="bodySmall">
             {t('discover.details.saveFailed')}
-          </AppText>
+          </StatusMessage>
         ) : null}
       </View>
     </Screen>

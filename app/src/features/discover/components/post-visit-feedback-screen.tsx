@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { AppButton, AppText } from '@/components/atoms';
-import { Callout, ChoiceChips, FormField, TextAction } from '@/components/molecules';
+import { Callout, ChoiceChips, FormField, StatusMessage, TextAction } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { interpolate, useTranslation } from '@/services/i18n';
@@ -190,9 +190,9 @@ export function PostVisitFeedbackScreen({ onBack, onSave, onSkip }: PostVisitFee
         </Callout>
 
         {failed ? (
-          <AppText testID="report-save-failed" tone="danger" variant="bodySmall">
+          <StatusMessage testID="report-save-failed" tone="danger" variant="bodySmall">
             {t('report.saveFailed')}
-          </AppText>
+          </StatusMessage>
         ) : null}
 
         {onSave ? (
