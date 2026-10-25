@@ -1,40 +1,43 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Appearance, Platform, useColorScheme } from 'react-native';
+import { useMemo, useSyncExternalStore } from 'react';
+import { Appearance } from 'react-native';
 
 import { resolveColorScheme, themes, type ColorSchemeName } from '@/constants/theme';
 import { AppThemeContext } from '@/hooks/use-app-theme';
 
 export type AppThemeProviderProps = {
-  children: ReactNode;
+  children: React.ReactNode;
 };
 
+/** The system's answer, watched for the whole tree rather than by each consumer. */
+const subscribe = (onChange: () => void) => {
+  const subscription = Appearance.addChangeListener(() => onChange());
+
+  return () => subscription.remove();
+};
+
+const getSnapshot = (): ColorSchemeName => resolveColorScheme(Appearance.getColorScheme());
+
 /**
- * Resolves the colour scheme once for the whole tree — and does it **after** the first paint on
- * the web, where the static export has already painted light.
+ * What the server rendered — and what the first hydrated render must agree with.
  *
- * Why the first render is light there: `react-native-web` starts `useColorScheme` from the
- * browser's media query, while the pre-rendered HTML was made without one. Rendering the dark
- * theme on the client's first pass therefore disagreed with the server's HTML; the hydration
- * mismatch left parts of the tree as the server painted them, and the core navigation — which
- * never re-renders — stayed light under dark screens (frontend review, 2026-10-25).
+ * The static export is built in Node, where there is no media query, so it paints light. The
+ * browser's first client render therefore starts from the same answer and only then switches to
+ * the system's; rendering the dark theme on the first pass disagreed with the HTML, the mismatch
+ * left parts of the tree as the server painted them, and the core navigation — which never
+ * re-renders — stayed light under dark screens (frontend review, 2026-10-25).
+ */
+const getServerSnapshot = (): ColorSchemeName => 'light';
+
+/**
+ * Resolves the colour scheme once for the whole tree.
  *
- * Starting from the paint the HTML made keeps hydration honest; the effect below then applies the
- * real answer, so every consumer updates together. A device has no earlier paint to match, so it
- * starts from its own system scheme.
+ * `useSyncExternalStore` is the primitive that makes the server/client distinction explicit: the
+ * server snapshot is light (the static export's paint), the client snapshot is the real system
+ * answer, and React re-renders every consumer when the two differ. There is no state update in an
+ * effect and no second render path to drift.
  */
 export function AppThemeProvider({ children }: AppThemeProviderProps) {
-  const web = Platform.OS === 'web';
-  const system = useColorScheme();
-  const [scheme, setScheme] = useState<ColorSchemeName>(() =>
-    web ? 'light' : resolveColorScheme(system),
-  );
-
-  useEffect(() => {
-    // On the web the hook's own first value is the browser's (see above), so the mounted answer is
-    // read from Appearance once the tree exists; on a device the hook is already the answer.
-    setScheme(resolveColorScheme(web ? Appearance.getColorScheme() : system));
-  }, [system, web]);
-
+  const scheme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const theme = useMemo(() => themes[scheme], [scheme]);
 
   return <AppThemeContext.Provider value={theme}>{children}</AppThemeContext.Provider>;

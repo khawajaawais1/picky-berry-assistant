@@ -19,13 +19,18 @@ export const AppThemeContext = createContext<Theme | null>(null);
  */
 export function useAppTheme(): Theme {
   const provided = useContext(AppThemeContext);
+  // Both hooks run on every render: a consumer may move between a provided theme and the
+  // fallback (the provider mounts, a test renders the component alone), and a hook behind `??`
+  // would change the call order when it does.
+  const system = useColorScheme();
 
-  return provided ?? themes[resolveColorScheme(useColorScheme())];
+  return provided ?? themes[resolveColorScheme(system)];
 }
 
 /** Exposed so components can branch on the scheme without duplicating fallback logic. */
 export function useColorSchemeName(): ColorSchemeName {
   const provided = useContext(AppThemeContext);
+  const system = useColorScheme();
 
-  return provided?.scheme ?? resolveColorScheme(useColorScheme());
+  return provided?.scheme ?? resolveColorScheme(system);
 }
