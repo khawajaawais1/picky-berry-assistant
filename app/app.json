@@ -10,7 +10,8 @@
     "ios": {
       "infoPlist": {
         "CFBundleLocalizations": ["en", "fi"]
-      }
+      },
+      "bundleIdentifier": "fi.picky.app"
     },
     "android": {
       "package": "fi.picky.app",
