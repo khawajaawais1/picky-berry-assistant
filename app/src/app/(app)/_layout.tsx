@@ -6,7 +6,8 @@ import {
   type ErrorBoundaryProps,
   type Href,
 } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { AccessibilityInfo, Animated, StyleSheet, View } from 'react-native';
 
 import { CoreNavigation, type CoreNavKey } from '@/components/organisms';
 import { ErrorScreen } from '@/components/templates';
@@ -90,9 +91,57 @@ export default function AppShellLayout() {
   const { colors } = useAppTheme();
   const activeKey = ACTIVE_TAB[pathname];
 
+  // The shell swaps routes itself, so a destination change had no transition at all — it was a
+  // hard cut from one screen to the next (reported from Expo Go, 2026-10-25). A short fade is the
+  // cheapest transition that reads as one screen giving way to another, and it is skipped when
+  // the system asks for reduced motion.
+  const [fade] = useState(() => new Animated.Value(1));
+  const previousPath = useRef(pathname);
+  const reduceMotion = useRef(false);
+
+  useEffect(() => {
+    let active = true;
+
+    AccessibilityInfo.isReduceMotionEnabled().then(
+      (enabled) => {
+        if (active) reduceMotion.current = enabled;
+      },
+      () => {
+        // The platform was asked and did not answer; motion stays on rather than being guessed at.
+      },
+    );
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (previousPath.current === pathname) {
+      return;
+    }
+
+    previousPath.current = pathname;
+
+    if (reduceMotion.current) {
+      fade.setValue(1);
+
+      return;
+    }
+
+    fade.setValue(0.55);
+    Animated.timing(fade, {
+      duration: 180,
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  }, [fade, pathname]);
+
   return (
     <View style={[styles.shell, { backgroundColor: colors.background }]}>
-      <Slot />
+      <Animated.View style={{ flex: 1, opacity: fade }}>
+        <Slot />
+      </Animated.View>
       {activeKey ? (
         <CoreNavigation
           activeKey={activeKey}
