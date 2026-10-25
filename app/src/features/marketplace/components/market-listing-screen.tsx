@@ -57,7 +57,6 @@ export function MarketListingScreen({
 
   return (
     <Screen
-      edges={['top']}
       eyebrow={t('market.eyebrow.listing')}
       onBack={onBack}
       title={listing.name}

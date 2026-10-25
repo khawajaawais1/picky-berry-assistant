@@ -66,7 +66,6 @@ export function MarketBrowseScreen({ onOpenListing }: MarketBrowseScreenProps) {
 
   return (
     <Screen
-      edges={['top']}
       eyebrow={t('market.eyebrow.browse')}
       headerAccessory={<Feather color={colors.success} name="feather" size={22} />}
       title={t('market.title.browse')}

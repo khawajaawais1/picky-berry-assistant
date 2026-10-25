@@ -70,7 +70,6 @@ export function MarketOrderScreen({ onBack, onMessageSeller }: MarketOrderScreen
 
   return (
     <Screen
-      edges={['top']}
       eyebrow={t('market.eyebrow.order')}
       onBack={onBack}
       title={t('market.order.title')}

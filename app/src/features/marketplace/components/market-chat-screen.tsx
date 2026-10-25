@@ -69,7 +69,6 @@ export function MarketChatScreen({ onBack, onOpenOrder }: MarketChatScreenProps)
 
   return (
     <Screen
-      edges={['top']}
       eyebrow={t('market.eyebrow.chat')}
       onBack={onBack}
       title={listing.seller.name}
