@@ -7,7 +7,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppThemeProvider } from '@/components/theme-provider';
 import { zonesQueryCachePersistence } from '@/features/discover';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { useDocumentLanguage } from '@/hooks/use-document-language';
 import { QueryProvider } from '@/services/query-client';
+import { useTranslation } from '@/services/i18n';
 
 export default function RootLayout() {
   // The theme is resolved once, above everything that paints (`components/theme-provider.tsx`):
@@ -22,6 +24,10 @@ export default function RootLayout() {
 
 function RootShell() {
   const theme = useAppTheme();
+  const { locale } = useTranslation();
+  // The static document can only declare the source language; on the web the document follows the
+  // language the app ended up showing (`src/app/+html.tsx` sets the first one).
+  useDocumentLanguage(locale);
 
   return (
     // The one place the app says which reads survive a restart: the Discover map opens with
