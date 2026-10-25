@@ -790,7 +790,9 @@ test.describe('the account and the plan in the built web app', () => {
     await expect(page).toHaveURL(/\/zone-details\?/);
     await expect(page).toHaveURL(/zone=cc0e7929-de9f-516a-9049-7a25a1a6d092/);
     await expect(page).toHaveURL(/species=lingonberry/);
-    await expect(page.getByText('Laajavuori 1')).toBeVisible();
+    // The saved-plan row and the zone screen's heading both carry the zone name now that the
+    // shell keeps previous screens mounted for its transition; the heading is the new screen.
+    await expect(page.getByRole('heading', { name: 'Laajavuori 1' })).toBeVisible();
     // The zone's own score timestamp, the same field the map prints: the details screen keeps
     // the answer's age rather than the moment it was opened.
     await expect(page.getByTestId('zone-details-updated')).toHaveText('Last updated 3 August 2026');
