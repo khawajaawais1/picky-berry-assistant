@@ -20,6 +20,8 @@ export const en = {
   'common.readFailed': 'Your saved visits could not be read.',
   // A store still being read is not an empty one: screens say this rather than a count of zero.
   'common.loading': 'Loading…',
+  'common.on': 'On',
+  'common.off': 'Off',
   'common.hidePassword': 'Hide password',
   'common.showPassword': 'Show password',
 

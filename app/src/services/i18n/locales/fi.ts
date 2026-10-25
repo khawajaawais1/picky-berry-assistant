@@ -12,6 +12,8 @@ export const fi: Record<TranslationKey, string> = {
   'common.back': 'Takaisin',
   'common.readFailed': 'Tallennettuja käyntejä ei voitu lukea.',
   'common.loading': 'Ladataan…',
+  'common.on': 'Päällä',
+  'common.off': 'Pois',
   'common.hidePassword': 'Piilota salasana',
   'common.showPassword': 'Näytä salasana',
 

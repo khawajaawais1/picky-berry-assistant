@@ -189,16 +189,35 @@ describe('PrivacySettingsScreen', () => {
     }
   });
 
+  it('names a setting by its value as well as its label', async () => {
+    // `accessibilityLabel={label}` replaced the row's children, so “Offline maps & sync” was
+    // announced without the count that is the row's point (frontend review, 2026-10-25).
+    await enqueueReport({
+      amountText: '1.3 kg',
+      minutes: 52,
+      recordedAt: '2026-08-28T10:55:00.000Z',
+      speciesId: 'lingonberry',
+      yieldRating: 4,
+      zoneId: 'Z14',
+    });
+
+    await render(<PrivacySettingsScreen onOpenSync={() => {}} />);
+
+    expect(
+      await screen.findByRole('button', { name: 'Offline maps & sync, 1 queued' }),
+    ).toBeOnTheScreen();
+  });
+
   it('is a reading rather than a control until the route can open the sync centre', async () => {
     const onOpenSync = jest.fn();
     const { rerender } = await render(<PrivacySettingsScreen />);
 
     // With nowhere to navigate to, the row is drawn as the reading it is: no role, no press.
     expect(screen.getByTestId('privacy-sync-row')).toBeOnTheScreen();
-    expect(screen.queryByRole('button', { name: 'Offline maps & sync' })).not.toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: /^Offline maps & sync/ })).not.toBeOnTheScreen();
 
     await rerender(<PrivacySettingsScreen onOpenSync={onOpenSync} />);
-    await fireEvent.press(screen.getByRole('button', { name: 'Offline maps & sync' }));
+    await fireEvent.press(screen.getByRole('button', { name: /^Offline maps & sync/ }));
 
     expect(onOpenSync).toHaveBeenCalledTimes(1);
   });
@@ -353,10 +372,10 @@ describe('PrivacySettingsScreen', () => {
 
     // With nowhere to navigate to, the row is drawn as the reading it is: no role, no press.
     expect(screen.getByTestId('privacy-saved-spots-row')).toBeOnTheScreen();
-    expect(screen.queryByRole('button', { name: 'Saved spots' })).not.toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: /^Saved spots/ })).not.toBeOnTheScreen();
 
     await rerender(<PrivacySettingsScreen onOpenSavedSpots={onOpenSavedSpots} />);
-    await fireEvent.press(screen.getByRole('button', { name: 'Saved spots' }));
+    await fireEvent.press(screen.getByRole('button', { name: /^Saved spots/ }));
 
     expect(onOpenSavedSpots).toHaveBeenCalledTimes(1);
   });

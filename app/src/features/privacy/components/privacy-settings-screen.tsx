@@ -351,6 +351,9 @@ function SettingRow({
   value?: string;
 }) {
   const { colors } = useAppTheme();
+  // A row's value is part of what the row says: “Offline maps & sync” without “1 queued” is a
+  // setting announced with its point removed (frontend review, 2026-10-25).
+  const accessibleName = value === undefined ? label : `${label}, ${value}`;
 
   const content = (
     <>
@@ -386,7 +389,7 @@ function SettingRow({
 
   return (
     <Pressable
-      accessibilityLabel={label}
+      accessibilityLabel={accessibleName}
       accessibilityRole="button"
       className="w-full flex-row items-center gap-gap py-setting"
       onPress={onPress}

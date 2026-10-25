@@ -92,8 +92,9 @@ describe('AlertsScreen', () => {
     expect(card.getByTestId('alert-preferences-sample')).toBeOnTheScreen();
 
     // The frame's switch is a figure: nothing delivers an alert and no permission is asked for, so
-    // it is a drawing with no role rather than a control that would turn on nothing.
-    expect(card.getByTestId('alert-preferences-push-figure')).toBeOnTheScreen();
+    // it is not a control that would turn on nothing. Its state is still a reading a screen reader
+    // must get: the group carries the label and the on/off answer (frontend review, 2026-10-25).
+    expect(card.getByLabelText('Ripe-berry push alerts, On')).toBeOnTheScreen();
     expect(screen.queryByRole('switch')).not.toBeOnTheScreen();
   });
 
