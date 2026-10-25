@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # The action compares the diff against the repository's dependency graph, which is a
       # repository setting an admin controls. This repository does not have it enabled yet
