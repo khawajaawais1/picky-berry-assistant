@@ -1,0 +1,124 @@
+name: build
+
+# Triggering a real installable app.
+#
+# - A version tag (`v0.1.0`) builds the production profile for both platforms.
+# - Actions -> build -> Run workflow builds any profile/platform for a branch.
+#
+# There is deliberately no build on every push to `main`: verification already runs there, and
+# EAS build minutes are a shared, limited resource. A branch is built when someone asks for it
+# (workflow_dispatch) or when it is tagged for release.
+#
+# Requires the repository secret EXPO_TOKEN (Expo -> Account settings -> Access tokens). The
+# EAS project id is already in app/app.json; the profiles are in app/eas.json.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Which platform to build
+        type: choice
+        options: [android, ios, all]
+        default: android
+      profile:
+        description: EAS build profile
+        type: choice
+        options: [development, preview, production]
+        default: preview
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eas-build-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: app
+
+jobs:
+  build:
+    name: Build (${{ github.ref_type == 'tag' && 'production, all platforms' || inputs.profile }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify the commit before building
+        run: npm run verify
+
+      - name: Resolve the profile and platform
+        id: target
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            echo "profile=production" >> "$GITHUB_OUTPUT"
+            echo "platform=all" >> "$GITHUB_OUTPUT"
+          else
+            echo "profile=${{ inputs.profile }}" >> "$GITHUB_OUTPUT"
+            echo "platform=${{ inputs.platform }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build with EAS
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "${EXPO_TOKEN:-}" ]; then
+            echo "::error::EXPO_TOKEN is not set. Add an Expo access token as a repository secret."
+            exit 1
+          fi
+
+          npx --yes eas-cli@latest build \
+            --platform "${{ steps.target.outputs.platform }}" \
+            --profile "${{ steps.target.outputs.profile }}" \
+            --message "CI ${GITHUB_SHA::7} (${GITHUB_REF_NAME})" \
+            --non-interactive \
+            --wait \
+            --json > build.json
+
+      - name: Summarize the build
+        if: always()
+        run: |
+          if [ ! -s build.json ]; then
+            echo "No build JSON was produced; see the EAS step above." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          node - <<'NODE'
+          const fs = require('fs');
+          const parsed = JSON.parse(fs.readFileSync('build.json', 'utf8'));
+          const builds = Array.isArray(parsed) ? parsed : [parsed];
+          const lines = [
+            '## EAS build',
+            '',
+            '| Platform | Status | Build |',
+            '| --- | --- | --- |',
+          ];
+
+          for (const build of builds) {
+            const url = build.artifacts?.buildUrl ?? `https://expo.dev/builds/${build.id}`;
+            lines.push(`| ${build.platform} | ${build.status} | [${build.id}](${url}) |`);
+          }
+
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${lines.join('\n')}\n`);
+          NODE
+
+      - name: Keep the build JSON
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: eas-build
+          path: app/build.json
+          retention-days: 30
+          if-no-files-found: ignore
