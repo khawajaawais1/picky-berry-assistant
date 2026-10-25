@@ -68,11 +68,7 @@ export function MarketChatScreen({ onBack, onOpenOrder }: MarketChatScreenProps)
     );
 
   return (
-    <Screen
-      eyebrow={t('market.eyebrow.chat')}
-      onBack={onBack}
-      title={listing.seller.name}
-    >
+    <Screen eyebrow={t('market.eyebrow.chat')} onBack={onBack} title={listing.seller.name}>
       <View className="w-full gap-section">
         <MarketDisclosure>
           {listing.seller.verified ? (

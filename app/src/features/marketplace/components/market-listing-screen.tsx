@@ -56,11 +56,7 @@ export function MarketListingScreen({
   const species = speciesLabelKey(listing.species);
 
   return (
-    <Screen
-      eyebrow={t('market.eyebrow.listing')}
-      onBack={onBack}
-      title={listing.name}
-    >
+    <Screen eyebrow={t('market.eyebrow.listing')} onBack={onBack} title={listing.name}>
       <View className="w-full gap-section">
         <MarketDisclosure>
           <AppText tone="muted" variant="metadata">
