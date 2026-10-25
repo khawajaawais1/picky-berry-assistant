@@ -565,6 +565,8 @@ export const en = {
   // behind the row was never drawn, so its own lines are written here (ADR-030). The eyebrow no
   // longer carries the “SEASON DEMO” disclosure: since ADR-060 the rows are source zones, and a
   // saved id the source cannot describe is printed alone rather than filled from the design.
+  'privacy.previewSample':
+    'This preview build may start with sample saved spots and reports so the screens have something to show. Signing out deletes them with the rest of the device record.',
   'privacy.savedSpots.eyebrow': 'ACCOUNT / OFFLINE · SAVED SPOTS',
   'privacy.savedSpots.title': 'Saved spots',
   // The frame's own subtitle under the row's label (node 5:23644, “4 spots · private by

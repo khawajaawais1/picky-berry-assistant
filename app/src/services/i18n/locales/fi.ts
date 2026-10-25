@@ -482,6 +482,8 @@ export const fi: Record<TranslationKey, string> = {
   // Frame 14's “Saved spots”, which screen 03's privacy line already calls “Tallennetut paikat”.
   // The eyebrow no longer repeats the demo disclosure frame 06's map carries (“KAUSIDEMO”): since
   // ADR-060 the rows are source zones, and an id the source cannot describe is printed alone.
+  'privacy.previewSample':
+    'Tämä esikatseluversio voi alkaa näytetallennetuilla paikoilla ja raporteilla, jotta näytöillä on jotain näytettävää. Uloskirjautuminen poistaa ne muun laiteluettelon mukana.',
   'privacy.savedSpots.eyebrow': 'TILI / OFFLINE · TALLENNETUT PAIKAT',
   'privacy.savedSpots.title': 'Tallennetut paikat',
   // The frame's own subtitle under the row's label (“4 spots · private by default”). The clause is

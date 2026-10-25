@@ -25,7 +25,7 @@ forced, because calling the 60-second resend wait “the design's sample” woul
 | **D · The app's own choice** | Neither the design's nor a stand-in for a service: a number this repository picked to make a drawn state reachable. Each row says whether the owner has decided it or it still awaits them. |
 | **E · Throwaway prototype** | Not product data at all. Deleted with the question it was built to ask. |
 
-**The gates.** Only **two** things are production-gated, both below. Everything else in
+**The gates.** Only **three** things are production-gated, below. Everything else in
 this file ships in a production build.
 
 ---
@@ -36,6 +36,7 @@ this file ships in a production build.
 | - | ----- | ---------------- | -------- | -------- |
 | G1 | The stand-in session port's acceptance (`createStandInSessionPort`, `src/services/session/stand-in-port.ts`) | A credential accepted, and a reset link requested, without asking the account service | In a production build the port answers `unavailable` for **every** credential and for a reset request **when no provider is configured**; screens 03 and `/sign-in` draw their action disabled, and `/forgot-password` draws it disabled without `EXPO_PUBLIC_FIREBASE_API_KEY`. A configured Firebase key is not a stand-in: it sends the real reset email in every environment | `e2e/production-export.spec.ts` (a real production export with no key fills the forms and every account action stays disabled, the reset request included); `src/services/session/__tests__/stand-in-port.test.ts`; `src/services/session/__tests__/firebase-password-reset.test.ts` |
 | G2 | Two prototype sets behind one shared switcher: the three sign-in readings (`src/features/onboarding/components/prototype/`) and the community map's three readings, each on the screen it would live on (`src/features/discover/components/prototype/`); `PrototypeSwitcher` (`src/components/prototype/`) | Throwaway readings of a screen the design has no frame for, and of a feature (shared spots) whose frame does not exist either | Every host route reads `appEnvironment() === 'production' ? undefined : …` and then ignores `?variant=` entirely | `e2e/production-export.spec.ts` (`/create-account?variant=B` shows screen 03; `/discover?variant=A`, `/zone-details?variant=B` and `/saved-spots?variant=C` each show the app's own screen — and no `PROTOTYPE` text is mounted on any of them) |
+| G3 | A one-time demo seed of two saved spots and two queued reports (`src/services/demo-seed.ts`) | Personal records the picker did not create, on a preview build | Only when `EXPO_PUBLIC_APP_ENV` is not `production` **and** `Platform.OS` is not `web`; production starts empty and the web harness never seeds. The profile carries `privacy.previewSample`; the marker `picky.demo-seed.v1` keeps it from reappearing after sign-out | `src/services/demo-seed.ts`; `src/services/__tests__/demo-seed.test.ts`; the notice in `src/features/privacy/components/privacy-settings-screen.tsx` |
 
 Both gates were re-run against a production export of this tree on 2026-10-10
 (`npx playwright test --config playwright.production.config.ts` — 3 passed), so the table above is
