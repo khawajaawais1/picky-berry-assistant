@@ -12,7 +12,7 @@ const ROOT = join(__dirname, '..', '..', '..');
 const app = JSON.parse(readFileSync(join(ROOT, 'app.json'), 'utf8')) as {
   expo: {
     android: { adaptiveIcon: { backgroundColor: string } };
-    plugins: [string | [string, Record<string, unknown>]][];
+    plugins: (string | [string, Record<string, unknown>])[];
   };
 };
 

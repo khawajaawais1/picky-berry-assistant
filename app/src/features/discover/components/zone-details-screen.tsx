@@ -1,7 +1,7 @@
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 
-import zoneSeason from '@/assets/images/zone-season.png';
+import zoneSeason from '@/assets/images/zone-season.jpg';
 import { AppButton, AppText } from '@/components/atoms';
 import { Card, StatusMessage } from '@/components/molecules';
 import { Screen } from '@/components/templates';
