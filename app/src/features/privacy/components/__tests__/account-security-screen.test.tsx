@@ -220,14 +220,15 @@ describe('AccountSecurityScreen, as the session’s hour runs out', () => {
   });
 
   /**
-   * Moves the clock to `moment` and lets the next second pass, so the screen re-reads at
-   * `moment + 1s` — which is what makes it look again. A jump on its own would leave the interval
-   * pending; a second-by-second walk would fire thousands of ticks for an hour of clock.
+   * Moves the clock to `moment` and lets the next tick pass, so the screen re-reads at
+   * `moment + 15s` — which is what makes it look again. A jump on its own would leave the interval
+   * pending; a second-by-second walk would fire thousands of ticks for an hour of clock. The screen
+   * ticks every fifteen seconds because its reading is in whole minutes.
    */
   async function moveTo(moment: Date) {
     await act(async () => {
       jest.setSystemTime(moment);
-      jest.advanceTimersByTime(1000);
+      jest.advanceTimersByTime(15_000);
     });
   }
 
@@ -260,9 +261,9 @@ describe('AccountSecurityScreen, as the session’s hour runs out', () => {
     await render(<AccountSecurityScreen />);
     await screen.findByText('Time left');
 
-    // One second before the end the session is still the app's, and the row still says whose it is
-    // (the tick lands at `moment + 1s`, so this reads the last live second).
-    await moveTo(new Date(START.getTime() + SESSION_LIFETIME_MS - 2000));
+    // The tick lands fifteen seconds after the moment it is given, so this reads the last second
+    // before expiry:
+    await moveTo(new Date(START.getTime() + SESSION_LIFETIME_MS - 16_000));
     expect(screen.getByTestId('account-security-row')).toBeOnTheScreen();
     expect(screen.queryByText('This session has ended')).not.toBeOnTheScreen();
   });

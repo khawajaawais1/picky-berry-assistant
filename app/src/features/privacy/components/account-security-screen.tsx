@@ -76,7 +76,9 @@ export function AccountSecurityScreen({ onBack, onSignIn, onSignOut }: AccountSe
   const { colors } = useAppTheme();
   const { t } = useTranslation();
   const { error: sessionError, loading, session } = useSession();
-  const now = useNow();
+  // The reading is in whole minutes; fifteen seconds is the slowest cadence that still notices an
+  // expiry promptly, instead of sixty renders a minute.
+  const now = useNow(15_000);
 
   // The session's own rule, asked about the moment this render is for: `isExpired` counts the
   // instant of expiry as expired, and `remainingMilliseconds` is floored at zero, so neither has to
