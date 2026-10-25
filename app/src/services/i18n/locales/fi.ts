@@ -14,6 +14,12 @@ export const fi: Record<TranslationKey, string> = {
   'common.loading': 'Ladataan…',
   'common.on': 'Päällä',
   'common.off': 'Pois',
+  'error.eyebrow': 'PICKY · JOTAIN MENI PIELEEN',
+  'error.title': 'Tämä näkymä kohtasi ongelman',
+  'error.body':
+    'Mitään ei hävinnyt: tallennetut paikat ja raportit ovat yhä tällä puhelimella. Yritä uudelleen tai palaa takaisin.',
+  'error.retry': 'Yritä uudelleen',
+  'error.home': 'Palaa takaisin',
   'common.hidePassword': 'Piilota salasana',
   'common.showPassword': 'Näytä salasana',
 

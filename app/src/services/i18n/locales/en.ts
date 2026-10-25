@@ -22,6 +22,14 @@ export const en = {
   'common.loading': 'Loading…',
   'common.on': 'On',
   'common.off': 'Off',
+  // The route error boundary (frontend review, 2026-10-25). It says the data on the phone is
+  // untouched and gives a way out; it never prints the thrown error.
+  'error.eyebrow': 'PICKY · SOMETHING WENT WRONG',
+  'error.title': 'This screen hit a problem',
+  'error.body':
+    'Nothing was lost: your saved spots and reports are still on this phone. Try again, or go back.',
+  'error.retry': 'Try again',
+  'error.home': 'Go back',
   'common.hidePassword': 'Hide password',
   'common.showPassword': 'Show password',
 

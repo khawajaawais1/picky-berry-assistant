@@ -128,6 +128,11 @@ const LEDGER: readonly LedgerEntry[] = [
     why: 'The review tool that pages through the design readings; it is mounted only outside a production build (the production export proves it is absent).',
   },
   {
+    file: 'src/components/templates/error-screen.tsx',
+    offers: { button: 1, role: 1, textAction: 1 },
+    why: 'The route error fallback: “Try again” runs the router’s reset, “Go back” opens the shell’s home, and the title is the screen’s heading. It prints no error text (frontend review, 2026-10-25).',
+  },
+  {
     file: 'src/components/templates/screen.tsx',
     offers: { pressable: 1, role: 2 },
     why: 'The back control, drawn only when the route has somewhere to go back to, and the screen title, announced as a heading rather than painted as text (frontend review, 2026-10-25). The heading is a reading, not a control.',

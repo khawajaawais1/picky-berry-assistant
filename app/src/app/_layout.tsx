@@ -1,15 +1,25 @@
 import '../../global.css';
 
-import { Stack } from 'expo-router';
+import { Stack, router, type ErrorBoundaryProps } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 
 import { AppThemeProvider } from '@/components/theme-provider';
+import { ErrorScreen } from '@/components/templates';
 import { zonesQueryCachePersistence } from '@/features/discover';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useDocumentLanguage } from '@/hooks/use-document-language';
 import { QueryProvider } from '@/services/query-client';
 import { useTranslation } from '@/services/i18n';
+
+/**
+ * The root fallback. Expo Router renders a route's exported `ErrorBoundary` with the thrown error
+ * and a reset; the shell below has its own boundary so a screen error does not lose the core
+ * navigation it is drawn inside.
+ */
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  return <ErrorScreen error={error} onHome={() => router.replace('/')} onRetry={retry} />;
+}
 
 export default function RootLayout() {
   // The theme is resolved once, above everything that paints (`components/theme-provider.tsx`):

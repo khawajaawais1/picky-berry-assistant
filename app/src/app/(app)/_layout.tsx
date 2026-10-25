@@ -1,7 +1,15 @@
-import { Slot, usePathname, useRouter, type Href } from 'expo-router';
+import {
+  Slot,
+  router,
+  usePathname,
+  useRouter,
+  type ErrorBoundaryProps,
+  type Href,
+} from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { CoreNavigation, type CoreNavKey } from '@/components/organisms';
+import { ErrorScreen } from '@/components/templates';
 import { useAppTheme } from '@/hooks/use-app-theme';
 
 /**
@@ -67,6 +75,14 @@ const ACTIVE_TAB: Record<string, CoreNavKey> = {
   '/terms-privacy': 'profile',
   '/your-data': 'profile',
 };
+
+/**
+ * A screen in the shell that throws falls back here: the same fallback as the root's, with the
+ * shell's home as the way out, so the user is not sent back through onboarding.
+ */
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  return <ErrorScreen error={error} onHome={() => router.replace('/discover')} onRetry={retry} />;
+}
 
 export default function AppShellLayout() {
   const pathname = usePathname();
