@@ -468,4 +468,22 @@ describe('PrivacySettingsScreen', () => {
     await rerender(<PrivacySettingsScreen />);
     expect(screen.queryByRole('button', { name: 'Back' })).not.toBeOnTheScreen();
   });
+
+  it('says a preview may start with sample records', async () => {
+    await render(<PrivacySettingsScreen />);
+
+    expect(screen.getByTestId('preview-sample-data')).toBeOnTheScreen();
+  });
+
+  it('does not promise samples in a production build', async () => {
+    process.env.EXPO_PUBLIC_APP_ENV = 'production';
+
+    try {
+      await render(<PrivacySettingsScreen />);
+
+      expect(screen.queryByTestId('preview-sample-data')).not.toBeOnTheScreen();
+    } finally {
+      delete process.env.EXPO_PUBLIC_APP_ENV;
+    }
+  });
 });
