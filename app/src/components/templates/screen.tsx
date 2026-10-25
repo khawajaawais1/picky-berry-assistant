@@ -81,7 +81,11 @@ export function Screen({
                 {eyebrow}
               </AppText>
             ) : null}
-            {title ? <AppText variant="subtitle">{title}</AppText> : null}
+            {title ? (
+              <AppText accessibilityRole="header" variant="subtitle">
+                {title}
+              </AppText>
+            ) : null}
             {subtitle ? (
               <AppText variant="body" tone="muted">
                 {subtitle}

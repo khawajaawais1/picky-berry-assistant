@@ -16,6 +16,19 @@ describe('Screen', () => {
     expect(screen.getByText('content')).toBeOnTheScreen();
   });
 
+  it('announces its title as the screen’s heading', async () => {
+    // A screen title that is only painted is a title no assistive technology can navigate to:
+    // the heading rotor and a browser's heading list stayed empty on every screen (frontend
+    // review, 2026-10-25). The role is the contract; it does not change the design's metrics.
+    await render(
+      <Screen title="Discover nearby">
+        <AppText>content</AppText>
+      </Screen>,
+    );
+
+    expect(screen.getByRole('header', { name: 'Discover nearby' })).toBeOnTheScreen();
+  });
+
   it('renders without a heading', async () => {
     await render(
       <Screen scroll={false}>
