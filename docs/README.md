@@ -8,6 +8,7 @@
 | [features/6.2-live-site-map.md](features/6.2-live-site-map.md) | Feature 6.2 summary + link to its deep dive | Awais |
 | [architecture.md](architecture.md) | Condensed MVP architecture: modules, jobs, flows | Hassan |
 | [sprints.md](sprints.md) | Sprints, first deliverables, course deadlines | Sayeem |
+| [builds.md](builds.md) | Build triggers: EAS tags, manual dispatch, Expo Go limits | Salman |
 | [decisions/](decisions/) | ADRs — one file per decision that changes a design doc | whoever decides |
 | [dependency-checklist.md](dependency-checklist.md) | Feature 6.2 dependencies D1–D21 | Sayeem |
 | [data-contract.md](data-contract.md) | What `data/` produces and who consumes it | Awais |
