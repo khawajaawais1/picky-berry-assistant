@@ -19,6 +19,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "coverage:ratchet": "node scripts/ratchet-coverage.mjs",
     "test:layout": "playwright test && playwright test --config playwright.production.config.ts",
     "build:native": "expo export --platform ios --output-dir dist-native/ios --clear && expo export --platform android --output-dir dist-native/android --clear",
     "prototype:sign-in": "expo start --web",

@@ -47,6 +47,7 @@ once. Do not commit with `--no-verify`: CI scans the whole history again.
 | `npm run lint` / `npm run lint:fix`                         | ESLint                                                 |
 | `npm run format` / `npm run format:check`                   | Prettier                                               |
 | `npm test` / `npm run test:watch` / `npm run test:coverage` | Jest                                                   |
+| `npm run coverage:ratchet`                                  | Raise the coverage floor after a coverage run          |
 | `npm run doctor`                                            | `expo-doctor` dependency/config health                 |
 | `npm run verify`                                            | typecheck + lint + test — run this before every commit |
 
@@ -176,16 +177,18 @@ Reviewers check, at minimum:
 ## CI
 
 `.github/workflows/mobile.yml` at the repository root runs `npm ci`, typecheck, lint,
-format check, tests and expo-doctor, then the Playwright layout/accessibility job and the native
-bundle exports (iOS + Android), for changes under `app/**` (or to the workflow) on `main` and on
-every pull request. A separate workflow, `.github/workflows/secrets.yml`, runs gitleaks over the
-history on every pull request and push to `main` with no path filter, so a secret committed
-anywhere in the repository fails the build. `dependency-review.yml` fails a pull request that
-adds a high-severity advisory (once the repository's dependency graph is enabled; until then
-it warns), `codeql.yml` scans TypeScript and Python on pull requests,
-`main` and weekly, and `actionlint.yml` lints the workflow YAML when it changes. Dependabot
-opens the grouped weekly dependency updates these checks then test. All of them only verify —
-none deploys or publishes. Fix red builds; do not skip or weaken the gate.
+format check, tests with coverage and expo-doctor, then the Playwright layout/accessibility job
+and the native bundle exports (iOS + Android), for changes under `app/**` (or to the workflow)
+on `main` and on every pull request. The coverage run fails below the floor in
+`coverage-thresholds.json` and uploads the report as the `app-coverage` artifact. A separate
+workflow, `.github/workflows/secrets.yml`, runs gitleaks over the history on every pull request
+and push to `main` with no path filter, so a secret committed anywhere in the repository fails
+the build. `dependency-review.yml` fails a pull request that adds a high-severity advisory
+(once the repository's dependency graph is enabled; until then it warns), `codeql.yml` scans
+TypeScript and Python on pull requests, `main` and weekly, and `actionlint.yml` lints the
+workflow YAML when it changes. Dependabot opens the grouped weekly dependency updates these
+checks then test. All of them only verify — none deploys or publishes. Fix red builds; do not
+skip or weaken the gate.
 
 Because `mobile.yml` is path-filtered, a pull request that touches only documentation or
 another folder will not start it. That is the same convention as `data.yml`; if the mobile

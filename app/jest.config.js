@@ -1,3 +1,5 @@
+const coverageThreshold = require('./coverage-thresholds.json');
+
 /** @type {import('jest').Config} */
 module.exports = {
   preset: 'jest-expo',
@@ -33,6 +35,9 @@ module.exports = {
     // winning variant is rewritten with tests, and the rest is deleted.
     '!src/**/prototype/**',
   ],
-  // Coverage thresholds are intentionally not enforced yet: see
-  // DEFINITION_OF_DONE.md ("Coverage"). Add them once product code lands.
+  // The floor is a ratchet, not a target: it starts at what the suite measured and is raised
+  // by `npm run coverage:ratchet` after coverage improves, never lowered. CI runs
+  // `npm run test:coverage -- --ci`, so a drop fails the pull request (TESTING.md §8).
+  coverageReporters: ['text-summary', 'lcov', 'json-summary'],
+  coverageThreshold: { global: coverageThreshold },
 };

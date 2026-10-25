@@ -50,13 +50,23 @@ describe('the verification gate', () => {
 
   it('runs each of the gate’s checks in the CI job that guards a merge', () => {
     // The workflow is read as text: it is YAML, and what it says is which commands run. The
-    // tests are the CI job's one step that spells its command differently — `npm test -- --ci`,
-    // because Jest's CI mode is what makes a changed snapshot fail instead of being written.
+    // tests are the CI job's one step that spells its command differently — the coverage run,
+    // because Jest's CI mode makes a changed snapshot fail instead of being written, and the
+    // recorded floor is what the gate enforces on top of the suite.
     const workflow = readFileSync(WORKFLOW, 'utf8');
 
     for (const step of GATE.filter((candidate) => candidate !== 'test')) {
       expect(workflow).toContain(`npm run ${step}`);
     }
-    expect(workflow).toContain('npm test -- --ci');
+    expect(workflow).toContain('npm run test:coverage -- --ci');
+  });
+
+  it('enforces a floor for every coverage metric, read from one file', () => {
+    const thresholds = JSON.parse(read('coverage-thresholds.json')) as Record<string, number>;
+
+    for (const metric of ['statements', 'branches', 'functions', 'lines']) {
+      expect(thresholds[metric]).toBeGreaterThan(0);
+    }
+    expect(read('jest.config.js')).toContain("require('./coverage-thresholds.json')");
   });
 });

@@ -136,11 +136,18 @@ refusals answered as a single `404` ([docs/api-contract.md](docs/api-contract.md
 
 ## 8. Coverage
 
-Coverage is collected (`collectCoverageFrom` in `jest.config.js`) and **thresholds
-are intentionally not enforced yet** — there is not enough product code for a
-percentage to mean anything. A global threshold will be introduced with the first
-product feature. Until then the contract is behavioural: every business-critical
-rule listed in §7 has tests, and coverage never drops as a side effect of a change.
+Coverage is collected and **enforced**. `jest.config.js` reads the floor from
+`coverage-thresholds.json` for statements, branches, functions and lines; the values are what
+the suite measured when the floor was set (2026-10-25: 95.09 / 89.64 / 96.03 / 96.56). CI runs
+`npm run test:coverage -- --ci` instead of plain Jest, so a change that drops any metric fails
+the pull request. The job also writes the same numbers to its summary and uploads the lcov/HTML
+report as the `app-coverage` artifact for seven days.
+
+The floor is a ratchet, not a target: after coverage improves, run `npm run test:coverage` and
+then `npm run coverage:ratchet`, which raises the recorded numbers to what was measured and
+never lowers them. A drop is fixed in the code, not recorded in the file, and new code arrives
+with tests. The contract is still behavioural — every business-critical rule in §7 has tests —
+this stops the number sliding while that is true.
 Route files (`src/app/**`) and barrel files (`index.ts`) are excluded: they are
 thin adapters with no behaviour of their own. Throwaway prototype code
 (`src/**/prototype/**`, the `prototype` skill's UI scaffolding) is excluded too: it
@@ -162,7 +169,8 @@ tests here rather than promoted from the scratch version.
 `../.github/workflows/mobile.yml` (at the repository root, `working-directory: app`) runs on
 every push to `main` and every pull
 request touching `app/**`: `npm ci` → `typecheck` → `lint` →
-`format:check` → `test --ci` → `expo-doctor`. A red gate must be fixed, not
+`format:check` → `test:coverage -- --ci` → `expo-doctor` (the coverage run is the test gate:
+Jest enforces `coverage-thresholds.json` and the report is uploaded beside it). A red gate must be fixed, not
 bypassed. A second job, **Layout in both languages and text sizes**, then installs a browser
 and runs `npm run test:layout`, which builds and serves two static web exports one after the other
 — the development one and a `EXPO_PUBLIC_APP_ENV=production` one (§12); it needs the first job
@@ -187,7 +195,7 @@ when Maestro is added it will run on a build artifact rather than on every pull 
 
 ## 11. Current state
 
-120 suites, 1,194 tests, all passing (2026-10-25), plus 200 browser checks in the development
+120 suites, 1,195 tests, all passing (2026-10-25), plus 200 browser checks in the development
 export (211 when the harness's own 11 measurement probes are counted) and 4 in the production one
 (`npm run test:layout`, §12, last measured 2026-10-24). Every app-drawn
 screen the design never drew is measured there — the sign-in screen, frame 14's two destinations,

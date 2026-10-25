@@ -46,8 +46,23 @@ jobs:
       - name: Format check
         run: npm run format:check
 
-      - name: Tests
-        run: npm test -- --ci
+      - name: Tests with coverage
+        # Coverage is the CI form of the test gate: Jest fails here when any metric drops
+        # below the recorded floor (coverage-thresholds.json, TESTING.md §8).
+        run: npm run test:coverage -- --ci
+
+      - name: Coverage summary
+        if: always()
+        run: node scripts/coverage-summary.mjs >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-coverage
+          path: app/coverage/
+          retention-days: 7
+          if-no-files-found: warn
 
       - name: Expo dependency and config health
         run: npx --yes expo-doctor
