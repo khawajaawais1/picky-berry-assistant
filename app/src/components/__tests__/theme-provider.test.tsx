@@ -1,7 +1,7 @@
 import { Appearance, Platform, Text } from 'react-native';
-import { render, screen, waitFor } from '@testing-library/react-native';
+import { render, renderHook, screen, waitFor } from '@testing-library/react-native';
 
-import { useAppTheme } from '@/hooks/use-app-theme';
+import { useAppTheme, useColorSchemeName } from '@/hooks/use-app-theme';
 
 import { AppThemeProvider } from '../theme-provider';
 
@@ -51,6 +51,17 @@ describe('AppThemeProvider', () => {
     );
 
     await waitFor(() => expect(screen.getByTestId('scheme')).toHaveTextContent('light'));
+  });
+
+  it('hands the scheme name down with the theme', async () => {
+    jest.replaceProperty(Platform, 'OS', 'web');
+    jest.spyOn(Appearance, 'getColorScheme').mockReturnValue('dark');
+
+    const { result } = await renderHook(() => useColorSchemeName(), {
+      wrapper: AppThemeProvider,
+    });
+
+    await waitFor(() => expect(result.current).toBe('dark'));
   });
 
   it('hands the theme down to every consumer, not one subtree', async () => {

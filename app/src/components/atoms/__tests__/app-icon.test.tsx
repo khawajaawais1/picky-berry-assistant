@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react-native';
 
-import { Feather } from '../app-icon';
+import { Feather, MaterialCommunityIcons, MaterialIcons } from '../app-icon';
 
 /**
  * The wrapper stands in for `@expo/vector-icons`; on a client (the test environment) it must render
@@ -12,5 +12,17 @@ describe('AppIcon', () => {
     await render(<Feather color="#414BA0" name="bell" size={22} testID="bell" />);
 
     expect(screen.getByTestId('bell')).toBeOnTheScreen();
+  });
+
+  it('wraps the other two icon families too', async () => {
+    await render(
+      <>
+        <MaterialCommunityIcons color="#414BA0" name="weather-sunny" size={20} testID="sun" />
+        <MaterialIcons color="#414BA0" name="info" size={20} testID="info" />
+      </>,
+    );
+
+    expect(screen.getByTestId('sun')).toBeOnTheScreen();
+    expect(screen.getByTestId('info')).toBeOnTheScreen();
   });
 });

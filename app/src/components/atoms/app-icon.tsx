@@ -20,7 +20,7 @@ const subscribe = () => () => {};
 const getSnapshot = () => true;
 const getServerSnapshot = () => false;
 
-function deferIcon<P extends { size?: number }>(Icon: ComponentType<P>) {
+function deferIcon<P extends { size?: number; testID?: string }>(Icon: ComponentType<P>) {
   return function DeferredIcon(props: P) {
     const ready = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
@@ -28,7 +28,7 @@ function deferIcon<P extends { size?: number }>(Icon: ComponentType<P>) {
       // The space the icon will take, so nothing moves when it arrives.
       const size = typeof props.size === 'number' ? props.size : 24;
 
-      return <View style={{ height: size, width: size }} />;
+      return <View style={{ height: size, width: size }} testID={props.testID} />;
     }
 
     return <Icon {...props} />;

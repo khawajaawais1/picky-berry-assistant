@@ -1,6 +1,7 @@
 import { AccessibilityInfo } from 'react-native';
 import { render, screen } from '@testing-library/react-native';
 
+import { AppText } from '../../atoms';
 import { StatusMessage } from '../status-message';
 
 /**
@@ -30,6 +31,22 @@ describe('StatusMessage', () => {
     await render(<StatusMessage>That email and password didn’t match.</StatusMessage>);
 
     expect(announce).toHaveBeenCalledWith('That email and password didn’t match.');
+  });
+
+  it('can be a final reading the caller does not want spoken', async () => {
+    await render(<StatusMessage announce={false}>Saved</StatusMessage>);
+
+    expect(screen.getByText('Saved')).toBeOnTheScreen();
+  });
+
+  it('leaves a composed child out of the iOS announcement', async () => {
+    await render(
+      <StatusMessage>
+        <AppText>Saved spot</AppText>
+      </StatusMessage>,
+    );
+
+    expect(screen.getByText('Saved spot')).toBeOnTheScreen();
   });
 
   it('keeps the text tone and variant its caller gives it', async () => {
