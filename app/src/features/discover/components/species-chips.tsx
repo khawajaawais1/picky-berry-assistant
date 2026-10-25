@@ -27,12 +27,12 @@ export type SpeciesChipsProps = {
  * cloudberry); the pilot's fourth, crowberry, is the domain list's, so the row renders one
  * chip more than the frame without changing the order of the design's three.
  *
- * One chip can be on, two can, or none, which is why these are checkboxes and not the
- * mutually exclusive `ChoiceChips` the onboarding screens use: filtering by lingonberry and
- * bilberry at once is a question a picker asks. The checked state is stated twice on purpose
- * — `accessibilityState` for iOS and Android, `aria-checked` for the web target, which writes
- * no state from the Pressable on its own (measured in the built export; the same fix the
- * consent checkbox needed).
+ * **One score layer is shown at a time.** A zone carries one score per berry, so the screen keeps
+ * at most one chip pressed and clears it on the second press. These are therefore **toggle
+ * buttons**, not checkboxes: a checkbox announces a multi-select the score source cannot answer.
+ * The pressed state is stated twice on purpose — `accessibilityState.selected` for iOS and
+ * Android, `aria-pressed` for the web target, which writes no state from the Pressable on its own
+ * (measured in the built export; frontend review, 2026-10-25).
  *
  * The frame paints its first chip as chosen while drawing every zone on its map. The app opens
  * with no chip on instead, because a chip painted chosen while nothing has been filtered away
@@ -49,6 +49,7 @@ export function SpeciesChips({ selected, onToggle }: SpeciesChipsProps) {
     <View
       accessibilityLabel={t('discover.species.filter')}
       className="w-full flex-row flex-wrap gap-gap"
+      role="group"
       testID="species-chips"
     >
       {SPECIES.map((species) => {
@@ -58,9 +59,9 @@ export function SpeciesChips({ selected, onToggle }: SpeciesChipsProps) {
         return (
           <Pressable
             accessibilityLabel={label}
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked: on }}
-            aria-checked={on}
+            accessibilityRole="button"
+            accessibilityState={{ selected: on }}
+            aria-pressed={on}
             className="h-chip flex-row items-center rounded-pill px-gap"
             hitSlop={CHIP_HIT_SLOP}
             key={species}

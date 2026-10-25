@@ -104,7 +104,7 @@ describe('DiscoverScreen', () => {
     expect(screen.getByTestId('zone-search-field')).toBeOnTheScreen();
     expect(screen.getByTestId('species-chips')).toBeOnTheScreen();
     // The design's chips are 36 px tall; 4 px of hit slop on each side is the 44 px target.
-    expect(screen.getByRole('checkbox', { name: 'Lingonberry' }).props.hitSlop).toMatchObject({
+    expect(screen.getByRole('button', { name: 'Lingonberry' }).props.hitSlop).toMatchObject({
       bottom: 4,
       top: 4,
     });
@@ -238,16 +238,21 @@ describe('DiscoverScreen', () => {
     await render(<DiscoverScreen zoneSource={source} />, { wrapper: QueryProvider });
     await screen.findByText('53 / 100 yield');
 
-    await fireEvent.press(screen.getByRole('checkbox', { name: 'Lingonberry' }));
+    const lingonberry = screen.getByRole('button', { name: 'Lingonberry' });
+    expect(lingonberry.props.accessibilityState).toMatchObject({ selected: false });
 
-    // The card now reads the berry the chip asked for — the same zone, its other score.
+    await fireEvent.press(lingonberry);
+
+    // The card now reads the berry the chip asked for — the same zone, its other score, and the
+    // chip's pressed state says which layer is on (frontend review, 2026-10-25).
+    expect(lingonberry.props.accessibilityState).toMatchObject({ selected: true });
     expect(await screen.findByText('Laajavuori 1 · Lingonberry')).toBeOnTheScreen();
     expect(screen.getByText('70 / 100 yield')).toBeOnTheScreen();
     expect(screen.getByText('High confidence')).toBeOnTheScreen();
     expect(screen.getByText('Ripe now')).toBeOnTheScreen();
     expect(source.list).toHaveBeenLastCalledWith({ species: 'lingonberry' });
 
-    await fireEvent.press(screen.getByRole('checkbox', { name: 'Lingonberry' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Lingonberry' }));
 
     // Pressing the lit chip clears it, and the screen falls back to the pilot's berry rather
     // than inventing a combined score.
@@ -259,7 +264,7 @@ describe('DiscoverScreen', () => {
     await renderScreen();
     await screen.findByText('3 zones · test data');
 
-    await fireEvent.press(screen.getByRole('checkbox', { name: 'Crowberry' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Crowberry' }));
 
     expect(await screen.findByText('No zones to show')).toBeOnTheScreen();
     expect(screen.queryByTestId('zone-card')).not.toBeOnTheScreen();
@@ -338,7 +343,7 @@ describe('DiscoverScreen', () => {
     // it opens reads the same record rather than another zone's figures.
     expect(onOpenZone).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'a' }), 'bilberry');
 
-    await fireEvent.press(screen.getByRole('checkbox', { name: 'Lingonberry' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Lingonberry' }));
     await screen.findByText('70 / 100 yield');
     await fireEvent.press(screen.getByRole('button', { name: 'Open zone Laajavuori 1 details' }));
 
@@ -359,8 +364,10 @@ describe('DiscoverScreen', () => {
 
     await openList();
 
-    // Only the view toggle is a control here (no back, no download glyph in this render).
-    expect(screen.getAllByRole('button')).toHaveLength(1);
+    // The view toggle and the four score-layer toggles are controls here (no back, no download
+    // glyph in this render); the zone card itself is a reading.
+    expect(screen.getAllByRole('button')).toHaveLength(5);
+    expect(screen.queryByRole('button', { name: /Open zone/ })).not.toBeOnTheScreen();
   });
 
   it('switches back to the map the frame’s toggle names', async () => {

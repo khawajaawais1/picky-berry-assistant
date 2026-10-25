@@ -64,9 +64,9 @@ describe('the discover screen on a Finnish device', () => {
     // The frame's two controls and the row under the card, all in Finnish: the field's own
     // promise, the berries the chips ask for, and the words on the map/list row.
     expect(screen.getByLabelText('Hae paikkaa tai aluetta')).toBeOnTheScreen();
-    expect(screen.getByRole('checkbox', { name: 'Puolukka' })).toBeOnTheScreen();
-    expect(screen.getByRole('checkbox', { name: 'Mustikka' })).toBeOnTheScreen();
-    expect(screen.getByRole('checkbox', { name: 'Lakka' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Puolukka' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Mustikka' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Lakka' })).toBeOnTheScreen();
     expect(screen.getByText('Kartta valittuna')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Näytä alueluettelo' })).toBeOnTheScreen();
 
@@ -95,7 +95,7 @@ describe('the discover screen on a Finnish device', () => {
     await render(<DiscoverScreen />, { wrapper: QueryProvider });
     await screen.findByText('Sato 53 / 100');
 
-    await fireEvent.press(screen.getByRole('checkbox', { name: 'Puolukka' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Puolukka' }));
 
     // The same zone, the lingonberry score the stub carries, said in Finnish.
     expect(await screen.findByText('Laajavuori 1 · Puolukka')).toBeOnTheScreen();
