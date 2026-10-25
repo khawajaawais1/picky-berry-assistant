@@ -30,6 +30,9 @@ cp .env.example .env     # public client config (never secrets — SECURITY.md �
 npm start                # then press i / a / w, or scan the QR code
 ```
 
+`npm ci` also wires this clone's Git hooks through the `prepare` script: every commit is
+scanned for secrets before it is created (`app/.githooks/pre-commit`, SECURITY.md §9).
+
 ## Verify
 
 ```bash

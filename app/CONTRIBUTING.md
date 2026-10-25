@@ -30,6 +30,13 @@ The npm package lives in `app/`, so every npm command in this file runs from the
 backend is the sibling folder `../backend/` (FastAPI) and the data pipelines are `../data/`;
 the app talks to neither today.
 
+`npm ci` also runs the `prepare` script, which points this clone's Git hooks at
+`app/.githooks`. Every commit is then scanned for secrets before it exists (SECURITY.md §9).
+The hook needs `git` and `curl`; on macOS and Linux it downloads the pinned gitleaks build
+once into `node_modules/.cache/gitleaks` after checking its SHA-256, and elsewhere it uses
+the `gitleaks` already on `PATH`. If you cloned before the hook existed, run `npm run prepare`
+once. Do not commit with `--no-verify`: CI scans the whole history again.
+
 ### Commands
 
 | Command                                                     | Purpose                                                |

@@ -146,8 +146,12 @@ Accepted policy (owner decision, 2026-10-08):
   rules and allowing only the app's versioned `picky.*` storage keys, which are public
   identifiers. A finding fails the job. The workflow has no path filter: every pull request
   and every push to `main` runs it, whichever folder changed, so a secret committed in
-  `backend/`, `data/` or `deploy/` starts the same scan as one in `app/`. Review remains the
-  first control, and `.env` stays git-ignored.
+  `backend/`, `data/` or `deploy/` starts the same scan as one in `app/`. The same scanner and
+  config also run in a local pre-commit hook against the staged changes, downloading the
+  pinned build once into `node_modules/.cache/gitleaks` after verifying its SHA-256, so a key
+  is normally stopped before it enters history at all. `git commit --no-verify` skips the
+  hook, which is why CI remains the enforcing control. Review comes first, and `.env` stays
+  git-ignored.
 
 ## 10. GPS and privacy
 
@@ -328,7 +332,8 @@ Implemented in this repository:
   exception.
 - **Secret scanning** in `.github/workflows/secrets.yml`: `gitleaks` over the full history
   with `.gitleaks.toml` (§9), on every pull request and every push to `main`, unfiltered by
-  path.
+  path. A pre-commit hook (`app/.githooks/pre-commit`) runs the same scan against staged
+  changes before the commit exists.
 - **Dependency automation and scanning:** Dependabot (weekly, grouped), dependency review on
   every pull request, CodeQL for TypeScript and Python, and actionlint over the workflows.
   These gates judge what a change adds; they do not clear the advisories recorded below.

@@ -26,7 +26,8 @@
     "verify": "npm run format:check && npm run typecheck && npm run lint && npm run test",
     "doctor": "npx --yes expo-doctor",
     "build:android:demo": "npx eas-cli@latest build --platform android --profile preview",
-    "apk": "node scripts/fetch-apk.mjs"
+    "apk": "node scripts/fetch-apk.mjs",
+    "prepare": "node scripts/install-git-hooks.mjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
