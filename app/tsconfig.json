@@ -1,0 +1,18 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "types": ["jest"],
+    // Metro resolves a platform file (`zone-map-canvas.web.tsx` / `.native.tsx`) from the
+    // import `./zone-map-canvas`; TypeScript has to be told the same suffixes or it reports
+    // the import as missing. Web first because both canvases share one props type, and the
+    // web file is the one that carries no native dependency — the native file is checked on
+    // its own, since `include` below covers every source file.
+    "moduleSuffixes": [".web", ".native", ""],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/assets/*": ["./assets/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts", "nativewind-env.d.ts"]
+}

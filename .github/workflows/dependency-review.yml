@@ -1,0 +1,54 @@
+name: dependency review
+
+# Runs on every pull request, with no path filter: a dependency arrives through a lockfile,
+# a Dockerfile or a workflow, and the check is cheap enough to answer for all three.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  # The action posts its summary on the pull request when it fails.
+  pull-requests: write
+
+concurrency:
+  group: dependency-review-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: Review dependency changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      # The action compares the diff against the repository's dependency graph, which is a
+      # repository setting an admin controls. This repository does not have it enabled yet
+      # (2026-10-25), and CI cannot turn it on. So the job reports the missing setting in the
+      # summary instead of failing every pull request until someone can: a red check nobody
+      # can fix is noise, not a gate. The moment the graph is enabled, the step below runs and
+      # enforces the severity floor — no other change needed.
+      - name: Check the dependency graph is available
+        id: graph
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/${GITHUB_REPOSITORY}/dependency-graph/sbom" >/dev/null 2>&1; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "### Dependency review did not run"
+              echo ""
+              echo "This repository's dependency graph is not enabled, so there is nothing to compare the diff against."
+              echo "An admin can enable it in **Settings → Code security and analysis → Dependency graph** (SECURITY.md §14)."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning title=Dependency graph not enabled::Dependency review needs the repository's dependency graph. Enable it in Settings → Code security and analysis; no workflow change is needed."
+          fi
+
+      - name: Review the dependency diff
+        if: steps.graph.outputs.available == 'true'
+        uses: actions/dependency-review-action@v5
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: on-failure

@@ -1,0 +1,7 @@
+#!/bin/sh
+# Local secret scan: the same engine and `.gitleaks.toml` that CI runs over every commit
+# (`.github/workflows/secrets.yml`), pointed at the index instead of the history — so a key
+# is stopped before it enters the history at all, where removing it means a rewrite and a
+# rotation. `git commit --no-verify` skips this, which is why CI keeps its own scan.
+set -eu
+exec "$(git rev-parse --show-toplevel)/app/scripts/pre-commit-secret-scan.sh"

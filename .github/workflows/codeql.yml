@@ -1,0 +1,50 @@
+name: codeql
+
+# Static analysis for the two languages the repository actually ships: TypeScript in `app/`
+# and Python in `data/` (the backend and ml folders have no code yet; a new language is one
+# matrix entry when they do). Code scanning findings land in the repository's Security tab
+# (SECURITY.md §14).
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    # The queries change as well as the code, so a weekly run catches a newly published
+    # query against code that has not moved.
+    - cron: "23 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze ${{ matrix.language }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript, python]
+    steps:
+      - uses: actions/checkout@v4
+
+      # Neither language needs a build to be analysed: TypeScript is read from source and
+      # Python is imported by the extractor, so `none` is both faster and honest about what
+      # was checked. The app's own typecheck and bundle exports remain the build gates.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ matrix.language }}"

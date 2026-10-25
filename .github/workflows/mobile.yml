@@ -1,0 +1,132 @@
+name: mobile
+
+on:
+  pull_request:
+    paths: ["app/**", ".github/workflows/mobile.yml"]
+  push:
+    branches: [main]
+    paths: ["app/**", ".github/workflows/mobile.yml"]
+  workflow_dispatch:
+
+# Verification only: this workflow never deploys or publishes.
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: app
+
+jobs:
+  verify:
+    name: Typecheck, lint, format, test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Tests with coverage
+        # Coverage is the CI form of the test gate: Jest fails here when any metric drops
+        # below the recorded floor (coverage-thresholds.json, TESTING.md §8).
+        run: npm run test:coverage -- --ci
+
+      - name: Coverage summary
+        if: always()
+        run: node scripts/coverage-summary.mjs >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-coverage
+          path: app/coverage/
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Expo dependency and config health
+        run: npx --yes expo-doctor
+
+  native:
+    name: Native bundle exports
+    # The web export cannot see a platform-specific module or transform failure. This job
+    # builds the JavaScript bundle each native target actually ships; it is still not a
+    # device run (TESTING.md §10).
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Export the iOS and Android bundles
+        run: npm run build:native
+        env:
+          EXPO_NO_TELEMETRY: "1"
+
+  layout:
+    name: Layout, text sizes, built-artifact states and the accessibility tree
+    # Only when the fast gate is green: measuring a broken build wastes a browser
+    # download and a web build. See ADR-018, ADR-019 and TESTING.md §12.
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install the browser the harness drives
+        run: npx playwright install --with-deps chromium
+
+      # The design is measured against Android's own typeface, so the runner needs it: without
+      # Roboto, Chromium falls back to a Liberation font whose glyphs are wider, and Finnish copy
+      # at 200 % was reported as clipped here while passing on a machine that had the font the
+      # app is designed with (found in CI, 2026-10-21).
+      - name: Install the typeface the design is measured with
+        run: sudo apt-get update && sudo apt-get install -y fonts-roboto
+
+      # Builds the static web export, serves it and measures every built screen in
+      # Finnish and English, at the design's text size and at the largest system one
+      # (e2e/layout.spec.ts), then checks the states the built consent controls expose, the
+      # consent record they write, and the accessibility tree of every built screen — role,
+      # accessible name and declared state on every control (e2e/accessibility.spec.ts,
+      # e2e/a11y-tree.ts; TESTING.md §12). The webServer in
+      # playwright.config.ts owns both the build and the server, so this is the whole job.
+      - name: Measure every screen and check the built controls
+        run: npm run test:layout

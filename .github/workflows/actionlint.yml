@@ -1,0 +1,43 @@
+name: actionlint
+
+# Workflow files are code: a bad expression, an undefined step output or a wrong `needs:`
+# only fails on the run that needed it. This checks the YAML the way the app gate checks
+# TypeScript (SECURITY.md §14). Path-filtered because nothing outside the workflows can
+# break it; `secrets.yml` carries the checks that must answer for every change.
+on:
+  pull_request:
+    paths: [".github/workflows/**", ".github/actions/**", ".github/actionlint.yaml"]
+  push:
+    branches: [main]
+    paths: [".github/workflows/**", ".github/actions/**", ".github/actionlint.yaml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: actionlint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  actionlint:
+    name: Lint the workflows
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      # Pinned by version and SHA-256 for the same reason gitleaks is: CI downloads a
+      # release binary, and a moved tag must not change what runs (SECURITY.md §14).
+      - name: Install actionlint
+        env:
+          ACTIONLINT_VERSION: 1.7.12
+          ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+        run: |
+          curl -sSfL "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz" -o /tmp/actionlint.tar.gz
+          echo "${ACTIONLINT_SHA256}  /tmp/actionlint.tar.gz" | sha256sum -c -
+          mkdir -p /tmp/actionlint-bin
+          tar -xzf /tmp/actionlint.tar.gz -C /tmp/actionlint-bin actionlint
+
+      - name: Lint
+        run: /tmp/actionlint-bin/actionlint -color

@@ -1,0 +1,21 @@
+# Secret scanning for the whole repository (CI: `.github/workflows/secrets.yml`).
+#
+# The default rules stay in force; this file only records the false positives the app produces.
+# It is read because the workflow scans the repository root, where this file sits.
+title = "Picky secret scanning"
+
+[extend]
+useDefault = true
+
+# The app's records are named by versioned AsyncStorage keys such as
+# `picky.privacy-consent.v2`. They are public identifiers written into the bundle, not
+# credentials, but their shape (a long, high-entropy value after `KEY =`) is what the
+# `generic-api-key` rule looks for. The allowlist is deliberately narrow: it matches a line
+# only when the identifier ends in `STORAGE_KEY` or `CONSENT_KEY` and the value is a `picky.`
+# key, so a real credential on any other line is still reported.
+[[allowlists]]
+description = "Versioned `picky.*` storage keys are public identifiers, not secrets"
+regexTarget = "line"
+regexes = [
+  '''(?:STORAGE_KEY|CONSENT_KEY)\s*=\s*['"]picky\.[a-z0-9.-]+['"]''',
+]

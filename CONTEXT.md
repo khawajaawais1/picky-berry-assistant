@@ -89,6 +89,11 @@ Rules that keep it simple and cheap (≈ €485/yr): one VM in the EU, one backe
 no Kubernetes, no Redis/Celery, modules talk only through each other's `service.py`.
 Summary: [docs/architecture.md](docs/architecture.md).
 
+**What exists today:** the app and the `data/` package. Everything above the app in that picture —
+the API, job runner, bucket, knowledge graph and models — is planned, and the app's own line is
+ahead of itself too: it has MapLibre and a foreground location watch, but no geofences, SQLite
+outbox or FCM. [docs/architecture.md](docs/architecture.md) keeps the layer-by-layer status.
+
 ## 5. Daily data → score → alert loop
 
 ```
@@ -101,6 +106,9 @@ Summary: [docs/architecture.md](docs/architecture.md).
 Score = α·S_reports + (1−α)·S_model with α = N_eff / (N_eff + 3). Every score and alert
 stores **why**, so the app can explain it in plain words. Details: architecture doc §6.2
 and the 6.2 deep dive §7.
+
+**None of the loop runs yet:** the two ingests are CLI commands run by hand, and prediction,
+reasoning and push are unbuilt. The app's map and zone screens read the committed 50-zone stub.
 
 ## 6. Timeline
 
@@ -137,11 +145,17 @@ OSM data is ODbL, FMI open data CC BY 4.0. Full list: [docs/licences.md](docs/li
 ## 9. Open decisions (sprint 1)
 
 * Cloud provider: Hetzner Helsinki vs. CSC cPouta — Sabih
-* GDD ripeness thresholds per species, with sources — Asmer
-* Pilot bbox (proposed in `data/config/pilot_area.yaml`) and H3 res 8 vs. 9 — Awais + Hassan
-* Visit thresholds (10 min dwell, 5 min exit) — Salman, after the first field test
+* GDD ripeness thresholds per species, with sources — Asmer; no threshold file exists yet, only the
+  unverified zone-species rules in `data/config/zone_species_rules.yaml`
+* Pilot bbox and H3 res 8 vs. 9 — Awais + Hassan; the bbox is written down in
+  `data/config/pilot_area.yaml` (res 8, 3,000–6,300 expected zones) and still marked a proposal
+* Visit thresholds — Salman, after the first field test; the app runs a stand-in (5 min dwell,
+  30 min grace) against the team's 10 min / 5 min target, and the foreground watch's 50 m / 60 s
+  budget is decided but unmeasured ([ADR-063](app/docs/adr/ADR-063-the-watch-has-a-cadence-and-an-accuracy-budget.md),
+  [docs/field-test.md](app/docs/field-test.md))
 * Domain name, store accounts (Apple Developer for TestFlight), task board (GitHub Projects) — Sayeem
-* Zone count is ≈ 4–5k, not 3–4k: H3 res-8 cells are ≈ 0.57 km² at 62° N — re-check payload budgets — Hassan
+* Payload budget at the data config's 3,000–6,300 expected zones — Hassan (H3 res-8 cells are
+  ≈ 0.57 km² at 62° N)
 
 ## 10. Glossary
 
