@@ -119,6 +119,7 @@ pytest, Jest, Maestro, k6 · Sentry. All free and open source.
 | [CONTEXT.md](CONTEXT.md) | Project brief, team, timeline, conventions, glossary |
 | [docs/features/](docs/features/README.md) | Feature catalogue + deep-dive template |
 | [docs/architecture.md](docs/architecture.md) | Modules, jobs, end-to-end flows |
+| [docs/builds.md](docs/builds.md) | Triggering EAS builds: tags, manual dispatch, Expo Go limits |
 | [docs/decisions/](docs/decisions/) | Architecture decision records |
 | [docs/sprints.md](docs/sprints.md) | Sprints, deliverables, deadlines |
 | [docs/data-contract.md](docs/data-contract.md) | Tables `data/` provides to other modules |
