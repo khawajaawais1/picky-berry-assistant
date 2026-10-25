@@ -484,7 +484,7 @@ export const typography = {
    * node `5:23226`). Two points above `metric`, and semibold where the score is regular: this
    * one is the screen's clock, and the design sets it the way a clock is set.
    */
-  timer: { fontSize: 52, lineHeight: 63, fontWeight: '600' },
+  timer: { fontSize: 52, lineHeight: 63, fontWeight: '600', fontVariant: ['tabular-nums'] },
   /**
    * One cell's number in frame 10's yield rating (24/29, node `5:23291`). Its own slot rather
    * than `digit` (25/30 semibold): the rating is regular weight, because it is a choice rather

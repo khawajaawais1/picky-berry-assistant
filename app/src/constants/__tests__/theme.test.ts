@@ -37,6 +37,12 @@ describe('design tokens', () => {
     expect(new Set(values).size).toBe(values.length);
   });
 
+  it('sets the live clock in tabular numerals, so its digits do not jitter', () => {
+    // The visit clock counts every second inside a centred card. Proportional digits change the
+    // reading's width as they change, which nudges the whole line (frontend review, 2026-10-25).
+    expect(typography.timer.fontVariant).toContain('tabular-nums');
+  });
+
   it('defines every typography variant', () => {
     expect(Object.keys(typography).sort()).toEqual([
       'body',
