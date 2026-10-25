@@ -2,7 +2,7 @@ import '../../global.css';
 
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 
 import { AppThemeProvider } from '@/components/theme-provider';
 import { zonesQueryCachePersistence } from '@/features/discover';
@@ -34,7 +34,7 @@ function RootShell() {
     // the last zones this device read, rather than a loading line in a forest with no signal
     // (`features/discover/services/zone-cache.ts`).
     <QueryProvider persistOptions={zonesQueryCachePersistence}>
-      <SafeAreaProvider>
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
         <Stack
           screenOptions={{
             headerShown: false,

@@ -113,6 +113,21 @@ describe('Screen', () => {
     });
   });
 
+  it('keeps the keyboard from covering the fields it is open for', async () => {
+    // A form's submit sits at the bottom of the column; with the keyboard open it was still under
+    // the thumb, because the template only kept taps working (frontend review, 2026-10-25).
+    await render(
+      <Screen title="Create your account">
+        <AppText>content</AppText>
+      </Screen>,
+    );
+
+    const scroller = screen.getByTestId('screen-scroll');
+
+    expect(scroller.props.automaticallyAdjustKeyboardInsets).toBe(true);
+    expect(scroller.props.keyboardDismissMode).toBe('on-drag');
+  });
+
   it('renders children in both scroll modes', async () => {
     const scrolled = await render(
       <Screen>
