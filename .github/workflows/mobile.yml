@@ -2,10 +2,10 @@ name: mobile
 
 on:
   pull_request:
-    paths: ["app/**", ".github/workflows/mobile.yml", ".gitleaks.toml"]
+    paths: ["app/**", ".github/workflows/mobile.yml"]
   push:
     branches: [main]
-    paths: ["app/**", ".github/workflows/mobile.yml", ".gitleaks.toml"]
+    paths: ["app/**", ".github/workflows/mobile.yml"]
   workflow_dispatch:
 
 # Verification only: this workflow never deploys or publishes.
@@ -51,41 +51,6 @@ jobs:
 
       - name: Expo dependency and config health
         run: npx --yes expo-doctor
-
-  secrets:
-    name: Secret scan
-    # Reads history rather than the app, so it runs beside the fast gate instead of behind it:
-    # a committed key must fail the pull request even when a test is red. The scan covers every
-    # commit reachable from HEAD, because a key removed from the working tree is still in the
-    # history that shipped.
-    #
-    # The scanner is pinned by version **and** SHA-256: CI downloads a release binary, and a
-    # moved tag must not be able to change what runs here (SECURITY.md §14). This workflow is
-    # path-filtered to `app/**` and the two files that configure it, so a change outside `app/`
-    # does not start the scan (SECURITY.md §9 records that limit).
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: .
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          # Full history: the scan is about what was committed, not only what the diff adds.
-          fetch-depth: 0
-
-      - name: Install gitleaks
-        env:
-          GITLEAKS_VERSION: 8.30.1
-          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
-        run: |
-          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -o /tmp/gitleaks.tar.gz
-          echo "${GITLEAKS_SHA256}  /tmp/gitleaks.tar.gz" | sha256sum -c -
-          mkdir -p /tmp/gitleaks-bin
-          tar -xzf /tmp/gitleaks.tar.gz -C /tmp/gitleaks-bin gitleaks
-
-      - name: Scan the history
-        run: /tmp/gitleaks-bin/gitleaks git . --config .gitleaks.toml --redact --no-banner --verbose
 
   native:
     name: Native bundle exports

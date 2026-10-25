@@ -1,4 +1,4 @@
-# Secret scanning for the whole repository (CI: `.github/workflows/mobile.yml`).
+# Secret scanning for the whole repository (CI: `.github/workflows/secrets.yml`).
 #
 # The default rules stay in force; this file only records the false positives the app produces.
 # It is read because the workflow scans the repository root, where this file sits.

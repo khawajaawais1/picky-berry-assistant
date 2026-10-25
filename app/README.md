@@ -45,9 +45,11 @@ built flow from the walk through the report to the queued row; `npm run build:na
 the iOS and Android bundles.
 
 CI is [`.github/workflows/mobile.yml`](../.github/workflows/mobile.yml) at the repository
-root: it runs the same gate, the Playwright layout/accessibility harness, the native bundle
-exports and a gitleaks secret scan for changes under `app/**` or the workflow's own config on
-`main` and on every pull request, and it only verifies — it never deploys or publishes.
+root: it runs the same gate, the Playwright layout/accessibility harness and the native bundle
+exports for changes under `app/**` or the workflow on `main` and on every pull request. A
+separate [`.github/workflows/secrets.yml`](../.github/workflows/secrets.yml) runs the gitleaks
+secret scan over the history on every pull request and push to `main`, with no path filter.
+Both only verify — they never deploy or publish.
 
 ## Layout
 

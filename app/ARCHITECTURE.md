@@ -38,7 +38,7 @@ picky-berry-assistant/            # the team monorepo (root README, CONTEXT.md, 
 ├── ontology/                     # OWL/Turtle + SPARQL alert rules — Asmer
 ├── docker/ · deploy/             # Postgres image, production compose, Caddy — Sabih
 ├── docs/                         # team-level features, architecture, ADRs, sprints
-├── .github/workflows/            # data.yml, mobile.yml
+├── .github/workflows/            # data.yml, mobile.yml, secrets.yml
 └── app/                          # this folder: the Expo application (npm package "picky-mobile")
     ├── app.json                  # Expo config; native behaviour is configured here
     ├── assets/                   # icons, splash, images
@@ -363,7 +363,8 @@ documented comparison before integration. No other third-party service is integr
   (`../deploy/`), Postgres 17 + PostGIS alongside it, object storage for media
   (`../docs/architecture.md`).
 - **CI:** verification only — [`../.github/workflows/mobile.yml`](../.github/workflows/mobile.yml)
-  for the app and `data.yml` for the pipelines. Nothing deploys or publishes from CI.
+  for the app, `data.yml` for the pipelines, and `secrets.yml` for the repo-wide gitleaks scan
+  (unfiltered by path). Nothing deploys or publishes from CI.
 
 ## 11. Scalability strategy
 

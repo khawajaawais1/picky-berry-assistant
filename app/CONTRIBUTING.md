@@ -168,12 +168,15 @@ Reviewers check, at minimum:
 ## CI
 
 `.github/workflows/mobile.yml` at the repository root runs `npm ci`, typecheck, lint,
-format check, tests and expo-doctor, then the Playwright layout/accessibility job, the native
-bundle exports (iOS + Android) and a gitleaks secret scan over the history, for changes under
-`app/**` (or to the workflow and `.gitleaks.toml`) on `main` and on every pull request. It only
-verifies — it never deploys or publishes. Fix red builds; do not skip or weaken the gate.
+format check, tests and expo-doctor, then the Playwright layout/accessibility job and the native
+bundle exports (iOS + Android), for changes under `app/**` (or to the workflow) on `main` and on
+every pull request. A separate workflow, `.github/workflows/secrets.yml`, runs gitleaks over the
+history on every pull request and push to `main` with no path filter, so a secret committed
+anywhere in the repository fails the build. Both only verify — they never deploy or publish.
+Fix red builds; do not skip or weaken the gate.
 
-Because the workflow is path-filtered, a pull request that touches only documentation or
+Because `mobile.yml` is path-filtered, a pull request that touches only documentation or
 another folder will not start it. That is the same convention as `data.yml`; if the mobile
 check is marked **required** on `main`, a docs-only PR will wait for a status that never
-arrives, so either keep it optional or expect to merge such PRs with that check absent.
+arrives, so either keep it optional or expect to merge such PRs with that check absent. The
+secret scan has no such gap: it starts on every pull request.

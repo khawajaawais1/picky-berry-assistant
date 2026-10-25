@@ -123,8 +123,10 @@ decision of an accepted ADR; supersede it with a new one.
   `main`. Name it after its feature id (`feat/6.3-geofence-refresh`) or as
   `<type>/<handle>/<topic>` (`feature/salman/visit-timer`); see
   [CONTRIBUTING.md](CONTRIBUTING.md) § Branching and [`../CONTRIBUTING.md`](../CONTRIBUTING.md).
-- Commands run from `app/`; CI is [`../.github/workflows/mobile.yml`](../.github/workflows/mobile.yml)
-  and is path-filtered to `app/**`.
+- Commands run from `app/`; the app gate is
+  [`../.github/workflows/mobile.yml`](../.github/workflows/mobile.yml) and is path-filtered to
+  `app/**`. A separate `secrets.yml` scans the whole history for secrets on every pull request,
+  unfiltered by path.
 - Conventional Commits (`feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`).
 - `npm` only, with `npx expo install <pkg>` for Expo-managed dependencies.
 

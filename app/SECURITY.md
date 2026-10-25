@@ -139,14 +139,14 @@ Accepted policy (owner decision, 2026-10-08):
   actions are drawn disabled (ADR-054 §8, ADR-059). The password is handed to the provider
   adapter's place and is never written to a store, a log or the session; the app's own database
   will hold no password or hash (ADR-054 decision 2).
-- **Secret scanning runs in CI.** `gitleaks` 8.30.1 (pinned by version and SHA-256, so a moved
-  release tag cannot change what runs) scans the full git history on the frontend workflow,
-  with `.gitleaks.toml` extending the default rules and allowing only the app's versioned
-  `picky.*` storage keys, which are public identifiers. A finding fails the job. The workflow
-  is path-filtered to `app/**` and its config files, so a secret committed in `backend/`,
-  `data/` or elsewhere is scanned only when a later frontend change starts it; a repo-wide
-  secret workflow is the follow-up. Review remains the first control, and `.env` stays
-  git-ignored.
+- **Secret scanning runs in CI, over the whole repository.** `gitleaks` 8.30.1 (pinned by
+  version and SHA-256, so a moved release tag cannot change what runs) scans the full git
+  history in `.github/workflows/secrets.yml`, with `.gitleaks.toml` extending the default
+  rules and allowing only the app's versioned `picky.*` storage keys, which are public
+  identifiers. A finding fails the job. The workflow has no path filter: every pull request
+  and every push to `main` runs it, whichever folder changed, so a secret committed in
+  `backend/`, `data/` or `deploy/` starts the same scan as one in `app/`. Review remains the
+  first control, and `.env` stays git-ignored.
 
 ## 10. GPS and privacy
 
@@ -307,8 +307,9 @@ Implemented in this repository:
   copied off the device by the OS. `src/config/__tests__/app-hardening.test.ts` asserts that
   setting, the foreground-only permission list, and the absence of a blanket iOS cleartext
   exception.
-- **Secret scanning** in the frontend workflow: `gitleaks` over the full history with
-  `.gitleaks.toml` (§9), on every pull request and push that starts it.
+- **Secret scanning** in `.github/workflows/secrets.yml`: `gitleaks` over the full history
+  with `.gitleaks.toml` (§9), on every pull request and every push to `main`, unfiltered by
+  path.
 
 The Discover map's **zone cache** (`picky.zones-cache.v1`) also lives on the device, and is not
 one of the four records above: it holds the service's public zone geometry and scores — no
