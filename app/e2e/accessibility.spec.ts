@@ -581,7 +581,7 @@ test.describe('the visit flow in the built web app', () => {
     await expect(page.getByText('Waiting to sync · 1 report')).toBeVisible();
     const row = page.getByTestId('offline-report-0');
     await expect(row).toContainText('Zone 14 · Lingonberry');
-    await expect(row).toContainText('52 min · Yield 4 / 5');
+    await expect(row).toContainText('52 min · Rating 4 / 5');
     await expect(row).toContainText('Queued · visit + report');
 
     // What the frame promises here is a retry (“will retry automatically”), and nothing has been
