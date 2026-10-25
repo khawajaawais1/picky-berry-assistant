@@ -33,7 +33,7 @@ jobs:
       matrix:
         language: [javascript-typescript, python]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Neither language needs a build to be analysed: TypeScript is read from source and
       # Python is imported by the extractor, so `none` is both faster and honest about what
