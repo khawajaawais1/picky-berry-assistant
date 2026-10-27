@@ -134,3 +134,23 @@ def test_weather_coverage_check():
     assert check_weather_coverage(w, d).ok                       # 4/5 = 80 %
     d.loc[0, "tmean_c"] = np.nan
     assert not check_weather_coverage(w, d).ok
+
+
+def test_coverage_ignores_today_without_values():
+    from picky_data.checks import check_weather_coverage
+
+    w = pd.DataFrame({"zone_id": ["a", "b"], "fmisid": [1, 2], "weight": [1.0, 1.0]})
+    d = pd.DataFrame({"fmisid": [1, 2, 1, 2],
+                      "date": [date(2026, 10, 26)] * 2 + [date(2026, 10, 27)] * 2,
+                      "tmean_c": [4.0, 3.5, np.nan, np.nan]})
+    c = check_weather_coverage(w, d)
+    assert c.ok and "2026-10-26" in c.detail
+
+
+def test_clean_daily_drops_empty_days():
+    from picky_data.weather.fmi import clean_daily
+
+    d = pd.DataFrame({"fmisid": [1, 1], "date": [date(2026, 10, 26), date(2026, 10, 27)],
+                      "tmean_c": [4.0, np.nan], "tmin_c": [1.0, np.nan], "tmax_c": [6.0, np.nan],
+                      "precip_mm": [0.0, np.nan], "snow_cm": [np.nan, np.nan]})
+    assert clean_daily(d).date.tolist() == [date(2026, 10, 26)]

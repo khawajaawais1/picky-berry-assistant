@@ -121,6 +121,7 @@ def clean_daily(daily: pd.DataFrame) -> pd.DataFrame:
         bad = (daily[c] < TEMP_RANGE_C[0]) | (daily[c] > TEMP_RANGE_C[1])
         daily.loc[bad, c] = np.nan
     daily["fmisid"] = daily["fmisid"].astype(int)
+    daily = daily.dropna(subset=list(PARAMS.values()), how="all")   # nothing observed that day (e.g. today)
     return daily.drop_duplicates(["fmisid", "date"]).sort_values(["fmisid", "date"]).reset_index(drop=True)
 
 

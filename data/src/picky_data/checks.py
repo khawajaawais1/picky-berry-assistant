@@ -61,7 +61,8 @@ def check_weather(weights: pd.DataFrame, daily: pd.DataFrame, zones: gpd.GeoData
     d = daily.sort_values(["fmisid", "date"]).copy()
     d["year"] = pd.to_datetime(d["date"]).dt.year
     dec = (d.groupby(["fmisid", "year"])["gdd_since_apr1"].diff() < -1e-6).sum()
-    latest = pd.to_datetime(d["date"]).max() if len(d) else None
+    with_t = d[d["tmean_c"].notna()]
+    latest = pd.to_datetime(with_t["date"]).max() if len(with_t) else None
     return [
         Check("C5 IDW weights sum to 1", bad == 0, f"{bad} zones off" if bad else ""),
         Check("C6 every zone has weather weights", not missing, f"{len(missing)} missing" if missing else ""),
@@ -78,10 +79,12 @@ def check_ndvi(obs: pd.DataFrame) -> list[Check]:
 
 
 def check_weather_coverage(weights: pd.DataFrame, daily: pd.DataFrame, min_share: float = 0.8) -> Check:
-    """≥ 80 % of zones must get a temperature on the latest day (architecture doc §10)."""
-    if daily.empty:
-        return Check("C14 weather covers ≥ 80 % of zones on latest day", False, "no weather rows")
-    latest = daily["date"].max()
+    """≥ 80 % of zones must get a temperature on the latest day that has any temperature
+    (architecture doc §10). Today is usually still empty at FMI, so it does not count."""
+    with_temp = daily[daily["tmean_c"].notna()]
+    if with_temp.empty:
+        return Check("C14 weather covers ≥ 80 % of zones on latest day", False, "no temperatures at all")
+    latest = with_temp["date"].max()
     reporting = set(daily.loc[(daily["date"] == latest) & daily["tmean_c"].notna(), "fmisid"])
     covered = weights[weights.fmisid.isin(reporting)].zone_id.nunique()
     share = covered / max(weights.zone_id.nunique(), 1)

@@ -18,7 +18,7 @@ import argparse
 import json
 import logging
 import sys
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 from .config import DATA_DIR, OUT_DIR, PilotArea, ensure_dirs, load_env
@@ -134,7 +134,8 @@ def cmd_weather(args) -> int:
     area = _area(args)
     wc = area.weather
     start = date.fromisoformat(args.start or wc["backfill_from"])
-    end = date.fromisoformat(args.end) if args.end else date.today()
+    # FMI publishes a day's values only after the day ends → default to yesterday
+    end = date.fromisoformat(args.end) if args.end else date.today() - timedelta(days=1)
     stations, daily = fetch_daily(area, start, end)
     if args.stub_one_station:
         stations = pd.DataFrame([STUB_STATION])
