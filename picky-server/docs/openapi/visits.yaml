@@ -1,0 +1,126 @@
+openapi: 3.1.0
+info:
+  title: Berry Picker Visits API
+  version: 1.0.0
+  license:
+    name: UNLICENSED
+    identifier: LicenseRef-UNLICENSED
+  description: Server-side visit validation; raw GPS tracks are never accepted.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+paths:
+  /visits:
+    post:
+      summary: Submit a completed visit
+      operationId: createVisit
+      description: Receives a zone and visit timestamps only; the phone performs geofence detection.
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          description: If supplied, must equal client_id.
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [client_id, zone_id, started_at, ended_at]
+              properties:
+                client_id: { type: string, format: uuid }
+                zone_id: { type: string, format: uuid }
+                started_at: { type: string, format: date-time }
+                ended_at: { type: string, format: date-time }
+                manual: { type: boolean, default: false }
+      responses:
+        '201':
+          description: New accepted or rejected visit recorded.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VisitResult' }
+        '200':
+          description: Idempotent replay of the current user's existing visit.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VisitResult' }
+        '401': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+    get:
+      summary: List the authenticated user's visits
+      operationId: listVisits
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - name: cursor
+          in: query
+          description: Opaque base64 cursor for the started_at and id ordering.
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string, enum: [accepted, rejected, all], default: accepted }
+      responses:
+        '200':
+          description: Only the authenticated user's visits, newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [visits, next_cursor]
+                properties:
+                  visits:
+                    type: array
+                    items: { $ref: '#/components/schemas/Visit' }
+                  next_cursor: { type: [string, 'null'] }
+        '401': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    Error:
+      description: Standard API error.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Visit:
+      type: object
+      required: [id, zone_id, zone_name, started_at, ended_at, duration_s, manual, status, reject_reason]
+      properties:
+        id: { type: string, format: uuid }
+        zone_id: { type: [string, 'null'], format: uuid }
+        zone_name: { type: [string, 'null'] }
+        started_at: { type: string, format: date-time }
+        ended_at: { type: string, format: date-time }
+        duration_s: { type: integer }
+        manual: { type: boolean }
+        status: { type: string, enum: [accepted, rejected] }
+        reject_reason: { type: [string, 'null'], enum: [invalid_range, in_future, too_short, too_long, zone_not_found, overlap, null] }
+    VisitResult:
+      allOf:
+        - $ref: '#/components/schemas/Visit'
+        - type: object
+          required: [idempotent_replay]
+          properties:
+            idempotent_replay: { type: boolean }
+    Error:
+      type: object
+      required: [error, request_id]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: { type: object }
+        request_id: { type: string }

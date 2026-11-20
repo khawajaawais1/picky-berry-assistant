@@ -1,0 +1,517 @@
+openapi: 3.1.0
+info:
+  title: Berry Picker Zones API
+  version: 1.0.0
+  license:
+    name: UNLICENSED
+    identifier: LicenseRef-UNLICENSED
+  description: Read-only zone scores and scoring-job enqueue API for feature 6.2.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    servers:
+      - url: /
+    get:
+      summary: Check API and database health
+      operationId: getHealth
+      security: []
+      responses:
+        '200':
+          description: API and database are healthy.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, db]
+                properties:
+                  status: { type: string, const: ok }
+                  db: { type: string, const: ok }
+        '429': { $ref: '#/components/responses/Error' }
+        '500': { $ref: '#/components/responses/Error' }
+  /species:
+    get:
+      summary: List supported berry species
+      operationId: listSpecies
+      responses:
+        '200':
+          description: Species stored in the database.
+          headers:
+            Cache-Control:
+              schema: { type: string, example: 'private, max-age=86400' }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [species]
+                properties:
+                  species:
+                    type: array
+                    items: { $ref: '#/components/schemas/Species' }
+        '401': { $ref: '#/components/responses/Error' }
+  /zones:
+    get:
+      summary: Get scored zones in a bounding box
+      operationId: listZones
+      parameters:
+        - $ref: '#/components/parameters/Bbox'
+        - $ref: '#/components/parameters/Species'
+        - name: zoom
+          in: query
+          schema: { type: number, default: 12 }
+      responses:
+        '200':
+          description: GeoJSON FeatureCollection of zones or grouped H3 cells.
+          headers:
+            ETag: { schema: { type: string } }
+            Cache-Control: { schema: { type: string, example: 'private, max-age=300' } }
+          content:
+            application/geo+json:
+              schema: { $ref: '#/components/schemas/ZoneCollection' }
+        '304': { description: Cached representation is current. }
+        '401': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /zones/near:
+    get:
+      summary: Find nearby scored zones or nearest geofences
+      operationId: findNearbyZones
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          schema: { type: number, minimum: -90, maximum: 90 }
+        - name: lng
+          in: query
+          required: true
+          schema: { type: number, minimum: -180, maximum: 180 }
+        - name: species
+          in: query
+          required: false
+          description: Required when sort=score; ignored when sort=distance.
+          schema: { type: string }
+        - name: sort
+          in: query
+          description: Distance mode defaults to 20 results; score mode defaults to 10.
+          schema: { type: string, enum: [score, distance], default: score }
+        - name: radius_km
+          in: query
+          schema: { type: number, minimum: 0, maximum: 50, default: 10 }
+        - name: limit
+          in: query
+          description: Defaults to 10 for score sorting and 20 for distance sorting.
+          schema: { type: integer, minimum: 1, maximum: 50 }
+      responses:
+        '200':
+          description: Nearby zones sorted by score then distance, or nearest zones for geofences.
+          headers:
+            Cache-Control: { schema: { type: string, example: 'private, max-age=300' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NearbyZones' }
+        '401': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /zones/snapshot:
+    get:
+      summary: Download a full or incremental offline snapshot
+      operationId: getZoneSnapshot
+      parameters:
+        - $ref: '#/components/parameters/Bbox'
+        - name: since
+          in: query
+          schema: { type: string, format: date-time }
+      responses:
+        '200':
+          description: Offline snapshot; scores include all species or only rows changed since the timestamp.
+          headers:
+            ETag: { schema: { type: string } }
+          content:
+            application/geo+json:
+              schema: { $ref: '#/components/schemas/SnapshotCollection' }
+        '304': { description: Cached representation is current. }
+        '401': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /zones/{id}:
+    get:
+      summary: Get zone details and recent report aggregates
+      operationId: getZone
+      parameters:
+        - $ref: '#/components/parameters/ZoneId'
+        - name: lat
+          in: query
+          schema: { type: number, minimum: -90, maximum: 90 }
+        - name: lng
+          in: query
+          schema: { type: number, minimum: -180, maximum: 180 }
+      responses:
+        '200':
+          description: Zone details and recent report aggregates.
+          headers:
+            ETag: { schema: { type: string } }
+            Cache-Control: { schema: { type: string, example: 'private, max-age=300' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ZoneDetail' }
+        '304': { description: Cached representation is current. }
+        '401': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /zones/{id}/explanation:
+    get:
+      summary: Get localized reasons for the current score
+      operationId: getZoneExplanation
+      parameters:
+        - $ref: '#/components/parameters/ZoneId'
+        - $ref: '#/components/parameters/Species'
+        - name: lang
+          in: query
+          schema: { type: string, enum: [fi, en], default: en }
+      responses:
+        '200':
+          description: Localized reason text generated from stored reason codes.
+          headers:
+            Cache-Control: { schema: { type: string, example: 'private, max-age=300' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Explanation' }
+        '401': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /zones/{id}/history:
+    get:
+      summary: Get daily score history
+      operationId: getZoneHistory
+      parameters:
+        - $ref: '#/components/parameters/ZoneId'
+        - $ref: '#/components/parameters/Species'
+        - name: days
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 365, default: 30 }
+      responses:
+        '200':
+          description: Latest score for each Helsinki calendar day.
+          headers:
+            Cache-Control: { schema: { type: string, example: 'private, max-age=3600' } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [zone_id, species, days, points]
+                properties:
+                  zone_id: { type: string, format: uuid }
+                  species: { type: string }
+                  days: { type: integer }
+                  points:
+                    type: array
+                    items:
+                      type: object
+                      required: [date, score, confidence]
+                      properties:
+                        date: { type: string, format: date }
+                        score: { type: integer, minimum: 0, maximum: 100 }
+                        confidence: { $ref: '#/components/schemas/Confidence' }
+        '401': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /admin/scores/recompute:
+    post:
+      summary: Enqueue an admin score recomputation
+      operationId: enqueueScoreRecompute
+      description: Requires the admin role.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                zone_id: { type: string, format: uuid }
+                species: { type: string }
+      responses:
+        '202':
+          description: Recompute job was queued or deduplicated.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [job_id, status, deduplicated]
+                properties:
+                  job_id: { type: integer }
+                  status: { type: string, const: queued }
+                  deduplicated: { type: boolean }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Bbox:
+      name: bbox
+      in: query
+      required: true
+      description: west,south,east,north in WGS84.
+      schema:
+        type: string
+        example: '25.1,62.1,25.5,62.3'
+    Species:
+      name: species
+      in: query
+      required: true
+      schema: { type: string }
+    ZoneId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    Error:
+      description: Standard API error.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Species:
+      type: object
+      required: [code, name_fi, name_en, latin, colour, season_start_doy, season_end_doy]
+      properties:
+        code: { type: string }
+        name_fi: { type: string }
+        name_en: { type: string }
+        latin: { type: [string, 'null'] }
+        colour: { type: string }
+        season_start_doy: { type: [integer, 'null'] }
+        season_end_doy: { type: [integer, 'null'] }
+    Confidence:
+      type: string
+      enum: [high, medium, low]
+    Ripeness:
+      type: string
+      enum: [unripe, ripening, ripe, past, off_season]
+    Score:
+      type: object
+      required: [species, score, confidence, ripeness, updated_at]
+      properties:
+        species: { type: string }
+        score: { type: integer, minimum: 0, maximum: 100 }
+        confidence: { $ref: '#/components/schemas/Confidence' }
+        ripeness: { $ref: '#/components/schemas/Ripeness' }
+        updated_at: { type: string, format: date-time }
+    ZoneCollection:
+      type: object
+      required: [type, features, meta]
+      properties:
+        type: { type: string, const: FeatureCollection }
+        features:
+          type: array
+          items: { $ref: '#/components/schemas/ZoneFeature' }
+        meta: { $ref: '#/components/schemas/ZoneCollectionMeta' }
+    ZoneFeature:
+      type: object
+      required: [type, id, geometry, properties]
+      properties:
+        type: { type: string, const: Feature }
+        id:
+          type: string
+          description: Zone UUID in detail mode or parent H3 index in grouped mode.
+        geometry: { $ref: '#/components/schemas/Polygon' }
+        properties:
+          type: object
+          required: [h3, species, score, confidence, ripeness, updated_at]
+          properties:
+            h3: { type: string }
+            name: { type: [string, 'null'] }
+            species: { type: string }
+            score: { type: integer, minimum: 0, maximum: 100 }
+            confidence: { $ref: '#/components/schemas/Confidence' }
+            ripeness: { $ref: '#/components/schemas/Ripeness' }
+            updated_at: { type: string, format: date-time }
+            grouped: { type: boolean }
+            zone_count: { type: integer, minimum: 1 }
+    Polygon:
+      type: object
+      required: [type, coordinates]
+      properties:
+        type: { type: string, const: Polygon }
+        coordinates:
+          type: array
+          items:
+            type: array
+            items:
+              type: array
+              minItems: 2
+              maxItems: 2
+              items: { type: number }
+    ZoneCollectionMeta:
+      type: object
+      required: [species, mode, count, bbox, computed_at]
+      properties:
+        species: { type: string }
+        mode: { type: string, enum: [detail, grouped] }
+        count: { type: integer }
+        bbox:
+          type: array
+          minItems: 4
+          maxItems: 4
+          items: { type: number }
+        computed_at: { type: [string, 'null'], format: date-time }
+    SnapshotCollection:
+      type: object
+      required: [type, features, meta]
+      properties:
+        type: { type: string, const: FeatureCollection }
+        features:
+          type: array
+          items: { $ref: '#/components/schemas/SnapshotFeature' }
+        meta: { $ref: '#/components/schemas/SnapshotMeta' }
+    SnapshotFeature:
+      type: object
+      required: [type, id, geometry, properties]
+      properties:
+        type: { type: string, const: Feature }
+        id: { type: string, format: uuid }
+        geometry: { $ref: '#/components/schemas/Polygon' }
+        properties:
+          type: object
+          required: [h3, name, forest_type, scores]
+          properties:
+            h3: { type: string }
+            name: { type: [string, 'null'] }
+            forest_type: { type: [string, 'null'] }
+            scores:
+              type: object
+              additionalProperties: { $ref: '#/components/schemas/SnapshotScore' }
+    SnapshotScore:
+      type: object
+      required: [score, confidence, ripeness, updated_at]
+      properties:
+        score: { type: integer, minimum: 0, maximum: 100 }
+        confidence: { $ref: '#/components/schemas/Confidence' }
+        ripeness: { $ref: '#/components/schemas/Ripeness' }
+        updated_at: { type: string, format: date-time }
+    SnapshotMeta:
+      type: object
+      required: [generated_at, since, bbox, count]
+      properties:
+        generated_at: { type: string, format: date-time }
+        since: { type: [string, 'null'], format: date-time }
+        bbox:
+          type: array
+          minItems: 4
+          maxItems: 4
+          items: { type: number }
+        count: { type: integer }
+    NearbyZones:
+      type: object
+      required: [origin, radius_km, zones]
+      properties:
+        species:
+          type: string
+          description: Present for score sorting; omitted for distance sorting.
+        origin:
+          type: object
+          required: [lat, lng]
+          properties:
+            lat: { type: number }
+            lng: { type: number }
+        radius_km: { type: number }
+        zones:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/NearbyZone'
+              - $ref: '#/components/schemas/GeofenceZone'
+    NearbyZone:
+      type: object
+      additionalProperties: false
+      required: [id, name, h3, centroid, distance_km, score, confidence, ripeness, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: [string, 'null'] }
+        h3: { type: string }
+        centroid: { $ref: '#/components/schemas/Centroid' }
+        distance_km: { type: number, minimum: 0 }
+        score: { type: integer, minimum: 0, maximum: 100 }
+        confidence: { $ref: '#/components/schemas/Confidence' }
+        ripeness: { $ref: '#/components/schemas/Ripeness' }
+        updated_at: { type: string, format: date-time }
+    GeofenceZone:
+      type: object
+      additionalProperties: false
+      required: [id, h3, name, centroid, distance_km]
+      properties:
+        id: { type: string, format: uuid }
+        h3: { type: string }
+        name: { type: [string, 'null'] }
+        centroid: { $ref: '#/components/schemas/Centroid' }
+        distance_km: { type: number, minimum: 0 }
+    Centroid:
+      type: object
+      required: [lat, lng]
+      properties:
+        lat: { type: number }
+        lng: { type: number }
+    ZoneDetail:
+      type: object
+      required: [id, h3, name, forest_type, area_km2, centroid, scores, reports_7d]
+      properties:
+        id: { type: string, format: uuid }
+        h3: { type: string }
+        name: { type: [string, 'null'] }
+        forest_type: { type: [string, 'null'] }
+        area_km2: { type: number }
+        centroid:
+          type: object
+          required: [lat, lng]
+          properties:
+            lat: { type: number }
+            lng: { type: number }
+        distance_km: { type: number, minimum: 0 }
+        scores: { type: array, items: { $ref: '#/components/schemas/Score' } }
+        reports_7d:
+          type: array
+          items: { $ref: '#/components/schemas/ReportAggregate' }
+    ReportAggregate:
+      type: object
+      required: [species, count, avg_rating]
+      properties:
+        species: { type: string }
+        count: { type: integer, minimum: 0 }
+        avg_rating: { type: [number, 'null'], minimum: 1, maximum: 5 }
+    Explanation:
+      type: object
+      required: [zone_id, species, lang, reasons, inputs, model_version, computed_at]
+      properties:
+        zone_id: { type: string, format: uuid }
+        species: { type: string }
+        lang: { type: string, enum: [fi, en] }
+        reasons:
+          type: array
+          items: { $ref: '#/components/schemas/ExplanationReason' }
+        inputs:
+          type: object
+          additionalProperties: { type: [number, 'null'] }
+        model_version: { type: string }
+        computed_at: { type: string, format: date-time }
+    ExplanationReason:
+      type: object
+      required: [code, text]
+      properties:
+        code: { type: string }
+        text: { type: string }
+    Error:
+      type: object
+      required: [error, request_id]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: { type: object }
+        request_id: { type: string }
