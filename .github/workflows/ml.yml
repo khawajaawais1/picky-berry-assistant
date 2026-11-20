@@ -1,0 +1,23 @@
+name: ml
+on:
+  pull_request:
+    paths: ["ml/**", "data/test_zones.geojson", ".github/workflows/ml.yml"]
+  push:
+    branches: [main]
+    paths: ["ml/**"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ml
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt -r requirements-service.txt
+      - run: ruff check berry_ml service scripts tests
+      - run: pytest -q
