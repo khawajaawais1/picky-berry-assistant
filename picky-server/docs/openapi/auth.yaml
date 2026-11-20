@@ -1,0 +1,321 @@
+openapi: 3.1.0
+info:
+  title: Berry Picker Accounts API
+  version: 1.0.0
+  license:
+    name: UNLICENSED
+    identifier: LicenseRef-UNLICENSED
+  description: Account registration, authentication, and profile API for features 6.1 and 6.3.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+paths:
+  /auth/register:
+    post:
+      summary: Register a picker account
+      operationId: registerAccount
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email, password, consents]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 10, maxLength: 128 }
+                nickname: { type: string, maxLength: 30 }
+                lang: { type: string, enum: [fi, en], default: fi }
+                consents:
+                  $ref: '#/components/schemas/RegistrationConsents'
+      responses:
+        '201':
+          description: Account created and verification email dispatched.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthSession' }
+        '409': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /auth/login:
+    post:
+      summary: Exchange credentials for tokens
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 10, maxLength: 128 }
+      responses:
+        '200':
+          description: Access and refresh tokens.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthSession' }
+        '401': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /auth/refresh:
+    post:
+      summary: Rotate a refresh token
+      operationId: refreshSession
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [refresh_token]
+              properties:
+                refresh_token: { type: string, minLength: 1 }
+      responses:
+        '200':
+          description: Rotated access and refresh tokens.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthSession' }
+        '401': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /auth/logout:
+    post:
+      summary: Revoke a refresh token
+      operationId: logout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [refresh_token]
+              properties:
+                refresh_token: { type: string, minLength: 1 }
+      responses:
+        '204': { description: Refresh token revoked. }
+        '401': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /auth/verify-email:
+    post:
+      summary: Verify an email address
+      operationId: verifyEmail
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [token]
+              properties:
+                token: { type: string, minLength: 1 }
+      responses:
+        '204': { description: Email address verified. }
+        '422': { $ref: '#/components/responses/Error' }
+  /me:
+    get:
+      summary: Get the authenticated user's profile
+      operationId: getMe
+      responses:
+        '200':
+          description: Current user's profile.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Profile' }
+        '401': { $ref: '#/components/responses/Error' }
+    patch:
+      summary: Update the authenticated user's profile
+      operationId: updateMe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              minProperties: 1
+              properties:
+                nickname: { type: string, minLength: 1, maxLength: 30 }
+                alert_radius_km: { type: integer, minimum: 1, maximum: 100 }
+                species_interest:
+                  type: array
+                  uniqueItems: true
+                  items: { type: string }
+                lang: { type: string, enum: [fi, en] }
+      responses:
+        '200':
+          description: Updated profile.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Profile' }
+        '401': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+    delete:
+      summary: Delete the authenticated user's account
+      operationId: deleteMe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [password]
+              properties:
+                password: { type: string, minLength: 10, maxLength: 128 }
+      responses:
+        '204': { description: Account deleted and personal data anonymized. }
+        '401': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /me/privacy:
+    patch:
+      summary: Update privacy settings
+      operationId: updatePrivacy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              minProperties: 1
+              properties:
+                privacy_level: { type: string, enum: [private, shared, public] }
+                background_location: { type: boolean }
+      responses:
+        '200':
+          description: Updated privacy settings.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [privacy_level, background_location]
+                properties:
+                  privacy_level: { type: string, enum: [private, shared, public] }
+                  background_location: { type: boolean }
+        '401': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /me/devices:
+    post:
+      summary: Register or refresh a device
+      operationId: registerDevice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [fcm_token, platform]
+              properties:
+                fcm_token: { type: string, minLength: 1 }
+                platform: { type: string, enum: [ios, android] }
+                app_version: { type: string }
+      responses:
+        '204': { description: Device registered or refreshed. }
+        '401': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /me/export:
+    post:
+      summary: Export the authenticated user's data
+      operationId: exportMe
+      responses:
+        '200':
+          description: JSON export containing only the current user's data.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PersonalDataExport' }
+        '401': { $ref: '#/components/responses/Error' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    Error:
+      description: Standard API error.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    RegistrationConsents:
+      type: object
+      additionalProperties: false
+      properties:
+        terms_version: { type: string, minLength: 1 }
+        privacy_policy_version: { type: string, minLength: 1 }
+        background_location: { type: boolean, default: false }
+    AuthSession:
+      type: object
+      required: [access_token, refresh_token, token_type, expires_in, user]
+      properties:
+        access_token: { type: string }
+        refresh_token: { type: string }
+        token_type: { type: string, const: Bearer }
+        expires_in: { type: integer, minimum: 1 }
+        user:
+          type: object
+          required: [id, email, nickname, role]
+          properties:
+            id: { type: string, format: uuid }
+            email: { type: string, format: email }
+            nickname: { type: [string, 'null'] }
+            role: { type: string, enum: [picker, buyer, admin] }
+    Profile:
+      type: object
+      required: [id, email, email_verified, nickname, role, privacy_level, background_location, alert_radius_km, species_interest, lang, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        email_verified: { type: boolean }
+        nickname: { type: [string, 'null'] }
+        role: { type: string, enum: [picker, buyer, admin] }
+        privacy_level: { type: string, enum: [private, shared, public] }
+        background_location: { type: boolean }
+        alert_radius_km: { type: integer, minimum: 1, maximum: 100 }
+        species_interest: { type: array, items: { type: string } }
+        lang: { type: string, enum: [fi, en] }
+        created_at: { type: string, format: date-time }
+    PersonalDataExport:
+      type: object
+      required: [profile, consents, devices, visits, reports]
+      properties:
+        profile: { $ref: '#/components/schemas/Profile' }
+        consents: { type: array, items: { type: object, additionalProperties: true } }
+        devices:
+          type: array
+          items:
+            type: object
+            required: [id, platform, token_suffix, last_seen_at]
+            properties:
+              id: { type: string, format: uuid }
+              platform: { type: string, enum: [ios, android] }
+              token_suffix: { type: string, maxLength: 6 }
+              last_seen_at: { type: string, format: date-time }
+        visits: { type: array, items: { type: object, additionalProperties: true } }
+        reports: { type: array, items: { type: object, additionalProperties: true } }
+    Error:
+      type: object
+      required: [error, request_id]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: { type: object }
+        request_id: { type: string }
