@@ -1,0 +1,3805 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "cc0e7929-de9f-516a-9049-7a25a1a6d092",
+   "properties": {
+    "h3": "8811250e25fffff",
+    "name": "Laajavuori 1",
+    "species": "bilberry",
+    "forest_type": "forest_broadleaf",
+    "scores": {
+     "bilberry": {
+      "score": 18,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 2,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 9,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 18,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.46,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.689711,
+       62.25623
+      ],
+      [
+       25.69564,
+       62.253184
+      ],
+      [
+       25.703822,
+       62.254551
+      ],
+      [
+       25.706077,
+       62.258964
+      ],
+      [
+       25.700147,
+       62.26201
+      ],
+      [
+       25.691963,
+       62.260642
+      ],
+      [
+       25.689711,
+       62.25623
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "a2f83130-4d9a-5133-ba7e-83444d71e848",
+   "properties": {
+    "h3": "8811250e21fffff",
+    "name": "Laajavuori 2",
+    "species": "bilberry",
+    "forest_type": "forest_spruce",
+    "scores": {
+     "bilberry": {
+      "score": 49,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 1,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 14,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 49,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.844,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.686033,
+       62.263687
+      ],
+      [
+       25.691963,
+       62.260642
+      ],
+      [
+       25.700147,
+       62.26201
+      ],
+      [
+       25.702402,
+       62.266422
+      ],
+      [
+       25.69647,
+       62.269468
+      ],
+      [
+       25.688285,
+       62.2681
+      ],
+      [
+       25.686033,
+       62.263687
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "55a2cccb-eca3-5455-885b-72ad2a0129c4",
+   "properties": {
+    "h3": "8811250e27fffff",
+    "name": "Laajavuori 3",
+    "species": "bilberry",
+    "forest_type": "forest_mixed",
+    "scores": {
+     "bilberry": {
+      "score": 7,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 1,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 2,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 7,
+    "confidence": "low",
+    "ripeness": "ripe",
+    "forest_share": 0.195,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.700147,
+       62.26201
+      ],
+      [
+       25.706077,
+       62.258964
+      ],
+      [
+       25.714262,
+       62.26033
+      ],
+      [
+       25.716518,
+       62.264743
+      ],
+      [
+       25.710588,
+       62.267789
+      ],
+      [
+       25.702402,
+       62.266422
+      ],
+      [
+       25.700147,
+       62.26201
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "49159b79-072c-5395-9c55-97f83f9e1f57",
+   "properties": {
+    "h3": "8811250e2dfffff",
+    "name": "Laajavuori 4",
+    "species": "bilberry",
+    "forest_type": "forest_broadleaf",
+    "scores": {
+     "bilberry": {
+      "score": 38,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 2,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 12,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 38,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.685,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.6756,
+       62.257907
+      ],
+      [
+       25.68153,
+       62.254862
+      ],
+      [
+       25.689711,
+       62.25623
+      ],
+      [
+       25.691963,
+       62.260642
+      ],
+      [
+       25.686033,
+       62.263687
+      ],
+      [
+       25.67785,
+       62.262319
+      ],
+      [
+       25.6756,
+       62.257907
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "5595832d-e1b5-53b7-bad5-ae976b51c68f",
+   "properties": {
+    "h3": "8811250f19fffff",
+    "name": "Laajavuori 5",
+    "species": "bilberry",
+    "forest_type": "forest_mixed",
+    "scores": {
+     "bilberry": {
+      "score": 20,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 1,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 5,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 20,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.419,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.693387,
+       62.248771
+      ],
+      [
+       25.699315,
+       62.245725
+      ],
+      [
+       25.707495,
+       62.247092
+      ],
+      [
+       25.70975,
+       62.251505
+      ],
+      [
+       25.703822,
+       62.254551
+      ],
+      [
+       25.69564,
+       62.253184
+      ],
+      [
+       25.693387,
+       62.248771
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "e56ed0ce-cceb-5bc0-acca-acef38d9e6e7",
+   "properties": {
+    "h3": "8811250f1bfffff",
+    "name": "Laajavuori 6",
+    "species": "bilberry",
+    "forest_type": "forest_spruce",
+    "scores": {
+     "bilberry": {
+      "score": 9,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 4,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 4,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 9,
+    "confidence": "low",
+    "ripeness": "ripe",
+    "forest_share": 0.271,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.703822,
+       62.254551
+      ],
+      [
+       25.70975,
+       62.251505
+      ],
+      [
+       25.717934,
+       62.252871
+      ],
+      [
+       25.720191,
+       62.257283
+      ],
+      [
+       25.714262,
+       62.26033
+      ],
+      [
+       25.706077,
+       62.258964
+      ],
+      [
+       25.703822,
+       62.254551
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "1176e285-4e1a-5e9e-ad48-cfe9b7bac38a",
+   "properties": {
+    "h3": "8811250f53fffff",
+    "name": "Laajavuori 7",
+    "species": "bilberry",
+    "forest_type": "mire",
+    "scores": {
+     "bilberry": {
+      "score": 44,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 3,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 11,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 44,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.879,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.679279,
+       62.250449
+      ],
+      [
+       25.685208,
+       62.247404
+      ],
+      [
+       25.693387,
+       62.248771
+      ],
+      [
+       25.69564,
+       62.253184
+      ],
+      [
+       25.689711,
+       62.25623
+      ],
+      [
+       25.68153,
+       62.254862
+      ],
+      [
+       25.679279,
+       62.250449
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "58bd5fd2-b658-552b-9407-59cc20685f56",
+   "properties": {
+    "h3": "8811250c49fffff",
+    "name": "Laajavuori 8",
+    "species": "bilberry",
+    "forest_type": "forest_pine",
+    "scores": {
+     "bilberry": {
+      "score": 6,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 2,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 6,
+    "confidence": "low",
+    "ripeness": "ripe",
+    "forest_share": 0.131,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.710588,
+       62.267789
+      ],
+      [
+       25.716518,
+       62.264743
+      ],
+      [
+       25.724706,
+       62.266109
+      ],
+      [
+       25.726965,
+       62.270522
+      ],
+      [
+       25.721034,
+       62.273568
+      ],
+      [
+       25.712845,
+       62.272202
+      ],
+      [
+       25.710588,
+       62.267789
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "2fde05ee-b1fe-5186-8d11-e035180dbf6e",
+   "properties": {
+    "h3": "8811250c4dfffff",
+    "name": "Laajavuori 9",
+    "species": "bilberry",
+    "forest_type": "forest_broadleaf",
+    "scores": {
+     "bilberry": {
+      "score": 1,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 1,
+    "confidence": "low",
+    "ripeness": "ripe",
+    "forest_share": 0.007,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.714262,
+       62.26033
+      ],
+      [
+       25.720191,
+       62.257283
+      ],
+      [
+       25.728377,
+       62.258649
+      ],
+      [
+       25.730636,
+       62.263062
+      ],
+      [
+       25.724706,
+       62.266109
+      ],
+      [
+       25.716518,
+       62.264743
+      ],
+      [
+       25.714262,
+       62.26033
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "9f486851-dd54-5b69-880f-aab25e942dac",
+   "properties": {
+    "h3": "8811250e23fffff",
+    "name": "Laajavuori 10",
+    "species": "bilberry",
+    "forest_type": "forest_pine",
+    "scores": {
+     "bilberry": {
+      "score": 7,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 2,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 7,
+    "confidence": "low",
+    "ripeness": "ripe",
+    "forest_share": 0.135,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.69647,
+       62.269468
+      ],
+      [
+       25.702402,
+       62.266422
+      ],
+      [
+       25.710588,
+       62.267789
+      ],
+      [
+       25.712845,
+       62.272202
+      ],
+      [
+       25.706913,
+       62.275248
+      ],
+      [
+       25.698725,
+       62.27388
+      ],
+      [
+       25.69647,
+       62.269468
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "7bb23474-1f3d-5778-bc4c-da4d78251a88",
+   "properties": {
+    "h3": "8811250e29fffff",
+    "name": "Laajavuori 11",
+    "species": "bilberry",
+    "forest_type": "forest_spruce",
+    "scores": {
+     "bilberry": {
+      "score": 42,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 4,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 10,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 42,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.775,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.671919,
+       62.265364
+      ],
+      [
+       25.67785,
+       62.262319
+      ],
+      [
+       25.686033,
+       62.263687
+      ],
+      [
+       25.688285,
+       62.2681
+      ],
+      [
+       25.682353,
+       62.271145
+      ],
+      [
+       25.674169,
+       62.269776
+      ],
+      [
+       25.671919,
+       62.265364
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "fa26d4e8-c490-5546-89cb-4ccb5a27ee90",
+   "properties": {
+    "h3": "8811250e2bfffff",
+    "name": "Laajavuori 12",
+    "species": "bilberry",
+    "forest_type": "forest_broadleaf",
+    "scores": {
+     "bilberry": {
+      "score": 31,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 4,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 9,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 31,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.706,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.682353,
+       62.271145
+      ],
+      [
+       25.688285,
+       62.2681
+      ],
+      [
+       25.69647,
+       62.269468
+      ],
+      [
+       25.698725,
+       62.27388
+      ],
+      [
+       25.692792,
+       62.276925
+      ],
+      [
+       25.684605,
+       62.275557
+      ],
+      [
+       25.682353,
+       62.271145
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "6ae995bb-9d1a-501f-b50f-8b7c4e01af8f",
+   "properties": {
+    "h3": "8811250e67fffff",
+    "name": "Laajavuori 13",
+    "species": "bilberry",
+    "forest_type": "forest_spruce",
+    "scores": {
+     "bilberry": {
+      "score": 56,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 6,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 14,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 56,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.977,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.661489,
+       62.259582
+      ],
+      [
+       25.66742,
+       62.256538
+      ],
+      [
+       25.6756,
+       62.257907
+      ],
+      [
+       25.67785,
+       62.262319
+      ],
+      [
+       25.671919,
+       62.265364
+      ],
+      [
+       25.663737,
+       62.263995
+      ],
+      [
+       25.661489,
+       62.259582
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "6b285a8d-c985-5edc-a5af-a1cd1df34ea0",
+   "properties": {
+    "h3": "8811250f11fffff",
+    "name": "Laajavuori 14",
+    "species": "bilberry",
+    "forest_type": "forest_spruce",
+    "scores": {
+     "bilberry": {
+      "score": 8,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 1,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 3,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 8,
+    "confidence": "low",
+    "ripeness": "ripe",
+    "forest_share": 0.227,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.707495,
+       62.247092
+      ],
+      [
+       25.713422,
+       62.244045
+      ],
+      [
+       25.721604,
+       62.24541
+      ],
+      [
+       25.723861,
+       62.249823
+      ],
+      [
+       25.717934,
+       62.252871
+      ],
+      [
+       25.70975,
+       62.251505
+      ],
+      [
+       25.707495,
+       62.247092
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "a367591d-b380-549c-9cd6-cfd93c4d114d",
+   "properties": {
+    "h3": "8811250f13fffff",
+    "name": "Laajavuori 15",
+    "species": "bilberry",
+    "forest_type": "forest_broadleaf",
+    "scores": {
+     "bilberry": {
+      "score": 3,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 1,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 1,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 3,
+    "confidence": "low",
+    "ripeness": "ripe",
+    "forest_share": 0.091,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.717934,
+       62.252871
+      ],
+      [
+       25.723861,
+       62.249823
+      ],
+      [
+       25.732046,
+       62.251188
+      ],
+      [
+       25.734305,
+       62.255601
+      ],
+      [
+       25.728377,
+       62.258649
+      ],
+      [
+       25.720191,
+       62.257283
+      ],
+      [
+       25.717934,
+       62.252871
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "2cb11dfb-e9b9-5aac-aaba-73d535a72904",
+   "properties": {
+    "h3": "8811250f1dfffff",
+    "name": "Laajavuori 16",
+    "species": "bilberry",
+    "forest_type": "forest_mixed",
+    "scores": {
+     "bilberry": {
+      "score": 9,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 1,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 3,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 9,
+    "confidence": "low",
+    "ripeness": "ripe",
+    "forest_share": 0.247,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.697062,
+       62.241313
+      ],
+      [
+       25.702988,
+       62.238266
+      ],
+      [
+       25.711167,
+       62.239632
+      ],
+      [
+       25.713422,
+       62.244045
+      ],
+      [
+       25.707495,
+       62.247092
+      ],
+      [
+       25.699315,
+       62.245725
+      ],
+      [
+       25.697062,
+       62.241313
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "5d77b1d8-f2c7-5c54-be09-ef6779d104c5",
+   "properties": {
+    "h3": "8811250f51fffff",
+    "name": "Laajavuori 17",
+    "species": "bilberry",
+    "forest_type": "forest_spruce",
+    "scores": {
+     "bilberry": {
+      "score": 17,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 1,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 9,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 17,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.483,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.668852,
+       62.244669
+      ],
+      [
+       25.67478,
+       62.241624
+      ],
+      [
+       25.682957,
+       62.242992
+      ],
+      [
+       25.685208,
+       62.247404
+      ],
+      [
+       25.679279,
+       62.250449
+      ],
+      [
+       25.671101,
+       62.249082
+      ],
+      [
+       25.668852,
+       62.244669
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "fb20c175-0e4c-56e8-a2c1-478c5f40ba7d",
+   "properties": {
+    "h3": "8811250f57fffff",
+    "name": "Laajavuori 18",
+    "species": "bilberry",
+    "forest_type": "forest_broadleaf",
+    "scores": {
+     "bilberry": {
+      "score": 17,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 2,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 5,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 17,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.377,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.682957,
+       62.242992
+      ],
+      [
+       25.688884,
+       62.239946
+      ],
+      [
+       25.697062,
+       62.241313
+      ],
+      [
+       25.699315,
+       62.245725
+      ],
+      [
+       25.693387,
+       62.248771
+      ],
+      [
+       25.685208,
+       62.247404
+      ],
+      [
+       25.682957,
+       62.242992
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "ed180bea-6816-5953-9310-709d8dc7fb4f",
+   "properties": {
+    "h3": "8811250f5bfffff",
+    "name": "Laajavuori 19",
+    "species": "bilberry",
+    "forest_type": "forest_pine",
+    "scores": {
+     "bilberry": {
+      "score": 51,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 6,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 17,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 51,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.96,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.665172,
+       62.252126
+      ],
+      [
+       25.671101,
+       62.249082
+      ],
+      [
+       25.679279,
+       62.250449
+      ],
+      [
+       25.68153,
+       62.254862
+      ],
+      [
+       25.6756,
+       62.257907
+      ],
+      [
+       25.66742,
+       62.256538
+      ],
+      [
+       25.665172,
+       62.252126
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "8efc39fe-0980-56dd-ba96-15ce815da69c",
+   "properties": {
+    "h3": "8811250c41fffff",
+    "name": "Laajavuori 20",
+    "species": "bilberry",
+    "forest_type": "forest_spruce",
+    "scores": {
+     "bilberry": {
+      "score": 3,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 1,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 3,
+    "confidence": "low",
+    "ripeness": "ripe",
+    "forest_share": 0.087,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.724706,
+       62.266109
+      ],
+      [
+       25.730636,
+       62.263062
+      ],
+      [
+       25.738825,
+       62.264427
+      ],
+      [
+       25.741086,
+       62.26884
+      ],
+      [
+       25.735156,
+       62.271888
+      ],
+      [
+       25.726965,
+       62.270522
+      ],
+      [
+       25.724706,
+       62.266109
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "3f9df463-0f60-59f8-b4b0-3bb84e46a20a",
+   "properties": {
+    "h3": "8811250c45fffff",
+    "name": "Laajavuori 21",
+    "species": "bilberry",
+    "forest_type": "forest_pine",
+    "scores": {
+     "bilberry": {
+      "score": 8,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 3,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 8,
+    "confidence": "low",
+    "ripeness": "ripe",
+    "forest_share": 0.166,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.728377,
+       62.258649
+      ],
+      [
+       25.734305,
+       62.255601
+      ],
+      [
+       25.742492,
+       62.256966
+      ],
+      [
+       25.744753,
+       62.261379
+      ],
+      [
+       25.738825,
+       62.264427
+      ],
+      [
+       25.730636,
+       62.263062
+      ],
+      [
+       25.728377,
+       62.258649
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "4b8c1671-1b82-5e21-af93-a596913939e4",
+   "properties": {
+    "h3": "8811250c4bfffff",
+    "name": "Laajavuori 22",
+    "species": "bilberry",
+    "forest_type": "forest_spruce",
+    "scores": {
+     "bilberry": {
+      "score": 12,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 4,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 12,
+    "confidence": "low",
+    "ripeness": "ripe",
+    "forest_share": 0.268,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.721034,
+       62.273568
+      ],
+      [
+       25.726965,
+       62.270522
+      ],
+      [
+       25.735156,
+       62.271888
+      ],
+      [
+       25.737416,
+       62.2763
+      ],
+      [
+       25.731485,
+       62.279347
+      ],
+      [
+       25.723293,
+       62.277981
+      ],
+      [
+       25.721034,
+       62.273568
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "297a113e-004f-5afc-aeb3-15ab0b83f69c",
+   "properties": {
+    "h3": "8811250c69fffff",
+    "name": "Laajavuori 23",
+    "species": "bilberry",
+    "forest_type": "mire",
+    "scores": {
+     "bilberry": {
+      "score": 9,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 3,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 9,
+    "confidence": "low",
+    "ripeness": "ripe",
+    "forest_share": 0.184,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.732046,
+       62.251188
+      ],
+      [
+       25.737972,
+       62.24814
+      ],
+      [
+       25.746158,
+       62.249505
+      ],
+      [
+       25.74842,
+       62.253918
+      ],
+      [
+       25.742492,
+       62.256966
+      ],
+      [
+       25.734305,
+       62.255601
+      ],
+      [
+       25.732046,
+       62.251188
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "8a2a9dd5-2e5b-5b81-8e79-b0d97a99d946",
+   "properties": {
+    "h3": "8811250e05fffff",
+    "name": "Laajavuori 24",
+    "species": "bilberry",
+    "forest_type": "forest_mixed",
+    "scores": {
+     "bilberry": {
+      "score": 24,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 5,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 8,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 24,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.599,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.668236,
+       62.27282
+      ],
+      [
+       25.674169,
+       62.269776
+      ],
+      [
+       25.682353,
+       62.271145
+      ],
+      [
+       25.684605,
+       62.275557
+      ],
+      [
+       25.678672,
+       62.278601
+      ],
+      [
+       25.670486,
+       62.277232
+      ],
+      [
+       25.668236,
+       62.27282
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "b8c0cdd0-2665-56af-8f91-4624e15be733",
+   "properties": {
+    "h3": "8811250e07fffff",
+    "name": "Laajavuori 25",
+    "species": "bilberry",
+    "forest_type": "forest_broadleaf",
+    "scores": {
+     "bilberry": {
+      "score": 42,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 4,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 12,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 42,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.867,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.678672,
+       62.278601
+      ],
+      [
+       25.684605,
+       62.275557
+      ],
+      [
+       25.692792,
+       62.276925
+      ],
+      [
+       25.695047,
+       62.281338
+      ],
+      [
+       25.689112,
+       62.284382
+      ],
+      [
+       25.680924,
+       62.283014
+      ],
+      [
+       25.678672,
+       62.278601
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "db68448f-82a2-527a-a0c6-01377e564cdd",
+   "properties": {
+    "h3": "8811250e35fffff",
+    "name": "Laajavuori 26",
+    "species": "bilberry",
+    "forest_type": "mire",
+    "scores": {
+     "bilberry": {
+      "score": 18,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 1,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 6,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 18,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.334,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.706913,
+       62.275248
+      ],
+      [
+       25.712845,
+       62.272202
+      ],
+      [
+       25.721034,
+       62.273568
+      ],
+      [
+       25.723293,
+       62.277981
+      ],
+      [
+       25.71736,
+       62.281027
+      ],
+      [
+       25.70917,
+       62.27966
+      ],
+      [
+       25.706913,
+       62.275248
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "7e52dfa3-e42d-5dcd-b82f-6bba9576b70d",
+   "properties": {
+    "h3": "8811250e3dfffff",
+    "name": "Laajavuori 27",
+    "species": "bilberry",
+    "forest_type": "forest_mixed",
+    "scores": {
+     "bilberry": {
+      "score": 12,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 1,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 5,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 12,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.304,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.692792,
+       62.276925
+      ],
+      [
+       25.698725,
+       62.27388
+      ],
+      [
+       25.706913,
+       62.275248
+      ],
+      [
+       25.70917,
+       62.27966
+      ],
+      [
+       25.703236,
+       62.282706
+      ],
+      [
+       25.695047,
+       62.281338
+      ],
+      [
+       25.692792,
+       62.276925
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "70d85c48-c52a-5f92-8f65-ee962da3f64a",
+   "properties": {
+    "h3": "8811250e61fffff",
+    "name": "Laajavuori 28",
+    "species": "bilberry",
+    "forest_type": "forest_mixed",
+    "scores": {
+     "bilberry": {
+      "score": 48,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 12,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 19,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 48,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.893,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.647379,
+       62.261256
+      ],
+      [
+       25.653311,
+       62.258213
+      ],
+      [
+       25.661489,
+       62.259582
+      ],
+      [
+       25.663737,
+       62.263995
+      ],
+      [
+       25.657805,
+       62.267038
+      ],
+      [
+       25.649625,
+       62.265669
+      ],
+      [
+       25.647379,
+       62.261256
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "6c6fea7b-5fee-5f19-b409-8aecaabfe146",
+   "properties": {
+    "h3": "8811250e63fffff",
+    "name": "Laajavuori 29",
+    "species": "bilberry",
+    "forest_type": "forest_broadleaf",
+    "scores": {
+     "bilberry": {
+      "score": 43,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 17,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 20,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 43,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.946,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.657805,
+       62.267038
+      ],
+      [
+       25.663737,
+       62.263995
+      ],
+      [
+       25.671919,
+       62.265364
+      ],
+      [
+       25.674169,
+       62.269776
+      ],
+      [
+       25.668236,
+       62.27282
+      ],
+      [
+       25.660053,
+       62.271451
+      ],
+      [
+       25.657805,
+       62.267038
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "e7257eec-360d-5a4b-81ce-584302815995",
+   "properties": {
+    "h3": "8811250e65fffff",
+    "name": "Laajavuori 30",
+    "species": "bilberry",
+    "forest_type": "forest_spruce",
+    "scores": {
+     "bilberry": {
+      "score": 62,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 4,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 14,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 62,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 1.0,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.651064,
+       62.253801
+      ],
+      [
+       25.656994,
+       62.250757
+      ],
+      [
+       25.665172,
+       62.252126
+      ],
+      [
+       25.66742,
+       62.256538
+      ],
+      [
+       25.661489,
+       62.259582
+      ],
+      [
+       25.653311,
+       62.258213
+      ],
+      [
+       25.651064,
+       62.253801
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "ea33408d-6ef3-51de-8b70-a90b096b9e92",
+   "properties": {
+    "h3": "8811250f03fffff",
+    "name": "Laajavuori 31",
+    "species": "bilberry",
+    "forest_type": "forest_spruce",
+    "scores": {
+     "bilberry": {
+      "score": 8,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 3,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 8,
+    "confidence": "low",
+    "ripeness": "ripe",
+    "forest_share": 0.191,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.700735,
+       62.233853
+      ],
+      [
+       25.70666,
+       62.230806
+      ],
+      [
+       25.714838,
+       62.232171
+      ],
+      [
+       25.717093,
+       62.236584
+      ],
+      [
+       25.711167,
+       62.239632
+      ],
+      [
+       25.702988,
+       62.238266
+      ],
+      [
+       25.700735,
+       62.233853
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "6e8feae8-33af-564b-ac42-b7b10ab07f3d",
+   "properties": {
+    "h3": "8811250f0bfffff",
+    "name": "Laajavuori 32",
+    "species": "bilberry",
+    "forest_type": "forest_spruce",
+    "scores": {
+     "bilberry": {
+      "score": 9,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 2,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 9,
+    "confidence": "low",
+    "ripeness": "ripe",
+    "forest_share": 0.163,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.686633,
+       62.235533
+      ],
+      [
+       25.692559,
+       62.232487
+      ],
+      [
+       25.700735,
+       62.233853
+      ],
+      [
+       25.702988,
+       62.238266
+      ],
+      [
+       25.697062,
+       62.241313
+      ],
+      [
+       25.688884,
+       62.239946
+      ],
+      [
+       25.686633,
+       62.235533
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "8ae8e247-8df9-58c9-b47d-d101b5339c30",
+   "properties": {
+    "h3": "8811250f15fffff",
+    "name": "Laajavuori 33",
+    "species": "bilberry",
+    "forest_type": "forest_spruce",
+    "scores": {
+     "bilberry": {
+      "score": 6,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 2,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 6,
+    "confidence": "low",
+    "ripeness": "ripe",
+    "forest_share": 0.145,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.711167,
+       62.239632
+      ],
+      [
+       25.717093,
+       62.236584
+      ],
+      [
+       25.725273,
+       62.23795
+      ],
+      [
+       25.72753,
+       62.242362
+      ],
+      [
+       25.721604,
+       62.24541
+      ],
+      [
+       25.713422,
+       62.244045
+      ],
+      [
+       25.711167,
+       62.239632
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "e32d9792-77da-5dbc-a0a0-4d9e851282b2",
+   "properties": {
+    "h3": "8811250f17fffff",
+    "name": "Laajavuori 34",
+    "species": "bilberry",
+    "forest_type": "forest_spruce",
+    "scores": {
+     "bilberry": {
+      "score": 1,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 1,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 1,
+    "confidence": "low",
+    "ripeness": "ripe",
+    "forest_share": 0.055,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.721604,
+       62.24541
+      ],
+      [
+       25.72753,
+       62.242362
+      ],
+      [
+       25.735713,
+       62.243727
+      ],
+      [
+       25.737972,
+       62.24814
+      ],
+      [
+       25.732046,
+       62.251188
+      ],
+      [
+       25.723861,
+       62.249823
+      ],
+      [
+       25.721604,
+       62.24541
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "ddf908f6-f2f3-5c27-8783-6f3e11e15ea6",
+   "properties": {
+    "h3": "8811250f55fffff",
+    "name": "Laajavuori 35",
+    "species": "bilberry",
+    "forest_type": "forest_spruce",
+    "scores": {
+     "bilberry": {
+      "score": 17,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 1,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 5,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 17,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.372,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.672532,
+       62.237211
+      ],
+      [
+       25.678458,
+       62.234166
+      ],
+      [
+       25.686633,
+       62.235533
+      ],
+      [
+       25.688884,
+       62.239946
+      ],
+      [
+       25.682957,
+       62.242992
+      ],
+      [
+       25.67478,
+       62.241624
+      ],
+      [
+       25.672532,
+       62.237211
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "40a0d715-2879-599a-b961-f3298fb32730",
+   "properties": {
+    "h3": "8811250f59fffff",
+    "name": "Laajavuori 36",
+    "species": "bilberry",
+    "forest_type": "forest_spruce",
+    "scores": {
+     "bilberry": {
+      "score": 24,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 0,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 9,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 24,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.651,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.654748,
+       62.246345
+      ],
+      [
+       25.660677,
+       62.243301
+      ],
+      [
+       25.668852,
+       62.244669
+      ],
+      [
+       25.671101,
+       62.249082
+      ],
+      [
+       25.665172,
+       62.252126
+      ],
+      [
+       25.656994,
+       62.250757
+      ],
+      [
+       25.654748,
+       62.246345
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "9c6987a9-9165-527c-acee-a953537e981e",
+   "properties": {
+    "h3": "8811250f5dfffff",
+    "name": "Laajavuori 37",
+    "species": "bilberry",
+    "forest_type": "mire",
+    "scores": {
+     "bilberry": {
+      "score": 40,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 2,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 9,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 40,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.653,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.65843,
+       62.238888
+      ],
+      [
+       25.664358,
+       62.235843
+      ],
+      [
+       25.672532,
+       62.237211
+      ],
+      [
+       25.67478,
+       62.241624
+      ],
+      [
+       25.668852,
+       62.244669
+      ],
+      [
+       25.660677,
+       62.243301
+      ],
+      [
+       25.65843,
+       62.238888
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "2a59812c-72e7-54b5-875f-efc62cc5257a",
+   "properties": {
+    "h3": "88112501b3fffff",
+    "name": "Laajavuori 38",
+    "species": "bilberry",
+    "forest_type": "forest_pine",
+    "scores": {
+     "bilberry": {
+      "score": 38,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 1,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 10,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 38,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.757,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.640644,
+       62.248019
+      ],
+      [
+       25.646574,
+       62.244975
+      ],
+      [
+       25.654748,
+       62.246345
+      ],
+      [
+       25.656994,
+       62.250757
+      ],
+      [
+       25.651064,
+       62.253801
+      ],
+      [
+       25.642888,
+       62.252431
+      ],
+      [
+       25.640644,
+       62.248019
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "8c3935c4-5a47-5828-b332-d205d5a45904",
+   "properties": {
+    "h3": "88112501b7fffff",
+    "name": "Laajavuori 39",
+    "species": "bilberry",
+    "forest_type": "mire",
+    "scores": {
+     "bilberry": {
+      "score": 42,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 3,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 11,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 42,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.895,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.64433,
+       62.240563
+      ],
+      [
+       25.650258,
+       62.237519
+      ],
+      [
+       25.65843,
+       62.238888
+      ],
+      [
+       25.660677,
+       62.243301
+      ],
+      [
+       25.654748,
+       62.246345
+      ],
+      [
+       25.646574,
+       62.244975
+      ],
+      [
+       25.64433,
+       62.240563
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "0192e924-46b8-5673-9744-4c2fa69bc14e",
+   "properties": {
+    "h3": "8811250c43fffff",
+    "name": "Laajavuori 40",
+    "species": "bilberry",
+    "forest_type": "mire",
+    "scores": {
+     "bilberry": {
+      "score": 2,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 2,
+    "confidence": "low",
+    "ripeness": "ripe",
+    "forest_share": 0.027,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.735156,
+       62.271888
+      ],
+      [
+       25.741086,
+       62.26884
+      ],
+      [
+       25.749277,
+       62.270205
+      ],
+      [
+       25.751541,
+       62.274618
+      ],
+      [
+       25.74561,
+       62.277666
+      ],
+      [
+       25.737416,
+       62.2763
+      ],
+      [
+       25.735156,
+       62.271888
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "0a06ffdd-5676-583f-91af-42e078d629f9",
+   "properties": {
+    "h3": "8811250c47fffff",
+    "name": "Laajavuori 41",
+    "species": "bilberry",
+    "forest_type": "forest_broadleaf",
+    "scores": {
+     "bilberry": {
+      "score": 5,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 1,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 2,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 5,
+    "confidence": "low",
+    "ripeness": "ripe",
+    "forest_share": 0.167,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.738825,
+       62.264427
+      ],
+      [
+       25.744753,
+       62.261379
+      ],
+      [
+       25.752944,
+       62.262744
+      ],
+      [
+       25.755207,
+       62.267157
+      ],
+      [
+       25.749277,
+       62.270205
+      ],
+      [
+       25.741086,
+       62.26884
+      ],
+      [
+       25.738825,
+       62.264427
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "226cdf0b-2c92-565c-8ee1-299ebb51b740",
+   "properties": {
+    "h3": "8811250c5dfffff",
+    "name": "Laajavuori 42",
+    "species": "bilberry",
+    "forest_type": "forest_mixed",
+    "scores": {
+     "bilberry": {
+      "score": 3,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 1,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 3,
+    "confidence": "low",
+    "ripeness": "ripe",
+    "forest_share": 0.052,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.731485,
+       62.279347
+      ],
+      [
+       25.737416,
+       62.2763
+      ],
+      [
+       25.74561,
+       62.277666
+      ],
+      [
+       25.747873,
+       62.282079
+      ],
+      [
+       25.74194,
+       62.285126
+      ],
+      [
+       25.733746,
+       62.28376
+      ],
+      [
+       25.731485,
+       62.279347
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "0f495d86-6cae-5f89-8a93-1250eb20fb3c",
+   "properties": {
+    "h3": "8811250c61fffff",
+    "name": "Laajavuori 43",
+    "species": "bilberry",
+    "forest_type": "forest_pine",
+    "scores": {
+     "bilberry": {
+      "score": 6,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 2,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 6,
+    "confidence": "low",
+    "ripeness": "ripe",
+    "forest_share": 0.22,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.746158,
+       62.249505
+      ],
+      [
+       25.752084,
+       62.246456
+      ],
+      [
+       25.760271,
+       62.247819
+      ],
+      [
+       25.762535,
+       62.252232
+      ],
+      [
+       25.756608,
+       62.255282
+      ],
+      [
+       25.74842,
+       62.253918
+      ],
+      [
+       25.746158,
+       62.249505
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "fb47acb8-773f-5cfc-b340-d6415f2f7d9c",
+   "properties": {
+    "h3": "8811250c6bfffff",
+    "name": "Laajavuori 44",
+    "species": "bilberry",
+    "forest_type": "forest_mixed",
+    "scores": {
+     "bilberry": {
+      "score": 9,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 1,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 3,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 9,
+    "confidence": "low",
+    "ripeness": "ripe",
+    "forest_share": 0.217,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.742492,
+       62.256966
+      ],
+      [
+       25.74842,
+       62.253918
+      ],
+      [
+       25.756608,
+       62.255282
+      ],
+      [
+       25.758871,
+       62.259695
+      ],
+      [
+       25.752944,
+       62.262744
+      ],
+      [
+       25.744753,
+       62.261379
+      ],
+      [
+       25.742492,
+       62.256966
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "7ca1736d-0b5f-595c-ac9f-7013e63ecaf7",
+   "properties": {
+    "h3": "8811250c6dfffff",
+    "name": "Laajavuori 45",
+    "species": "bilberry",
+    "forest_type": "forest_pine",
+    "scores": {
+     "bilberry": {
+      "score": 8,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 4,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 8,
+    "confidence": "low",
+    "ripeness": "ripe",
+    "forest_share": 0.136,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.735713,
+       62.243727
+      ],
+      [
+       25.741638,
+       62.240679
+      ],
+      [
+       25.749823,
+       62.242043
+      ],
+      [
+       25.752084,
+       62.246456
+      ],
+      [
+       25.746158,
+       62.249505
+      ],
+      [
+       25.737972,
+       62.24814
+      ],
+      [
+       25.735713,
+       62.243727
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "867d8544-1c82-57fe-b2cc-a13cbb338f27",
+   "properties": {
+    "h3": "8811250e01fffff",
+    "name": "Laajavuori 46",
+    "species": "bilberry",
+    "forest_type": "mire",
+    "scores": {
+     "bilberry": {
+      "score": 55,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 4,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 13,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 55,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.929,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.664552,
+       62.280276
+      ],
+      [
+       25.670486,
+       62.277232
+      ],
+      [
+       25.678672,
+       62.278601
+      ],
+      [
+       25.680924,
+       62.283014
+      ],
+      [
+       25.674989,
+       62.286057
+      ],
+      [
+       25.666802,
+       62.284688
+      ],
+      [
+       25.664552,
+       62.280276
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "1f43b094-976d-5c6d-8d2d-058ebb67b4ef",
+   "properties": {
+    "h3": "8811250e03fffff",
+    "name": "Laajavuori 47",
+    "species": "bilberry",
+    "forest_type": "mire",
+    "scores": {
+     "bilberry": {
+      "score": 31,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 3,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 9,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 31,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.691,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.674989,
+       62.286057
+      ],
+      [
+       25.680924,
+       62.283014
+      ],
+      [
+       25.689112,
+       62.284382
+      ],
+      [
+       25.691367,
+       62.288795
+      ],
+      [
+       25.685431,
+       62.291839
+      ],
+      [
+       25.677241,
+       62.29047
+      ],
+      [
+       25.674989,
+       62.286057
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "1d969fd8-eb0f-5963-b2b9-44585c047c42",
+   "properties": {
+    "h3": "8811250e0dfffff",
+    "name": "Laajavuori 48",
+    "species": "bilberry",
+    "forest_type": "forest_broadleaf",
+    "scores": {
+     "bilberry": {
+      "score": 35,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 3,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 10,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 35,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.765,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.654119,
+       62.274493
+      ],
+      [
+       25.660053,
+       62.271451
+      ],
+      [
+       25.668236,
+       62.27282
+      ],
+      [
+       25.670486,
+       62.277232
+      ],
+      [
+       25.664552,
+       62.280276
+      ],
+      [
+       25.656368,
+       62.278906
+      ],
+      [
+       25.654119,
+       62.274493
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "4de36aa7-62b9-5346-afd1-0ab809584121",
+   "properties": {
+    "h3": "8811250e31fffff",
+    "name": "Laajavuori 49",
+    "species": "bilberry",
+    "forest_type": "forest_broadleaf",
+    "scores": {
+     "bilberry": {
+      "score": 19,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 11,
+      "confidence": "medium",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 12,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 19,
+    "confidence": "medium",
+    "ripeness": "ripe",
+    "forest_share": 0.523,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.703236,
+       62.282706
+      ],
+      [
+       25.70917,
+       62.27966
+      ],
+      [
+       25.71736,
+       62.281027
+      ],
+      [
+       25.719619,
+       62.28544
+      ],
+      [
+       25.713685,
+       62.288486
+      ],
+      [
+       25.705493,
+       62.287118
+      ],
+      [
+       25.703236,
+       62.282706
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "d8a64772-fa71-51a7-8d23-9578d4493017",
+   "properties": {
+    "h3": "8811250e37fffff",
+    "name": "Laajavuori 50",
+    "species": "bilberry",
+    "forest_type": "mire",
+    "scores": {
+     "bilberry": {
+      "score": 9,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "lingonberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "unripe"
+     },
+     "cloudberry": {
+      "score": 0,
+      "confidence": "low",
+      "ripeness": "ripe"
+     },
+     "crowberry": {
+      "score": 4,
+      "confidence": "low",
+      "ripeness": "ripe"
+     }
+    },
+    "score": 9,
+    "confidence": "low",
+    "ripeness": "ripe",
+    "forest_share": 0.229,
+    "coverage": "grid",
+    "updated_at": "2026-11-20T22:08:26Z",
+    "score_date": "2026-07-25",
+    "model": "zone-grid-jkl-v1+rules-v1",
+    "stub": false
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       25.71736,
+       62.281027
+      ],
+      [
+       25.723293,
+       62.277981
+      ],
+      [
+       25.731485,
+       62.279347
+      ],
+      [
+       25.733746,
+       62.28376
+      ],
+      [
+       25.727812,
+       62.286807
+      ],
+      [
+       25.719619,
+       62.28544
+      ],
+      [
+       25.71736,
+       62.281027
+      ]
+     ]
+    ]
+   }
+  }
+ ]
+}

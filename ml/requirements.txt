@@ -1,0 +1,6 @@
+# berry_ml runtime (what the backend needs). Exact pins: docs/versions.md
+numpy==2.4.6
+pandas==3.0.5
+pillow==13.0.0
+onnxruntime==1.29.0
+joblib==1.6.0
