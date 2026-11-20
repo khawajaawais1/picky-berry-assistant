@@ -112,7 +112,6 @@ DB_SSL=require            # set to "disable" only for the local docker database
 JWT_SECRET=change_me
 DEV_AUTH_BYPASS=false     # true only in local .env; app must refuse to start if true and NODE_ENV=production
 
-CORS_ORIGINS=http://localhost:8081
 THROTTLE_LIMIT=300        # requests per minute per user or IP
 THROTTLE_DISABLED=false   # true for k6 load tests only
 
@@ -725,7 +724,7 @@ The real scorer (Python) overwrites these rows later. Remove the script (or keep
   - `@Public()` and `@Roles(...)` decorators and a `RolesGuard`.
   - `DEV_AUTH_BYPASS=true` injects a fake admin user (`id: 00000000-0000-0000-0000-000000000001`). The app **must fail to boot** if the bypass is on while `NODE_ENV=production`.
   - TODO(question): is token issuance done by this API or by Supabase Auth? If Supabase Auth, replace secret verification with the project's JWT secret or JWKS and keep the same `sub` and `role` mapping.
-- `helmet()` on, CORS limited to `CORS_ORIGINS`, validation `whitelist: true` + `forbidNonWhitelisted: true`.
+- `helmet()` on, CORS currently allows all origins, validation `whitelist: true` + `forbidNonWhitelisted: true`.
 - Rate limit with `@nestjs/throttler` (`THROTTLE_LIMIT` per minute per user or IP). It must be switchable off (`THROTTLE_DISABLED=true`) so the k6 load test is not throttled.
 - Never log tokens, passwords or full connection strings.
 - Parameterise every SQL value. Never build SQL by string concatenation.

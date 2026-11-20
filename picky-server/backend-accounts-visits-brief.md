@@ -255,28 +255,36 @@ Detection runs on the phone: geofences for the 20 nearest zones, 10 minutes insi
 
 ### 4.1 `POST /api/v1/visits` (user)
 
+Generate a new UUID for each new visit (`crypto.randomUUID()` in JavaScript or
+`[guid]::NewGuid().ToString()` in PowerShell). Keep that `client_id` when retrying
+the same visit; sending it again replays the original result, even if the body
+has changed.
+
 Body:
 
 ```json
 {
-  "client_id": "7c1e2d9a-5b0f-4a63-9d11-2f4c8a6b0e55",
-  "zone_id": "3f2c9a1e-0d3b-4c1e-9a55-1c6f2a7e9b10",
-  "started_at": "2026-08-04T07:02:11Z",
-  "ended_at": "2026-08-04T07:47:30Z",
+  "client_id": "4cd7a7d4-e6da-4d4c-bdbf-d0997c5ac60d",
+  "zone_id": "00a2b3a5-620b-5076-bd7a-08fbd10c7a44",
+  "started_at": "2026-11-20T23:10:00.000Z",
+  "ended_at": "2026-11-20T23:15:00.000Z",
   "manual": false
 }
 ```
+
+This example has the minimum accepted duration of 300 seconds. Replace the
+sample `client_id` with a newly generated UUID for each new visit.
 
 Response (`201` for a new visit, `200` for a replay of the same `client_id`):
 
 ```json
 {
-  "id": "7c1e2d9a-5b0f-4a63-9d11-2f4c8a6b0e55",
-  "zone_id": "3f2c9a1e-...",
-  "zone_name": "Laajavuori 3",
-  "started_at": "2026-08-04T07:02:11.000Z",
-  "ended_at": "2026-08-04T07:47:30.000Z",
-  "duration_s": 2719,
+  "id": "4cd7a7d4-e6da-4d4c-bdbf-d0997c5ac60d",
+  "zone_id": "00a2b3a5-620b-5076-bd7a-08fbd10c7a44",
+  "zone_name": "<name returned for this zone>",
+  "started_at": "2026-11-20T23:10:00.000Z",
+  "ended_at": "2026-11-20T23:15:00.000Z",
+  "duration_s": 300,
   "manual": false,
   "status": "accepted",
   "reject_reason": null,

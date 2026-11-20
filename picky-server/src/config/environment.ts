@@ -15,7 +15,6 @@ const schema = Joi.object({
   MAIL_MODE: Joi.string().valid('console').default('console'),
   APP_PUBLIC_URL: Joi.string().uri().default('http://localhost:3000'),
   DEV_AUTH_BYPASS: Joi.boolean().truthy('true').falsy('false').default(false),
-  CORS_ORIGINS: Joi.string().allow('').default(''),
   THROTTLE_LIMIT: Joi.number().integer().min(1).default(300),
   THROTTLE_DISABLED: Joi.boolean().truthy('true').falsy('false').default(false),
   MAX_BBOX_KM_DETAIL: Joi.number().positive().default(50),
