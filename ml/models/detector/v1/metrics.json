@@ -1,0 +1,12 @@
+{
+  "test_mAP50": 0.798,
+  "test_mAP50_95": 0.559,
+  "precision": 0.816,
+  "recall": 0.754,
+  "per_class_mAP50": {
+    "bilberry": 0.943,
+    "cloudberry": 0.911,
+    "crowberry": 0.786,
+    "lingonberry": 0.551
+  }
+}
