@@ -49,7 +49,7 @@ picky-berry-assistant/
 ├── backend/                 ← FastAPI modular monolith, 10 modules           — Hassan (+ module co-owners)
 │   └── app/modules/ingest/  ← daily ingest jobs, thin wrapper over data/     — Awais
 ├── data/                    ← data pipelines: zones, weather, NDVI, basemap  — Awais
-├── ml/                      ← YOLO (WildBe), phenology baseline, XGBoost     — Remon
+├── ml/                      ← berry detector, zone scores, report rule       — Remon · Asmer · Sayeem
 ├── ontology/                ← Berry ontology (OWL/Turtle), SPARQL alert rules — Asmer
 ├── docker/                  ← Postgres + PostGIS + h3 image                  — Sabih + Hassan
 ├── deploy/                  ← production compose, Caddy, backups             — Sabih
@@ -63,7 +63,8 @@ picky-berry-assistant/
 | `app/` | ✅ Expo app: every v1 design screen, 120 suites / 1195 tests, layout + accessibility + native bundle + coverage + secret-scan CI; MapLibre draws the pilot stub's zones — a basemap and the zone service are next ([`app/README.md`](app/README.md)) |
 | `data/` | ✅ Pipelines for 6.2 + 28 tests; 50 stub zones committed; the real backfill and bucket upload are not run |
 | `docker/` | 🟡 Postgres 17 + PostGIS + h3 image and dev compose defined; no CI build |
-| `backend/`, `ml/`, `ontology/`, `deploy/` | ⬜ Planned layout in each README; no code in any of them yet |
+| `ml/` | ✅ v1 models + `berry_ml` package + reference API, 24 tests — see [ml/API.md](ml/API.md) for wiring it into the backend |
+| `backend/`, `ontology/`, `deploy/` | ⬜ Planned layout in each README; no code in any of them yet |
 
 Sprint plan and first deliverables (due 3 Nov): [docs/sprints.md](docs/sprints.md).
 
