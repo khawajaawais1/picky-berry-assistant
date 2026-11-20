@@ -37,12 +37,7 @@ async function bootstrap(): Promise<void> {
   });
   app.use(helmet());
   app.use(compression());
-  app.enableCors({
-    origin: (process.env.CORS_ORIGINS ?? '')
-      .split(',')
-      .map((origin) => origin.trim())
-      .filter(Boolean),
-  });
+  app.enableCors({ origin: '*' });
   app.useGlobalFilters(app.get(ApiExceptionFilter));
   app.useGlobalPipes(
     new ValidationPipe({

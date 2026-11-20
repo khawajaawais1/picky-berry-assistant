@@ -15,7 +15,10 @@ paths:
     post:
       summary: Submit a completed visit
       operationId: createVisit
-      description: Receives a zone and visit timestamps only; the phone performs geofence detection.
+      description: |
+        Receives a zone and visit timestamps only; the phone performs geofence detection.
+        Generate a new client_id UUID for each new visit, and reuse it only to retry that same visit.
+        ended_at must be later than started_at by 300 to 36000 seconds.
       parameters:
         - name: Idempotency-Key
           in: header
@@ -31,11 +34,32 @@ paths:
               additionalProperties: false
               required: [client_id, zone_id, started_at, ended_at]
               properties:
-                client_id: { type: string, format: uuid }
-                zone_id: { type: string, format: uuid }
-                started_at: { type: string, format: date-time }
-                ended_at: { type: string, format: date-time }
+                client_id:
+                  type: string
+                  format: uuid
+                  description: New UUID for each distinct visit; reuse only for retries of that visit.
+                zone_id:
+                  type: string
+                  format: uuid
+                  example: 00a2b3a5-620b-5076-bd7a-08fbd10c7a44
+                started_at:
+                  type: string
+                  format: date-time
+                  example: '2026-11-20T23:10:00.000Z'
+                ended_at:
+                  type: string
+                  format: date-time
+                  example: '2026-11-20T23:15:00.000Z'
                 manual: { type: boolean, default: false }
+            examples:
+              minimumDuration:
+                summary: Visit with the minimum accepted duration
+                value:
+                  client_id: 4cd7a7d4-e6da-4d4c-bdbf-d0997c5ac60d
+                  zone_id: 00a2b3a5-620b-5076-bd7a-08fbd10c7a44
+                  started_at: '2026-11-20T23:10:00.000Z'
+                  ended_at: '2026-11-20T23:15:00.000Z'
+                  manual: false
       responses:
         '201':
           description: New accepted or rejected visit recorded.

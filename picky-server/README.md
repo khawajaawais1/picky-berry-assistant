@@ -33,8 +33,9 @@ npm run start:dev
 
 The local example enables `DEV_AUTH_BYPASS`; never use it in production. The API
 refuses to start in production when this bypass is enabled. Set
-`DATABASE_URL`, `DB_SSL`, `JWT_SECRET`, and `CORS_ORIGINS` for the target
-environment.
+`DATABASE_URL`, `DB_SSL`, and `JWT_SECRET` for the target environment. CORS
+currently allows requests from any browser origin; this does not replace API
+authentication.
 
 Account and visit tables are added by migrations `0004` and `0005`. After
 applying them locally, set `DEV_PICKER_PASSWORD` in `.env` to a local password
