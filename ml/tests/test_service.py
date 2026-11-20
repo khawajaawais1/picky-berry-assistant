@@ -26,6 +26,7 @@ def test_detection_from_upload():
 def test_unreadable_photo_is_a_problem_json_400():
     r = client.post("/api/v1/ml/detections", files={"photo": ("x.jpg", b"nope", "image/jpeg")})
     assert r.status_code == 400 and r.headers["content-type"].startswith("application/problem+json")
+    assert "Traceback" not in r.text and "cannot identify" not in r.text  # no exception text leaks
 
 
 def test_zones_payload():
@@ -38,6 +39,7 @@ def test_zones_payload():
 def test_bad_species_is_422_problem_json():
     r = client.get("/api/v1/ml/zones", params={"species": "strawberry"})
     assert r.status_code == 422 and r.json()["status"] == 422
+    assert r.json()["detail"] == "Check these fields: species"
 
 
 def test_score_update():

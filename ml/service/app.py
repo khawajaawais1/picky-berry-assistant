@@ -108,8 +108,9 @@ async def detect(photo: UploadFile = File(..., description="JPEG/PNG photo of be
         return problem(413, "Photo too large", f"Maximum is {MAX_UPLOAD_BYTES // (1024 * 1024)} MB.")
     try:
         result = detector().detect(data, conf=confidence)
-    except InvalidImageError as exc:
-        return problem(400, "Unreadable photo", str(exc))
+    except InvalidImageError:
+        # Fixed text only: never echo exception messages to the client (CodeQL py/stack-trace-exposure).
+        return problem(400, "Unreadable photo", "Send a JPEG or PNG photo, at most 12,000 pixels on a side.")
     return result.to_dict(include_boxes=boxes)
 
 
@@ -141,7 +142,9 @@ app = FastAPI(title="Berry Picker Assistant - ML reference service", version="1.
 
 @app.exception_handler(RequestValidationError)
 async def validation_problem(_: Request, exc: RequestValidationError):
-    return problem(422, "Invalid request", "; ".join(f"{'.'.join(map(str, e['loc']))}: {e['msg']}" for e in exc.errors()))
+    # Name the fields only; the validator's own messages stay in the server log.
+    fields = sorted({str(e["loc"][-1]) for e in exc.errors() if e.get("loc")})
+    return problem(422, "Invalid request", "Check these fields: " + ", ".join(fields) if fields else "Check the request.")
 
 
 app.include_router(router)
