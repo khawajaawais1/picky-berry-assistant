@@ -29,9 +29,9 @@ def test_boxes_are_inside_the_image(det):
         assert 0.25 <= d.confidence <= 1
 
 
-def test_payload_is_camel_case(det):
+def test_payload_is_snake_case(det):
     p = det.detect(EX / "test_2.jpg").to_dict()
-    assert {"counts", "total", "imageSize", "modelVersion", "detections"} <= set(p)
+    assert {"counts", "total", "image_size", "model_version", "detections"} <= set(p)
     assert "detections" not in det.detect(EX / "test_2.jpg").to_dict(include_boxes=False)
 
 

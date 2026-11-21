@@ -58,8 +58,8 @@ class DetectionResult:
         out = {
             "counts": self.counts,
             "total": self.total,
-            "imageSize": {"width": self.image_size[0], "height": self.image_size[1]},
-            "modelVersion": self.model_version,
+            "image_size": {"width": self.image_size[0], "height": self.image_size[1]},
+            "model_version": self.model_version,
         }
         if include_boxes:
             out["detections"] = [d.to_dict() for d in self.detections]

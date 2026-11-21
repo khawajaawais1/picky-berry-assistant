@@ -1,9 +1,9 @@
 [project]
 name = "berry-ml"
-version = "1.0.0"
+version = "2.0.0"
 description = "Berry Picker Assistant ML: berry detector, zone scores, report rules (Team Picky)"
 requires-python = ">=3.11"
-dependencies = ["numpy==2.4.6", "pandas==3.0.5", "pillow==13.0.0", "onnxruntime==1.29.0", "joblib==1.6.0"]
+dependencies = ["numpy==2.4.6", "pandas==3.0.5", "pillow==13.0.0", "onnxruntime==1.29.0", "joblib==1.6.0", "tzdata==2026.6"]
 
 [project.optional-dependencies]
 service = ["fastapi==0.165.0", "uvicorn[standard]==0.54.0", "python-multipart==0.0.32"]

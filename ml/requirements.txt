@@ -4,3 +4,4 @@ pandas==3.0.5
 pillow==13.0.0
 onnxruntime==1.29.0
 joblib==1.6.0
+tzdata==2026.6   # Europe/Helsinki on Windows and slim images

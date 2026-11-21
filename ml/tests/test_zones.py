@@ -55,3 +55,32 @@ def test_ripening_shifts_north():
 def test_perfect_forest_ripe_normal_year_is_80(grid):
     from berry_ml.zones import map_score
     assert map_score(1.0, 1.0, 1.0) == 80
+
+
+def test_score_points_explanation_has_at_least_two_reasons_for_every_species():
+    from berry_ml import ZoneGrid
+    from berry_ml.zones import SPECIES
+    g = ZoneGrid()
+    for date in ("2026-01-15", "2026-06-01", "2026-07-25", "2026-09-05", "2026-10-30"):
+        r = g.score_points([{"id": "a", "h3": "h", "lat": 62.30, "lon": 25.60}], date=date)[0]
+        for sp in SPECIES:
+            e = r["scores"][sp]["explanation"]
+            assert len(e["reasons"]) >= 2 and {"model_version", "rules_version", "reasons", "inputs"} <= set(e)
+
+
+def test_season_reasons_follow_the_calendar():
+    from berry_ml.zones import season_reason
+    doy = lambda s: __import__("datetime").date.fromisoformat(s).timetuple().tm_yday  # noqa: E731
+    assert season_reason("bilberry", doy("2026-07-25")) == "in_ripe_window"
+    assert season_reason("bilberry", doy("2026-07-03")) == "ripening_window"
+    assert season_reason("bilberry", doy("2026-06-01")) == "before_window"
+    assert season_reason("bilberry", doy("2026-09-02")) == "past_window"
+    assert season_reason("bilberry", doy("2026-01-15")) == "off_season"
+
+
+def test_point_score_and_batch_agree_on_one_cell():
+    from berry_ml import ZoneGrid
+    g = ZoneGrid()
+    one = g.score_point(62.30, 25.60, "2026-07-25")
+    batch = g.score_points([{"id": "a", "h3": None, "lat": 62.30, "lon": 25.60}], "2026-07-25", radius_m=0)[0]
+    assert batch["cells"] == 1 and batch["scores"]["bilberry"]["score"] == one["bilberry"].score
