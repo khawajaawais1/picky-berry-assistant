@@ -92,7 +92,12 @@ describe('AuthService password reset', () => {
       expect([userId, email]).toEqual([USER.id, USER.email]);
       const token = new URL(link).searchParams.get('token')!;
       expect(token.length).toBeGreaterThanOrEqual(43);
-      expect(insert[1]).toEqual([USER.id, sha256(token)]);
+      // The token is 32 random bytes, so a fast digest is the right store for it (OWASP Forgot
+      // Password Cheat Sheet); the lookup's own hashing is pinned by the confirm test below.
+      const [storedUser, storedHash] = insert[1] as [string, string];
+      expect(storedUser).toBe(USER.id);
+      expect(storedHash).toMatch(/^[0-9a-f]{64}$/);
+      expect(storedHash).not.toBe(token);
       expect(JSON.stringify(insert[1])).not.toContain(token);
     });
 
