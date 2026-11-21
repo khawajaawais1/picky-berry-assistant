@@ -191,7 +191,7 @@ class ZoneGrid:
         return {"type": "FeatureCollection", "features": feats}
 
     def score_point(self, lat: float, lon: float, date=None, year_index: float = 1.0) -> dict[str, ZoneScore] | None:
-        """Server-side helper (e.g. for building zones); never expose this to clients."""
+        """Score the 256 m grid cell at one point (served by GET /api/v1/ml/score). None if outside the grid."""
         d2 = (self.lat - lat) ** 2 + ((self.lon - lon) * math.cos(math.radians(lat))) ** 2
         i = int(d2.argmin())
         if math.sqrt(d2[i]) * 111_320 > 185:
