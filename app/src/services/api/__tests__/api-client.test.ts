@@ -145,6 +145,16 @@ describe('createApiClient', () => {
       });
     });
 
+    it('treats a client built with no token provider as holding no session', async () => {
+      const fetchImpl = fetchAnswering();
+      const client = createApiClient({ baseUrl: BASE, fetchImpl });
+
+      const result = await client.request({ method: 'GET', path: '/me', parse: anything });
+
+      expect(result).toEqual({ ok: false, error: { kind: 'unauthenticated' } });
+      expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
     it('does not send an authenticated request when there is no session', async () => {
       const fetchImpl = fetchAnswering();
       const client = createApiClient({ baseUrl: BASE, fetchImpl, tokens: tokens(null) });

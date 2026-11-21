@@ -80,6 +80,16 @@ describe('createSecureSessionStore', () => {
   });
 
   describe('where and how it keeps the session', () => {
+    it('uses the platform module when given no storage', async () => {
+      // `expo-secure-store` is the in-memory keychain from jest.setup.ts.
+      const store = createSecureSessionStore();
+
+      await store.write('value');
+
+      expect(await store.read()).toBe('value');
+      await store.clear();
+    });
+
     it('writes under the one versioned key, available only while this device is unlocked', async () => {
       const { store, storage } = storeOver();
 

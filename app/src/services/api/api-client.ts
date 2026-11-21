@@ -81,10 +81,9 @@ export type ApiClientOptions = {
 
 export const API_PREFIX = '/api/v1';
 
-const NO_SESSION: TokenProvider = {
-  accessToken: async () => null,
-  refresh: async () => null,
-};
+const nothing = async () => null;
+
+const NO_SESSION: TokenProvider = { accessToken: nothing, refresh: nothing };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);

@@ -152,6 +152,36 @@ describe('createApiSessionPort', () => {
       expect(await h.store.read()).toBeNull();
     });
 
+    it.each<[string, Record<string, unknown>]>([
+      ['a token type other than Bearer', { token_type: 'MAC' }],
+      ['a lifetime that is not a whole number of seconds', { expires_in: 1.5 }],
+      ['a lifetime below one second', { expires_in: 0 }],
+      ['a blank refresh token', { refresh_token: ' ' }],
+    ])('reads a session with %s as unavailable', async (_, change) => {
+      const h = harness({ status: 200, body: { ...authSession(), ...change } });
+
+      expect(await h.port.signIn({ email: EMAIL, password: PASSWORD })).toEqual({
+        ok: false,
+        reason: 'unavailable',
+      });
+    });
+
+    it.each<[string, unknown]>([
+      ['a nickname that is not text', { email: EMAIL, nickname: 7 }],
+      ['no address', { email: ' ', nickname: null }],
+    ])('reads a user with %s as unavailable', async (_, user) => {
+      const h = harness({ status: 200, body: { ...authSession(), user } });
+
+      expect((await h.port.signIn({ email: EMAIL, password: PASSWORD })).ok).toBe(false);
+    });
+
+    it('refuses to send an empty password', async () => {
+      const h = harness();
+
+      await expect(h.port.signIn({ email: EMAIL, password: '' })).rejects.toThrow(RangeError);
+      expect(h.fetchImpl).not.toHaveBeenCalled();
+    });
+
     it('refuses to send a credential that names no account', async () => {
       const h = harness();
 
@@ -177,6 +207,14 @@ describe('createApiSessionPort', () => {
       });
       expect(result.ok).toBe(true);
       expect(await h.store.read()).toContain('access-1');
+    });
+
+    it('sends no nickname when none was given', async () => {
+      const h = harness({ status: 201, body: authSession() });
+
+      await h.port.register({ ...REGISTRATION, displayName: '  ' });
+
+      expect(h.sent(0).body).not.toHaveProperty('nickname');
     });
 
     it('reads an address already in use (409) as refused', async () => {
@@ -249,6 +287,18 @@ describe('createApiSessionPort', () => {
       expect(await h.store.read()).toContain('refresh-1');
     });
 
+    it.each([
+      ['text that is not JSON', 'not json'],
+      ['a value of another version', JSON.stringify({ v: 2 })],
+      ['a value with no tokens', JSON.stringify({ v: 1, accessToken: '', refreshToken: 'r' })],
+    ])('drops %s', async (_, stored) => {
+      const h = harness();
+      await h.store.write(stored);
+
+      expect(await h.port.current()).toBeNull();
+      expect(await h.store.read()).toBeNull();
+    });
+
     it('drops a stored value it cannot read', async () => {
       const h = harness();
       await h.store.write('{"not":"a session"}');
@@ -277,6 +327,23 @@ describe('createApiSessionPort', () => {
 
       expect(tokens).toEqual(['access-2', 'access-2']);
       expect(h.fetchImpl).toHaveBeenCalledTimes(2);
+    });
+
+    it('hands over the stale token while offline, so the transport reports the network', async () => {
+      const h = harness({ status: 200, body: authSession() });
+      await h.port.signIn({ email: EMAIL, password: PASSWORD });
+      h.advance(900_000);
+      h.answer('offline');
+
+      expect(await h.port.tokens.accessToken()).toBe('access-1');
+    });
+
+    it('answers no token from a refresh that cannot reach the server', async () => {
+      const h = harness({ status: 200, body: authSession() }, 'offline');
+      await h.port.signIn({ email: EMAIL, password: PASSWORD });
+
+      expect(await h.port.tokens.refresh()).toBeNull();
+      expect(await h.store.read()).toContain('refresh-1');
     });
 
     it('answers no token from a refresh when there is no session to refresh', async () => {
@@ -312,6 +379,22 @@ describe('createApiSessionPort', () => {
   });
 
   describe('requestPasswordReset', () => {
+    it('refuses a reset that names no account', async () => {
+      await expect(harness().port.requestPasswordReset('  ')).rejects.toThrow(RangeError);
+    });
+
+    it('hands the address to a reset provider when one is given', async () => {
+      const passwordReset = jest.fn(async () => ({ ok: true }) as const);
+      const port = createApiSessionPort({
+        client: createApiClient({ baseUrl: BASE, fetchImpl: jest.fn() }),
+        store: createInMemorySessionStore(),
+        passwordReset,
+      });
+
+      expect(await port.requestPasswordReset(` ${EMAIL} `)).toEqual({ ok: true });
+      expect(passwordReset).toHaveBeenCalledWith(EMAIL);
+    });
+
     it('is unavailable, because the API has no reset endpoint yet (ADR-065 decision 4)', async () => {
       expect(await harness().port.requestPasswordReset(EMAIL)).toEqual({
         ok: false,

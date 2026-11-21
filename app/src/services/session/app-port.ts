@@ -26,13 +26,16 @@ export type AppSessionPortOptions = {
 
 const UNAVAILABLE = { ok: false, reason: 'unavailable' } as const;
 
+const unavailable = async () => UNAVAILABLE;
+const nothing = async () => null;
+
 const unconfiguredPort: ApiSessionPort = {
-  signIn: async () => UNAVAILABLE,
-  register: async () => UNAVAILABLE,
-  current: async () => null,
+  signIn: unavailable,
+  register: unavailable,
+  current: nothing,
   signOut: async () => undefined,
-  requestPasswordReset: async () => UNAVAILABLE,
-  tokens: { accessToken: async () => null, refresh: async () => null },
+  requestPasswordReset: unavailable,
+  tokens: { accessToken: nothing, refresh: nothing },
 };
 
 export function createAppSessionPort({

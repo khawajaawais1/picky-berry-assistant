@@ -116,6 +116,11 @@ describe('createAppSessionPort', () => {
     });
     expect(await port.current()).toBeNull();
     expect(await port.tokens.accessToken()).toBeNull();
+    expect(await port.tokens.refresh()).toBeNull();
+    expect(await port.requestPasswordReset('aino@example.fi')).toEqual({
+      ok: false,
+      reason: 'unavailable',
+    });
     await expect(port.signOut()).resolves.toBeUndefined();
     expect(fetchImpl).not.toHaveBeenCalled();
   });
