@@ -211,6 +211,16 @@ export const fi: Record<TranslationKey, string> = {
   'discover.details.forecastDisclaimer': 'Ennuste olosuhteista, ei taattu sato.',
   // Sanotaan ennen niitä osioita, joille ei ole lähdettä: lähdealueen oikean pisteen alla
   // lukija tietää, mihin sovelluksen oma tieto päättyy.
+  // What the zone service says about one zone and berry (ADR-065, the API plan's phase 3).
+  'discover.details.insight.title': 'Vyöhykepalvelusta',
+  'discover.details.insight.why': 'Miksi tämä pistemäärä',
+  'discover.details.insight.reports': '{count} raporttia tällä viikolla · arvosana {rating} / 5',
+  'discover.details.insight.reportsOne': '{count} raportti tällä viikolla · arvosana {rating} / 5',
+  'discover.details.insight.reportsCount': '{count} raporttia tällä viikolla',
+  'discover.details.insight.reportsCountOne': '{count} raportti tällä viikolla',
+  'discover.details.insight.history': 'Viimeiset {days} päivää: {low}–{high}',
+  'discover.details.insight.loading': 'Kysytään vyöhykepalvelulta…',
+  'discover.details.insight.unavailable': 'Vyöhykepalvelu ei vastannut.',
   'discover.details.sample':
     'Alla olevat näkymät, tuorein havainto, kävelyreitti ja niiden takana oleva raporttilista ovat suunnittelun oma malliesimerkki: sääpalvelua tai raporttivirtaa ei vielä ole.',
   'discover.details.outlook.title': 'Tämän päivän näkymät',

@@ -133,7 +133,7 @@ function asText(value: unknown): string | null {
 }
 
 /** A score the map can band: an integer 0–100, with a confidence and a ripeness it knows. */
-function asScore(value: unknown): ZoneScore | null {
+export function parseZoneScore(value: unknown): ZoneScore | null {
   if (!isRecord(value)) return null;
 
   const { confidence, ripeness, score } = value;
@@ -190,7 +190,7 @@ function asScores(properties: Record<string, unknown>): Partial<Record<Species, 
   // Only the app's own vocabulary survives: a species key the chips cannot name is not a
   // score this map can ask for.
   for (const species of SPECIES) {
-    const parsed = asScore(raw[species]);
+    const parsed = parseZoneScore(raw[species]);
     if (parsed) scores[species] = parsed;
   }
 
@@ -224,7 +224,7 @@ function parseFeature(value: unknown, species: Species): Zone | null {
   const served = !isRecord(value.properties.scores);
   if (served && value.properties.species !== species) return null;
 
-  const topLevel = served ? asScore(value.properties) : null;
+  const topLevel = served ? parseZoneScore(value.properties) : null;
   const scores = served ? (topLevel ? { [species]: topLevel } : {}) : asScores(value.properties);
   const score = scores[species];
   if (!score) return null;

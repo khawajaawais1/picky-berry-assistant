@@ -1,7 +1,9 @@
 import { zoneSourceKind } from '@/config/env';
 import { apiClient } from '@/services/api';
 
+import type { ZoneInsightSource } from '../domain/zone-insight';
 import type { ZoneSource } from '../domain/zone-source';
+import { createApiZoneInsightSource } from './api-zone-insight-source';
 import { createApiZoneSource } from './api-zone-source';
 import { testZoneSource } from './test-zone-source';
 
@@ -11,5 +13,13 @@ import { testZoneSource } from './test-zone-source';
  * routes are where the shipped app chooses the service. Only a non-production build that asks
  * for it by name (`EXPO_PUBLIC_ZONE_SOURCE=stub`, the layout harness) gets the stub here.
  */
-export const appZoneSource: ZoneSource =
-  zoneSourceKind() === 'stub' ? testZoneSource : createApiZoneSource({ client: apiClient });
+const readsStub = zoneSourceKind() === 'stub';
+
+export const appZoneSource: ZoneSource = readsStub
+  ? testZoneSource
+  : createApiZoneSource({ client: apiClient });
+
+/** The zone service's extra facts for screen 07, or none when the build reads the stub. */
+export const appZoneInsightSource: ZoneInsightSource | undefined = readsStub
+  ? undefined
+  : createApiZoneInsightSource({ client: apiClient });

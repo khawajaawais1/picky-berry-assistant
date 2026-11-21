@@ -2,6 +2,7 @@ import { router, useCanGoBack, useLocalSearchParams } from 'expo-router';
 
 import { appEnvironment } from '@/config/env';
 import {
+  appZoneInsightSource,
   appZoneSource,
   CommunityMapPrototype,
   communityMapReading,
@@ -47,6 +48,7 @@ export default function ZoneDetailsRoute() {
 
   return (
     <ZoneDetailsScreen
+      insightSource={appZoneInsightSource}
       zoneSource={appZoneSource}
       onBack={canGoBack ? () => router.back() : undefined}
       onNavigate={() => router.push('/route-to-zone')}

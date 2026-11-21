@@ -260,6 +260,16 @@ export const en = {
   // Said before the blocks no source supplies, so a picker reading a source zone's real score
   // knows where the outlook and the report stop being the app's own knowledge (the rule frame
   // 13's demo note follows).
+  // What the zone service says about one zone and berry (ADR-065, the API plan's phase 3).
+  'discover.details.insight.title': 'From the zone service',
+  'discover.details.insight.why': 'Why this score',
+  'discover.details.insight.reports': '{count} reports this week · rating {rating} / 5',
+  'discover.details.insight.reportsOne': '{count} report this week · rating {rating} / 5',
+  'discover.details.insight.reportsCount': '{count} reports this week',
+  'discover.details.insight.reportsCountOne': '{count} report this week',
+  'discover.details.insight.history': 'Last {days} days: {low}–{high}',
+  'discover.details.insight.loading': 'Asking the zone service…',
+  'discover.details.insight.unavailable': 'The zone service could not answer.',
   'discover.details.sample':
     'The outlook, the freshest report, the walk and the report list behind them are the design’s own sample: no weather source or report stream exists yet.',
   'discover.details.outlook.title': 'Today’s outlook',

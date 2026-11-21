@@ -28,6 +28,9 @@ import {
   type ZoneRipeness,
   type ZoneSource,
 } from '../domain/zone-source';
+import type { ZoneInsightSource } from '../domain/zone-insight';
+import { scoreRange } from '../domain/zone-insight';
+import { useZoneInsight, type ZoneInsightState } from '../hooks/use-zone-insight';
 import { useZones } from '../hooks/use-zones';
 import { testZoneSource } from '../services/test-zone-source';
 import { SPECIES_LABEL_KEY } from './species-copy';
@@ -58,6 +61,12 @@ export type ZoneDetailsScreenProps = {
   species?: Species;
   /** Where the zone comes from. Defaults to the pilot stub, as on frame 06. */
   zoneSource?: ZoneSource;
+  /**
+   * The zone service's own facts about the zone (ADR-065): every berry it scored, its reasons for
+   * this berry's score, the week's reports and the recent range. Without one the screen draws
+   * the zone's map figures alone, as the stub path does.
+   */
+  insightSource?: ZoneInsightSource;
   onBack?: () => void;
   /**
    * Opens the route to this zone — frame 08 — or nothing.
@@ -219,9 +228,11 @@ function SourceZoneDetails({
   species = PILOT_ZONE_SPECIES,
   zoneId,
   zoneSource = testZoneSource,
+  insightSource,
 }: ZoneDetailsScreenProps & { zoneId: string }) {
-  const { t } = useTranslation();
+  const { locale, t } = useTranslation();
   const { status, zones } = useZones(zoneSource, species);
+  const insight = useZoneInsight(insightSource, zoneId, species, locale);
   const zone: Zone | undefined = zones.find((candidate) => candidate.id === zoneId);
 
   if (!zone) {
@@ -254,12 +265,17 @@ function SourceZoneDetails({
         zoneId: zone.id,
         title: zone.name,
         layer: species,
-        species: zoneSpecies(zone, species),
+        // The served list scores one berry; the zone's detail says every berry it was scored for.
+        species: zoneSpecies(
+          insight?.status === 'ready' ? { ...zone, scores: insight.insight.detail.scores } : zone,
+          species,
+        ),
         score: zone.score,
         confidence: zone.confidence,
         ripeness: zone.ripeness,
         updatedAt: zone.updatedAt,
       }}
+      insight={insight}
       sampleNote
     />
   );
@@ -278,12 +294,14 @@ function DetailsView({
   onSeeReports,
   read,
   sampleNote,
+  insight,
 }: {
   onBack?: () => void;
   onNavigate?: () => void;
   onSeeReports?: () => void;
   read: DetailsRead;
   sampleNote: boolean;
+  insight?: ZoneInsightState;
 }) {
   const { colors } = useAppTheme();
   const { locale, t } = useTranslation();
@@ -405,6 +423,8 @@ function DetailsView({
             })}
           </AppText>
         ) : null}
+
+        {insight ? <InsightBlock insight={insight} layer={read.layer} /> : null}
 
         {sampleNote ? (
           <AppText testID="zone-details-sample-note" tone="muted" variant="metadata">
@@ -563,3 +583,78 @@ const styles = StyleSheet.create({
   strong: { fontWeight: '600' },
   yieldCard: { gap: spacing.cardGap, padding: spacing.section },
 });
+
+/**
+ * What the zone service says about this zone and berry (ADR-065): its reasons, the week's
+ * reports and the recent score range. Each line is drawn only when the service gave its figure,
+ * and a failed read is said rather than left as an empty block.
+ */
+function InsightBlock({ insight, layer }: { insight: ZoneInsightState; layer: Species }) {
+  const { t } = useTranslation();
+
+  if (insight.status !== 'ready') {
+    return (
+      <StatusMessage
+        testID="zone-details-insight"
+        tone={insight.status === 'error' ? 'danger' : 'muted'}
+        variant="bodySmall"
+      >
+        {t(
+          insight.status === 'error'
+            ? 'discover.details.insight.unavailable'
+            : 'discover.details.insight.loading',
+        )}
+      </StatusMessage>
+    );
+  }
+
+  const { detail, history, reasons } = insight.insight;
+  const report = detail.reports[layer];
+  const range = scoreRange(history.points);
+  const reportLine = report
+    ? interpolate(
+        t(
+          report.averageRating === null
+            ? report.count === 1
+              ? 'discover.details.insight.reportsCountOne'
+              : 'discover.details.insight.reportsCount'
+            : report.count === 1
+              ? 'discover.details.insight.reportsOne'
+              : 'discover.details.insight.reports',
+        ),
+        { count: String(report.count), rating: String(report.averageRating ?? '') },
+      )
+    : null;
+
+  return (
+    <View className="w-full gap-sm" testID="zone-details-insight">
+      <AppText variant="sectionHeading">{t('discover.details.insight.title')}</AppText>
+      {reasons.length > 0 ? (
+        <View className="w-full gap-xs">
+          <AppText style={{ fontWeight: '600' }} variant="bodySmall">
+            {t('discover.details.insight.why')}
+          </AppText>
+          {reasons.map((reason) => (
+            <AppText key={reason} tone="muted" variant="bodySmall">
+              {reason}
+            </AppText>
+          ))}
+        </View>
+      ) : null}
+      {reportLine ? (
+        <AppText tone="muted" variant="bodySmall">
+          {reportLine}
+        </AppText>
+      ) : null}
+      {range ? (
+        <AppText tone="muted" variant="bodySmall">
+          {interpolate(t('discover.details.insight.history'), {
+            days: String(history.days),
+            high: String(range.high),
+            low: String(range.low),
+          })}
+        </AppText>
+      ) : null}
+    </View>
+  );
+}

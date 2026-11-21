@@ -8,6 +8,7 @@ import { readSavedZones, saveZone } from '@/services/saved-zones';
 import type { Species } from '../../domain/species';
 import { CARD_ZONE_STATE, DEMO_ZONES } from '../../domain/zone';
 import { DEMO_ZONE_DETAILS } from '../../domain/zone-details';
+import type { ZoneInsight, ZoneInsightSource } from '../../domain/zone-insight';
 import type { Zone, ZoneScore, ZoneSource } from '../../domain/zone-source';
 import { ZoneDetailsScreen } from '../zone-details-screen';
 
@@ -542,5 +543,112 @@ describe('ZoneDetailsScreen over the zone source', () => {
     );
     expect(screen.queryByTestId('zone-yield-card')).not.toBeOnTheScreen();
     expect(screen.queryByText('Zone 14 · Laajavuori')).not.toBeOnTheScreen();
+  });
+});
+
+/**
+ * Frame 07 with the zone service's own facts (ADR-065, the plan's phase 3). The list answer
+ * scores one berry, so the species row comes from the zone's detail, and the screen adds what
+ * the service says about this berry: its reasons, the week's reports and the recent range.
+ */
+describe('ZoneDetailsScreen with the zone service’s insight', () => {
+  const INSIGHT: ZoneInsight = {
+    detail: {
+      id: 'zone-a',
+      scores: {
+        lingonberry: LINGONBERRY_SCORE,
+        bilberry: BILBERRY_SCORE,
+        cloudberry: BILBERRY_SCORE,
+      },
+      reports: { lingonberry: { count: 4, averageRating: 3.5 } },
+    },
+    reasons: ['Warm summer so far.', 'Enough rain in the last month.'],
+    history: {
+      days: 30,
+      points: [
+        { date: '2026-07-10', score: 41 },
+        { date: '2026-08-02', score: 70 },
+      ],
+    },
+  };
+
+  // The served list carries the asked berry only, as `GET /zones` does.
+  const ONE_BERRY: readonly Zone[] = [
+    sourceZone('zone-a', 'Laajavuori 1', { lingonberry: LINGONBERRY_SCORE }),
+  ];
+
+  async function renderInsight(insightSource: ZoneInsightSource) {
+    return render(
+      <ZoneDetailsScreen
+        insightSource={insightSource}
+        species="lingonberry"
+        zoneId="zone-a"
+        zoneSource={sourceOf(ONE_BERRY)}
+      />,
+      { wrapper: QueryProvider },
+    );
+  }
+
+  it('asks the service about this zone and berry, in the screen’s language', async () => {
+    const insight = jest.fn(async () => INSIGHT);
+
+    await renderInsight({ insight });
+    await screen.findByText('Laajavuori 1');
+
+    await waitFor(() =>
+      expect(insight).toHaveBeenCalledWith({
+        zoneId: 'zone-a',
+        species: 'lingonberry',
+        lang: 'en',
+      }),
+    );
+  });
+
+  it('draws the species row from every berry the service scored, the berry read first', async () => {
+    await renderInsight({ insight: async () => INSIGHT });
+
+    expect(await screen.findByTestId('zone-species-chip-cloudberry')).toBeOnTheScreen();
+    expect(screen.getByTestId('zone-species-chip-bilberry')).toBeOnTheScreen();
+    expect(screen.getByTestId('zone-species-chip-lingonberry')).toHaveStyle({
+      backgroundColor: themes.light.colors.accent,
+    });
+  });
+
+  it('prints the service’s reasons, the week’s reports and the recent range', async () => {
+    await renderInsight({ insight: async () => INSIGHT });
+
+    expect(await screen.findByText('Why this score')).toBeOnTheScreen();
+    expect(screen.getByText('Warm summer so far.')).toBeOnTheScreen();
+    expect(screen.getByText('Enough rain in the last month.')).toBeOnTheScreen();
+    expect(screen.getByText('4 reports this week · rating 3.5 / 5')).toBeOnTheScreen();
+    expect(screen.getByText('Last 30 days: 41–70')).toBeOnTheScreen();
+  });
+
+  it('prints the count alone when the service withholds the average', async () => {
+    await renderInsight({
+      insight: async () => ({
+        ...INSIGHT,
+        detail: { ...INSIGHT.detail, reports: { lingonberry: { count: 1, averageRating: null } } },
+      }),
+    });
+
+    expect(await screen.findByText('1 report this week')).toBeOnTheScreen();
+  });
+
+  it('says so when the service could not answer, and keeps the zone’s own figures', async () => {
+    await renderInsight({ insight: async () => Promise.reject(new Error('offline')) });
+
+    expect(await screen.findByText('The zone service could not answer.')).toBeOnTheScreen();
+    expect(screen.getByText('70')).toBeOnTheScreen();
+  });
+
+  it('draws no service block without an insight source', async () => {
+    await render(
+      <ZoneDetailsScreen species="lingonberry" zoneId="zone-a" zoneSource={sourceOf(ONE_BERRY)} />,
+      { wrapper: QueryProvider },
+    );
+    await screen.findByText('Laajavuori 1');
+
+    expect(screen.queryByTestId('zone-details-insight')).not.toBeOnTheScreen();
   });
 });
