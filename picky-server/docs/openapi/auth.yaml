@@ -124,6 +124,52 @@ paths:
       responses:
         '204': { description: Email address verified. }
         '422': { $ref: '#/components/responses/Error' }
+  /auth/password-reset:
+    post:
+      summary: Request a password reset link
+      description: >-
+        Always answers 202 with no body, whether or not the address has an account, so the
+        endpoint cannot reveal which addresses are registered. For an account, earlier unused
+        reset links stop working and a new one, valid for one hour, is sent to the address.
+      operationId: requestPasswordReset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '202': { description: Accepted. A link is sent if the address has an account. }
+        '422': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /auth/password-reset/confirm:
+    post:
+      summary: Set a new password with a reset token
+      description: >-
+        The token is single use and expires after one hour. On success every refresh token of
+        the account is revoked, so each device signs in again with the new password.
+      operationId: confirmPasswordReset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [token, password]
+              properties:
+                token: { type: string, minLength: 1 }
+                password: { type: string, minLength: 10, maxLength: 128 }
+      responses:
+        '204': { description: Password changed; every session was signed out. }
+        '422': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
   /me:
     get:
       summary: Get the authenticated user's profile
