@@ -126,6 +126,25 @@ describe('useVisitSync', () => {
     );
   });
 
+  it('tries again to keep a visit the device would not store', async () => {
+    const { outbox, held } = memoryOutbox();
+    const add = jest.spyOn(outbox, 'add').mockRejectedValueOnce(new Error('storage full'));
+    const { api } = apiAnswering('retry');
+
+    const { rerender } = await renderHook(
+      ({ list }: Props) => useVisitSync({ api, outbox, visits: list }),
+      {
+        initialProps: { list: [visit(1)] },
+      },
+    );
+    await waitFor(() => expect(add).toHaveBeenCalledTimes(1));
+
+    await rerender({ list: [visit(1), visit(2, false)] });
+
+    await waitFor(() => expect(add).toHaveBeenCalledTimes(2));
+    expect(held()).toHaveLength(1);
+  });
+
   it('keeps and sends nothing without an API', async () => {
     const { outbox, held } = memoryOutbox();
 

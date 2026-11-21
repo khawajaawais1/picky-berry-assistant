@@ -531,6 +531,19 @@ describe('PrivacySettingsScreen, with the account service', () => {
     expect(await screen.findByText('aino@example.fi · Email verified')).toBeOnTheScreen();
   });
 
+  it('claims no verification when the service could not answer', async () => {
+    await signedUp();
+
+    await render(
+      <PrivacySettingsScreen
+        accountApi={{ profile: async () => Promise.reject(new Error('x')) }}
+      />,
+    );
+
+    expect(await screen.findByTestId('privacy-account-row')).toBeOnTheScreen();
+    await waitFor(() => expect(screen.queryByText(/verified/)).not.toBeOnTheScreen());
+  });
+
   it('claims no verification while the service has not answered', async () => {
     await signedUp();
 

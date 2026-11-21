@@ -140,6 +140,16 @@ describe('VisitTracker', () => {
     now.mockRestore();
   });
 
+  it('stops listening for the foreground when it unmounts', async () => {
+    const remove = jest.fn();
+    jest.spyOn(AppState, 'addEventListener').mockReturnValue({ remove });
+
+    const view = await render(<VisitTracker api={undefined} zones={[ZONE]} />);
+    await view.unmount();
+
+    expect(remove).toHaveBeenCalledTimes(1);
+  });
+
   it('reads no position without the picker’s consent', async () => {
     const { source } = fakeSource();
 
