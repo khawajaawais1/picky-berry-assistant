@@ -70,7 +70,13 @@ export function usePushAlerts({
   }, [push]);
 
   const turnOn = useCallback(async () => {
-    const permission = await push.request();
+    let permission: PushPermission;
+    try {
+      permission = await push.request();
+    } catch {
+      // A platform that cannot ask cannot alert: the switch says so instead of a rejection escaping.
+      permission = 'unsupported';
+    }
     setStatus(statusOf(permission));
     if (permission !== 'granted' || !register) return;
     setRegistration(await registerThisDevice({ push, register }));

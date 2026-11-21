@@ -61,6 +61,32 @@ describe('createExpoPushPort', () => {
     expect(open).toHaveBeenCalledTimes(1);
   });
 
+  it('has no push in Expo Go, which cannot receive remote notifications since SDK 53', async () => {
+    const port = createExpoPushPort('android', { expoGo: true });
+
+    expect(await port.permission()).toBe('unsupported');
+    expect(await port.request()).toBe('unsupported');
+    expect(await port.token()).toBeNull();
+    expect(mocked.setNotificationChannelAsync).not.toHaveBeenCalled();
+  });
+
+  it('still asks for the permission when the platform will not create the channel', async () => {
+    // Seen on Android: the channel call rejected with a NullPointerException inside the module.
+    mocked.setNotificationChannelAsync.mockRejectedValueOnce(new Error('rejected'));
+    mocked.requestPermissionsAsync.mockResolvedValue({ status: 'granted', granted: true } as never);
+
+    expect(await createExpoPushPort('android').request()).toBe('granted');
+  });
+
+  it('answers unsupported, never a rejection, when the platform cannot read or ask', async () => {
+    mocked.getPermissionsAsync.mockRejectedValueOnce(new Error('rejected'));
+    mocked.requestPermissionsAsync.mockRejectedValueOnce(new Error('rejected'));
+    const port = createExpoPushPort('ios');
+
+    expect(await port.permission()).toBe('unsupported');
+    expect(await port.request()).toBe('unsupported');
+  });
+
   it('has no push on the web', async () => {
     const port = createExpoPushPort('web');
 

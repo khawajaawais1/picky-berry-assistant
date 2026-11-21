@@ -25,27 +25,47 @@ const UNSUPPORTED: PushPort = {
 };
 
 /**
- * The push port on a phone, through `expo-notifications`. The web build has no push and answers
- * `unsupported` for everything, without touching the module.
+ * The push port on a phone, through `expo-notifications`. The web build and Expo Go have no push
+ * (Expo Go has received no remote notifications on Android since SDK 53) and answer `unsupported`
+ * for everything, without touching the module.
+ *
+ * A platform call that rejects answers `unsupported` rather than escaping: the alerts switch then
+ * says this phone cannot receive alerts, which is what the picker can act on.
  */
-export function createExpoPushPort(os: string): PushPort {
-  if (os !== 'ios' && os !== 'android') return UNSUPPORTED;
+export function createExpoPushPort(
+  os: string,
+  { expoGo = false }: { expoGo?: boolean } = {},
+): PushPort {
+  if ((os !== 'ios' && os !== 'android') || expoGo) return UNSUPPORTED;
   const platform: PushDevice['platform'] = os;
 
   return {
     async permission() {
-      return permissionOf(await getPermissionsAsync());
+      try {
+        return permissionOf(await getPermissionsAsync());
+      } catch {
+        return 'unsupported';
+      }
     },
 
     async request() {
-      // Android 13 asks for the permission only once a channel exists to show alerts on.
+      // Android 13 asks for the permission only once a channel exists to show alerts on. A channel
+      // the platform will not create is not a reason not to ask: the default channel still shows.
       if (platform === 'android') {
-        await setNotificationChannelAsync(ALERTS_CHANNEL_ID, {
-          name: 'Picky alerts',
-          importance: AndroidImportance.DEFAULT,
-        });
+        try {
+          await setNotificationChannelAsync(ALERTS_CHANNEL_ID, {
+            name: 'Picky alerts',
+            importance: AndroidImportance.DEFAULT,
+          });
+        } catch {
+          // Seen on Android: the module rejected with a NullPointerException.
+        }
       }
-      return permissionOf(await requestPermissionsAsync());
+      try {
+        return permissionOf(await requestPermissionsAsync());
+      } catch {
+        return 'unsupported';
+      }
     },
 
     async token() {

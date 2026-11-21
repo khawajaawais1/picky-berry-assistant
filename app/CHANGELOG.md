@@ -25,6 +25,8 @@ recorded in [docs/adr/](docs/adr/).
 
 ### Fixed
 
+- The alerts switch no longer throws on Android when the platform will not create the notification
+  channel, and Expo Go (which has no remote push since SDK 53) reads as unable to receive alerts.
 - Builds made with EAS (`development`, `preview`, `production`) now carry the API address
   (`EXPO_PUBLIC_API_BASE_URL`). Without it every request failed before leaving the phone, so
   account creation always failed.

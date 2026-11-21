@@ -69,6 +69,17 @@ describe('usePushAlerts', () => {
     expect(register).not.toHaveBeenCalled();
   });
 
+  it('never lets a failed request escape the switch', async () => {
+    const push = fakePushPort({ permission: 'undetermined' });
+    push.request.mockRejectedValueOnce(new Error('the platform refused'));
+    const { result } = await renderHook(() => usePushAlerts({ push, register: jest.fn() }));
+    await waitFor(() => expect(result.current.status).toBe('off'));
+
+    await act(async () => result.current.turnOn());
+
+    expect(result.current.status).toBe('unsupported');
+  });
+
   it('says when this phone could not be registered', async () => {
     const push = fakePushPort({ permission: 'undetermined', token: null });
     const { result } = await renderHook(() => usePushAlerts({ push, register: jest.fn() }));
