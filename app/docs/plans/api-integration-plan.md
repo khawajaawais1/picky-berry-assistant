@@ -23,10 +23,13 @@ suite.
    `name` gets the data contract's fallback ("Zone 50E25", from the H3 cell).
 2. Resolved in phase 2: the map does not load by viewport, so `GET /zones` is asked for a fixed
    pilot bbox (`PILOT_BBOX`) at zoom 12. Viewport loading needs a map that pans first.
-3. There is no password-reset endpoint, so reset is unavailable in every build (ADR-065 decision 4).
+3. There is no password-reset endpoint yet, so reset is unavailable in every build (ADR-065
+   decision 4). #24 adds `POST /auth/password-reset` and `/confirm`; the app's screen can call
+   them once it merges.
    The Firebase reset adapter (`firebase-password-reset.ts`, `EXPO_PUBLIC_FIREBASE_API_KEY`) is
    now unused and can be removed.
-4. `/health` returns 404 under `/api/v1` on the deployed host.
+4. Corrected: `/health` was never broken. The served OpenAPI document gives it a per-path `/`
+   server, which this plan first missed. #24 also serves it at `/api/v1/health` for uniformity.
 5. There are no versioned terms or privacy documents, so registration sends `consents: {}`.
 6. Resolved by [ADR-066](../adr/ADR-066-the-tracker-is-mounted-over-the-zone-service.md): the app
    shell mounts the visit tracker over the zone service's zones, and finalized visits post to
