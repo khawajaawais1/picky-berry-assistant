@@ -457,6 +457,14 @@ export const fi: Record<TranslationKey, string> = {
   'discover.season.row.title': 'Alue {zone} · {species}',
   'discover.season.row.queued': 'Jonossa',
   'discover.season.row.synced': 'Synkronoitu',
+  // The visits the team API recorded for this account (ADR-065, the API plan's phase 4).
+  'discover.season.recorded.title': 'Vyöhykepalvelun tallentamat',
+  'discover.season.recorded.row': '{zone} · {date} · {minutes} min',
+  'discover.season.recorded.rowShort': '{zone} · {date} · alle 1 min',
+  'discover.season.recorded.unknownZone': 'Vyöhyke, jota ei enää ole listattu',
+  'discover.season.recorded.empty': 'Palvelu ei ole vielä tallentanut käyntejä.',
+  'discover.season.recorded.loading': 'Kysytään vyöhykepalvelulta…',
+  'discover.season.recorded.failed': 'Vyöhykepalvelu ei vastannut.',
   'discover.season.note':
     'Sisältää jonossa olevan käyntisi. Satoasteet lasketaan vain käynneistä, joilla on kirjattu määrä.',
 

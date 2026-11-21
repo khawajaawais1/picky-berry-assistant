@@ -13,7 +13,7 @@ suite.
 | 1   | Auth and session         | `POST /auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`, `/auth/verify-email`        | stand-in session port, in-memory store → secure store      | Done        |
 | 2   | Zones                    | `GET /zones` (bbox + species), `/zones/near`                                                       | `testZoneSource` behind the `ZoneSource` port               | Done        |
 | 3   | Zone details             | `GET /zones/{id}`, `/zones/{id}/explanation`, `/zones/{id}/history`, `GET /species`                | screen 07's sample outlook and reports                      | Done        |
-| 4   | Visits                   | `POST /visits` (idempotent `client_id`), `GET /visits`                                             | local-only visit lifecycle; outbox flush                    | Planned     |
+| 4   | Visits                   | `POST /visits` (idempotent `client_id`), `GET /visits`                                             | local-only visit lifecycle; outbox flush                    | Done        |
 | 5   | Account and privacy      | `GET/PATCH/DELETE /me`, `PATCH /me/privacy`, `POST /me/export`, `POST /me/devices`                 | privacy screens' local state, your-data export              | Planned     |
 | 6   | Offline                  | `GET /zones/snapshot` (full and incremental)                                                       | downloads screen's stand-in                                 | Planned     |
 
@@ -28,3 +28,7 @@ suite.
    now unused and can be removed.
 4. `/health` returns 404 under `/api/v1` on the deployed host.
 5. There are no versioned terms or privacy documents, so registration sends `consents: {}`.
+6. **Owner decision needed:** `POST /visits` is built (`createVisitsApi`, `useVisitSync`), but the
+   presence tracker (`useVisitPresence`) is not mounted anywhere (ADR-046), and mounting it means
+   watching location app-wide (ADR-047). Until that is decided, no visit is posted; screen 11 lists
+   what `GET /visits` holds.

@@ -478,6 +478,14 @@ export const en = {
   'discover.season.row.title': 'Zone {zone} · {species}',
   'discover.season.row.queued': 'Queued',
   'discover.season.row.synced': 'Synced',
+  // The visits the team API recorded for this account (ADR-065, the API plan's phase 4).
+  'discover.season.recorded.title': 'Recorded by the zone service',
+  'discover.season.recorded.row': '{zone} · {date} · {minutes} min',
+  'discover.season.recorded.rowShort': '{zone} · {date} · under 1 min',
+  'discover.season.recorded.unknownZone': 'A zone no longer listed',
+  'discover.season.recorded.empty': 'The service has recorded no visits yet.',
+  'discover.season.recorded.loading': 'Asking the zone service…',
+  'discover.season.recorded.failed': 'The zone service could not answer.',
   'discover.season.note':
     'Includes your queued visit. Harvest rates use only visits with a recorded weight.',
   // Screen 13 · Account and offline · Downloads. The app's sync centre is the report queue, so the

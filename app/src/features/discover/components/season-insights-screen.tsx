@@ -1,4 +1,5 @@
 import { Feather } from '@/components/atoms/app-icon';
+import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { View } from 'react-native';
 
@@ -7,8 +8,9 @@ import { ChoiceChips, StatusMessage, type ChoiceChipOption } from '@/components/
 import { Screen } from '@/components/templates';
 import { layout, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import type { VisitsApi } from '@/features/visits';
 import { useReportQueue } from '@/hooks/use-report-queue';
-import { interpolate, useTranslation, type Translation } from '@/services/i18n';
+import { formatLongDate, interpolate, useTranslation, type Translation } from '@/services/i18n';
 
 import {
   DEMO_HARVEST_BY_VISIT,
@@ -31,6 +33,11 @@ import { speciesLabelKey } from './species-copy';
 
 export type SeasonInsightsScreenProps = {
   onBack?: () => void;
+  /**
+   * The zone service's record of this account's visits (ADR-065), drawn under the phone's own
+   * history. Without it the screen draws the phone's history alone.
+   */
+  visitsApi?: Pick<VisitsApi, 'list'>;
 };
 
 /**
@@ -56,7 +63,7 @@ export type SeasonInsightsScreenProps = {
  * frame's **core navigation** is absent like every other core picker screen's, because the tab
  * shell is an architecture decision of its own (PROJECT.md, open question 22).
  */
-export function SeasonInsightsScreen({ onBack }: SeasonInsightsScreenProps) {
+export function SeasonInsightsScreen({ onBack, visitsApi }: SeasonInsightsScreenProps) {
   const { colors } = useAppTheme();
   const { locale, t } = useTranslation();
   const { error, reports } = useReportQueue();
@@ -194,6 +201,8 @@ export function SeasonInsightsScreen({ onBack }: SeasonInsightsScreenProps) {
           </StatusMessage>
         ) : null}
 
+        {visitsApi ? <RecordedVisits api={visitsApi} /> : null}
+
         <AppText tone="muted" variant="metadata">
           {t('discover.season.note')}
         </AppText>
@@ -292,6 +301,59 @@ function HistoryRow({ row, index }: { row: VisitHistoryEntry; index: number }) {
       >
         {queued ? t('discover.season.row.queued') : t('discover.season.row.synced')}
       </AppText>
+    </View>
+  );
+}
+
+/**
+ * The visits the zone service recorded for this account, newest first (ADR-065). Its own
+ * component, so the query is asked only when the route supplies the API. A failed read is said,
+ * never drawn as an empty record.
+ */
+function RecordedVisits({ api }: { api: Pick<VisitsApi, 'list'> }) {
+  const { locale, t } = useTranslation();
+  const query = useQuery({
+    queryKey: ['visits', 'recorded'],
+    queryFn: () => api.list(),
+    retry: false,
+  });
+
+  return (
+    <View className="w-full gap-xs" testID="season-recorded">
+      <AppText variant="sectionHeading">{t('discover.season.recorded.title')}</AppText>
+      {query.data ? (
+        query.data.visits.length === 0 ? (
+          <AppText tone="muted" variant="bodySmall">
+            {t('discover.season.recorded.empty')}
+          </AppText>
+        ) : (
+          query.data.visits.map((visit) => {
+            const minutes = Math.floor(visit.durationSeconds / 60);
+            return (
+              <AppText key={visit.id} tone="muted" variant="bodySmall">
+                {interpolate(
+                  t(
+                    minutes < 1
+                      ? 'discover.season.recorded.rowShort'
+                      : 'discover.season.recorded.row',
+                  ),
+                  {
+                    date: formatLongDate(visit.startedAt, locale),
+                    minutes: String(minutes),
+                    zone: visit.zoneName ?? t('discover.season.recorded.unknownZone'),
+                  },
+                )}
+              </AppText>
+            );
+          })
+        )
+      ) : (
+        <StatusMessage tone={query.isError ? 'danger' : 'muted'} variant="bodySmall">
+          {t(
+            query.isError ? 'discover.season.recorded.failed' : 'discover.season.recorded.loading',
+          )}
+        </StatusMessage>
+      )}
     </View>
   );
 }
