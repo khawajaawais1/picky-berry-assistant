@@ -140,6 +140,26 @@ def zones(species: Species = "bilberry", date: dt.date | None = None):
                         media_type="application/geo+json")
 
 
+@router.get("/score")
+def point_score(lat: float = Query(..., ge=-90, le=90, description="Latitude, WGS84 decimal degrees"),
+                lon: float = Query(..., ge=-180, le=180, description="Longitude, WGS84 decimal degrees"),
+                date: dt.date | None = None):
+    """One spot -> berry score for all 4 species (the same model as /zones, for a single point)."""
+    day = date or dt.date.today()
+    scores = {}
+    forest_share = None
+    for sp in ("bilberry", "lingonberry", "cloudberry", "crowberry"):
+        res = grid().score_point(lat, lon, date=day, year_index=yield_model().year_index("Lansi-Suomi", sp))
+        if res is None:
+            return problem(404, "Outside the model area",
+                           "The forest grid covers 40 x 40 km around Jyvaskyla; this point is outside it.")
+        z = res[sp]
+        scores[sp] = z.to_payload()
+        forest_share = z.forest_share
+    return {"lat": lat, "lon": lon, "date": day.isoformat(), "scores": scores,
+            "forestShare": forest_share, "modelVersion": ZONE_GRID_VERSION}
+
+
 @router.post("/score-updates")
 def score_update(body: ScoreUpdateIn):
     """Internal: map score + recent reports for ONE zone and species -> new score.
