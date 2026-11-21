@@ -19,6 +19,7 @@ document follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Routing, request ids, the error envelope and validation are configured once in
   `src/configure-app.ts`, which `main.ts` and the e2e suite share.
+- `npm run openapi:lint` validates all three OpenAPI documents, not only `zones.yaml`.
 
 ### Unchanged
 
