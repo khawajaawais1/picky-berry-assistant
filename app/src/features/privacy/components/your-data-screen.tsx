@@ -9,6 +9,7 @@ import { spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { usePrivacyConsent } from '@/hooks/use-privacy-consent';
 import { useReportQueue } from '@/hooks/use-report-queue';
+import { useVisitOutbox } from '@/hooks/use-visit-outbox';
 import { useSavedZones } from '@/hooks/use-saved-zones';
 import { useSession } from '@/hooks/use-session';
 import { useTranslation, type TranslationKey } from '@/services/i18n';
@@ -76,14 +77,17 @@ export function YourDataScreen({ accountApi, onBack, onShare }: YourDataScreenPr
   const { t } = useTranslation();
   const { consent, error: consentError, loading: consentLoading } = usePrivacyConsent();
   const { error: queueError, loading: queueLoading, reports } = useReportQueue();
+  const { entries: waiting, error: outboxError, loading: outboxLoading } = useVisitOutbox();
   const { error: zonesError, loading: zonesLoading, zones } = useSavedZones();
   const { error: sessionError, loading: sessionLoading, session } = useSession();
   const [sharing, setSharing] = useState(false);
   const [outcome, setOutcome] = useState<ShareOutcome | 'failed' | null>(null);
 
-  const loading = consentLoading || queueLoading || sessionLoading || zonesLoading;
+  const loading = consentLoading || queueLoading || outboxLoading || sessionLoading || zonesLoading;
   // The same rule the notice follows: an unanswered read is neither “held” nor “nothing held”.
-  const readFailed = Boolean(consentError || queueError || sessionError || zonesError);
+  const readFailed = Boolean(
+    consentError || queueError || outboxError || sessionError || zonesError,
+  );
 
   // What the copy would carry, in the order the app collected the records — the same order
   // `heldRecords` answers in, named by the same record type, so the two screens cannot drift into
@@ -129,13 +133,28 @@ export function YourDataScreen({ accountApi, onBack, onShare }: YourDataScreenPr
     });
   }
 
+  if (waiting.length > 0) {
+    rows.push({
+      label: 'privacy.termsPrivacy.record.outbox.label',
+      record: 'outbox',
+      value: String(waiting.length),
+    });
+  }
+
   const share = async () => {
     if (!onShare || sharing) return;
 
     setSharing(true);
     setOutcome(null);
 
-    const records: ExportRecords = { consent, readFailed, reports, session, zones };
+    const records: ExportRecords = {
+      consent,
+      readFailed,
+      reports,
+      session,
+      waitingVisits: waiting,
+      zones,
+    };
 
     try {
       setOutcome(

@@ -17,12 +17,18 @@ import { heldRecords, type StoredRecordState } from '../held-records';
  */
 const NOTHING: StoredRecordState = {
   consentDecided: false,
+  outboxCount: 0,
   planCount: 0,
   queueCount: 0,
   signedIn: false,
 };
 
 describe('the records a phone is holding', () => {
+  it('names the finished visits waiting to send, after the queue (ADR-066)', () => {
+    expect(heldRecords({ ...NOTHING, outboxCount: 2, queueCount: 1 })).toEqual(['queue', 'outbox']);
+    expect(heldRecords({ ...NOTHING, outboxCount: undefined })).toEqual([]);
+  });
+
   it('names nothing on a phone the app has just been installed on', () => {
     expect(heldRecords(NOTHING)).toEqual([]);
   });
@@ -32,7 +38,13 @@ describe('the records a phone is holding', () => {
     // saved, and what is waiting. A different order is a different screen, and this test is where
     // that decision is visible.
     expect(
-      heldRecords({ consentDecided: true, planCount: 4, queueCount: 1, signedIn: true }),
+      heldRecords({
+        consentDecided: true,
+        outboxCount: 0,
+        planCount: 4,
+        queueCount: 1,
+        signedIn: true,
+      }),
     ).toEqual(['account', 'consent', 'plan', 'queue']);
   });
 
@@ -56,6 +68,7 @@ describe('the records a phone is holding', () => {
     expect(
       heldRecords({
         consentDecided: undefined,
+        outboxCount: undefined,
         planCount: undefined,
         queueCount: undefined,
         signedIn: undefined,

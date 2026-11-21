@@ -43,8 +43,11 @@ The submission path was built and tested with nothing feeding it.
 
 - With consent given and permission granted, the app watches position whenever the shell is open,
   not only on one screen. The watch's cadence and battery budget are ADR-063's.
-- A visit the picker walks out of finalizes only when a later fix arrives. On iOS, which filters by
-  distance alone, a picker who stops moving after leaving a zone holds the visit open until they
-  move again or reopen the app.
-- Visits that are still open, or that failed to send, are lost when the process ends. A durable
-  outbox is not built.
+- A visit the picker walks out of finalizes on the next fix or the next return to the foreground,
+  whichever comes first.
+- **Amended 2026-11-21:** finished visits are kept in a durable outbox
+  (`services/visit-outbox.ts`, `picky.visit-outbox.v1`) until the server answers them, flushed on
+  launch, after each visit and on returning to the foreground. The notice lists it, the user's copy
+  carries it (export format v2), and signing out deletes it. Returning to the foreground also
+  finalizes any visit whose grace window passed with no fix, on iOS and Android alike. A visit that
+  is still open when the process ends is not kept: it holds a live presence, not a finished visit.

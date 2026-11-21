@@ -5,6 +5,7 @@ import { enqueueReport, readReportQueue } from '../report-queue';
 import { readSavedZones, saveZone } from '../saved-zones';
 import { sessionPort } from '../session';
 import { signOut } from '../sign-out';
+import { addToVisitOutbox, readVisitOutbox } from '../visit-outbox';
 import { installFakeAuthServer } from '@/services/session/testing';
 
 /**
@@ -48,6 +49,19 @@ beforeEach(async () => {
 });
 
 describe('signing out', () => {
+  it('deletes the finished visits waiting to be sent (ADR-066)', async () => {
+    await addToVisitOutbox({
+      clientId: '4cd7a7d4-e6da-4d4c-bdbf-d0997c5ac60d',
+      zoneId: 'cc0e7929-de9f-516a-9049-7a25a1a6d092',
+      startedAt: '2026-08-03T09:00:00.000Z',
+      endedAt: '2026-08-03T09:45:00.000Z',
+    });
+
+    await signOut();
+
+    expect(await readVisitOutbox()).toEqual([]);
+  });
+
   it('removes everything this device holds, and drops the session with it', async () => {
     await recordPrivacyConsent(true);
     await enqueueReport(REPORT);

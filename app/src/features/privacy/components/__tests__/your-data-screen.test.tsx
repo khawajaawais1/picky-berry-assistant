@@ -4,6 +4,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import { recordPrivacyConsent } from '@/services/privacy-consent';
 import { enqueueReport } from '@/services/report-queue';
 import { saveZone } from '@/services/saved-zones';
+import { addToVisitOutbox } from '@/services/visit-outbox';
 import { sessionPort } from '@/services/session';
 
 import { EXPORT_FORMAT } from '../../domain/export-document';
@@ -55,6 +56,29 @@ async function seedEveryRecord() {
     consents: {},
   });
 }
+
+// Before the main block: its last test leaves the shared store hanging on purpose.
+describe('YourDataScreen, with finished visits waiting to send (ADR-066)', () => {
+  const WAITING = {
+    clientId: '4cd7a7d4-e6da-4d4c-bdbf-d0997c5ac60d',
+    zoneId: 'cc0e7929-de9f-516a-9049-7a25a1a6d092',
+    startedAt: '2026-08-03T09:00:00.000Z',
+    endedAt: '2026-08-03T09:45:00.000Z',
+  };
+
+  it('lists the record and carries each entry in the copy', async () => {
+    await addToVisitOutbox(WAITING);
+    const onShare = jest.fn(async () => 'shared' as const);
+
+    await render(<YourDataScreen onShare={onShare} />);
+    expect(await screen.findByText('Finished visits waiting to send')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByTestId('your-data-share'));
+
+    await waitFor(() => expect(onShare).toHaveBeenCalled());
+    const [document] = onShare.mock.calls[0] as unknown as [string];
+    expect(JSON.parse(document).waitingVisits).toEqual([WAITING]);
+  });
+});
 
 describe('YourDataScreen', () => {
   it('renders its own words', async () => {

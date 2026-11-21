@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act, render, waitFor } from '@testing-library/react-native';
+import { AppState, type AppStateStatus } from 'react-native';
 
 import { CONSENT_STORAGE_KEY } from '@/services/privacy-consent';
 import type { PositionFix, PositionHandlers, PositionSource } from '@/services/location';
@@ -47,9 +48,24 @@ function fakeSource() {
 }
 
 function recordingApi() {
-  const submit = jest.fn(async (): Promise<SubmitOutcome> => ({ kind: 'skipped' }));
-  const api: VisitsApi = { submit, list: jest.fn() };
-  return { api, submit };
+  const send = jest.fn(async (): Promise<Exclude<SubmitOutcome, { kind: 'skipped' }>> => ({
+    kind: 'refused',
+    failure: { kind: 'network' },
+  }));
+  const api: VisitsApi = { send, submit: jest.fn(), list: jest.fn() };
+  return { api, send };
+}
+
+/** Captures the AppState listener the tracker registers, so a test can bring the app back. */
+function captureAppState() {
+  let listener: ((state: AppStateStatus) => void) | null = null;
+  jest.spyOn(AppState, 'addEventListener').mockImplementation((_, handler) => {
+    listener = handler as (state: AppStateStatus) => void;
+    return { remove: jest.fn() };
+  });
+  return {
+    become: async (state: AppStateStatus) => act(async () => listener?.(state)),
+  };
 }
 
 beforeEach(async () => {
@@ -63,7 +79,7 @@ describe('VisitTracker', () => {
       JSON.stringify({ visitTracking: true, decidedAt: '2026-10-12T09:00:00.000Z' }),
     );
     const { held, source } = fakeSource();
-    const { api, submit } = recordingApi();
+    const { api, send } = recordingApi();
     let id = 0;
 
     await render(
@@ -81,19 +97,53 @@ describe('VisitTracker', () => {
     await deliver(fix(INSIDE, START));
     await deliver(fix(INSIDE, START + MINUTE));
     await deliver(fix(OUTSIDE, START + 2 * MINUTE));
-    expect(submit).not.toHaveBeenCalled();
+    expect(send).not.toHaveBeenCalled();
 
     await deliver(fix(OUTSIDE, START + 10 * MINUTE));
 
-    await waitFor(() => expect(submit).toHaveBeenCalledTimes(1));
-    expect(submit).toHaveBeenCalledWith(
-      expect.objectContaining({ zoneId: ZONE.id, finalizedAt: expect.any(Number) }),
+    await waitFor(() => expect(send).toHaveBeenCalledTimes(1));
+    expect(send).toHaveBeenCalledWith(expect.objectContaining({ zone_id: ZONE.id }));
+  });
+
+  it('finalizes and sends a visit when the app returns to the foreground', async () => {
+    await AsyncStorage.setItem(
+      CONSENT_STORAGE_KEY,
+      JSON.stringify({ visitTracking: true, decidedAt: '2026-10-12T09:00:00.000Z' }),
     );
+    const appState = captureAppState();
+    const { held, source } = fakeSource();
+    const { api, send } = recordingApi();
+    const now = jest.spyOn(Date, 'now');
+
+    await render(
+      <VisitTracker
+        api={api}
+        nextVisitId={() => '4cd7a7d4-e6da-4d4c-bdbf-000000000001'}
+        policy={POLICY}
+        source={source}
+        zones={[ZONE]}
+      />,
+    );
+    await waitFor(() => expect(held.handlers).not.toBeNull());
+    const deliver = async (next: PositionFix) => act(async () => held.handlers?.onFix(next));
+    await deliver(fix(INSIDE, START));
+    await deliver(fix(INSIDE, START + MINUTE));
+    await deliver(fix(OUTSIDE, START + 2 * MINUTE));
+
+    // No further fix: the picker stood still. The app comes back half an hour later.
+    now.mockReturnValue(START + 40 * MINUTE);
+    await appState.become('background');
+    expect(send).not.toHaveBeenCalled();
+    await appState.become('active');
+
+    await waitFor(() => expect(send).toHaveBeenCalledTimes(1));
+    now.mockRestore();
   });
 
   it('reads no position without the picker’s consent', async () => {
     const { source } = fakeSource();
 
+    captureAppState();
     await render(<VisitTracker api={recordingApi().api} source={source} zones={[ZONE]} />);
 
     await waitFor(() => expect(source.watch).not.toHaveBeenCalled());

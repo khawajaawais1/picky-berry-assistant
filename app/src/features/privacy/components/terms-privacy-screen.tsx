@@ -8,6 +8,7 @@ import { spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { usePrivacyConsent } from '@/hooks/use-privacy-consent';
 import { useReportQueue } from '@/hooks/use-report-queue';
+import { useVisitOutbox } from '@/hooks/use-visit-outbox';
 import { useSavedZones } from '@/hooks/use-saved-zones';
 import { useSession } from '@/hooks/use-session';
 import { useTranslation, type TranslationKey } from '@/services/i18n';
@@ -50,6 +51,11 @@ const RECORD_COPY: Record<
     value: 'privacy.termsPrivacy.record.plan.value',
     hint: 'privacy.termsPrivacy.record.plan.hint',
   },
+  outbox: {
+    label: 'privacy.termsPrivacy.record.outbox.label',
+    value: 'privacy.termsPrivacy.record.outbox.value',
+    hint: 'privacy.termsPrivacy.record.outbox.hint',
+  },
   queue: {
     label: 'privacy.termsPrivacy.record.queue.label',
     value: 'privacy.termsPrivacy.record.queue.value',
@@ -85,10 +91,12 @@ export function TermsPrivacyScreen({ onBack, onOpenYourData }: TermsPrivacyScree
   const { t } = useTranslation();
   const { consent, error: consentError, loading: consentLoading } = usePrivacyConsent();
   const { error: queueError, loading: queueLoading, reports } = useReportQueue();
+  const { entries: waiting, error: outboxError, loading: outboxLoading } = useVisitOutbox();
   const { error: zonesError, loading: zonesLoading, zones } = useSavedZones();
   const { error: sessionError, loading: sessionLoading, session } = useSession();
   const records = heldRecords({
     consentDecided: consent === null ? false : true,
+    outboxCount: waiting.length,
     planCount: zones.length,
     queueCount: reports.length,
     signedIn: session !== null,
@@ -96,10 +104,10 @@ export function TermsPrivacyScreen({ onBack, onOpenYourData }: TermsPrivacyScree
   // A read that failed leaves the list short, and a short list presented as the whole of what this
   // phone holds is the one thing this screen may not do. The account is the record whose read can
   // fail without any of the three device stores being involved, so it is named with them.
-  const readFailed = consentError || queueError || zonesError || sessionError;
+  const readFailed = consentError || queueError || outboxError || zonesError || sessionError;
   // A read still in flight is neither “held” nor “nothing held”: “Nothing of yours is on this phone
   // yet.” drawn over an unanswered store would be a claim about a device nobody has read.
-  const loading = consentLoading || queueLoading || sessionLoading || zonesLoading;
+  const loading = consentLoading || queueLoading || outboxLoading || sessionLoading || zonesLoading;
 
   return (
     <Screen

@@ -1,5 +1,6 @@
 import type { PrivacyConsent } from '@/services/privacy-consent';
 import type { VisitReport } from '@/services/report-queue';
+import type { OutboxVisit } from '@/services/visit-outbox';
 import type { SavedZone } from '@/services/saved-zones';
 import type { Session } from '@/services/session';
 
@@ -41,7 +42,7 @@ import type { Session } from '@/services/session';
  * changes, this string changes with it, and an older copy stays readable rather than being
  * mistaken for a current one.
  */
-export const EXPORT_FORMAT = 'picky.personal-data.v1';
+export const EXPORT_FORMAT = 'picky.personal-data.v2';
 
 /** What the app is holding, as the screens and hooks read it. */
 export type ExportRecords = {
@@ -53,6 +54,8 @@ export type ExportRecords = {
   zones: SavedZone[];
   /** The reports still waiting to reach a server (ADR-005). */
   reports: VisitReport[];
+  /** The finished visits waiting to reach `POST /visits` (ADR-066). Added in v2. */
+  waitingVisits: OutboxVisit[];
   /** True when any of the reads above did not answer, so this copy may be missing something. */
   readFailed: boolean;
 };
@@ -74,6 +77,7 @@ export function buildExportDocument(records: ExportRecords, at: Date): string {
       incomplete: records.readFailed,
       queuedReports: records.reports,
       savedZones: records.zones,
+      waitingVisits: records.waitingVisits,
     },
     null,
     2,

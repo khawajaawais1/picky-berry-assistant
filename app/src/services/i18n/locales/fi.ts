@@ -608,6 +608,11 @@ export const fi: Record<TranslationKey, string> = {
     'Raportit, joita tämä puhelin pitää sisällään, ja niihin kirjoittamasi tiedot.',
   'privacy.termsPrivacy.record.queue.hint':
     'Luetteloissa synkronointikeskuksessa; uloskirjautuminen poistaa ne.',
+  'privacy.termsPrivacy.record.outbox.label': 'Lähettämistä odottavat käynnit',
+  'privacy.termsPrivacy.record.outbox.value':
+    'Kunkin päättyneen käynnin vyöhyke sekä alku ja loppu, kunnes vyöhykepalvelu on saanut ne.',
+  'privacy.termsPrivacy.record.outbox.hint':
+    'Lähetetään, kun sovellus on verkossa; uloskirjautuminen poistaa ne.',
   'privacy.termsPrivacy.rights.title': 'Oikeutesi ja missä ne ovat',
   'privacy.termsPrivacy.rights.see.label': 'Katsoa',
   'privacy.termsPrivacy.rights.see.value':

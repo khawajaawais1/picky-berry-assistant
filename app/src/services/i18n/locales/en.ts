@@ -705,6 +705,11 @@ export const en = {
   'privacy.termsPrivacy.record.queue.value':
     'The visit reports this phone holds, with what you typed about each one.',
   'privacy.termsPrivacy.record.queue.hint': 'Listed in the sync centre; signing out deletes them.',
+  'privacy.termsPrivacy.record.outbox.label': 'Finished visits waiting to send',
+  'privacy.termsPrivacy.record.outbox.value':
+    'The zone and the start and end of each finished visit, until the zone service has it.',
+  'privacy.termsPrivacy.record.outbox.hint':
+    'Sent when the app is online; signing out deletes them.',
   'privacy.termsPrivacy.rights.title': 'Your rights, and where they are',
   'privacy.termsPrivacy.rights.see.label': 'See it',
   'privacy.termsPrivacy.rights.see.value':

@@ -7,6 +7,7 @@ import {
   visitSubmission,
   type VisitPage,
   type VisitRecord,
+  type VisitSubmission,
 } from '../domain/visit-submission';
 
 /**
@@ -35,6 +36,8 @@ export class VisitsReadError extends Error {
 
 export type VisitsApi = {
   submit(visit: Visit): Promise<SubmitOutcome>;
+  /** Posts a submission as it was kept, e.g. from the outbox (ADR-066). */
+  send(payload: VisitSubmission): Promise<Exclude<SubmitOutcome, { kind: 'skipped' }>>;
   list(): Promise<VisitPage>;
 };
 
@@ -47,23 +50,27 @@ function retryable(failure: ApiFailure): boolean {
 }
 
 export function createVisitsApi({ client }: { client: ApiClient }): VisitsApi {
+  async function send(body: VisitSubmission): Promise<Exclude<SubmitOutcome, { kind: 'skipped' }>> {
+    const result = await client.request({
+      method: 'POST',
+      path: '/visits',
+      body,
+      parse: parseVisitRecord,
+    });
+
+    if (result.ok) return { kind: 'recorded', record: result.data };
+    return retryable(result.error)
+      ? { kind: 'retry', failure: result.error }
+      : { kind: 'refused', failure: result.error };
+  }
+
   return {
     async submit(visit) {
       const body = visitSubmission(visit);
-      if (body === null) return { kind: 'skipped' };
-
-      const result = await client.request({
-        method: 'POST',
-        path: '/visits',
-        body,
-        parse: parseVisitRecord,
-      });
-
-      if (result.ok) return { kind: 'recorded', record: result.data };
-      return retryable(result.error)
-        ? { kind: 'retry', failure: result.error }
-        : { kind: 'refused', failure: result.error };
+      return body === null ? { kind: 'skipped' } : send(body);
     },
+
+    send,
 
     async list() {
       const result = await client.request({

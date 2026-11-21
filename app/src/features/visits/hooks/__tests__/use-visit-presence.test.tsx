@@ -181,6 +181,22 @@ describe('useVisitPresence', () => {
     ]);
   });
 
+  it('finalizes on request at a given instant, with no fix needed', async () => {
+    // ADR-066: returning to the foreground is evidence of time too. iOS filters by distance alone,
+    // so a picker who stood still after walking out sends no fix; the app's return finalizes it.
+    const { device, view } = await mount();
+
+    await deliver(device, fix(Z14.ring[0]!, START));
+    await deliver(device, fix(Z14.ring[0]!, START + MINUTE));
+    await deliver(device, fix(NOWHERE, START + 2 * MINUTE));
+
+    await act(async () =>
+      view.result.current.finalizeNow(START + 2 * MINUTE + POLICY.graceMs + MINUTE),
+    );
+
+    expect(view.result.current.visits[0]?.finalizedAt).not.toBeNull();
+  });
+
   it('resumes the same visit when the picker comes back inside the grace window', async () => {
     const { device, view } = await mount();
 

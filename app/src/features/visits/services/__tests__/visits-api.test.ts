@@ -110,6 +110,22 @@ describe('createVisitsApi', () => {
     );
   });
 
+  describe('send', () => {
+    it('posts a stored submission as it was kept', async () => {
+      const { fetchImpl, visits } = api({ status: 201, body: RECORD });
+      const payload = {
+        client_id: ID,
+        zone_id: ZONE,
+        started_at: '2026-08-03T09:00:00.000Z',
+        ended_at: '2026-08-03T09:45:00.000Z',
+        manual: false,
+      };
+
+      expect((await visits.send(payload)).kind).toBe('recorded');
+      expect(JSON.parse(fetchImpl.mock.calls[0]![1].body!)).toEqual(payload);
+    });
+  });
+
   describe('list', () => {
     it('reads the picker’s visits, newest first as the server orders them', async () => {
       const { fetchImpl, visits } = api({
