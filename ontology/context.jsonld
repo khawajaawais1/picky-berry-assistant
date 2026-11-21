@@ -1,0 +1,66 @@
+{
+  "@context": {
+    "@version": 1.1,
+    "@protected": true,
+
+    "bpa": "https://picky.example/onto#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+
+    "id": "@id",
+    "type": "@type",
+
+    "Species": "bpa:Species",
+    "Zone": "bpa:Zone",
+    "SpeciesAssessment": "bpa:SpeciesAssessment",
+
+    "species": {
+      "@id": "bpa:species",
+      "@type": "@id"
+    },
+    "ripenessStage": {
+      "@id": "bpa:ripenessStage",
+      "@type": "@id"
+    },
+    "hasAssessment": {
+      "@id": "bpa:hasAssessment",
+      "@type": "@id"
+    },
+    "habitatClass": {
+      "@id": "bpa:habitatClass",
+      "@type": "@id"
+    },
+
+    "speciesCode": "bpa:speciesCode",
+    "latinName": "bpa:latinName",
+    "nameFi": "bpa:nameFi",
+    "nameEn": "bpa:nameEn",
+    "minHabitatSuitability": {
+      "@id": "bpa:minHabitatSuitability",
+      "@type": "xsd:decimal"
+    },
+    "zoneNumber": "bpa:zoneNumber",
+    "placeName": "bpa:placeName",
+    "yieldScore": {
+      "@id": "bpa:yieldScore",
+      "@type": "xsd:integer"
+    },
+    "confidence": "bpa:confidence",
+    "zoneSuitability": {
+      "@id": "bpa:zoneSuitability",
+      "@type": "xsd:decimal"
+    },
+    "verified": {
+      "@id": "bpa:verified",
+      "@type": "xsd:boolean"
+    },
+
+    "ripeness": {
+      "@id": "bpa:ripenessStage",
+      "@type": "@id",
+      "@context": {
+        "@vocab": "https://picky.example/onto#"
+      }
+    }
+  }
+}

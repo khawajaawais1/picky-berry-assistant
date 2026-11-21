@@ -77,3 +77,8 @@ while being the part a user reads first.
   demand the complete translation.
 - The design's “EN / FI” footer is treated as an indicator of the supported languages,
   not as a control.
+
+- **Amended 2026-11-21 by [ADR-067](ADR-067-the-account-holds-its-preferences-and-push-registration.md):**
+  there is now an in-app language choice. Frame 14's Language row opens an app-drawn screen that
+  saves the account's `lang`, and while an account is signed in the app speaks it. A signed-out app
+  still follows the device, as above.

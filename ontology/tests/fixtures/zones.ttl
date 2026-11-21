@@ -1,0 +1,59 @@
+# Fixture zone snapshot for rules/ripe_nearby.rq — invented rows, not observations.
+# Four zones chosen so every branch of the rule shows: two alert candidates, one zone
+# whose species is not ripe yet, and one whose suitability is under the species minimum.
+
+@prefix bpa:  <https://picky.example/onto#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# 1 — bilberry ripe in a forest_unknown zone (suitability 0.70 ≥ 0.30). An alert.
+bpa:zone-1 a bpa:Zone, owl:NamedIndividual ;
+    bpa:zoneNumber "18" ;
+    bpa:placeName "Laajavuori" ;
+    bpa:hasAssessment bpa:zone-1-bilberry .
+
+bpa:zone-1-bilberry a bpa:SpeciesAssessment, owl:NamedIndividual ;
+    bpa:species bpa:Bilberry ;
+    bpa:ripenessStage bpa:Ripe ;
+    bpa:yieldScore 82 ;
+    bpa:confidence "high" ;
+    bpa:zoneSuitability 0.70 .
+
+# 2 — lingonberry in a prime pine zone, but only ripening. No alert yet.
+bpa:zone-2 a bpa:Zone, owl:NamedIndividual ;
+    bpa:zoneNumber "07" ;
+    bpa:placeName "Killerjärvi" ;
+    bpa:hasAssessment bpa:zone-2-lingonberry .
+
+bpa:zone-2-lingonberry a bpa:SpeciesAssessment, owl:NamedIndividual ;
+    bpa:species bpa:Lingonberry ;
+    bpa:ripenessStage bpa:Ripening ;
+    bpa:yieldScore 55 ;
+    bpa:confidence "medium" ;
+    bpa:zoneSuitability 0.95 .
+
+# 3 — cloudberry "ripe" in a spruce zone: 0.10 is under min_suitability 0.30, so the
+# species cannot occur here and the row is a data error, not an alert.
+bpa:zone-3 a bpa:Zone, owl:NamedIndividual ;
+    bpa:zoneNumber "23" ;
+    bpa:placeName "Muuratsalo" ;
+    bpa:hasAssessment bpa:zone-3-cloudberry .
+
+bpa:zone-3-cloudberry a bpa:SpeciesAssessment, owl:NamedIndividual ;
+    bpa:species bpa:Cloudberry ;
+    bpa:ripenessStage bpa:Ripe ;
+    bpa:yieldScore 60 ;
+    bpa:confidence "medium" ;
+    bpa:zoneSuitability 0.10 .
+
+# 4 — bilberry ripe in a good zone with no place name, so the OPTIONAL branch is covered.
+bpa:zone-4 a bpa:Zone, owl:NamedIndividual ;
+    bpa:zoneNumber "42" ;
+    bpa:hasAssessment bpa:zone-4-bilberry .
+
+bpa:zone-4-bilberry a bpa:SpeciesAssessment, owl:NamedIndividual ;
+    bpa:species bpa:Bilberry ;
+    bpa:ripenessStage bpa:Ripe ;
+    bpa:yieldScore 49 ;
+    bpa:confidence "medium" ;
+    bpa:zoneSuitability 0.95 .

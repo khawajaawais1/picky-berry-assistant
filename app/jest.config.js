@@ -30,6 +30,8 @@ module.exports = {
     '!src/**/index.ts',
     // Test support: a fake of the API that only tests import.
     '!src/services/session/testing.ts',
+    '!src/features/privacy/services/testing.ts',
+    '!src/services/push/testing.ts',
     // Route files are thin adapters: they are covered by E2E, not unit tests.
     '!src/app/**',
     // PROTOTYPE — throwaway scaffolding that answers a design question carries no tests, by

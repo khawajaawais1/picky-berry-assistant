@@ -59,6 +59,13 @@
       ],
       "@maplibre/maplibre-react-native",
       "expo-sqlite",
+      [
+        "expo-notifications",
+        {
+          "color": "#414BA0",
+          "defaultChannel": "alerts"
+        }
+      ],
       "expo-secure-store",
       "expo-status-bar"
     ],

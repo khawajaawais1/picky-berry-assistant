@@ -1,0 +1,50 @@
+# id:       ripe_nearby
+# version:  1.0.0
+# feature:  6.7 — reasoning and explainable push alerts (sprint 3)
+# owner:    Asmer
+#
+# sentence:             Ripe {nameEn} in zone {zoneNumber} near {placeName} — yield score {yieldScore}, {confidence} confidence.
+# sentenceWithoutPlace: Ripe {nameEn} in zone {zoneNumber} — yield score {yieldScore}, {confidence} confidence.
+#
+# inputs:   bpa.ttl + species.ttl, plus one reasoning run's zone snapshot:
+#             ?zone      a bpa:Zone, with bpa:zoneNumber and optionally bpa:placeName;
+#             ?assessment a bpa:SpeciesAssessment per zone × species, with bpa:species,
+#                        bpa:ripenessStage, bpa:yieldScore, bpa:confidence and
+#                        bpa:zoneSuitability;
+#           the snapshot's values come from ml/ (zone_scores) and data/ (zone_species).
+#
+# output:   one row per alert candidate, best yield score first. Throttling, radius,
+#           quiet hours and delivery belong to the reasoning module, not to the rule.
+#
+# Fires when the species is at the ripe stage in a zone whose habitat can support it: the
+# zone's suitability clears the species' own min_suitability (0.30, from
+# data/config/zone_species_rules.yaml). A zone below that threshold is somewhere the
+# species cannot occur, so a ripe score there is a data error, not a story.
+
+PREFIX bpa: <https://picky.example/onto#>
+
+SELECT ?zone ?zoneNumber ?placeName ?species ?speciesCode ?nameEn ?nameFi
+       ?yieldScore ?confidence ?zoneSuitability ?ripenessStage
+WHERE {
+  ?zone a bpa:Zone ;
+        bpa:zoneNumber ?zoneNumber ;
+        bpa:hasAssessment ?assessment .
+
+  ?assessment bpa:species ?species ;
+              bpa:ripenessStage ?ripenessStage ;
+              bpa:yieldScore ?yieldScore ;
+              bpa:confidence ?confidence ;
+              bpa:zoneSuitability ?zoneSuitability .
+
+  ?species bpa:speciesCode ?speciesCode ;
+           bpa:nameEn ?nameEn ;
+           bpa:nameFi ?nameFi ;
+           bpa:minHabitatSuitability ?min .
+
+  # A place is optional: a zone in the middle of the forest has no name to print.
+  OPTIONAL { ?zone bpa:placeName ?placeName }
+
+  FILTER(?ripenessStage = bpa:Ripe)
+  FILTER(?zoneSuitability >= ?min)
+}
+ORDER BY DESC(?yieldScore) ?zoneNumber

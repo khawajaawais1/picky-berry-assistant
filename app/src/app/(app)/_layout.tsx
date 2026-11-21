@@ -9,6 +9,15 @@ import {
 import { StyleSheet, View } from 'react-native';
 
 import { CoreNavigation, type CoreNavKey } from '@/components/organisms';
+import Constants from 'expo-constants';
+
+import {
+  AccountLanguage,
+  appAccountApi,
+  appProfileApi,
+  PushRegistration,
+} from '@/features/privacy';
+import { appPushPort } from '@/services/push';
 import { AppVisitTracking } from '@/features/visits';
 import { ErrorScreen } from '@/components/templates';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -69,8 +78,10 @@ const ACTIVE_TAB: Record<string, CoreNavKey> = {
   '/post-visit-feedback': 'visits',
   '/visits': 'visits',
   '/alerts': 'alerts',
+  '/alert-preferences': 'alerts',
   '/account-security': 'profile',
   '/downloads': 'profile',
+  '/language': 'profile',
   '/privacy-settings': 'profile',
   '/saved-spots': 'profile',
   '/terms-privacy': 'profile',
@@ -103,6 +114,14 @@ export default function AppShellLayout() {
         consent and the platform's permission, foreground only, and it draws nothing.
       */}
       <AppVisitTracking />
+      {/* While an account is signed in, the app speaks the account's language (ADR-067). */}
+      <AccountLanguage accountApi={appProfileApi} />
+      {/* Hands this phone's push token to the account service once alerts are allowed (ADR-067). */}
+      <PushRegistration
+        accountApi={appAccountApi}
+        appVersion={Constants.expoConfig?.version}
+        push={appPushPort}
+      />
       <Stack screenOptions={{ animation: 'fade', headerShown: false }} />
       {activeKey ? (
         <CoreNavigation

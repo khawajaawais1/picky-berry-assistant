@@ -9,11 +9,33 @@ recorded in [docs/adr/](docs/adr/).
 
 ### Added
 
+- Frame 12's alert-preferences card reads and saves the account's search radius and species
+  (`PATCH /me`), through a new app-drawn Alert preferences screen. Quiet hours reads "Not offered
+  yet", because the API has no field for it (ADR-067).
+- Push alerts: the card's switch asks for the notification permission and registers this phone's
+  native token with `POST /me/devices`; the shell re-registers on each start. Turning alerts off
+  opens the phone's settings. Adds `expo-notifications` and its config plugin. Real tokens need
+  the Firebase and APNs configuration in the build.
+- Frame 14's "Default spot visibility" chips save `privacy_level` (`PATCH /me/privacy`).
+- A Language screen behind frame 14's Language row saves the account's language, and the app
+  speaks it while that account is signed in (amends ADR-017).
+- The account's name can be edited on Account & security.
 - Password reset asks the team API (`POST /auth/password-reset`) and says the request was
   accepted, without claiming an email was sent (ADR-065, amended).
 
 ### Fixed
 
+- The alerts switch no longer throws on Android when the platform will not create the notification
+  channel, and Expo Go (which has no remote push since SDK 53) reads as unable to receive alerts.
+- Builds made with EAS (`development`, `preview`, `production`) now carry the API address
+  (`EXPO_PUBLIC_API_BASE_URL`). Without it every request failed before leaving the phone, so
+  account creation always failed.
+- The create-account screen now says why it failed: an address that may already have an account,
+  or an account service it could not reach. Before, every failure read "Your account wasn't
+  created. Try again."
+- Creating an account no longer always fails with "Your account wasn't created". The API requires
+  terms and privacy-policy versions (`422 CONSENT_REQUIRED`), and the app sent none. It now sends
+  the version of the device notice the consent row opens (ADR-068).
 - A reset request the service accepted (`202` with no body) no longer reads as failed: the
   transport skips the body for requests that declare `expectsBody: false`.
 - A rate-limited, missing or failing `/auth/refresh` no longer signs the picker out: only the server

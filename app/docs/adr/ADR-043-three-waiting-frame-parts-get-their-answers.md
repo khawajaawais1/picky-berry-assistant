@@ -148,3 +148,8 @@ name one has been to **draw what the design draws, with the screen saying what i
 - PROJECT.md issues 19 and 20; `docs/design-source.md`'s status table and the three screens' sections;
   `docs/demo-and-stand-ins.md` rows A8, A10 and A17.
 - `docs/demo-and-stand-ins.md`'s disclosure vocabulary (`· SEASON DEMO` / `· KAUSIDEMO`) and ADR-042.
+
+- **Amended 2026-11-21 by [ADR-067](ADR-067-the-account-holds-its-preferences-and-push-registration.md):**
+  with the account service connected, frame 12's preferences card is the account's own: a real push
+  switch, the account's radius and species, and quiet hours read as not offered. The sample
+  treatment here remains for a build without the service (the layout harness).

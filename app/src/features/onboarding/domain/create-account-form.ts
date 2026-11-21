@@ -51,3 +51,21 @@ export function isSubmittable(form: CreateAccountForm): boolean {
     form.consent
   );
 }
+
+/**
+ * The version of what screen 03's consent row agrees to (ADR-068). No written terms or privacy
+ * policy exist yet (PROJECT.md, open questions 15–16): the row's link opens the app's own device
+ * notice (`/terms-privacy`, ADR-039), so that notice is what the picker agreed to, and its version
+ * is the one recorded for both. **Bump it whenever the notice's wording changes**, and replace it
+ * with the real documents' versions when the owner publishes them.
+ */
+export const CONSENT_NOTICE_VERSION = 'device-notice-2026-11-21';
+
+/**
+ * The consents `POST /auth/register` records. The API refuses a registration without both
+ * versions (`422 CONSENT_REQUIRED`). Background location is never claimed: the app reads no
+ * position in the background (ADR-056).
+ */
+export function registrationConsents(): { terms_version: string; privacy_policy_version: string } {
+  return { terms_version: CONSENT_NOTICE_VERSION, privacy_policy_version: CONSENT_NOTICE_VERSION };
+}

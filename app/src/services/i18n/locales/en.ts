@@ -102,6 +102,10 @@ export const en = {
   'onboarding.createAccount.field.name': 'Your name',
   'onboarding.createAccount.field.password': 'Password',
   'onboarding.createAccount.failed': 'Your account wasn’t created. Try again.',
+  'onboarding.createAccount.refused':
+    'This email can’t be used for a new account. If it already has one, sign in instead.',
+  'onboarding.createAccount.unavailable':
+    'Picky couldn’t reach the account service. Check your connection and try again.',
   'onboarding.createAccount.heading': 'A little introduction.',
   'onboarding.createAccount.passwordHint': 'At least 10 characters, with a number.',
   'onboarding.createAccount.privacy.body':
@@ -442,6 +446,22 @@ export const en = {
   'discover.alert.preferences.speciesValue': '{species} + {count}',
   'discover.alert.preferences.sample':
     'The design’s sample preferences: no alert is sent yet, and nothing here reads a radius, quiet hours or a species.',
+  'discover.alert.preferences.quietUnset': 'Not offered yet',
+  'discover.alert.preferences.speciesNone': 'None chosen',
+  'discover.alert.preferences.live': 'Saved to your account. The service sends no alerts yet.',
+  'discover.alert.preferences.readFailed': 'Your alert settings could not be read.',
+  'discover.alert.push.denied': 'Notifications for Picky are off in this phone’s settings.',
+  'discover.alert.push.openSettings': 'Open phone settings',
+  'discover.alert.push.offHint': 'Opens this phone’s settings, where alerts are turned off.',
+  'discover.alert.push.unsupported': 'This phone cannot receive push alerts from Picky yet.',
+  'discover.alert.push.registerFailed':
+    'Alerts are allowed, but this phone could not be registered yet. It tries again on the next start.',
+  'discover.alertPreferences.eyebrow': 'CORE PICKER · ALERT PREFERENCES',
+  'discover.alertPreferences.title': 'Alert preferences',
+  'discover.alertPreferences.intro':
+    'How far away, and for which berries, an alert is about. Saved to your account.',
+  'discover.alertPreferences.saveFailed': 'The change could not be saved. Try again.',
+  'discover.alertPreferences.signedOut': 'Sign in to choose what alerts are about.',
 
   // Screen 11 · Core picker · Visits and analytics. The eyebrow carries the design's own words
   // plus the disclosure that the season on it is the design's sample month, the way frame 06's
@@ -610,6 +630,29 @@ export const en = {
   // has no picker to open (ADR-017), so each catalogue names its own language.
   'privacy.language.title': 'Language',
   'privacy.language.value': 'English',
+  'privacy.languageScreen.eyebrow': 'ACCOUNT / OFFLINE · LANGUAGE',
+  'privacy.languageScreen.intro':
+    'The language Picky speaks. It is saved to your account, so the next phone you sign in on speaks it too.',
+  'privacy.languageScreen.choices': 'App language',
+  'privacy.languageScreen.english': 'English',
+  'privacy.languageScreen.finnish': 'Suomi',
+  'privacy.languageScreen.signedOut':
+    'Sign in to choose a language. Until then Picky follows this phone’s.',
+  'privacy.languageScreen.saveFailed': 'The language could not be saved. Try again.',
+  'privacy.languageScreen.readFailed':
+    'Your account could not be read, so the language cannot be changed right now.',
+  'privacy.visibility.title': 'Default spot visibility',
+  'privacy.visibility.private': 'Private',
+  'privacy.visibility.shared': 'Shared',
+  'privacy.visibility.public': 'Public',
+  'privacy.visibility.note':
+    'Saved to your account for when sharing arrives. Nothing of yours is shown to anyone yet.',
+  'privacy.visibility.saveFailed': 'The visibility could not be saved. Try again.',
+  'privacy.nickname.label': 'Name',
+  'privacy.nickname.save': 'Save name',
+  'privacy.nickname.saved': 'Name saved.',
+  'privacy.nickname.invalid': 'A name is 1–30 characters.',
+  'privacy.nickname.saveFailed': 'The name could not be saved. Try again.',
   // The frame's last control, and the failure it has to be able to state: signing out deletes
   // what this device holds, so a run that did not finish is not one to pass over.
   'privacy.signOut': 'Sign out',

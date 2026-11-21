@@ -91,6 +91,10 @@ export const fi: Record<TranslationKey, string> = {
   'onboarding.createAccount.field.name': 'Nimesi',
   'onboarding.createAccount.field.password': 'Salasana',
   'onboarding.createAccount.failed': 'Tilin luonti ei onnistunut. Yritä uudelleen.',
+  'onboarding.createAccount.refused':
+    'Tällä sähköpostilla ei voi luoda uutta tiliä. Jos sillä on jo tili, kirjaudu sisään.',
+  'onboarding.createAccount.unavailable':
+    'Picky ei tavoittanut tilipalvelua. Tarkista yhteys ja yritä uudelleen.',
   'onboarding.createAccount.heading': 'Pieni esittely.',
   'onboarding.createAccount.passwordHint': 'Vähintään 10 merkkiä, sisältää numeron.',
   'onboarding.createAccount.privacy.body':
@@ -393,6 +397,22 @@ export const fi: Record<TranslationKey, string> = {
   'discover.alert.preferences.speciesValue': '{species} + {count}',
   'discover.alert.preferences.sample':
     'Suunnittelun esimerkkivalinnat: hälytyksiä ei vielä lähetetä eikä mikään lue sädettä, hiljaisia tunteja tai lajeja.',
+  'discover.alert.preferences.quietUnset': 'Ei vielä tarjolla',
+  'discover.alert.preferences.speciesNone': 'Ei valittu',
+  'discover.alert.preferences.live': 'Tallentuu tiliisi. Palvelu ei vielä lähetä ilmoituksia.',
+  'discover.alert.preferences.readFailed': 'Ilmoitusasetuksiasi ei voitu lukea.',
+  'discover.alert.push.denied': 'Pickyn ilmoitukset ovat pois päältä puhelimen asetuksissa.',
+  'discover.alert.push.openSettings': 'Avaa puhelimen asetukset',
+  'discover.alert.push.offHint': 'Avaa puhelimen asetukset, joissa ilmoitukset kytketään pois.',
+  'discover.alert.push.unsupported': 'Tämä puhelin ei vielä voi vastaanottaa Pickyn ilmoituksia.',
+  'discover.alert.push.registerFailed':
+    'Ilmoitukset on sallittu, mutta puhelinta ei vielä voitu rekisteröidä. Se yrittää uudelleen seuraavalla käynnistyksellä.',
+  'discover.alertPreferences.eyebrow': 'POIMINTA · ILMOITUSASETUKSET',
+  'discover.alertPreferences.title': 'Ilmoitusasetukset',
+  'discover.alertPreferences.intro':
+    'Kuinka kaukana ja mistä marjoista ilmoitus kertoo. Tallentuu tiliisi.',
+  'discover.alertPreferences.saveFailed': 'Muutosta ei voitu tallentaa. Yritä uudelleen.',
+  'discover.alertPreferences.signedOut': 'Kirjaudu sisään valitaksesi, mistä ilmoitukset kertovat.',
 
   // Screen 13. The sync centre's own heading counts the reports this phone is holding. “Raportti”
   // is the word screens 10 and 11 already use for one, and the singular and plural are separate
@@ -525,6 +545,28 @@ export const fi: Record<TranslationKey, string> = {
   // The row names the language the app is in, so this catalogue says its own name.
   'privacy.language.title': 'Kieli',
   'privacy.language.value': 'Suomi',
+  'privacy.languageScreen.eyebrow': 'TILI / OFFLINE · KIELI',
+  'privacy.languageScreen.intro':
+    'Kieli, jota Picky puhuu. Se tallentuu tiliisi, joten seuraavakin puhelin, jolla kirjaudut, puhuu sitä.',
+  'privacy.languageScreen.choices': 'Sovelluksen kieli',
+  'privacy.languageScreen.english': 'English',
+  'privacy.languageScreen.finnish': 'Suomi',
+  'privacy.languageScreen.signedOut':
+    'Kirjaudu sisään valitaksesi kielen. Siihen asti Picky seuraa puhelimen kieltä.',
+  'privacy.languageScreen.saveFailed': 'Kieltä ei voitu tallentaa. Yritä uudelleen.',
+  'privacy.languageScreen.readFailed': 'Tiliäsi ei voitu lukea, joten kieltä ei voi nyt vaihtaa.',
+  'privacy.visibility.title': 'Paikkojen oletusnäkyvyys',
+  'privacy.visibility.private': 'Yksityinen',
+  'privacy.visibility.shared': 'Jaettu',
+  'privacy.visibility.public': 'Julkinen',
+  'privacy.visibility.note':
+    'Tallentuu tiliisi jakamista varten. Mitään tietojasi ei vielä näytetä kenellekään.',
+  'privacy.visibility.saveFailed': 'Näkyvyyttä ei voitu tallentaa. Yritä uudelleen.',
+  'privacy.nickname.label': 'Nimi',
+  'privacy.nickname.save': 'Tallenna nimi',
+  'privacy.nickname.saved': 'Nimi tallennettu.',
+  'privacy.nickname.invalid': 'Nimessä on 1–30 merkkiä.',
+  'privacy.nickname.saveFailed': 'Nimeä ei voitu tallentaa. Yritä uudelleen.',
   'privacy.signOut': 'Kirjaudu ulos',
   // Poisto ei ole täällä peruutettavissa, joten se nimetään ennen kuin se tapahtuu.
   'privacy.signOut.confirm.title': 'Kirjaudu ulos tältä laitteelta?',

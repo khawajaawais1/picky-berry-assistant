@@ -1,0 +1,169 @@
+# species.ttl — one block per pilot species (ontology v1).
+#
+# Every value here is copied from the two committed configs, not sourced afresh:
+#   data/config/species.yaml          → speciesCode, latinName, nameFi, nameEn, IRI
+#   data/config/zone_species_rules.yaml → habitat suitability, fertility multipliers,
+#                                         min_suitability, `verified: false`
+#
+# The IRIs are that YAML's placeholders (D6) — the same ones the API emits for F3.
+# They only change when Asmer + Hassan revise the species vocabulary.
+#
+# `bpa:verified false` is zone_species_rules.yaml's own `verified:` flag: the ecology values
+# are a first pass without sources, so a reasoning run must be able to say so.
+
+@prefix bpa:  <https://picky.example/onto#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# --- the four pilot species (data/config/species.yaml) -------------------
+
+bpa:Bilberry a bpa:Species, owl:NamedIndividual ;
+    bpa:speciesCode "bilberry" ;
+    bpa:latinName "Vaccinium myrtillus" ;
+    bpa:nameFi "mustikka" ;
+    bpa:nameEn "bilberry" ;
+    bpa:minHabitatSuitability 0.30 ;
+    bpa:verified false ;
+    rdfs:label "bilberry"@en .
+
+bpa:Lingonberry a bpa:Species, owl:NamedIndividual ;
+    bpa:speciesCode "lingonberry" ;
+    bpa:latinName "Vaccinium vitis-idaea" ;
+    bpa:nameFi "puolukka" ;
+    bpa:nameEn "lingonberry" ;
+    bpa:minHabitatSuitability 0.30 ;
+    bpa:verified false ;
+    rdfs:label "lingonberry"@en .
+
+bpa:Cloudberry a bpa:Species, owl:NamedIndividual ;
+    bpa:speciesCode "cloudberry" ;
+    bpa:latinName "Rubus chamaemorus" ;
+    bpa:nameFi "lakka (hilla)" ;
+    bpa:nameEn "cloudberry" ;
+    bpa:minHabitatSuitability 0.30 ;
+    bpa:verified false ;
+    rdfs:label "cloudberry"@en .
+
+bpa:Crowberry a bpa:Species, owl:NamedIndividual ;
+    bpa:speciesCode "crowberry" ;
+    bpa:latinName "Empetrum nigrum" ;
+    bpa:nameFi "variksenmarja" ;
+    bpa:nameEn "crowberry" ;
+    bpa:minHabitatSuitability 0.30 ;
+    bpa:verified false ;
+    rdfs:label "crowberry"@en .
+
+# --- habitat suitability, 0–1 fit per habitat class ----------------------
+# zone_species_rules.yaml `rules:` — one node per species × class so the value keeps
+# its species and class (an RDF literal cannot carry a row of a table).
+
+# bilberry — spruce and mixed forest, the mire is a refuge not a home.
+bpa:BilberryMire a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Bilberry ; bpa:habitatClass bpa:mire ; bpa:suitability 0.15 .
+bpa:BilberryForestSpruce a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Bilberry ; bpa:habitatClass bpa:forest_spruce ; bpa:suitability 0.95 .
+bpa:BilberryForestPine a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Bilberry ; bpa:habitatClass bpa:forest_pine ; bpa:suitability 0.65 .
+bpa:BilberryForestMixed a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Bilberry ; bpa:habitatClass bpa:forest_mixed ; bpa:suitability 0.80 .
+bpa:BilberryForestBroadleaf a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Bilberry ; bpa:habitatClass bpa:forest_broadleaf ; bpa:suitability 0.45 .
+bpa:BilberryForestUnknown a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Bilberry ; bpa:habitatClass bpa:forest_unknown ; bpa:suitability 0.70 .
+
+# lingonberry — pine.
+bpa:LingonberryMire a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Lingonberry ; bpa:habitatClass bpa:mire ; bpa:suitability 0.25 .
+bpa:LingonberryForestSpruce a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Lingonberry ; bpa:habitatClass bpa:forest_spruce ; bpa:suitability 0.55 .
+bpa:LingonberryForestPine a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Lingonberry ; bpa:habitatClass bpa:forest_pine ; bpa:suitability 0.95 .
+bpa:LingonberryForestMixed a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Lingonberry ; bpa:habitatClass bpa:forest_mixed ; bpa:suitability 0.75 .
+bpa:LingonberryForestBroadleaf a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Lingonberry ; bpa:habitatClass bpa:forest_broadleaf ; bpa:suitability 0.35 .
+bpa:LingonberryForestUnknown a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Lingonberry ; bpa:habitatClass bpa:forest_unknown ; bpa:suitability 0.70 .
+
+# cloudberry — mire, and almost nothing else.
+bpa:CloudberryMire a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Cloudberry ; bpa:habitatClass bpa:mire ; bpa:suitability 0.90 .
+bpa:CloudberryForestSpruce a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Cloudberry ; bpa:habitatClass bpa:forest_spruce ; bpa:suitability 0.10 .
+bpa:CloudberryForestPine a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Cloudberry ; bpa:habitatClass bpa:forest_pine ; bpa:suitability 0.20 .
+bpa:CloudberryForestMixed a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Cloudberry ; bpa:habitatClass bpa:forest_mixed ; bpa:suitability 0.05 .
+bpa:CloudberryForestBroadleaf a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Cloudberry ; bpa:habitatClass bpa:forest_broadleaf ; bpa:suitability 0.02 .
+bpa:CloudberryForestUnknown a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Cloudberry ; bpa:habitatClass bpa:forest_unknown ; bpa:suitability 0.10 .
+
+# crowberry — pine and open mire.
+bpa:CrowberryMire a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Crowberry ; bpa:habitatClass bpa:mire ; bpa:suitability 0.55 .
+bpa:CrowberryForestSpruce a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Crowberry ; bpa:habitatClass bpa:forest_spruce ; bpa:suitability 0.15 .
+bpa:CrowberryForestPine a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Crowberry ; bpa:habitatClass bpa:forest_pine ; bpa:suitability 0.70 .
+bpa:CrowberryForestMixed a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Crowberry ; bpa:habitatClass bpa:forest_mixed ; bpa:suitability 0.30 .
+bpa:CrowberryForestBroadleaf a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Crowberry ; bpa:habitatClass bpa:forest_broadleaf ; bpa:suitability 0.10 .
+bpa:CrowberryForestUnknown a bpa:HabitatSuitability, owl:NamedIndividual ;
+    bpa:species bpa:Crowberry ; bpa:habitatClass bpa:forest_unknown ; bpa:suitability 0.35 .
+
+# --- fertility multipliers, MS-NFI site class 1–6 ------------------------
+# zone_species_rules.yaml `fertility_multiplier:` — applied to the habitat mean, then clipped.
+
+bpa:BilberrySite1 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Bilberry ; bpa:fertilitySiteClass 1 ; bpa:fertilityMultiplier 0.80 .
+bpa:BilberrySite2 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Bilberry ; bpa:fertilitySiteClass 2 ; bpa:fertilityMultiplier 1.10 .
+bpa:BilberrySite3 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Bilberry ; bpa:fertilitySiteClass 3 ; bpa:fertilityMultiplier 1.10 .
+bpa:BilberrySite4 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Bilberry ; bpa:fertilitySiteClass 4 ; bpa:fertilityMultiplier 0.80 .
+bpa:BilberrySite5 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Bilberry ; bpa:fertilitySiteClass 5 ; bpa:fertilityMultiplier 0.50 .
+bpa:BilberrySite6 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Bilberry ; bpa:fertilitySiteClass 6 ; bpa:fertilityMultiplier 0.30 .
+
+bpa:LingonberrySite1 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Lingonberry ; bpa:fertilitySiteClass 1 ; bpa:fertilityMultiplier 0.50 .
+bpa:LingonberrySite2 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Lingonberry ; bpa:fertilitySiteClass 2 ; bpa:fertilityMultiplier 0.80 .
+bpa:LingonberrySite3 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Lingonberry ; bpa:fertilitySiteClass 3 ; bpa:fertilityMultiplier 1.00 .
+bpa:LingonberrySite4 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Lingonberry ; bpa:fertilitySiteClass 4 ; bpa:fertilityMultiplier 1.15 .
+bpa:LingonberrySite5 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Lingonberry ; bpa:fertilitySiteClass 5 ; bpa:fertilityMultiplier 1.00 .
+bpa:LingonberrySite6 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Lingonberry ; bpa:fertilitySiteClass 6 ; bpa:fertilityMultiplier 0.60 .
+
+bpa:CloudberrySite1 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Cloudberry ; bpa:fertilitySiteClass 1 ; bpa:fertilityMultiplier 1.00 .
+bpa:CloudberrySite2 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Cloudberry ; bpa:fertilitySiteClass 2 ; bpa:fertilityMultiplier 1.00 .
+bpa:CloudberrySite3 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Cloudberry ; bpa:fertilitySiteClass 3 ; bpa:fertilityMultiplier 1.00 .
+bpa:CloudberrySite4 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Cloudberry ; bpa:fertilitySiteClass 4 ; bpa:fertilityMultiplier 1.00 .
+bpa:CloudberrySite5 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Cloudberry ; bpa:fertilitySiteClass 5 ; bpa:fertilityMultiplier 1.00 .
+bpa:CloudberrySite6 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Cloudberry ; bpa:fertilitySiteClass 6 ; bpa:fertilityMultiplier 1.00 .
+
+bpa:CrowberrySite1 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Crowberry ; bpa:fertilitySiteClass 1 ; bpa:fertilityMultiplier 0.30 .
+bpa:CrowberrySite2 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Crowberry ; bpa:fertilitySiteClass 2 ; bpa:fertilityMultiplier 0.50 .
+bpa:CrowberrySite3 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Crowberry ; bpa:fertilitySiteClass 3 ; bpa:fertilityMultiplier 0.80 .
+bpa:CrowberrySite4 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Crowberry ; bpa:fertilitySiteClass 4 ; bpa:fertilityMultiplier 1.00 .
+bpa:CrowberrySite5 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Crowberry ; bpa:fertilitySiteClass 5 ; bpa:fertilityMultiplier 1.20 .
+bpa:CrowberrySite6 a bpa:FertilityMultiplier, owl:NamedIndividual ;
+    bpa:species bpa:Crowberry ; bpa:fertilitySiteClass 6 ; bpa:fertilityMultiplier 1.20 .

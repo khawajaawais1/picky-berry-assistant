@@ -1,3 +1,4 @@
+import { setAppLocale } from './i18n';
 import { clearPrivacyConsent } from './privacy-consent';
 import { clearReportQueue } from './report-queue';
 import { clearSavedZones } from './saved-zones';
@@ -31,4 +32,6 @@ export async function signOut(): Promise<void> {
   // Last, so that a failure above leaves the session — and therefore the screen that shows who
   // is signed in — exactly as it was.
   await sessionPort.signOut();
+  // The account's language went with the account: a signed-out app speaks the device's (ADR-067).
+  setAppLocale(null);
 }

@@ -4,6 +4,7 @@ import { sessionPort } from '@/services/session';
 
 import { AccountSecurityScreen } from '../account-security-screen';
 import { installFakeAuthServer } from '@/services/session/testing';
+import { accountProfile, fakeAccountApi } from '../../services/testing';
 
 /**
  * The screen frame 14's “Account & security” row opens (node 5:23677). **The design never drew it**
@@ -21,6 +22,71 @@ const SIGN_OUT = 'Sign out';
 beforeEach(async () => {
   installFakeAuthServer();
   await sessionPort.signOut();
+});
+
+describe('AccountSecurityScreen, editing the name (ADR-067)', () => {
+  async function signedIn() {
+    await sessionPort.register({
+      displayName: 'Aino Korhonen',
+      email: 'aino@example.fi',
+      password: 'berries1234',
+      lang: 'en',
+      consents: {},
+    });
+  }
+
+  it('offers the account’s name for editing once the service has answered it', async () => {
+    await signedIn();
+    await render(<AccountSecurityScreen accountApi={fakeAccountApi()} />);
+
+    expect(await screen.findByDisplayValue('Aino Korhonen')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Save name' })).toBeOnTheScreen();
+  });
+
+  it('saves a new name to the account and draws it in the account row', async () => {
+    await signedIn();
+    const api = fakeAccountApi();
+    await render(<AccountSecurityScreen accountApi={api} />);
+
+    await fireEvent.changeText(await screen.findByLabelText('Name'), 'Aino K');
+    await fireEvent.press(screen.getByRole('button', { name: 'Save name' }));
+
+    expect(api.updateProfile).toHaveBeenCalledWith({ nickname: 'Aino K' });
+    expect(await screen.findByText('Name saved.')).toBeOnTheScreen();
+    expect(screen.getByTestId('account-security-row')).toHaveTextContent(/Aino K/);
+  });
+
+  it('refuses an empty name without asking the service', async () => {
+    await signedIn();
+    const api = fakeAccountApi();
+    await render(<AccountSecurityScreen accountApi={api} />);
+
+    await fireEvent.changeText(await screen.findByLabelText('Name'), '   ');
+    await fireEvent.press(screen.getByRole('button', { name: 'Save name' }));
+
+    expect(await screen.findByText('A name is 1–30 characters.')).toBeOnTheScreen();
+    expect(api.updateProfile).not.toHaveBeenCalled();
+  });
+
+  it('says the name was not saved when the service refuses it', async () => {
+    await signedIn();
+    const api = fakeAccountApi();
+    api.updateProfile.mockResolvedValueOnce({ ok: false, reason: 'unavailable' });
+    await render(<AccountSecurityScreen accountApi={api} />);
+
+    await fireEvent.changeText(await screen.findByLabelText('Name'), 'Aino K');
+    await fireEvent.press(screen.getByRole('button', { name: 'Save name' }));
+
+    expect(await screen.findByText('The name could not be saved. Try again.')).toBeOnTheScreen();
+  });
+
+  it('offers no name field without an account service that can save', async () => {
+    await signedIn();
+    await render(<AccountSecurityScreen accountApi={{ profile: async () => accountProfile() }} />);
+
+    await screen.findByTestId('account-security-row');
+    expect(screen.queryByLabelText('Name')).not.toBeOnTheScreen();
+  });
 });
 
 describe('AccountSecurityScreen', () => {
@@ -236,12 +302,7 @@ describe('AccountSecurityScreen, with no session', () => {
  * longer claims it without asking.
  */
 describe('AccountSecurityScreen, with the account service', () => {
-  const profile = (emailVerified: boolean) => async () => ({
-    email: 'aino@example.fi',
-    emailVerified,
-    nickname: 'Aino Korhonen',
-    lang: 'en' as const,
-  });
+  const profile = (emailVerified: boolean) => async () => accountProfile({ emailVerified });
 
   async function signedUp() {
     await sessionPort.register({

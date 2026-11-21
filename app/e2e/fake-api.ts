@@ -80,10 +80,23 @@ export async function fakeAccountService(page: Page): Promise<void> {
     const email = typeof body.email === 'string' ? body.email : '';
 
     switch (path) {
-      case '/api/v1/auth/register':
+      case '/api/v1/auth/register': {
+        // The service's own rule: a registration without both consent versions is refused.
+        const consents = (body.consents ?? {}) as Record<string, unknown>;
+        if (
+          typeof consents.terms_version !== 'string' ||
+          typeof consents.privacy_policy_version !== 'string'
+        ) {
+          await answer(route, 422, {
+            error: { code: 'CONSENT_REQUIRED', message: 'x' },
+            request_id: 'c',
+          });
+          return;
+        }
         nicknames.set(email, typeof body.nickname === 'string' ? body.nickname : null);
         await answer(route, 201, session(email));
         return;
+      }
       case '/api/v1/auth/login':
         await answer(route, 200, session(email));
         return;

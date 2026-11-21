@@ -182,6 +182,8 @@ const SAMPLE_FREE_SCREENS: readonly string[] = [
   'src/features/onboarding/components/sign-in-screen.tsx',
   'src/features/onboarding/components/welcome-screen.tsx',
   'src/features/privacy/components/account-security-screen.tsx',
+  // The account's own language, read from and saved to `GET/PATCH /me` (ADR-067).
+  'src/features/privacy/components/language-screen.tsx',
   'src/features/privacy/components/privacy-settings-screen.tsx',
   'src/features/privacy/components/terms-privacy-screen.tsx',
   // The export surface (ADR-040): it lists the phone's own records as the notice does, so it draws
@@ -190,6 +192,8 @@ const SAMPLE_FREE_SCREENS: readonly string[] = [
   // The saved plan reads the zone source (ADR-060): every row is a source zone, and a saved id
   // the source no longer answers to is printed as the id alone — no design sample is drawn.
   'src/features/discover/components/saved-spots-screen.tsx',
+  // The account's own alert radius and species (ADR-067): nothing on it is the design's sample.
+  'src/features/discover/components/alert-preferences-screen.tsx',
   // The watch field test (ADR-063) is a tester's instrument, not a screen of the design: it draws
   // readings from the real seam and the phone's own battery, and none of the design's sample.
   'src/features/field-test/components/field-test-screen.tsx',

@@ -7,6 +7,9 @@ import { sessionPort } from '../session';
 import { signOut } from '../sign-out';
 import { addToVisitOutbox, readVisitOutbox } from '../visit-outbox';
 import { installFakeAuthServer } from '@/services/session/testing';
+import { renderHook } from '@testing-library/react-native';
+
+import { setAppLocale, useTranslation } from '../i18n';
 
 /**
  * Leaving the app: the one control on frame 14 that deletes anything.
@@ -49,6 +52,15 @@ beforeEach(async () => {
 });
 
 describe('signing out', () => {
+  it('stops speaking the account’s language, so a signed-out app follows the device (ADR-067)', async () => {
+    setAppLocale('fi');
+
+    await signOut();
+
+    const { result } = await renderHook(() => useTranslation());
+    expect(result.current.locale).toBe('en');
+  });
+
   it('deletes the finished visits waiting to be sent (ADR-066)', async () => {
     await addToVisitOutbox({
       clientId: '4cd7a7d4-e6da-4d4c-bdbf-d0997c5ac60d',
