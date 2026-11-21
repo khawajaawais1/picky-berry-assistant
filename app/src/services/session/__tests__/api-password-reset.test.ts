@@ -33,6 +33,23 @@ describe('createApiPasswordResetRequest', () => {
     expect(JSON.parse(init.body!)).toEqual({ email: 'aino@example.fi' });
   });
 
+  it('answers accepted for a 202 with an empty body, as the service sends it', async () => {
+    // Nest answers `@HttpCode(202)` on a void handler with no body, so `json()` throws, as it
+    // does in a browser. The request must not read that as an unreadable answer.
+    const fetchImpl = jest.fn<ReturnType<ApiFetch>, Parameters<ApiFetch>>(async () => ({
+      ok: true,
+      status: 202,
+      json: async () => {
+        throw new SyntaxError('Unexpected end of JSON input');
+      },
+    }));
+    const request = createApiPasswordResetRequest({
+      client: createApiClient({ baseUrl: BASE, fetchImpl }),
+    });
+
+    expect(await request('aino@example.fi')).toEqual({ ok: true });
+  });
+
   it('answers accepted for the service’s 202', async () => {
     expect(await requestAnswering({ status: 202 }).request('aino@example.fi')).toEqual({
       ok: true,

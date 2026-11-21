@@ -66,6 +66,12 @@ export type ApiRequest<T> = {
    * no retry: the session port uses it for the logout of the token it already holds.
    */
   bearer?: string;
+  /**
+   * Whether the success answer carries a body. `false` for an endpoint that answers with none,
+   * such as a `202` from a void handler: the transport then reads nothing and hands `parse` `null`,
+   * as it does for every `204`. Defaults to `true`.
+   */
+  expectsBody?: boolean;
   /** Validates the success body (`null` for an empty one). Answers `null` when it cannot read it. */
   parse: (body: unknown) => T | null;
 };
@@ -199,7 +205,7 @@ async function settle<T>(
   }
 
   let body: unknown = null;
-  if (response.status !== 204) {
+  if (response.status !== 204 && request.expectsBody !== false) {
     const read = await readBody(response);
     if (!read.readable) {
       return { ok: false, error: { kind: 'invalid-response', status: response.status } };

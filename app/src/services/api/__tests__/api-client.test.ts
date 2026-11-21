@@ -275,6 +275,24 @@ describe('createApiClient', () => {
       expect(result).toEqual({ ok: false, error: { kind: 'invalid-response', status: 200 } });
     });
 
+    it('reads no body for a request that expects none, whatever the success status', async () => {
+      const fetchImpl = fetchAnswering({ status: 202, unreadable: true });
+      const client = createApiClient({ baseUrl: BASE, fetchImpl });
+      const parse = jest.fn(() => true);
+
+      const result = await client.request({
+        method: 'POST',
+        path: '/auth/password-reset',
+        body: {},
+        auth: false,
+        expectsBody: false,
+        parse,
+      });
+
+      expect(result).toEqual({ ok: true, status: 202, data: true });
+      expect(parse).toHaveBeenCalledWith(null);
+    });
+
     it('parses an empty 204 without reading a body', async () => {
       const fetchImpl = fetchAnswering({ status: 204, unreadable: true });
       const client = createApiClient({ baseUrl: BASE, fetchImpl, tokens: tokens('a1') });

@@ -14,6 +14,8 @@ recorded in [docs/adr/](docs/adr/).
 
 ### Fixed
 
+- A reset request the service accepted (`202` with no body) no longer reads as failed: the
+  transport skips the body for requests that declare `expectsBody: false`.
 - `TESTING.md` no longer claims Playwright is pinned to an exact 1.63.0: it is a caret range, and
   `package.json` is where the version is read.
 

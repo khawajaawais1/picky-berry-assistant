@@ -29,6 +29,8 @@ export function createApiPasswordResetRequest({
       path: '/auth/password-reset',
       body: { email: address },
       auth: false,
+      // The service answers `202` with no body.
+      expectsBody: false,
       parse: () => true,
     });
 
