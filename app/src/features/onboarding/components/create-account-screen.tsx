@@ -27,9 +27,24 @@ export type OnboardingCreateAccountScreenProps = {
    * The screen does not ask the session seam itself: whether a credential may become an account
    * is the account service's question, and the answer comes from behind its port
    * (`src/services/session/`). The route above wires this to that port.
+   *
+   * It answers `true` for an account created, or why not: `refused` (the service said no, most
+   * often to an address that already has an account), `unavailable` (the service could not be
+   * asked: no connection, or a build with no API address), or `false` when there is no reason to
+   * give. Each gets its own failure line, so the picker is told what to do next.
    */
-  onSubmit?: (values: CreateAccountForm) => Promise<boolean>;
+  onSubmit?: (values: CreateAccountForm) => Promise<CreateAccountOutcome>;
 };
+
+export type CreateAccountOutcome = boolean | 'refused' | 'unavailable';
+
+type Failure = 'generic' | 'refused' | 'unavailable';
+
+const FAILURE_KEY = {
+  generic: 'onboarding.createAccount.failed',
+  refused: 'onboarding.createAccount.refused',
+  unavailable: 'onboarding.createAccount.unavailable',
+} as const;
 
 /**
  * Screen 03 · Onboarding · Create account (Figma node 5:22788).
@@ -72,7 +87,7 @@ export function OnboardingCreateAccountScreen({
   const [form, setForm] = useState<CreateAccountForm>(EMPTY_CREATE_ACCOUNT_FORM);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [submissionFailed, setSubmissionFailed] = useState(false);
+  const [submissionFailed, setSubmissionFailed] = useState<Failure | null>(null);
 
   const consent = t('onboarding.createAccount.consent');
   const canCreate = onSubmit !== undefined;
@@ -83,14 +98,15 @@ export function OnboardingCreateAccountScreen({
     }
 
     setSubmitting(true);
-    setSubmissionFailed(false);
+    setSubmissionFailed(null);
 
     try {
-      setSubmissionFailed(!(await onSubmit(form)));
+      const outcome = await onSubmit(form);
+      setSubmissionFailed(outcome === true ? null : outcome === false ? 'generic' : outcome);
     } catch {
       // The seam rejects only when the session could not be kept, and that is never a success:
       // the screen says the account was not created rather than moving on without a session.
-      setSubmissionFailed(true);
+      setSubmissionFailed('generic');
     } finally {
       setSubmitting(false);
     }
@@ -182,7 +198,7 @@ export function OnboardingCreateAccountScreen({
 
         {submissionFailed ? (
           <StatusMessage testID="create-account-failed" tone="danger" variant="bodySmall">
-            {t('onboarding.createAccount.failed')}
+            {t(FAILURE_KEY[submissionFailed])}
           </StatusMessage>
         ) : null}
 

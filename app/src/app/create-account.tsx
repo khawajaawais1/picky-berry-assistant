@@ -61,7 +61,8 @@ export default function CreateAccountRoute() {
         });
 
         if (!result.ok) {
-          return false;
+          // The reason picks the failure line: a taken address, or a service it could not ask.
+          return result.reason;
         }
 
         router.push('/location-consent');

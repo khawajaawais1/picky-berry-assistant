@@ -206,6 +206,37 @@ describe('OnboardingCreateAccountScreen', () => {
     expect(await screen.findByText('Your account wasn’t created. Try again.')).toBeOnTheScreen();
   });
 
+  it('says an address the service refuses may already have an account', async () => {
+    // A taken address is a 409, which the port reads as refused: “try again” would send the
+    // picker round the same refusal, so the screen names the way on instead.
+    const onSubmit = jest.fn(async () => 'refused' as const);
+    await render(<OnboardingCreateAccountScreen onSubmit={onSubmit} />);
+
+    await fillForm();
+    await fireEvent.press(screen.getByTestId('create-account-action'));
+
+    expect(
+      await screen.findByText(
+        'This email can’t be used for a new account. If it already has one, sign in instead.',
+      ),
+    ).toBeOnTheScreen();
+  });
+
+  it('says the account service could not be reached, rather than blaming the form', async () => {
+    // A build with no API address, or no connection, never asks the service at all.
+    const onSubmit = jest.fn(async () => 'unavailable' as const);
+    await render(<OnboardingCreateAccountScreen onSubmit={onSubmit} />);
+
+    await fillForm();
+    await fireEvent.press(screen.getByTestId('create-account-action'));
+
+    expect(
+      await screen.findByText(
+        'Picky couldn’t reach the account service. Check your connection and try again.',
+      ),
+    ).toBeOnTheScreen();
+  });
+
   it('says the same thing when the session could not be kept', async () => {
     // A rejecting port is a session the app does not have, which is not a success: the screen
     // reports it instead of moving on signed out (AGENTS.md §2.3).

@@ -102,6 +102,10 @@ export const en = {
   'onboarding.createAccount.field.name': 'Your name',
   'onboarding.createAccount.field.password': 'Password',
   'onboarding.createAccount.failed': 'Your account wasn’t created. Try again.',
+  'onboarding.createAccount.refused':
+    'This email can’t be used for a new account. If it already has one, sign in instead.',
+  'onboarding.createAccount.unavailable':
+    'Picky couldn’t reach the account service. Check your connection and try again.',
   'onboarding.createAccount.heading': 'A little introduction.',
   'onboarding.createAccount.passwordHint': 'At least 10 characters, with a number.',
   'onboarding.createAccount.privacy.body':

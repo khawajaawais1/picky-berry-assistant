@@ -25,6 +25,12 @@ recorded in [docs/adr/](docs/adr/).
 
 ### Fixed
 
+- Builds made with EAS (`development`, `preview`, `production`) now carry the API address
+  (`EXPO_PUBLIC_API_BASE_URL`). Without it every request failed before leaving the phone, so
+  account creation always failed.
+- The create-account screen now says why it failed: an address that may already have an account,
+  or an account service it could not reach. Before, every failure read "Your account wasn't
+  created. Try again."
 - Creating an account no longer always fails with "Your account wasn't created". The API requires
   terms and privacy-policy versions (`422 CONSENT_REQUIRED`), and the app sent none. It now sends
   the version of the device notice the consent row opens (ADR-068).

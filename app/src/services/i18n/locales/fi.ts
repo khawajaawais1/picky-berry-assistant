@@ -91,6 +91,10 @@ export const fi: Record<TranslationKey, string> = {
   'onboarding.createAccount.field.name': 'Nimesi',
   'onboarding.createAccount.field.password': 'Salasana',
   'onboarding.createAccount.failed': 'Tilin luonti ei onnistunut. Yritä uudelleen.',
+  'onboarding.createAccount.refused':
+    'Tällä sähköpostilla ei voi luoda uutta tiliä. Jos sillä on jo tili, kirjaudu sisään.',
+  'onboarding.createAccount.unavailable':
+    'Picky ei tavoittanut tilipalvelua. Tarkista yhteys ja yritä uudelleen.',
   'onboarding.createAccount.heading': 'Pieni esittely.',
   'onboarding.createAccount.passwordHint': 'Vähintään 10 merkkiä, sisältää numeron.',
   'onboarding.createAccount.privacy.body':
