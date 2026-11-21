@@ -71,7 +71,8 @@ jobs:
             echo "::error::Run this workflow from a version tag (vMAJOR.MINOR.PATCH), not a branch."
             exit 1
           fi
-          if ! git merge-base --is-ancestor "${GITHUB_SHA}" origin/main; then
+          # HEAD is the tagged commit as checked out (not the tag object of an annotated tag).
+          if ! git merge-base --is-ancestor HEAD origin/main; then
             echo "::error::${GITHUB_REF_NAME} points at a commit that is not on main. Tag the merged main."
             exit 1
           fi
