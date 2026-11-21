@@ -38,6 +38,12 @@ export default defineConfig({
     timeout: 300_000,
     // A shipped build with no provider is the state checked here, and the harness must never
     // send a real reset email: the empty key wins over any value in a developer's `.env`.
-    env: { EXPO_NO_TELEMETRY: '1', EXPO_PUBLIC_FIREBASE_API_KEY: '' },
+    env: {
+      EXPO_NO_TELEMETRY: '1',
+      EXPO_PUBLIC_FIREBASE_API_KEY: '',
+      // The reserved `.invalid` TLD never resolves: the export can reach no real API, and the
+      // journeys that need one fake it (`e2e/fake-api.ts`).
+      EXPO_PUBLIC_API_BASE_URL: 'https://picky-api.invalid',
+    },
   },
 });
