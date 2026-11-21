@@ -4,6 +4,7 @@ import { sessionPort } from '@/services/session';
 
 import { AccountSecurityScreen } from '../account-security-screen';
 import { installFakeAuthServer } from '@/services/session/testing';
+import { accountProfile } from '../../services/testing';
 
 /**
  * The screen frame 14's “Account & security” row opens (node 5:23677). **The design never drew it**
@@ -236,12 +237,7 @@ describe('AccountSecurityScreen, with no session', () => {
  * longer claims it without asking.
  */
 describe('AccountSecurityScreen, with the account service', () => {
-  const profile = (emailVerified: boolean) => async () => ({
-    email: 'aino@example.fi',
-    emailVerified,
-    nickname: 'Aino Korhonen',
-    lang: 'en' as const,
-  });
+  const profile = (emailVerified: boolean) => async () => accountProfile({ emailVerified });
 
   async function signedUp() {
     await sessionPort.register({

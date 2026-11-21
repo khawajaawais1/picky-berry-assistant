@@ -9,6 +9,7 @@ import { sessionPort } from '@/services/session';
 
 import { PrivacySettingsScreen } from '../privacy-settings-screen';
 import { installFakeAuthServer } from '@/services/session/testing';
+import { accountProfile } from '../../services/testing';
 
 /**
  * Content and metrics come from Figma frame `14 · Account and offline · Profile and privacy`
@@ -498,12 +499,7 @@ describe('PrivacySettingsScreen', () => {
  * longer claims it without asking.
  */
 describe('PrivacySettingsScreen, with the account service', () => {
-  const profile = (emailVerified: boolean) => async () => ({
-    email: 'aino@example.fi',
-    emailVerified,
-    nickname: 'Aino Korhonen',
-    lang: 'en' as const,
-  });
+  const profile = (emailVerified: boolean) => async () => accountProfile({ emailVerified });
 
   async function signedUp() {
     await sessionPort.register({
