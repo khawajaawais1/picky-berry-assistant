@@ -528,8 +528,7 @@ export const fi: Record<TranslationKey, string> = {
   'privacy.accountSecurity.session.lifetime.hint':
     'Jokainen kirjautuminen on lyhytikäinen, ja tilipalvelu uusii sen, joten sinulta ei kysytä uudelleen.',
   'privacy.accountSecurity.session.ends.label': 'Mikä sen päättää',
-  'privacy.accountSecurity.session.ends.value':
-    'Uloskirjautuminen tai tilipalvelun päättämä istunto.',
+  'privacy.accountSecurity.session.ends.value': 'Uloskirjautuminen tai palvelun päätös.',
   'privacy.accountSecurity.session.ends.hint':
     'Uloskirjautuminen ilmoittaa myös tilipalvelulle, joten istuntoa ei voi enää uusia.',
   'privacy.accountSecurity.absent.title': 'Ei vielä täällä',

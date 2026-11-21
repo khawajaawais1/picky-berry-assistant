@@ -624,7 +624,7 @@ export const en = {
   'privacy.accountSecurity.session.lifetime.hint':
     'Each sign-in is short-lived and the account service renews it, so you are not asked again.',
   'privacy.accountSecurity.session.ends.label': 'What ends it',
-  'privacy.accountSecurity.session.ends.value': 'Signing out, or the account service ending it.',
+  'privacy.accountSecurity.session.ends.value': 'Signing out, or the service ends it.',
   'privacy.accountSecurity.session.ends.hint':
     'Signing out tells the account service too, so the session cannot be renewed.',
   'privacy.accountSecurity.absent.title': 'Not here yet',

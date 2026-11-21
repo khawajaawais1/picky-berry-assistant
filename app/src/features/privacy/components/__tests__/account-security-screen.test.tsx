@@ -94,7 +94,7 @@ describe('AccountSecurityScreen', () => {
     expect(screen.getByText('How long it lasts')).toBeOnTheScreen();
     expect(screen.getByText('Renewed while you use the app.')).toBeOnTheScreen();
     expect(screen.getByText('What ends it')).toBeOnTheScreen();
-    expect(screen.getByText('Signing out, or the account service ending it.')).toBeOnTheScreen();
+    expect(screen.getByText('Signing out, or the service ends it.')).toBeOnTheScreen();
   });
 
   it('draws no countdown, because the account service renews the session (ADR-065)', async () => {
