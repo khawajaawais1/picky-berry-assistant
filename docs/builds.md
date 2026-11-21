@@ -13,7 +13,7 @@ preview — is the supported way to run it on a phone.
 | Quick JS/UI work, no map      | `cd app && npx expo start`; scan the QR in Expo Go                                                                                                     | —           | Metro dev server (not a build)                                         |
 | Phone testing with hot reload | Actions → **build** → Run workflow, `development`, `android`; or locally `cd app && npx eas-cli@latest build --profile development --platform android` | development | Development client, installed once; then `npx expo start --dev-client` |
 | Installable internal APK      | Actions → **build** → Run workflow, `preview`, `android`; or `npm run build:android:demo`                                                              | preview     | Standalone APK (no Metro)                                              |
-| Release build                 | `git tag v0.1.0 && git push origin v0.1.0`                                                                                                             | production  | Android AAB + iOS build for both platforms                             |
+| Release                       | `npm run release:prepare -- X.Y.Z`, merge, then tag `vX.Y.Z` on `main` — see [releasing.md](releasing.md)                                             | production  | GitHub Release with the Android AAB + APK, iOS linked when enabled     |
 
 The `development` profile uses `expo-dev-client` (installed in `app/package.json`). The preview
 profile is a standalone binary and needs no development client. `npm run apk` downloads the
@@ -23,8 +23,9 @@ newest finished Android build under a readable name.
 
 The workflow is [`.github/workflows/build.yml`](../.github/workflows/build.yml).
 
-- **Version tag** — a tag matching `v*` on a commit builds the **production** profile for
-  Android and iOS. Tags are the release trigger; use annotated SemVer tags on `main`.
+- **Version tag** — a `vMAJOR.MINOR.PATCH` tag on `main` is a release and runs
+  [`release.yml`](../.github/workflows/release.yml), not this workflow: see
+  [releasing.md](releasing.md).
 - **Manual** — run the **build** workflow from the Actions tab and choose `platform`
   (`android` / `ios` / `all`) and `profile` (`development` / `preview` / `production`). This is
   how a branch is built: there is no build on every push to `main`, so EAS minutes are spent
@@ -54,7 +55,7 @@ The workflow is [`.github/workflows/build.yml`](../.github/workflows/build.yml).
 ## What this does not do
 
 - **No OTA updates.** `expo-updates` is not installed; every JS change needs a new build.
-- **No store submission.** Tag builds stop at the artifact; App Store / Play submission is a
-  separate `eas submit` step when the accounts exist.
+- **No store submission.** Manual builds stop at the artifact. Releases can submit to Google Play
+  (internal) and TestFlight behind a switch ([releasing.md](releasing.md)).
 - **No Expo Go build.** As above, Expo Go cannot run the native map; use the development client
   or the preview APK.

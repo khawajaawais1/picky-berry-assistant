@@ -1,0 +1,273 @@
+name: release
+
+# Releases the mobile app from a version tag (docs/releasing.md, app/docs/adr/ADR-069).
+#
+#   git tag -a v1.2.3 -m "Picky v1.2.3" && git push origin v1.2.3
+#
+# 1. prepare  — the tag is vMAJOR.MINOR.PATCH, is on main, and agrees with app.json, package.json
+#               and a non-empty "## [1.2.3]" CHANGELOG section; EXPO_TOKEN is set.
+# 2. verify   — the whole mobile gate (mobile.yml) on the tagged commit.
+# 3. build    — EAS production builds: Android AAB, Android APK (sideloading) and, when the
+#               repository variable IOS_RELEASE_ENABLED is "true", iOS.
+# 4. release  — a GitHub Release "Picky v1.2.3" with the CHANGELOG section as notes, the AAB and
+#               APK attached and the iOS build linked (an App Store-signed .ipa installs only
+#               through TestFlight, so it is not attached).
+# 5. submit   — only when switched on (STORE_SUBMIT_ENABLED variable, or the "submit" input):
+#               Google Play internal track and TestFlight, with the credentials stored in EAS.
+#
+# Re-run from Actions -> release -> Run workflow, choosing the tag (not a branch) as the ref.
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+  workflow_dispatch:
+    inputs:
+      submit:
+        description: Also submit to Google Play (internal) and TestFlight
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# One release per tag at a time, and never cancelled halfway: a cancelled run can leave builds
+# that consumed a build number but reached no release.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # Pinned: the CLI decides how builds are started and submitted, so a release must not change
+  # behaviour because a new CLI was published that morning. Bump it in its own pull request.
+  EAS_CLI_VERSION: 27.4.1
+  EXPO_NO_TELEMETRY: "1"
+
+defaults:
+  run:
+    working-directory: app
+
+jobs:
+  prepare:
+    name: Check the tag, versions and changelog
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      builds: ${{ steps.matrix.outputs.builds }}
+      submit: ${{ steps.matrix.outputs.submit }}
+      submissions: ${{ steps.matrix.outputs.submissions }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The whole history, so the tagged commit can be checked against main.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+
+      - name: The ref is a release tag on main
+        run: |
+          if [ "${GITHUB_REF_TYPE}" != "tag" ]; then
+            echo "::error::Run this workflow from a version tag (vMAJOR.MINOR.PATCH), not a branch."
+            exit 1
+          fi
+          # HEAD is the tagged commit as checked out (not the tag object of an annotated tag).
+          if ! git merge-base --is-ancestor HEAD origin/main; then
+            echo "::error::${GITHUB_REF_NAME} points at a commit that is not on main. Tag the merged main."
+            exit 1
+          fi
+
+      - name: The tag, app.json, package.json and CHANGELOG.md agree
+        id: version
+        run: |
+          node scripts/release.mjs check "${GITHUB_REF_NAME}"
+          echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: EXPO_TOKEN is set
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "${EXPO_TOKEN:-}" ]; then
+            echo "::error::EXPO_TOKEN is not set. Add an Expo access token as a repository secret (docs/releasing.md)."
+            exit 1
+          fi
+
+      - name: Decide what to build and submit
+        id: matrix
+        env:
+          IOS_RELEASE_ENABLED: ${{ vars.IOS_RELEASE_ENABLED }}
+          STORE_SUBMIT_ENABLED: ${{ vars.STORE_SUBMIT_ENABLED }}
+          SUBMIT_INPUT: ${{ inputs.submit }}
+        run: |
+          builds='{"platform":"android","profile":"production"},{"platform":"android","profile":"release-apk"}'
+          submissions='"android"'
+          if [ "${IOS_RELEASE_ENABLED}" = "true" ]; then
+            builds="${builds},{\"platform\":\"ios\",\"profile\":\"production\"}"
+            submissions="${submissions},\"ios\""
+          else
+            echo "::notice::iOS is not built: set the repository variable IOS_RELEASE_ENABLED to true once the Apple credentials are in EAS."
+          fi
+          submit=false
+          if [ "${STORE_SUBMIT_ENABLED}" = "true" ] || [ "${SUBMIT_INPUT}" = "true" ]; then
+            submit=true
+          fi
+          {
+            echo "builds={\"include\":[${builds}]}"
+            echo "submissions=[${submissions}]"
+            echo "submit=${submit}"
+          } >> "$GITHUB_OUTPUT"
+
+  verify:
+    name: Verify the tagged commit
+    needs: prepare
+    uses: ./.github/workflows/mobile.yml
+
+  build:
+    name: EAS build (${{ matrix.platform }}, ${{ matrix.profile }})
+    needs: [prepare, verify]
+    runs-on: ubuntu-latest
+    # EAS queue time plus the build itself; the job waits so the release can attach the result.
+    timeout-minutes: 120
+    strategy:
+      # Let every build finish, so "Re-run failed jobs" rebuilds only the one that failed. The
+      # release waits for all of them: a release is never published with a platform missing.
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.builds) }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # --freeze-credentials: a release never creates or changes a signing key on its own. A new
+      # Android keystore would make every later Play update impossible to install over this one.
+      - name: Build with EAS
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          PLATFORM: ${{ matrix.platform }}
+          PROFILE: ${{ matrix.profile }}
+        run: |
+          npx --yes "eas-cli@${EAS_CLI_VERSION}" build \
+            --platform "${PLATFORM}" \
+            --profile "${PROFILE}" \
+            --message "Release ${GITHUB_REF_NAME} (${GITHUB_SHA::7})" \
+            --non-interactive \
+            --freeze-credentials \
+            --wait \
+            --json > build.json
+          jq -r '.[] | "| \(.platform) | \(.buildProfile) | \(.status) | \(.appVersion) (\(.appBuildVersion)) | \(.id) |"' build.json \
+            | { echo "| Platform | Profile | Status | Version | Build |"; echo "| --- | --- | --- | --- | --- |"; cat; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the build JSON for the release
+        uses: actions/upload-artifact@v7
+        with:
+          name: eas-build-${{ matrix.platform }}-${{ matrix.profile }}
+          path: app/build.json
+          retention-days: 90
+          if-no-files-found: error
+
+  release:
+    name: Publish the GitHub Release
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: eas-build-*
+          path: ${{ runner.temp }}/builds
+
+      - name: Write the notes and the list of files
+        env:
+          SUBMIT: ${{ needs.prepare.outputs.submit }}
+        run: |
+          flag=""
+          if [ "${SUBMIT}" = "true" ]; then flag="--submitted"; fi
+          node scripts/release.mjs plan "${GITHUB_REF_NAME}" "${RUNNER_TEMP}/builds" "${RUNNER_TEMP}/release" ${flag}
+
+      - name: Download the Android files
+        run: |
+          mkdir -p "${RUNNER_TEMP}/release/files"
+          while IFS="$(printf '\t')" read -r url name; do
+            curl -fsSL --retry 3 -o "${RUNNER_TEMP}/release/files/${name}" "${url}"
+          done < "${RUNNER_TEMP}/release/assets.tsv"
+          ls -l "${RUNNER_TEMP}/release/files"
+
+      # Creates the release, or on a re-run updates its notes and replaces its files.
+      - name: Create or update the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          notes="${RUNNER_TEMP}/release/notes.md"
+          files=("${RUNNER_TEMP}"/release/files/*)
+          if gh release view "${GITHUB_REF_NAME}" > /dev/null 2>&1; then
+            gh release edit "${GITHUB_REF_NAME}" --title "Picky v${VERSION}" --notes-file "${notes}"
+            gh release upload "${GITHUB_REF_NAME}" "${files[@]}" --clobber
+          else
+            gh release create "${GITHUB_REF_NAME}" "${files[@]}" \
+              --title "Picky v${VERSION}" \
+              --notes-file "${notes}" \
+              --verify-tag
+          fi
+          cat "${notes}" >> "$GITHUB_STEP_SUMMARY"
+
+  submit:
+    name: Submit to ${{ matrix.platform == 'ios' && 'TestFlight' || 'Google Play (internal)' }}
+    needs: [prepare, release]
+    if: needs.prepare.outputs.submit == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    # Repository Settings -> Environments -> app-stores can require a reviewer before anything
+    # reaches a store.
+    environment: app-stores
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ${{ fromJSON(needs.prepare.outputs.submissions) }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: eas-build-${{ matrix.platform }}-production
+          path: ${{ runner.temp }}/build
+
+      # Submits the exact build this run made, by id, with the store credentials EAS holds
+      # (Play service account key; App Store Connect API key). Nothing store-related is a
+      # GitHub secret.
+      - name: Submit with EAS
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          PLATFORM: ${{ matrix.platform }}
+        run: |
+          build_id="$(jq -r '.[0].id' "${RUNNER_TEMP}/build/build.json")"
+          npx --yes "eas-cli@${EAS_CLI_VERSION}" submit \
+            --platform "${PLATFORM}" \
+            --profile production \
+            --id "${build_id}" \
+            --non-interactive \
+            --wait

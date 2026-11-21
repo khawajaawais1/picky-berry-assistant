@@ -9,6 +9,12 @@ recorded in [docs/adr/](docs/adr/).
 
 ### Added
 
+- A release pipeline (`.github/workflows/release.yml`): a `vX.Y.Z` tag on `main` runs the mobile
+  gate, builds the Android AAB, a sideload APK (new `release-apk` profile) and, once enabled, iOS
+  with EAS, and publishes a GitHub Release "Picky vX.Y.Z" with this file's section as its notes.
+  Submission to Google Play (internal) and TestFlight is behind a switch.
+  `npm run release:prepare -- X.Y.Z` sets the version and cuts this file (ADR-069,
+  [docs/releasing.md](../docs/releasing.md)).
 - Frame 12's alert-preferences card reads and saves the account's search radius and species
   (`PATCH /me`), through a new app-drawn Alert preferences screen. Quiet hours reads "Not offered
   yet", because the API has no field for it (ADR-067).
@@ -22,6 +28,11 @@ recorded in [docs/adr/](docs/adr/).
 - The account's name can be edited on Account & security.
 - Password reset asks the team API (`POST /auth/password-reset`) and says the request was
   accepted, without claiming an email was sent (ADR-065, amended).
+
+### Changed
+
+- Production EAS builds auto-increment the build number EAS keeps (`autoIncrement`), and a tag no
+  longer starts a build from `build.yml`, which is now for on-demand builds only.
 
 ### Fixed
 

@@ -1,19 +1,17 @@
 name: build
 
-# Triggering a real installable app.
+# Triggering a real installable app on demand.
 #
-# - A version tag (`v0.1.0`) builds the production profile for both platforms.
 # - Actions -> build -> Run workflow builds any profile/platform for a branch.
+# - Version tags (`v1.2.3`) are not built here: release.yml owns them, builds the production
+#   profile and publishes the GitHub Release (docs/releasing.md, app/docs/adr/ADR-069).
 #
 # There is deliberately no build on every push to `main`: verification already runs there, and
-# EAS build minutes are a shared, limited resource. A branch is built when someone asks for it
-# (workflow_dispatch) or when it is tagged for release.
+# EAS build minutes are a shared, limited resource. A branch is built when someone asks for it.
 #
 # Requires the repository secret EXPO_TOKEN (Expo -> Account settings -> Access tokens). The
 # EAS project id is already in app/app.json; the profiles are in app/eas.json.
 on:
-  push:
-    tags: ["v*"]
   workflow_dispatch:
     inputs:
       platform:
@@ -40,7 +38,7 @@ defaults:
 
 jobs:
   build:
-    name: Build (${{ github.ref_type == 'tag' && 'production, all platforms' || inputs.profile }})
+    name: Build (${{ inputs.profile }}, ${{ inputs.platform }})
     runs-on: ubuntu-latest
     timeout-minutes: 90
 
@@ -59,17 +57,6 @@ jobs:
       - name: Verify the commit before building
         run: npm run verify
 
-      - name: Resolve the profile and platform
-        id: target
-        run: |
-          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
-            echo "profile=production" >> "$GITHUB_OUTPUT"
-            echo "platform=all" >> "$GITHUB_OUTPUT"
-          else
-            echo "profile=${{ inputs.profile }}" >> "$GITHUB_OUTPUT"
-            echo "platform=${{ inputs.platform }}" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Build with EAS
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -80,8 +67,8 @@ jobs:
           fi
 
           npx --yes eas-cli@latest build \
-            --platform "${{ steps.target.outputs.platform }}" \
-            --profile "${{ steps.target.outputs.profile }}" \
+            --platform "${{ inputs.platform }}" \
+            --profile "${{ inputs.profile }}" \
             --message "CI ${GITHUB_SHA::7} (${GITHUB_REF_NAME})" \
             --non-interactive \
             --wait \
