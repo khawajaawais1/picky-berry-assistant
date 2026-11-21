@@ -20,9 +20,13 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from fastapi import APIRouter, FastAPI, File, Query, Request, UploadFile
+import os
+import secrets
+
+from fastapi import APIRouter, Depends, FastAPI, File, HTTPException, Query, Request, Security, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
@@ -44,6 +48,16 @@ PILOT_ZONES = REPO / "data" / "test_zones.geojson"
 MAX_UPLOAD_BYTES = 15 * 1024 * 1024
 Species = Literal["bilberry", "lingonberry", "cloudberry", "crowberry"]
 Confidence = Literal["low", "medium", "high"]
+
+_API_KEY = os.environ.get("ML_API_KEY", "")
+_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
+def require_key(key: str | None = Security(_key_header)):
+    if not _API_KEY:
+        return  # key not configured — allow all (local dev without env var)
+    if not key or not secrets.compare_digest(key, _API_KEY):
+        raise HTTPException(status_code=401, detail="Invalid or missing X-API-Key header.")
 
 
 # ---------- models loaded once ----------
@@ -89,7 +103,7 @@ class ScoreUpdateIn(Camel):
     now: dt.datetime | None = None
 
 
-router = APIRouter(prefix="/api/v1/ml", tags=["ml"])
+router = APIRouter(prefix="/api/v1/ml", tags=["ml"], dependencies=[Depends(require_key)])
 
 
 @router.get("/health")
