@@ -56,8 +56,10 @@ npm run openapi:lint
 npm run db:check-a2
 ```
 
-`db:check-a2` and `db:types` require an accessible database. The health endpoint
-is `GET /health`; authenticated API routes use the `/api/v1` prefix.
+`db:check-a2` and `db:types` require an accessible database. Every route is served under
+the `/api/v1` prefix, health included (`GET /api/v1/health`); `GET /health` answers the same at
+the root for platform probes. The routing, request-id, error-envelope and validation setup lives
+in `src/configure-app.ts`, which `main.ts` and the e2e suite share.
 Swagger UI is available at `GET /docs` in all environments and renders the
 checked-in OpenAPI contracts. Its UI assets are loaded from a pinned jsDelivr
 release; the merged document is available at `GET /docs-json`. The Vercel
