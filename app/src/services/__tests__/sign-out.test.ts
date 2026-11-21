@@ -5,6 +5,7 @@ import { enqueueReport, readReportQueue } from '../report-queue';
 import { readSavedZones, saveZone } from '../saved-zones';
 import { sessionPort } from '../session';
 import { signOut } from '../sign-out';
+import { installFakeAuthServer } from '@/services/session/testing';
 
 /**
  * Leaving the app: the one control on frame 14 that deletes anything.
@@ -41,6 +42,7 @@ async function heldOnThisDevice() {
 }
 
 beforeEach(async () => {
+  installFakeAuthServer();
   await AsyncStorage.clear();
   await sessionPort.signOut();
 });
@@ -50,10 +52,12 @@ describe('signing out', () => {
     await recordPrivacyConsent(true);
     await enqueueReport(REPORT);
     await saveZone('Z14', 'bilberry');
-    await sessionPort.signIn({
+    await sessionPort.register({
       displayName: 'Aino Korhonen',
       email: 'aino@example.fi',
       password: 'berries1234',
+      lang: 'en',
+      consents: {},
     });
 
     await signOut();
@@ -79,10 +83,12 @@ describe('signing out', () => {
 
   it('keeps the session when a record could not be deleted, so nothing half-leaves', async () => {
     await recordPrivacyConsent(true);
-    await sessionPort.signIn({
+    await sessionPort.register({
       displayName: 'Aino Korhonen',
       email: 'aino@example.fi',
       password: 'berries1234',
+      lang: 'en',
+      consents: {},
     });
     // The first deletion fails — a store that will not answer — and deliberately **no
     // `mockRestore()` afterwards**: restoring a spy over this shared mock resets the mock's

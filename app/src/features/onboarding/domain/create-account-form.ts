@@ -28,17 +28,25 @@ export const EMPTY_CREATE_ACCOUNT_FORM: CreateAccountForm = {
 };
 
 /**
- * The rule the hint states (“At least 8 characters, with a number.”). The wording
- * itself lives in the catalogue so it can be translated; the check lives here.
+ * The rule the hint states (“At least 10 characters, with a number.”), with the bounds the team
+ * API enforces on `POST /auth/register` (ADR-065): password 10–128 characters, nickname at most
+ * 30. A form the server would refuse is not submittable. The wording lives in the catalogue so it
+ * can be translated; the check lives here.
  */
-const PASSWORD_MIN_LENGTH = 8;
+export const PASSWORD_MIN_LENGTH = 10;
+export const PASSWORD_MAX_LENGTH = 128;
+export const NAME_MAX_LENGTH = 30;
 
-/** Whether the form may be submitted: every control answered, and the rule met. */
+/** Whether the form may be submitted: every control answered, and the rules met. */
 export function isSubmittable(form: CreateAccountForm): boolean {
+  const name = form.name.trim();
+
   return (
-    form.name.trim().length > 0 &&
+    name.length > 0 &&
+    name.length <= NAME_MAX_LENGTH &&
     form.email.trim().length > 0 &&
     form.password.length >= PASSWORD_MIN_LENGTH &&
+    form.password.length <= PASSWORD_MAX_LENGTH &&
     /\d/.test(form.password) &&
     form.consent
   );

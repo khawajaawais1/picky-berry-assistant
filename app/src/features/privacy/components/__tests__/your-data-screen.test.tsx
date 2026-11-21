@@ -8,6 +8,7 @@ import { sessionPort } from '@/services/session';
 
 import { EXPORT_FORMAT } from '../../domain/export-document';
 import { YourDataScreen } from '../your-data-screen';
+import { installFakeAuthServer } from '@/services/session/testing';
 
 /**
  * The screen the export path is used from — the copy PROJECT.md's open question 23 names as owed,
@@ -27,6 +28,7 @@ const READ_FAILED =
 const SHARE = 'Share a copy';
 
 beforeEach(async () => {
+  installFakeAuthServer();
   await AsyncStorage.clear();
   // The session lives in the process rather than in the storage the tests clear (ADR-028), so every
   // test starts by letting go of whatever the last one was holding.
@@ -45,10 +47,12 @@ async function seedEveryRecord() {
     yieldRating: 4,
     zoneId: 'Z14',
   });
-  await sessionPort.signIn({
+  await sessionPort.register({
     displayName: 'Aino Korhonen',
     email: 'aino@example.fi',
     password: 'berries1234',
+    lang: 'en',
+    consents: {},
   });
 }
 

@@ -13,10 +13,8 @@ import {
 import { Screen } from '@/components/templates';
 import { layout, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { useNow } from '@/hooks/use-now';
 import { useSession } from '@/hooks/use-session';
 import { interpolate, useTranslation } from '@/services/i18n';
-import { isExpired, remainingMilliseconds } from '@/services/session';
 import { identifierKind } from '@/utils/identifier';
 
 import { profileInitials } from '../domain/profile';
@@ -59,33 +57,17 @@ export type AccountSecurityScreenProps = {
  * meets a loss they did not expect. Without a handler the control is not drawn at all — a reading,
  * not a promise.
  *
- * **The session's own hour is the one thing on this screen that changes while it is open**, and this
- * is where it is said out loud (ADR-041). A session good for an hour is a session that can run out
- * mid-read, so the screen shows the time left — read from the session's own expiry through
- * `remainingMilliseconds`, once a second — and when the hour is up it stops drawing the account it
- * no longer holds, says the session has ended, and offers the way back in. Without that, the app's
- * only answer to an expired session was the *next* screen's silence: `current()` drops a session
- * that is past its time and reports nobody, so the user would meet a signed-out app with no account
- * of how they got there (PROJECT.md, known issue 25).
- *
- * What it deliberately does not do: it does not extend, refresh or re-issue anything. No provider is
- * wired behind the port yet (ADR-054 decides which), so a session that has ended is one the user
- * signs into again.
+ * **The session is renewed, not counted down** (ADR-065, superseding ADR-041's countdown). The
+ * access token is short-lived and the session port rotates it with the account service, so a
+ * clock on this screen would count down to nothing. A session ends when the user signs out or the
+ * service refuses to renew it. Either way `current()` answers nobody, and the screen says so and
+ * offers the way back in.
  */
 export function AccountSecurityScreen({ onBack, onSignIn, onSignOut }: AccountSecurityScreenProps) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
   const { error: sessionError, loading, session } = useSession();
-  // The reading is in whole minutes; fifteen seconds is the slowest cadence that still notices an
-  // expiry promptly, instead of sixty renders a minute.
-  const now = useNow(15_000);
 
-  // The session's own rule, asked about the moment this render is for: `isExpired` counts the
-  // instant of expiry as expired, and `remainingMilliseconds` is floored at zero, so neither has to
-  // be interpreted here.
-  const ended = session !== null && isExpired(session, now);
-  const minutesLeft =
-    session === null ? 0 : Math.floor(remainingMilliseconds(session, now) / 60_000);
   // No session to carry on with, and none expected: the screen says so and — when it has somewhere
   // to go — offers the way in, exactly as the ended state does.
   const noSession = !loading && session === null && !sessionError;
@@ -120,7 +102,7 @@ export function AccountSecurityScreen({ onBack, onSignIn, onSignOut }: AccountSe
           {t('privacy.accountSecurity.intro')}
         </AppText>
 
-        {!loading && session && !ended ? (
+        {!loading && session ? (
           <View className="w-full flex-row items-center gap-gap" testID="account-security-row">
             <View
               className="items-center justify-center rounded-pill"
@@ -143,21 +125,6 @@ export function AccountSecurityScreen({ onBack, onSignIn, onSignOut }: AccountSe
             </View>
           </View>
         ) : null}
-
-        {
-          // The account the app was holding is gone, and this is the moment the user meets that:
-          // the hour is up, stated as itself rather than drawn as an empty account row.
-          !loading && session && ended ? (
-            <Callout
-              icon={<Feather color={colors.warning} name="clock" size={20} />}
-              testID="account-security-ended"
-              title={t('privacy.accountSecurity.ended.title')}
-              tone="warning"
-            >
-              {t('privacy.accountSecurity.ended.body')}
-            </Callout>
-          ) : null
-        }
 
         {noSession ? (
           <AppText testID="account-security-none" tone="muted" variant="bodySmall">
@@ -191,9 +158,6 @@ export function AccountSecurityScreen({ onBack, onSignIn, onSignOut }: AccountSe
             label={t('privacy.accountSecurity.session.where.label')}
             value={t('privacy.accountSecurity.session.where.value')}
           />
-          {/* The hour is the stand-in's `SESSION_LIFETIME_MS`, which is the provider's own token
-              length rather than a preference (ADR-054, ADR-028); the screen's test asserts the two
-              stay in step. */}
           <InfoRow
             hint={t('privacy.accountSecurity.session.lifetime.hint')}
             label={t('privacy.accountSecurity.session.lifetime.label')}
@@ -204,24 +168,6 @@ export function AccountSecurityScreen({ onBack, onSignIn, onSignOut }: AccountSe
             label={t('privacy.accountSecurity.session.ends.label')}
             value={t('privacy.accountSecurity.session.ends.value')}
           />
-          {
-            // Only while there is a live session: the reading is about the one being held, and a
-            // session that has run out has nothing left to count down. Floored at whole minutes,
-            // so the reading never claims more time than there is.
-            !loading && session && !ended ? (
-              <InfoRow
-                hint={t('privacy.accountSecurity.session.remaining.hint')}
-                label={t('privacy.accountSecurity.session.remaining.label')}
-                value={
-                  minutesLeft > 0
-                    ? interpolate(t('privacy.accountSecurity.session.remaining.value'), {
-                        minutes: String(minutesLeft),
-                      })
-                    : t('privacy.accountSecurity.session.remaining.underMinute')
-                }
-              />
-            ) : null
-          }
         </Card>
 
         <Card
@@ -240,11 +186,10 @@ export function AccountSecurityScreen({ onBack, onSignIn, onSignOut }: AccountSe
         </Card>
 
         {/*
-          The way back in, offered exactly when there is no session to carry on with: the hour ran
-          out while this screen was open, or the app is holding none at all. Its label is the
+          The way back in, offered exactly when there is no session to carry on with. Its label is the
           sign-in screen's own title, as every destination's is.
         */}
-        {!loading && (ended || noSession) && onSignIn ? (
+        {!loading && noSession && onSignIn ? (
           <TextAction
             align="center"
             label={t('onboarding.signIn.title')}

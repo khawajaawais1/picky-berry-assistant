@@ -106,7 +106,7 @@ export const en = {
   'onboarding.createAccount.field.password': 'Password',
   'onboarding.createAccount.failed': 'Your account wasn’t created. Try again.',
   'onboarding.createAccount.heading': 'A little introduction.',
-  'onboarding.createAccount.passwordHint': 'At least 8 characters, with a number.',
+  'onboarding.createAccount.passwordHint': 'At least 10 characters, with a number.',
   'onboarding.createAccount.privacy.body':
     'Saved spots default to private. Your GPS trails are never public.',
   'onboarding.createAccount.privacy.title': 'Your data stays yours',
@@ -610,41 +610,26 @@ export const en = {
   'privacy.accountSecurity.eyebrow': 'ACCOUNT / OFFLINE · ACCOUNT & SECURITY',
   'privacy.accountSecurity.title': 'Account & security',
   'privacy.accountSecurity.intro': 'What the app knows about your account, and what keeps it.',
-  'privacy.accountSecurity.none':
-    'No session is being held. One lasts an hour from the moment you sign in.',
+  'privacy.accountSecurity.none': 'No session is being held. Sign in to start one.',
   'privacy.accountSecurity.reach.title': 'Your email and password are the key',
   'privacy.accountSecurity.reach.body':
-    'Signing in asks for your email and password. The app keeps no password of its own, and no account service is connected to check one yet.',
+    'Signing in sends your email and password to the Picky account service, which checks them. The app keeps no password of its own.',
   'privacy.accountSecurity.session.title': 'The session',
   'privacy.accountSecurity.session.where.label': 'Where it is kept',
-  'privacy.accountSecurity.session.where.value': 'In this app’s memory, while the app is open.',
+  'privacy.accountSecurity.session.where.value': 'In this device’s secure storage.',
   'privacy.accountSecurity.session.where.hint':
-    'Nothing is written to this phone yet: the store behind the stand-in is memory, and the secure store arrives with the account service.',
+    'The keychain on iPhone, the keystore on Android, readable only while the device is unlocked. In a browser it stays in the tab’s memory.',
   'privacy.accountSecurity.session.lifetime.label': 'How long it lasts',
-  'privacy.accountSecurity.session.lifetime.value': 'An hour from the moment you sign in.',
+  'privacy.accountSecurity.session.lifetime.value': 'Renewed while you use the app.',
   'privacy.accountSecurity.session.lifetime.hint':
-    'The hour is the provider’s own token lifetime rather than a preference of ours.',
+    'Each sign-in is short-lived and the account service renews it, so you are not asked again.',
   'privacy.accountSecurity.session.ends.label': 'What ends it',
-  'privacy.accountSecurity.session.ends.value': 'Signing out, or the hour running out.',
+  'privacy.accountSecurity.session.ends.value': 'Signing out, or the service ends it.',
   'privacy.accountSecurity.session.ends.hint':
-    'A session that has run out is dropped the next time the app reads it.',
-  // The one reading on this screen that changes while it is open (ADR-041): the session's own
-  // expiry, floored at whole minutes so it never claims more time than there is. The hint says where
-  // the number comes from and what the app does *not* do with it — nothing extends a session yet.
-  'privacy.accountSecurity.session.remaining.label': 'Time left',
-  'privacy.accountSecurity.session.remaining.value': '{minutes} min',
-  'privacy.accountSecurity.session.remaining.underMinute': 'Less than a minute',
-  'privacy.accountSecurity.session.remaining.hint':
-    'Read from the session’s own expiry, once a second. Nothing here extends it — a session that ends is signed into again.',
-  // What the user meets when the hour runs out with the screen open. Drawn where the account row
-  // was, because the app is holding no account any more, and the sign-in screen's own title is the
-  // way back in.
-  'privacy.accountSecurity.ended.title': 'This session has ended',
-  'privacy.accountSecurity.ended.body':
-    'The hour that began when you signed in is up, so the app is holding no account.',
+    'Signing out tells the account service too, so the session cannot be renewed.',
   'privacy.accountSecurity.absent.title': 'Not here yet',
   'privacy.accountSecurity.absent.service':
-    'No account service is connected, so your name and your email address cannot be changed in the app and an account cannot be deleted.',
+    'Your name and email address cannot be changed in the app yet, and the account cannot be deleted from here yet.',
   'privacy.accountSecurity.absent.devices':
     'There is no list of your devices and no second session to end.',
   'privacy.accountSecurity.signOut.note':

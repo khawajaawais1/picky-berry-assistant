@@ -7,6 +7,7 @@ import { saveZone } from '@/services/saved-zones';
 import { sessionPort } from '@/services/session';
 
 import { TermsPrivacyScreen } from '../terms-privacy-screen';
+import { installFakeAuthServer } from '@/services/session/testing';
 
 /**
  * The screen frame 14's “Terms & privacy” row opens (node 5:23688). **The design never drew it**
@@ -23,6 +24,7 @@ const READ_FAILED =
 const SIGN_OUT = 'Sign out';
 
 beforeEach(async () => {
+  installFakeAuthServer();
   await AsyncStorage.clear();
   // The session lives in the process rather than in the storage the tests clear (ADR-028), so every
   // test starts by leaving go of whatever the last one was holding.
@@ -51,10 +53,12 @@ describe('TermsPrivacyScreen', () => {
       yieldRating: 4,
       zoneId: 'Z14',
     });
-    await sessionPort.signIn({
+    await sessionPort.register({
       displayName: 'Aino Korhonen',
       email: 'aino@example.fi',
       password: 'berries1234',
+      lang: 'en',
+      consents: {},
     });
 
     await render(<TermsPrivacyScreen />);

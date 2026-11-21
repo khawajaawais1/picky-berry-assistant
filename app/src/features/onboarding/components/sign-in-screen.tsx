@@ -5,7 +5,6 @@ import { View } from 'react-native';
 import { AppButton, AppText } from '@/components/atoms';
 import { FieldAction, FormField, StatusMessage, TextAction } from '@/components/molecules';
 import { Screen } from '@/components/templates';
-import { appEnvironment, type AppEnvironment } from '@/config/env';
 import { layout } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useTranslation } from '@/services/i18n';
@@ -29,12 +28,6 @@ export type OnboardingSignInScreenProps = {
    * because a recovery label with nowhere to go would claim an action it cannot take.
    */
   onForgotPassword?: () => void;
-  /**
-   * The environment this build was made for, which decides whether the action can act at all.
-   * Read from `src/config/env.ts` — the one module allowed to read `EXPO_PUBLIC_*` — and passable
-   * so a test can state which build it is testing.
-   */
-  environment?: AppEnvironment;
 };
 
 /**
@@ -54,8 +47,8 @@ export type OnboardingSignInScreenProps = {
  * press can produce that the design does not: a failure line, because a refused press must not be
  * silent (AGENTS.md §2.3).
  *
- * A **production** build draws the action disabled: no account service exists yet, so nothing
- * there could answer the credential (ADR-054 §8). The fields are still readable and typed into.
+ * The action acts in every build: the team API's account service answers it (ADR-065), and an
+ * unusable configuration answers `unavailable` through the port rather than through this screen.
  *
  * The screen is app-drawn, so its copy is this repository's — written in the app's voice, in both
  * shipped languages, and reviewed here rather than in a frame.
@@ -65,7 +58,6 @@ export function OnboardingSignInScreen({
   onSignIn,
   onCreateAccount,
   onForgotPassword,
-  environment,
 }: OnboardingSignInScreenProps) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
@@ -75,9 +67,7 @@ export function OnboardingSignInScreen({
   const [submitting, setSubmitting] = useState(false);
   const [signInFailed, setSignInFailed] = useState(false);
 
-  const buildEnvironment = environment ?? appEnvironment();
-  // Nothing can check a password in a shipped build, so its action cannot act (AGENTS.md §11.2).
-  const canSignIn = buildEnvironment !== 'production' && onSignIn !== undefined;
+  const canSignIn = onSignIn !== undefined;
   const complete = email.trim() !== '' && password !== '';
 
   const submit = async () => {

@@ -19,25 +19,25 @@ import { expect, test } from '@playwright/test';
  * community map's readings answer “which screen” as well as “which shape”.
  */
 test.describe('the production export', () => {
-  test('offers no account creation, sign-in or reset where nothing can answer', async ({
+  test('offers account creation and sign-in, and no reset, now the account service answers', async ({
     page,
   }) => {
-    // ADR-054 §8, ADR-059, ADR-062: a shipped build has no account service, so every action that
-    // would reach it is drawn disabled. Typing a complete credential must not change that.
+    // ADR-065: a shipped build signs in and registers with the account service. It has no reset
+    // endpoint yet, so the reset action stays disabled.
     await page.goto('/create-account');
     await page.getByLabel('Your name').fill('Aino Korhonen');
     await page.getByLabel('Email address').fill('aino@example.fi');
     await page.getByRole('textbox', { name: 'Password' }).fill('berries1234');
     await page.getByRole('checkbox', { name: /I agree to the Terms/ }).click();
 
-    await expect(page.getByRole('button', { name: 'Create account' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Create account' })).toBeEnabled();
     await expect(page).toHaveURL(/\/create-account$/);
 
     await page.goto('/sign-in');
     await page.getByRole('textbox', { name: 'Email address' }).fill('aino@example.fi');
     await page.getByRole('textbox', { name: 'Password' }).fill('berries1234');
 
-    await expect(page.getByRole('button', { name: 'Sign in' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Sign in' })).toBeEnabled();
     await expect(page).toHaveURL(/\/sign-in$/);
 
     await page.goto('/forgot-password');

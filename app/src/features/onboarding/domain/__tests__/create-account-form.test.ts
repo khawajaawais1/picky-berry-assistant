@@ -5,17 +5,17 @@ import {
 } from '../create-account-form';
 
 /**
- * The only rule the design states for this form is screen 03's hint
- * (“At least 8 characters, with a number.”). Everything asserted here either comes
- * from that sentence or from the frame's own controls; anything else would be an
- * invented requirement, so there is none.
+ * Screen 03's hint states the password rule (“At least 10 characters, with a number.”).
+ * The length bounds are the team API's (`POST /auth/register`: password 10–128, nickname
+ * at most 30), because the frontend follows the served contract (ADR-065). A form the
+ * server would refuse must not be submittable.
  */
 const complete: CreateAccountForm = {
   ...EMPTY_CREATE_ACCOUNT_FORM,
   consent: true,
   email: 'aino@example.fi',
   name: 'Aino Korhonen',
-  password: 'berries1',
+  password: 'berrypick1',
 };
 
 describe('EMPTY_CREATE_ACCOUNT_FORM', () => {
@@ -47,17 +47,28 @@ describe('isSubmittable', () => {
     expect(isSubmittable({ ...complete, email: '   ' })).toBe(false);
   });
 
-  it('requires at least eight characters in the password', () => {
-    expect(isSubmittable({ ...complete, password: 'berry1' })).toBe(false);
-    expect(isSubmittable({ ...complete, password: 'berries1' })).toBe(true);
+  it('requires at least ten characters in the password, the API’s minimum', () => {
+    expect(isSubmittable({ ...complete, password: 'berries12' })).toBe(false);
+    expect(isSubmittable({ ...complete, password: 'berries123' })).toBe(true);
+  });
+
+  it('refuses a password longer than the API’s 128 characters', () => {
+    expect(isSubmittable({ ...complete, password: `${'a'.repeat(127)}1` })).toBe(true);
+    expect(isSubmittable({ ...complete, password: `${'a'.repeat(128)}1` })).toBe(false);
+  });
+
+  it('refuses a name longer than the API’s 30-character nickname', () => {
+    expect(isSubmittable({ ...complete, name: 'a'.repeat(30) })).toBe(true);
+    expect(isSubmittable({ ...complete, name: `  ${'a'.repeat(30)}  ` })).toBe(true);
+    expect(isSubmittable({ ...complete, name: 'a'.repeat(31) })).toBe(false);
   });
 
   it('requires a number in the password', () => {
-    expect(isSubmittable({ ...complete, password: 'berryberry' })).toBe(false);
+    expect(isSubmittable({ ...complete, password: 'berryberryberry' })).toBe(false);
   });
 
   it('accepts a password of digits alone, because the design asks for nothing more', () => {
-    expect(isSubmittable({ ...complete, password: '12345678' })).toBe(true);
+    expect(isSubmittable({ ...complete, password: '1234567890' })).toBe(true);
   });
 
   it('requires consent', () => {

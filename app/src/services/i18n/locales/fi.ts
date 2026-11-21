@@ -95,7 +95,7 @@ export const fi: Record<TranslationKey, string> = {
   'onboarding.createAccount.field.password': 'Salasana',
   'onboarding.createAccount.failed': 'Tilin luonti ei onnistunut. Yritä uudelleen.',
   'onboarding.createAccount.heading': 'Pieni esittely.',
-  'onboarding.createAccount.passwordHint': 'Vähintään 8 merkkiä, sisältää numeron.',
+  'onboarding.createAccount.passwordHint': 'Vähintään 10 merkkiä, sisältää numeron.',
   'onboarding.createAccount.privacy.body':
     'Tallennetut paikat ovat oletuksena yksityisiä. GPS-reittejäsi ei koskaan julkaista.',
   'onboarding.createAccount.privacy.title': 'Tietosi pysyvät sinun',
@@ -514,36 +514,26 @@ export const fi: Record<TranslationKey, string> = {
   'privacy.accountSecurity.eyebrow': 'TILI / OFFLINE · TILI JA TURVALLISUUS',
   'privacy.accountSecurity.title': 'Tili ja turvallisuus',
   'privacy.accountSecurity.intro': 'Mitä sovellus tietää tilistäsi ja mikä pitää sen tallessa.',
-  'privacy.accountSecurity.none':
-    'Istuntoa ei ole käytössä. Istunto kestää tunnin siitä hetkestä, kun kirjaudut sisään.',
+  'privacy.accountSecurity.none': 'Istuntoa ei ole käytössä. Kirjaudu sisään aloittaaksesi.',
   'privacy.accountSecurity.reach.title': 'Sähköposti ja salasana ovat avain',
   'privacy.accountSecurity.reach.body':
-    'Sisäänkirjautuminen pyytää sähköpostin ja salasanan. Sovellus ei tallenna omaa salasanaa, eikä tilipalvelua ole vielä kytketty tarkistamaan sitä.',
+    'Sisäänkirjautuminen lähettää sähköpostin ja salasanan Pickyn tilipalveluun, joka tarkistaa ne. Sovellus ei tallenna omaa salasanaa.',
   'privacy.accountSecurity.session.title': 'Istunto',
   'privacy.accountSecurity.session.where.label': 'Missä se on',
-  'privacy.accountSecurity.session.where.value':
-    'Sovelluksen muistissa, niin kauan kuin sovellus on auki.',
+  'privacy.accountSecurity.session.where.value': 'Laitteen suojatussa tallennustilassa.',
   'privacy.accountSecurity.session.where.hint':
-    'Puhelimeen ei kirjoiteta vielä mitään: korvikkeen takana oleva varasto on muistissa, ja suojattu varasto tulee tilipalvelun mukana.',
+    'iPhonessa avainnipussa, Androidissa avainsäilössä, luettavissa vain laitteen ollessa auki. Selaimessa se pysyy välilehden muistissa.',
   'privacy.accountSecurity.session.lifetime.label': 'Kuinka kauan se kestää',
-  'privacy.accountSecurity.session.lifetime.value': 'Tunnin siitä hetkestä, kun kirjaudut sisään.',
+  'privacy.accountSecurity.session.lifetime.value': 'Uusitaan, kun käytät sovellusta.',
   'privacy.accountSecurity.session.lifetime.hint':
-    'Tunti on palveluntarjoajan oma tunnisteen voimassaoloaika, ei meidän valintamme.',
+    'Jokainen kirjautuminen on lyhytikäinen, ja tilipalvelu uusii sen, joten sinulta ei kysytä uudelleen.',
   'privacy.accountSecurity.session.ends.label': 'Mikä sen päättää',
-  'privacy.accountSecurity.session.ends.value': 'Uloskirjautuminen tai tunnin päättyminen.',
+  'privacy.accountSecurity.session.ends.value': 'Uloskirjautuminen tai palvelun päätös.',
   'privacy.accountSecurity.session.ends.hint':
-    'Vanhentunut istunto pudotetaan, kun sovellus lukee sen seuraavan kerran.',
-  'privacy.accountSecurity.session.remaining.label': 'Aikaa jäljellä',
-  'privacy.accountSecurity.session.remaining.value': '{minutes} min',
-  'privacy.accountSecurity.session.remaining.underMinute': 'Alle minuutti',
-  'privacy.accountSecurity.session.remaining.hint':
-    'Luetaan istunnon omasta päättymisajasta, kerran sekunnissa. Mikään täällä ei pidennä sitä — päättyneeseen istuntoon kirjaudutaan uudelleen.',
-  'privacy.accountSecurity.ended.title': 'Istunto on päättynyt',
-  'privacy.accountSecurity.ended.body':
-    'Sisäänkirjautumisen jälkeen alkanut tunti on kulunut, joten sovellus ei enää pidä tiliä.',
+    'Uloskirjautuminen ilmoittaa myös tilipalvelulle, joten istuntoa ei voi enää uusia.',
   'privacy.accountSecurity.absent.title': 'Ei vielä täällä',
   'privacy.accountSecurity.absent.service':
-    'Tilipalvelua ei ole kytketty, joten nimeäsi ja sähköpostiosoitettasi ei voi vielä muuttaa sovelluksessa eikä tiliä voi poistaa.',
+    'Nimeäsi ja sähköpostiosoitettasi ei voi vielä muuttaa sovelluksessa, eikä tiliä voi vielä poistaa täältä.',
   'privacy.accountSecurity.absent.devices': 'Laitelistaa ei ole, eikä toista istuntoa voi päättää.',
   'privacy.accountSecurity.signOut.note':
     'Uloskirjautuminen poistaa tältä puhelimelta käyntien seurannan suostumuksen, tallennetut paikat ja jonossa olevat raportit ja pudottaa sitten istunnon.',

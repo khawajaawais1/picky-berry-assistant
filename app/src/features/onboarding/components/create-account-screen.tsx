@@ -5,7 +5,6 @@ import { View } from 'react-native';
 import { AppButton, AppCheckbox, AppText } from '@/components/atoms';
 import { Callout, FieldAction, FormField, StatusMessage, TextAction } from '@/components/molecules';
 import { Screen } from '@/components/templates';
-import { appEnvironment, type AppEnvironment } from '@/config/env';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useTranslation } from '@/services/i18n';
 
@@ -30,12 +29,6 @@ export type OnboardingCreateAccountScreenProps = {
    * (`src/services/session/`). The route above wires this to that port.
    */
   onSubmit?: (values: CreateAccountForm) => Promise<boolean>;
-  /**
-   * The environment this build was made for, which decides whether the form can be submitted at
-   * all. Read from `src/config/env.ts` — the one module allowed to read `EXPO_PUBLIC_*` — and
-   * passable so a test can state which build it is testing.
-   */
-  environment?: AppEnvironment;
 };
 
 /**
@@ -57,9 +50,8 @@ export type OnboardingCreateAccountScreenProps = {
  * not keep) leaves a failure line under it rather than a silent press (AGENTS.md §2.3). Which
  * error treatment the design owner wants is still open (PROJECT.md open question 11).
  *
- * A **production** build draws the action disabled: today no account service exists, so nothing
- * there could answer the credential (ADR-054 §8). The form is still readable and typed into; the
- * action says it cannot act.
+ * The action acts in every build: the team API's account service answers it (ADR-065), and an
+ * unusable configuration answers `unavailable` through the port rather than through this screen.
  *
  * Two other deliberate departures from the frame, both recorded in PROJECT.md: the consent
  * control starts unchecked because a pre-ticked box is not a valid affirmative action, and the
@@ -74,7 +66,6 @@ export function OnboardingCreateAccountScreen({
   onSignIn,
   onReadTerms,
   onSubmit,
-  environment,
 }: OnboardingCreateAccountScreenProps) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
@@ -84,9 +75,7 @@ export function OnboardingCreateAccountScreen({
   const [submissionFailed, setSubmissionFailed] = useState(false);
 
   const consent = t('onboarding.createAccount.consent');
-  const buildEnvironment = environment ?? appEnvironment();
-  // Nothing can create an account in a shipped build, so its action cannot act (AGENTS.md §11.2).
-  const canCreate = buildEnvironment !== 'production' && onSubmit !== undefined;
+  const canCreate = onSubmit !== undefined;
 
   const submit = async () => {
     if (!canCreate || submitting) {
