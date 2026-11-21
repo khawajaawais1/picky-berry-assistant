@@ -6,6 +6,7 @@ import {
   SignInPrototype,
   isSignInVariantKey,
 } from '@/features/onboarding';
+import { useTranslation } from '@/services/i18n';
 import { sessionPort } from '@/services/session';
 
 /**
@@ -13,10 +14,8 @@ import { sessionPort } from '@/services/session';
  *
  * A route only wires a screen to a feature's public API. The back control is wired because the
  * welcome screen sits behind it, and submitting hands the address, the password and the name to
- * the **session port** (`src/services/session/`), which is where a credential becomes a session:
- * today the stand-in behind it accepts any completed form outside a production build and verifies
- * nothing, and when the account service exists the same call goes to it and this route does not
- * change (ADR-054, ADR-059).
+ * the **session port** (`src/services/session/`), which registers the account with the team API
+ * and holds the session it answers with (ADR-065).
  *
  * **The route asks for no code and opens no verification screen.** Screen 04 is retired: the
  * credential is the frame's own password field, so a successful submission is the account's
@@ -39,6 +38,7 @@ import { sessionPort } from '@/services/session';
  */
 export default function CreateAccountRoute() {
   const params = useLocalSearchParams<{ variant?: string }>();
+  const { locale } = useTranslation();
   const variant = appEnvironment() === 'production' ? undefined : params.variant;
 
   if (isSignInVariantKey(variant)) return <SignInPrototype variant={variant} />;
@@ -49,7 +49,15 @@ export default function CreateAccountRoute() {
       onReadTerms={() => router.push('/terms-privacy')}
       onSignIn={() => router.push('/sign-in')}
       onSubmit={async ({ email, password, name }) => {
-        const result = await sessionPort.signIn({ displayName: name, email, password });
+        // The account's language is the one the device reads the app in. There is no versioned
+        // terms document yet, so no consent version is claimed (ADR-065, the plan's gap list).
+        const result = await sessionPort.register({
+          consents: {},
+          displayName: name,
+          email,
+          lang: locale,
+          password,
+        });
 
         if (!result.ok) {
           return false;

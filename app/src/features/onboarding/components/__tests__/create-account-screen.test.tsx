@@ -23,7 +23,7 @@ const COMPLETE: CreateAccountForm = {
   consent: true,
   email: 'aino@example.fi',
   name: 'Aino Korhonen',
-  password: 'berries1',
+  password: 'berrypick1',
 };
 
 const CONSENT = 'I agree to the Terms of use and acknowledge the Privacy notice.';
@@ -51,7 +51,7 @@ describe('OnboardingCreateAccountScreen', () => {
     expect(screen.getByText('Your name')).toBeOnTheScreen();
     expect(screen.getByText('Email address')).toBeOnTheScreen();
     expect(screen.getByText('Password')).toBeOnTheScreen();
-    expect(screen.getByText('At least 8 characters, with a number.')).toBeOnTheScreen();
+    expect(screen.getByText('At least 10 characters, with a number.')).toBeOnTheScreen();
     expect(screen.getByText(CONSENT)).toBeOnTheScreen();
     expect(screen.getByText('Read terms & privacy')).toBeOnTheScreen();
     expect(screen.getByText('Create account')).toBeOnTheScreen();
@@ -85,7 +85,7 @@ describe('OnboardingCreateAccountScreen', () => {
       fontSize: typography.subtitle.fontSize,
     });
     expect(screen.getByText('Password')).toHaveStyle({ fontSize: 14, fontWeight: '600' });
-    expect(screen.getByText('At least 8 characters, with a number.')).toHaveStyle({
+    expect(screen.getByText('At least 10 characters, with a number.')).toHaveStyle({
       color: themes.light.colors.textMuted,
       fontSize: typography.metadata.fontSize,
     });
@@ -220,16 +220,17 @@ describe('OnboardingCreateAccountScreen', () => {
     expect(await screen.findByText('Your account wasn’t created. Try again.')).toBeOnTheScreen();
   });
 
-  it('draws the action disabled in a production build, where nothing can answer it', async () => {
-    // ADR-054 §8 / ADR-059: no account service exists in a shipped build, so the action always
-    // says it cannot act and the form does not promise a creation it cannot perform.
-    await render(
-      <OnboardingCreateAccountScreen environment="production" onSubmit={async () => true} />,
-    );
+  it('acts in a production build, because the account service answers it (ADR-065)', async () => {
+    process.env.EXPO_PUBLIC_APP_ENV = 'production';
+    try {
+      await render(<OnboardingCreateAccountScreen onSubmit={async () => true} />);
 
-    await fillForm();
+      await fillForm();
 
-    expect(screen.getByTestId('create-account-action')).toBeDisabled();
+      expect(screen.getByTestId('create-account-action')).toBeEnabled();
+    } finally {
+      delete process.env.EXPO_PUBLIC_APP_ENV;
+    }
   });
 
   it('only claims the link and sign-in actions when they can act', async () => {

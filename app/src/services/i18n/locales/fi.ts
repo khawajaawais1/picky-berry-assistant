@@ -95,7 +95,7 @@ export const fi: Record<TranslationKey, string> = {
   'onboarding.createAccount.field.password': 'Salasana',
   'onboarding.createAccount.failed': 'Tilin luonti ei onnistunut. Yritä uudelleen.',
   'onboarding.createAccount.heading': 'Pieni esittely.',
-  'onboarding.createAccount.passwordHint': 'Vähintään 8 merkkiä, sisältää numeron.',
+  'onboarding.createAccount.passwordHint': 'Vähintään 10 merkkiä, sisältää numeron.',
   'onboarding.createAccount.privacy.body':
     'Tallennetut paikat ovat oletuksena yksityisiä. GPS-reittejäsi ei koskaan julkaista.',
   'onboarding.createAccount.privacy.title': 'Tietosi pysyvät sinun',

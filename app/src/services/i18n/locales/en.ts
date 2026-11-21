@@ -106,7 +106,7 @@ export const en = {
   'onboarding.createAccount.field.password': 'Password',
   'onboarding.createAccount.failed': 'Your account wasn’t created. Try again.',
   'onboarding.createAccount.heading': 'A little introduction.',
-  'onboarding.createAccount.passwordHint': 'At least 8 characters, with a number.',
+  'onboarding.createAccount.passwordHint': 'At least 10 characters, with a number.',
   'onboarding.createAccount.privacy.body':
     'Saved spots default to private. Your GPS trails are never public.',
   'onboarding.createAccount.privacy.title': 'Your data stays yours',

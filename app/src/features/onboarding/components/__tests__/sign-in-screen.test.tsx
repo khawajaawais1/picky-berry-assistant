@@ -109,13 +109,18 @@ describe('OnboardingSignInScreen', () => {
     ).toBeOnTheScreen();
   });
 
-  it('draws the action disabled in a production build, where nothing can answer it', async () => {
-    await render(<OnboardingSignInScreen environment="production" onSignIn={async () => true} />);
+  it('acts in a production build, because the account service answers it (ADR-065)', async () => {
+    process.env.EXPO_PUBLIC_APP_ENV = 'production';
+    try {
+      await render(<OnboardingSignInScreen onSignIn={async () => true} />);
 
-    await fireEvent.changeText(screen.getByTestId('sign-in-email'), 'aino@example.fi');
-    await fireEvent.changeText(screen.getByTestId('sign-in-password'), 'berries1234');
+      await fireEvent.changeText(screen.getByTestId('sign-in-email'), 'aino@example.fi');
+      await fireEvent.changeText(screen.getByTestId('sign-in-password'), 'berries1234');
 
-    expect(screen.getByRole('button', { name: 'Sign in' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Sign in' })).toBeEnabled();
+    } finally {
+      delete process.env.EXPO_PUBLIC_APP_ENV;
+    }
   });
 
   it('keeps the password masked until the user reveals it', async () => {
