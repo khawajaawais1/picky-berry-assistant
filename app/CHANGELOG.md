@@ -12,6 +12,11 @@ recorded in [docs/adr/](docs/adr/).
 - Password reset asks the team API (`POST /auth/password-reset`) and says the request was
   accepted, without claiming an email was sent (ADR-065, amended).
 
+### Fixed
+
+- `TESTING.md` no longer claims Playwright is pinned to an exact 1.63.0: it is a caret range, and
+  `package.json` is where the version is read.
+
 ### Removed
 
 - The Firebase password-reset adapter and `EXPO_PUBLIC_FIREBASE_API_KEY`. The app carries no

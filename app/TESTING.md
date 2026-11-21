@@ -55,7 +55,7 @@ a test is impossible to lose when its module moves. Recorded in ADR-004.
 | Jest | 30.x | `jest-expo` 58 preset, `clearMocks: true` |
 | React Native Testing Library | 14.x | `render`, `fireEvent` and `renderHook` are **async** — always `await` them |
 | @types/jest | 30.0.x | pinned to match Jest (`tsconfig` sets `"types": ["jest"]`) |
-| Playwright | 1.63.0 (**exact**) | Browser harness (§12). Its browser build is version-locked, so the version is exact rather than a range. One-time `npx playwright install chromium` |
+| Playwright | 1.x (caret range; `package.json` is the source) | Browser harness (§12). Each release is tied to one browser build, so the browser is installed for whatever version is installed: `npx playwright install chromium` after an upgrade, as CI does on every run |
 
 `jest.config.js` mirrors the tsconfig `@/*` alias with `moduleNameMapper`; keep
 the two in sync. It also resolves Reanimated 4 through the library's own Jest
