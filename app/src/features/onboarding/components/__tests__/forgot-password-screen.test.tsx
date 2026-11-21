@@ -9,16 +9,16 @@ import { OnboardingForgotPasswordScreen } from '../forgot-password-screen';
  *
  * The screen keeps the app-drawn sign-in screen's framing — the 76 px key tile, the onboarding
  * header and the design's 54 px controls — and its words are this repository's, so this test is
- * where they are reviewed. What the screen may not do is claim a delivery: no sign-in service is
- * connected, the stand-in sends nothing, and the confirmation says so on a test build (ADR-048).
+ * where they are reviewed. What the screen may not do is claim a delivery the service does not
+ * make: its mail is console-only, so the confirmation says the request was accepted (ADR-048).
  */
 const EMAIL = 'aino@example.fi';
 const REQUESTED =
-  'If an account uses aino@example.fi, the sign-in service’s reset link is the next step for that address. The app never stores your password.';
+  'If an account uses aino@example.fi, its reset link opens a page where you can choose a new password.';
 const TEST_BUILD =
   'No sign-in service is connected here, so no reset email is sent. In the finished app, the link would go to this address.';
 const LIVE_REQUESTED =
-  'If an account uses aino@example.fi, the sign-in service’s reset link is on its way to that address. The app never stores your password.';
+  'If an account uses aino@example.fi, its reset link is on its way. Open it to choose a new password.';
 
 async function requestReset(email = EMAIL) {
   await fireEvent.changeText(screen.getByTestId('forgot-password-email'), email);
@@ -34,15 +34,15 @@ describe('OnboardingForgotPasswordScreen', () => {
     expect(screen.getByText('Forgot your password?')).toBeOnTheScreen();
     expect(
       screen.getByText(
-        'Enter the email your account uses. Reset links belong to the sign-in service; the app never stores your password.',
+        'Enter the email your account uses. The reset link opens a page where you choose a new password; the app never stores your password.',
       ),
     ).toBeOnTheScreen();
     expect(screen.getByText('Email address')).toBeOnTheScreen();
     expect(screen.getByText('Request reset link')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Sign in' })).toBeOnTheScreen();
 
-    // No code, no password field, no reset token: the provider owns the reset and the app never
-    // sees either end of it (ADR-054, ADR-062).
+    // This step asks for the address only; the emailed link opens the new-password page
+    // (ADR-054, ADR-062).
     expect(screen.queryByText(/code/i)).not.toBeOnTheScreen();
     expect(screen.queryByLabelText('Password')).not.toBeOnTheScreen();
   });
@@ -107,7 +107,7 @@ describe('OnboardingForgotPasswordScreen', () => {
     expect(await screen.findByText('Reset request accepted.')).toBeOnTheScreen();
     expect(
       screen.getByText(
-        'If an account uses nobody@example.fi, the sign-in service’s reset link is the next step for that address. The app never stores your password.',
+        'If an account uses nobody@example.fi, its reset link opens a page where you can choose a new password.',
       ),
     ).toBeOnTheScreen();
   });

@@ -57,8 +57,8 @@ export type SignInRefusal = 'refused' | 'unavailable';
 export type SignInResult = { ok: true; session: Session } | { ok: false; reason: SignInRefusal };
 
 /**
- * The port. Four operations: acquire a session, ask for the one being held, drop it, and ask the
- * provider for a password reset.
+ * The port. Five operations: acquire a session, ask for the one being held, drop it, ask the
+ * provider for a password reset link, and spend that link's token on a new password.
  *
  * The reset request is not a session operation in the sense the other three are — it holds
  * nothing and signs nobody in — but it belongs to the same provider and the same adapter, so it
@@ -81,4 +81,9 @@ export type SessionPort = {
    * reveal which ones have accounts.
    */
   requestPasswordReset(email: string): Promise<PasswordResetResult>;
+  /**
+   * Spends the link's single-use token and sets the account's new password. Holds nothing that
+   * comes back: a completion is a `204`, not a session, so the way on is signing in again.
+   */
+  completePasswordReset(token: string, password: string): Promise<PasswordResetResult>;
 };

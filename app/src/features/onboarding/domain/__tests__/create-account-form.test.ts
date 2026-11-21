@@ -1,5 +1,6 @@
 import {
   EMPTY_CREATE_ACCOUNT_FORM,
+  isPasswordValid,
   isSubmittable,
   type CreateAccountForm,
   CONSENT_NOTICE_VERSION,
@@ -75,6 +76,15 @@ describe('isSubmittable', () => {
 
   it('requires consent', () => {
     expect(isSubmittable({ ...complete, consent: false })).toBe(false);
+  });
+});
+
+describe('isPasswordValid', () => {
+  it('is the rule both account creation and reset use', () => {
+    expect(isPasswordValid('berries123')).toBe(true);
+    expect(isPasswordValid('berries12')).toBe(false);
+    expect(isPasswordValid('berryberryberry')).toBe(false);
+    expect(isPasswordValid(`${'a'.repeat(128)}1`)).toBe(false);
   });
 });
 

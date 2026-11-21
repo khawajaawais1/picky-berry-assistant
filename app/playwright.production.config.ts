@@ -36,8 +36,8 @@ export default defineConfig({
     url: BASE_URL,
     reuseExistingServer: false,
     timeout: 300_000,
-    // A shipped build with no provider is the state checked here, and the harness must never
-    // send a real reset email: the empty key wins over any value in a developer's `.env`.
+    // A shipped build with no reachable account service is the state checked here, and the
+    // reserved `.invalid` origin below cannot send anything, whatever a developer's `.env` holds.
     env: {
       EXPO_NO_TELEMETRY: '1',
       // The reserved `.invalid` TLD never resolves: the export can reach no real API, and the

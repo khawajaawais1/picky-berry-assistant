@@ -43,6 +43,8 @@ export type Visit = {
   segments: readonly PresenceSegment[];
   /** Set once the visit can no longer change; null while it may still resume. */
   finalizedAt: number | null;
+  /** True when the picker pressed “End visit”, rather than presence finalizing it. */
+  endedManually?: boolean;
 };
 
 export type CandidateEntry = {
@@ -321,4 +323,42 @@ export function finalizeExpired(
 
   if (due.events.length === 0) return { state, events: [] };
   return { state: { candidate: state.candidate, visits: due.visits }, events: due.events };
+}
+
+/**
+ * Ends one running visit at the picker's request.
+ *
+ * This is the manual counterpart of `finalizeExpired`: the picker says the visit is over now,
+ * so the open segment closes at `at` rather than at the last presence fix, and the visit becomes
+ * immutable. A visit that has already finalized is left untouched, which keeps a double press
+ * from rewriting its summary.
+ */
+export function endVisit(
+  state: VisitTrackerState,
+  visitId: string,
+  at: number,
+): VisitTrackerResult & { visit: Visit | null } {
+  const visit = state.visits.find((candidate) => candidate.id === visitId);
+  if (visit === undefined || visit.finalizedAt !== null) {
+    return { events: [], state, visit: null };
+  }
+
+  const open = isOpen(visit);
+  const ended: Visit = {
+    ...visit,
+    endedManually: true,
+    finalizedAt: at,
+    segments: open ? closeLastSegment(visit, at) : visit.segments,
+  };
+  const events: VisitEvent[] = [];
+  if (open) {
+    events.push({ type: 'segment-closed', visitId: visit.id, zoneId: visit.zoneId, at });
+  }
+  events.push({ type: 'visit-finalized', visitId: visit.id, zoneId: visit.zoneId, at });
+
+  return {
+    events,
+    state: { candidate: state.candidate, visits: replaceVisit(state.visits, visit.id, ended) },
+    visit: ended,
+  };
 }

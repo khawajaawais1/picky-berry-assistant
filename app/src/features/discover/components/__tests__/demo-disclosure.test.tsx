@@ -16,24 +16,12 @@ import {
 import { getCatalogue, SUPPORTED_LOCALES, type Locale, type TranslationKey } from '@/services/i18n';
 import { QueryProvider } from '@/services/query-client';
 
-// eslint-disable-next-line import/first
-import { ActiveVisitScreen } from '../active-visit-screen';
-// eslint-disable-next-line import/first
 import { AlertsScreen } from '../alerts-screen';
-// eslint-disable-next-line import/first
 import { DiscoverScreen } from '../discover-screen';
-// eslint-disable-next-line import/first
-import { PostVisitFeedbackScreen } from '../post-visit-feedback-screen';
-// eslint-disable-next-line import/first
 import { RouteToZoneScreen } from '../route-to-zone-screen';
-// eslint-disable-next-line import/first
-// eslint-disable-next-line import/first
 import { SeasonInsightsScreen } from '../season-insights-screen';
-// eslint-disable-next-line import/first
 import { ZoneDetailsScreen } from '../zone-details-screen';
-// eslint-disable-next-line import/first
 import { ZoneReportsScreen } from '../zone-reports-screen';
-
 /**
  * The rule this guards: **a screen that draws the design's sample names the demo on itself.**
  *
@@ -104,16 +92,6 @@ const DEMO_SCREENS: readonly DemoScreen[] = [
     draw: () => <RouteToZoneScreen />,
   },
   {
-    file: 'src/features/discover/components/active-visit-screen.tsx',
-    disclosure: 'discover.visit.eyebrow',
-    draw: () => <ActiveVisitScreen />,
-  },
-  {
-    file: 'src/features/discover/components/post-visit-feedback-screen.tsx',
-    disclosure: 'report.eyebrow',
-    draw: () => <PostVisitFeedbackScreen />,
-  },
-  {
     file: 'src/features/discover/components/season-insights-screen.tsx',
     disclosure: 'discover.season.eyebrow',
     draw: () => <SeasonInsightsScreen />,
@@ -179,6 +157,7 @@ const SAMPLE_FREE_SCREENS: readonly string[] = [
   'src/features/onboarding/components/create-account-screen.tsx',
   'src/features/onboarding/components/forgot-password-screen.tsx',
   'src/features/onboarding/components/location-consent-screen.tsx',
+  'src/features/onboarding/components/reset-password-screen.tsx',
   'src/features/onboarding/components/sign-in-screen.tsx',
   'src/features/onboarding/components/welcome-screen.tsx',
   'src/features/privacy/components/account-security-screen.tsx',
@@ -194,6 +173,13 @@ const SAMPLE_FREE_SCREENS: readonly string[] = [
   'src/features/discover/components/saved-spots-screen.tsx',
   // The account's own alert radius and species (ADR-067): nothing on it is the design's sample.
   'src/features/discover/components/alert-preferences-screen.tsx',
+  // Screen 09 now reads the app's tracker: its zone, arrival and duration are the visit the phone
+  // is making, and its empty and arriving states describe the tracker rather than the design.
+  'src/features/discover/components/active-visit-screen.tsx',
+  // Screen 10 reports the finalized tracked visit it is handed. Its form answers are the
+  // picker's own, and its empty state says no visit has ended rather than drawing the frame's
+  // sample window.
+  'src/features/discover/components/post-visit-feedback-screen.tsx',
   // The watch field test (ADR-063) is a tester's instrument, not a screen of the design: it draws
   // readings from the real seam and the phone's own battery, and none of the design's sample.
   'src/features/field-test/components/field-test-screen.tsx',

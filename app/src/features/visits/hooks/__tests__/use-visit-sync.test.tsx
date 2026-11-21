@@ -99,6 +99,21 @@ describe('useVisitSync', () => {
     expect(held()).toEqual([]);
   });
 
+  it('keeps a manual end through a lost network, and sends it as manual', async () => {
+    const { outbox } = memoryOutbox();
+    const { api, send } = apiAnswering('retry', 'recorded');
+    const manual = { ...visit(3), endedManually: true };
+
+    const { result } = await renderHook(() => useVisitSync({ api, outbox, visits: [manual] }));
+    await waitFor(() => expect(send).toHaveBeenCalledTimes(1));
+    expect(send).toHaveBeenLastCalledWith(expect.objectContaining({ manual: true }));
+
+    await act(async () => result.current.flush());
+
+    expect(send).toHaveBeenCalledTimes(2);
+    expect(send).toHaveBeenLastCalledWith(expect.objectContaining({ manual: true }));
+  });
+
   it('lets a refused visit go, because the same body would be refused again', async () => {
     const { outbox, held } = memoryOutbox();
     const { api, send } = apiAnswering('refused');

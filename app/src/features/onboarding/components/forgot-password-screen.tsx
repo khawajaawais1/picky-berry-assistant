@@ -43,12 +43,11 @@ export type OnboardingForgotPasswordScreenProps = {
  * and a text action back to sign-in. Frame-less, its copy is this repository's and its Finnish is
  * app-written, like the sign-in screen's.
  *
- * **What the journey does, and what it deliberately does not.** It asks for the email the account
- * uses and hands it to the sign-in provider, which owns the reset link, the reset token and the
- * page where a new password is set (ADR-054, ADR-062). The app draws no new-password field and
- * handles no token: a client that did would be holding the one credential ADR-054 says it never
- * stores, and it would have to invent a screen the design file does not contain. After the
- * provider's page, the way on is the sign-in screen this one came from.
+ * **What the journey does.** It asks for the email the account uses and hands it to the sign-in
+ * provider, which owns the reset link and its one-hour token (ADR-054, ADR-062). The link opens
+ * `/reset-password` in this app, where the token is spent on a new password and never stored.
+ * The confirmation therefore describes the next step without claiming a delivery in a build whose
+ * mail is still console-only.
  *
  * **A delivery is claimed only when one is made.** With a configured provider the confirmation
  * says “Check your inbox.” and that *if* an account uses the address, its reset link is on the

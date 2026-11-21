@@ -44,6 +44,17 @@ test.describe('the production export', () => {
 
     await expect(page.getByRole('button', { name: 'Request reset link' })).toBeEnabled();
     await expect(page).toHaveURL(/\/forgot-password$/);
+
+    // The other half of the journey: the link's page accepts a password under the same rules,
+    // without a provider's mail being involved.
+    await page.goto('/reset-password?token=harness-reset-token');
+    await page.getByRole('textbox', { name: 'New password', exact: true }).fill('berries1234');
+    await page
+      .getByRole('textbox', { name: 'Confirm new password', exact: true })
+      .fill('berries1234');
+
+    await expect(page.getByRole('button', { name: 'Save new password' })).toBeEnabled();
+    await expect(page).toHaveURL(/\/reset-password/);
   });
 
   test('mounts no prototype on the route that carries one for review', async ({ page }) => {

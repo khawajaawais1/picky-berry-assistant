@@ -1,6 +1,5 @@
 import type { VisitReport, YieldRating } from '@/services/report-queue';
 
-import { DEMO_ACTIVE_VISIT } from './active-visit';
 import { SPECIES, type Species } from './species';
 
 /**
@@ -52,38 +51,6 @@ export type ReportSpecies = Species;
  */
 export const DEFAULT_YIELD_RATING: YieldRating = 4;
 
-/** The frame's own visit, as its summary line prints it (node `5:23277`). */
-export const DEMO_VISIT_WINDOW = {
-  arrival: '10:03',
-  departure: '10:55',
-} as const;
-
-const CLOCK_READING = /^([01]\d|2[0-3]):([0-5]\d)$/;
-
-function toMinutes(reading: string): number {
-  const match = CLOCK_READING.exec(reading);
-
-  if (!match) {
-    throw new RangeError(`a visit window is written as HH:MM, got “${reading}”`);
-  }
-
-  return Number(match[1]) * 60 + Number(match[2]);
-}
-
-/**
- * How long a visit lasted, from the two clock readings the summary prints.
- *
- * A visit may span the end of a local day (PROJECT.md, decision 16), so a departure earlier on
- * the clock than the arrival is read as the next morning rather than as a mistake: 23:30 to
- * 00:15 is forty-five minutes in the zone, not a negative duration.
- */
-export function visitMinutes(arrival: string, departure: string): number {
-  const from = toMinutes(arrival);
-  const to = toMinutes(departure);
-
-  return to >= from ? to - from : to + 24 * 60 - from;
-}
-
 /** What the picker has answered on screen 10, before it is a report. */
 export type ReportDraft = {
   speciesId: ReportSpecies;
@@ -92,19 +59,31 @@ export type ReportDraft = {
   amountText: string;
 };
 
+/** The finalized visit a report belongs to, as the tracker published it. */
+export type ReportVisit = {
+  zoneId: string;
+  openedAt: number;
+  endedAt: number | null;
+};
+
 /**
  * The report as it is queued: the picker's own answers, the visit they belong to, and the
  * moment it was recorded. The amount is trimmed, because a field left with spaces is empty.
  */
-export function buildVisitReport(draft: ReportDraft, recordedAt: Date): VisitReport {
+export function buildVisitReport(
+  draft: ReportDraft,
+  recordedAt: Date,
+  visit: ReportVisit,
+): VisitReport {
+  const endedAt = visit.endedAt ?? visit.openedAt;
+
   return {
     amountText: draft.amountText.trim(),
-    // The visit's own length, which the frame's summary prints (52 min): a real visit knows when
-    // it began and ended, and the history rows screen 11 draws want that number beside them.
-    minutes: visitMinutes(DEMO_VISIT_WINDOW.arrival, DEMO_VISIT_WINDOW.departure),
+    // The visit's own length, which the history rows screen 11 draws want beside them.
+    minutes: Math.max(0, Math.floor((endedAt - visit.openedAt) / 60_000)),
     recordedAt: recordedAt.toISOString(),
     speciesId: draft.speciesId,
     yieldRating: draft.yieldRating,
-    zoneId: DEMO_ACTIVE_VISIT.zoneId,
+    zoneId: visit.zoneId,
   };
 }

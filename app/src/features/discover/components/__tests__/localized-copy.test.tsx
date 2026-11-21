@@ -36,6 +36,14 @@ import { SeasonInsightsScreen } from '../season-insights-screen';
 // eslint-disable-next-line import/first
 import { ZoneDetailsScreen } from '../zone-details-screen';
 
+const VISIT = {
+  endedAt: new Date(2026, 7, 28, 10, 55).getTime(),
+  openedAt: new Date(2026, 7, 28, 10, 3).getTime(),
+  visitId: 'visit-1',
+  zoneId: 'zone-laajavuori-1',
+  zoneName: 'Laajavuori 1',
+};
+
 describe('the discover screen on a Finnish device', () => {
   it('renders the screen, the map’s labels and the source card in Finnish', async () => {
     await render(<DiscoverScreen />, { wrapper: QueryProvider });
@@ -228,30 +236,41 @@ describe('the zone details screen on a Finnish device', () => {
 });
 
 describe('the active visit screen on a Finnish device', () => {
-  it('renders the frame’s copy in Finnish, including the species in its status label', async () => {
-    await render(<ActiveVisitScreen onEnd={jest.fn()} />);
+  it('renders the running visit in Finnish', async () => {
+    await render(<ActiveVisitScreen onEnd={jest.fn()} visit={VISIT} />);
 
-    expect(screen.getByText('POIMINTA · KÄYNTI KÄYNNISSÄ · KAUSIDEMO')).toBeOnTheScreen();
-    expect(screen.getByText('Poiminta alueella 14')).toBeOnTheScreen();
-    expect(screen.getByText('Saapuminen havaittiin automaattisesti')).toBeOnTheScreen();
-    expect(screen.getByText('AKTIIVINEN · PUOLUKKA')).toBeOnTheScreen();
+    expect(screen.getByText('POIMINTA · KÄYNTI KÄYNNISSÄ')).toBeOnTheScreen();
+    expect(screen.getByText('Poiminta alueella Laajavuori 1')).toBeOnTheScreen();
+    expect(screen.getByText('Saapuminen havaittu')).toBeOnTheScreen();
+    expect(screen.getByText('AKTIIVINEN KÄYNTI')).toBeOnTheScreen();
     expect(screen.getByText('Aika alueella · ei tarvitse verkkoa')).toBeOnTheScreen();
     expect(
       screen.getByText(
         'Vain sinä näet reittisi. Muut näkevät alueen tilan, eivät tarkkaa GPS-jälkeäsi.',
       ),
     ).toBeOnTheScreen();
-    // The two action labels are the shortened ones the design's label box can hold (see fi.ts).
-    expect(screen.getByText('Keskeytä')).toBeOnTheScreen();
+    // The design's label box holds the shortened action (see fi.ts).
     expect(screen.getByText('Lopeta')).toBeOnTheScreen();
     expect(
-      screen.getByText(
-        'Alueelta poistuminen päättää käynnin automaattisesti ja avaa pikaraportin.',
-      ),
+      screen.getByText('Seuranta huomaa poistumisen ja päättää käynnin lyhyen armonajan jälkeen.'),
     ).toBeOnTheScreen();
 
-    expect(screen.queryByText('ACTIVE · LINGONBERRY')).not.toBeOnTheScreen();
-    expect(screen.queryByText('Pause visit')).not.toBeOnTheScreen();
+    expect(screen.queryByText('ACTIVE VISIT')).not.toBeOnTheScreen();
+    expect(screen.queryByText('End visit')).not.toBeOnTheScreen();
+  });
+
+  it('renders the empty state in Finnish', async () => {
+    await render(<ActiveVisitScreen />);
+
+    expect(screen.getByText('POIMINTA · AKTIIVINEN KÄYNTI')).toBeOnTheScreen();
+    expect(screen.getByText('Käyntiä ei ole käynnissä')).toBeOnTheScreen();
+    expect(screen.getByText('Käynnin seuranta')).toBeOnTheScreen();
+    expect(
+      screen.getByText('Käynti alkaa, kun viivyt marja-alueella sovelluksen ollessa auki.'),
+    ).toBeOnTheScreen();
+    expect(screen.getByText('Avaa kartta löytääksesi alueen.')).toBeOnTheScreen();
+
+    expect(screen.queryByText('No visit is running')).not.toBeOnTheScreen();
   });
 });
 
@@ -328,12 +347,12 @@ describe('the season screen on a Finnish device', () => {
 
 describe('the post-visit feedback screen on a Finnish device', () => {
   it('renders the report’s question, its five answers and its note in Finnish', async () => {
-    await render(<PostVisitFeedbackScreen onSave={jest.fn()} onSkip={jest.fn()} />);
+    await render(<PostVisitFeedbackScreen onSave={jest.fn()} onSkip={jest.fn()} visit={VISIT} />);
 
-    expect(screen.getByText('POIMINTA · PIKARAPORTTI · KAUSIDEMO')).toBeOnTheScreen();
+    expect(screen.getByText('POIMINTA · PIKARAPORTTI')).toBeOnTheScreen();
     expect(screen.getByText('Miten poiminta sujui?')).toBeOnTheScreen();
-    expect(screen.getByText('Poistuminen havaittu · käynti päättyi')).toBeOnTheScreen();
-    expect(screen.getByText('Alue 14 · 28.8. · 10:03–10:55 · 52 min')).toBeOnTheScreen();
+    expect(screen.getByText('Käynti päättyi')).toBeOnTheScreen();
+    expect(screen.getByText('Alue Laajavuori 1 · 10:03–10:55 · 52 min')).toBeOnTheScreen();
     expect(screen.getByText('Pieni raportti. Tuoreempi kartta.')).toBeOnTheScreen();
     expect(
       screen.getByText('Arvioi löytämäsi marjat, älä vain kotiin tuotua määrää.'),
@@ -358,5 +377,14 @@ describe('the post-visit feedback screen on a Finnish device', () => {
 
     expect(screen.queryByText('How plentiful were the berries?')).not.toBeOnTheScreen();
     expect(screen.queryByText('Save report offline')).not.toBeOnTheScreen();
+  });
+
+  it('renders the empty state in Finnish when no visit has ended', async () => {
+    await render(<PostVisitFeedbackScreen />);
+
+    expect(screen.getByText('POIMINTA · PIKARAPORTTI')).toBeOnTheScreen();
+    expect(screen.getByText('Ei raportoitavaa käyntiä')).toBeOnTheScreen();
+    expect(screen.getByText('Raportti alkaa, kun seurattu käynti päättyy.')).toBeOnTheScreen();
+    expect(screen.getByText('Avaa kartta löytääksesi alueen.')).toBeOnTheScreen();
   });
 });

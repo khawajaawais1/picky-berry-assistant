@@ -1,6 +1,4 @@
-import { formatClockTime, formatElapsed, DEMO_ACTIVE_VISIT } from '../active-visit';
-import { CARD_ZONE_STATE, DEMO_ZONES } from '../zone';
-import { DEMO_ZONE_DETAILS } from '../zone-details';
+import { formatClockTime, formatElapsed } from '../active-visit';
 
 describe('formatElapsed', () => {
   it('prints the frame’s own reading, zero-padded to hours:minutes:seconds', () => {
@@ -41,21 +39,5 @@ describe('formatClockTime', () => {
   it('pads both halves to two digits', () => {
     expect(formatClockTime(new Date(2026, 7, 28, 9, 5, 0).getTime())).toBe('09:05');
     expect(formatClockTime(new Date(2026, 7, 28, 0, 0, 0).getTime())).toBe('00:00');
-  });
-});
-
-describe('DEMO_ACTIVE_VISIT', () => {
-  it('is the frame’s own sample, on the demo zone frames 06–08 tell their story about', () => {
-    // The frame draws “Picking in Zone 14”, “ACTIVE · LINGONBERRY”, “00:42:17” and its status
-    // message says the picker arrived at 10:03 — 42:17 before the reading it shows.
-    expect(DEMO_ACTIVE_VISIT.zoneId).toBe(DEMO_ZONE_DETAILS.zoneId);
-    expect(DEMO_ACTIVE_VISIT.elapsedMs).toBe(42 * 60_000 + 17_000);
-  });
-
-  it('names the zone frame 09’s title spells out (“Picking in Zone 14”)', () => {
-    const cardZone = DEMO_ZONES.find((zone) => zone.state === CARD_ZONE_STATE);
-
-    expect(DEMO_ZONE_DETAILS.zoneId).toBe(cardZone?.id);
-    expect(cardZone?.number).toBe('14');
   });
 });

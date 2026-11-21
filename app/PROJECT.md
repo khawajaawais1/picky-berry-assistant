@@ -360,12 +360,12 @@ What exists:
 - The picker's own plan (`src/services/saved-zones.ts`): the zones screen 07's bookmark saves,
   each with the berry whose layer it was saved under, stored on this phone only and removable by
   the same control (ADR-024, ADR-061).
-- The authentication seam (`src/services/session/`): one session port with a stand-in provider and
-  an in-memory session, `/sign-in` and `/forgot-password`, and the reset request's Firebase
-  adapter (`firebase-password-reset.ts`) — Identity Toolkit's `accounts:sendOobCode`, enabled by
-  `EXPO_PUBLIC_FIREBASE_API_KEY`; when configured it sends the provider's email and keeps no
-  address or token. Sign-in and account creation still wait for the account service (ADR-028,
-  ADR-054, ADR-062).
+- The authentication seam (`src/services/session/`): one session port whose adapter is the team
+  API's (`api-port.ts`), `/sign-in`, `/create-account`, `/forgot-password` and the emailed link's
+  page `/reset-password`, with the API's access and refresh tokens in platform secure storage on a
+  device and in memory on the web export (ADR-006, ADR-028, ADR-065). The reset request and its
+  completion go to `POST /auth/password-reset` and `POST /auth/password-reset/confirm`; the link's
+  token is held only while the page is open.
 - The first product slice, `src/features/visits`, as pure tested domain logic and
   the reference for the feature-module shape (single `index.ts` public API, pure
   `domain/` internals):
@@ -395,32 +395,34 @@ Done — **the password-reset journey the design never drew** (2026-10-24, asked
 build the password reset journey that ADR-059 records as missing, keeping the design's framing and
 recording any departure”):
 
-- **The app draws the request; the provider owns the reset.** `/sign-in` gains “Forgot password?”,
+- **The app draws both halves; the team API owns the reset.** `/sign-in` gains “Forgot password?”,
   and `/forgot-password` asks for the address the account uses and hands it to the session port.
-  The adapter is `src/services/session/firebase-password-reset.ts`: Firebase Identity Toolkit's
-  `accounts:sendOobCode`, enabled by `EXPO_PUBLIC_FIREBASE_API_KEY`. When configured, it asks
-  Firebase to send the link; the provider hosts the page where a new password is set and owns the
-  token. The app draws no new-password field and handles no reset token, so the way on after that
-  page is `/sign-in` ([ADR-062](docs/adr/ADR-062-password-reset-belongs-to-the-provider.md),
-  answering ADR-034 §1.5 and amending ADR-059 decision 4).
+  The API sends the link to the page where a new password is set. Since 2026-11-21 that page is
+  the app's own `/reset-password?token=…`: it reads the one-hour, single-use token from the URL,
+  asks for the new password and its confirmation, and sends them once to
+  `POST /auth/password-reset/confirm`. A `204` draws the success state and the way back to
+  sign-in; an invalid, expired or spent token draws the invalid state with a new-link action
+  ([ADR-065](docs/adr/ADR-065-the-api-issues-the-credential.md), answering ADR-034 §1.5 and
+  superseding ADR-062's Firebase adapter).
 - **The framing is the sign-in screen’s, because there is no frame to keep.** The 76 px key tile,
-  the onboarding header and back control, the design’s 54 px field and action and a text action
-  back to sign-in; the copy is the app’s, in Finnish and English. Being frame-less, it is held to
-  “nothing is lost at 200 %” rather than to a frame’s line counts.
-- **No string claims a delivery, and the screen is not an account oracle.** The action says
+  the onboarding header and back control, the design’s 54 px fields and action and a text action
+  back to sign-in; the copy is the app’s, in Finnish and English. Being frame-less, both pages
+  are held to “nothing is lost at 200 %” rather than to a frame’s line counts.
+- **No string claims a delivery, and the request is not an account oracle.** The action says
   “Request reset link”; the confirmation says the request was **accepted** and that _if_ an
-  account uses the address, the provider’s link is the next step. The stand-in sends nothing, so
-  a non-production build adds a test-build note saying no email is sent, and a production build
-  draws the action disabled. Every address gets the same words, and one failure line covers a
-  refusal without distinguishing an unknown account.
-- **One new port operation, and nothing stored.** `SessionPort.requestPasswordReset(email)` joins
-  `signIn`, `current()` and `signOut()`; it creates or changes no session and keeps no address,
-  link or token. The password is still never stored.
-- **Verified**: `npm run verify` green (format, `tsc --noEmit`, ESLint, **1168 tests in 116
-  suites**, including the port, the Firebase adapter and the screen), `npm run test:layout` green
-  with the new `01c` entry measured in both languages at both text sizes, and the browser journeys
-  walk sign-in → request → confirmation → sign-in and a production export with the reset action
-  disabled.
+  account uses the address, the link is the next step. The API's mail is console-only, so no
+  build claims an email; every address gets the same words, and one failure line covers a refusal
+  without distinguishing an unknown account.
+- **Two port operations, and nothing stored after the call.**
+  `SessionPort.requestPasswordReset(email)` and `completePasswordReset(token, password)` join
+  `signIn`, `current()` and `signOut()`; neither creates or changes a session, and the app keeps
+  no address, link or token. The token lives in the open page's memory for its one completion
+  call; the password is never stored.
+- **Verified**: `npm run verify` green (format, `tsc --noEmit`, ESLint, **1593 tests in 165
+  suites**, including the port and both screens), `npm run test:layout` green with `01c` and `01d`
+  measured in both languages at both text sizes, and the browser journeys walk sign-in → request →
+  confirmation → sign-in and the emailed link → new password → sign-in, including a spent link’s
+  refusal and a production export whose reset action is enabled against the configured API.
 
 Done — **screen 07 prints the zone’s own updated time** (2026-10-24, asked for as “Show each
 zone’s own updated time on screen 07’s details, using the same timestamp the map now carries”):
@@ -1595,15 +1597,18 @@ it: the frame's own reading (00:42:17) counts up for real, “Pause visit” hol
 restarts the clock from the reading it held, so a paused stretch is not counted as time in the
 zone. Its units are tested independently — the pure readings (`formatElapsed`, `formatClockTime`)
 and the ticking hook (`use-elapsed-ms`, five tests with a fake clock) — and the screen's tests drive
-the same clock the app reads, so the frame's own numbers are what they assert.
+the same clock the app reads, so the frame's own numbers are what they assert. **Superseded
+2026-11-21:** screen 09 now reads the mounted tracker; the demo reading, its pause/resume action
+and the map were removed (see screen 09 in `docs/design-source.md`).
 
 Two defects the layout harness found, both fixed: the frame's action labels are shortened in
 Finnish (“Keskeytä käynti” and “Lopeta käynti” each wrapped to two lines in the 103 px label box the
 frame draws), and at the largest text size the reading needed 440 px in a 302 px card — it is now
 painted in parts that reflow onto a second line instead of being clipped or capped below the size
 the user asked for, while assistive technology still hears one reading. Two new type slots came out
-of the frame (`statusLabel` 12/16.8, `timer` 52/62.9), the map is the same drawing at 210 px
-(`layout.visitMapHeight`), and the card's own 20 px inset became `spacing.cardInset`.
+of the frame (`statusLabel` 12/16.8, `timer` 52/62.9), the map was the same drawing at 210 px
+(`layout.visitMapHeight`, retired with the map on 2026-11-21), and the card's own 20 px inset
+became `spacing.cardInset`.
 
 Done — **screen 10 · Core picker · Post-visit feedback** (frame node `5:23259`), the report the
 visit ends in: built in the same `discover` feature and rendered by
@@ -1936,21 +1941,17 @@ is one. A Finnish reviewer's reading of the new copy is due with the rest of the
     either: `DEMO_ROUTE` (1.4 km, 22 minutes, a right turn in 180 m, arrival 10:03) is the frame's
     own sample, tied by test to the zone frames 06, 07 and 09 tell their story about.
 
-17. **Screen 09 (Active visit) is built in part.** What is real: the timer (it starts at the
-    frame's own 42:17 and counts up), the pause that holds it without counting the paused time, the
-    arrival time read back off the timer's own start instant, and “End visit” leading to the report.
-    What is the design's sample or absent: the visit itself is `DEMO_ACTIVE_VISIT` (there is no
-    position source and nothing detects an arrival — the frame's “Arrival detected automatically”
-    is the design's claim about a tracker this app does not have yet, and its arrival note's second
-    sentence says timing runs **while the app is open** where the frame promised the background
-    (ADR-047 §1)); the frame's **recentre control** is not
-    drawn (the map does not move, the app reads no position and the drawing carries no geographic
-    coordinates — ADR-021, and known issue 12 reads what that costs); and the species in the status label is the design's own
-    demo sentence, like the zone card's, while the header carries the same “SEASON DEMO” disclosure
-    frame 06's map makes (2026-10-10). A Finnish reviewer's reading of the new copy is due with
-    the rest of the catalogue (open question 13).
+17. **Screen 09 (Active visit) reads the app's tracker.** The mounted tracker publishes the
+    running visit, the zone's name and the arrival instant; the screen prints those, counts the
+    timer from the visit's own `openedAt`, says when an entry has not yet earned the dwell
+    (“arriving”), and says no visit is running when there is none. “End visit” ends the tracked
+    visit through the store and opens screen 10; the route also opens screen 10 when the tracker
+    finalizes the visit on its own after the picker leaves. What is absent: the frame's **map at
+    210 px** and its recentre control (this screen draws no map geometry — ADR-021, ADR-044) and
+    its **pause action** (the tracker judges presence and has no paused state). The header no
+    longer carries a demo disclosure, because the visit, arrival and duration are the app's own.
 
-18. **Screen 10 (Post-visit feedback) is built in part.** The report is real — its fields, its
+18. **Screen 10 (Post-visit feedback) reports the finalized tracked visit.** The report is real — its fields, its
     five-way rating, its validation and the write to the device — and since 2026-10-09 it is
     **listed back** on screens 11 and 13, which is what makes the queue a record rather than a
     promise. Its third species chip **“More”** is real since 2026-10-10: the design names three
@@ -1958,16 +1959,10 @@ is one. A Finnish reviewer's reading of the new copy is due with the rest of the
     (crowberry), so the chip reveals the rest of the vocabulary instead of opening an index that
     does not exist, and a report about any of the four can be saved. One part of the frame is still not built: the **“Add a berry photo”
     row** (the owner deferred evidence media on 2026-10-09: it needs an image picker, camera
-    permissions and its own security rules, decision 17). The visit it reports on is the design's
-    own sample (`DEMO_VISIT_WINDOW` and the demo zone), so its header carries the “SEASON DEMO”
-    disclosure frame 06's map makes (2026-10-10), and its core navigation is the app shell
-    (ADR-022).
-
-**The sample reaches further than the screen, which is known issue 26 below:** two of a saved
-report's six fields — the zone it is about and its 52 minutes — come from the demo, so a report
-the picker saves as their own carries values they did not choose, and screens 11 and 13 print
-them back. Recorded as finding F1 in [docs/demo-and-stand-ins.md](docs/demo-and-stand-ins.md);
-the fix is a visit that measures itself.
+    permissions and its own security rules, decision 17). Its summary — zone, arrival, departure
+    and duration — is the finalized visit the route hands it, and a page with no such visit draws
+    an honest empty state rather than the design's sample window. Its core navigation is the app
+    shell (ADR-022).
 
 One open question the connection rule raises for this screen: its **offline note** reads
 “Offline · ready to queue” — the frame's own words for the _save path_ (the same words its
@@ -2064,21 +2059,19 @@ rest. Recorded as a question rather than decided in code.
     ([ADR-034](docs/adr/ADR-034-signing-in-the-frame-the-journey-and-the-session.md)). Since
     2026-10-24 its credential is **email + password** — no code screen sits behind it — and it is
     wired to the session port like screen 03
-    ([ADR-059](docs/adr/ADR-059-email-password-replaces-the-code-screen.md)). What is still owed:
-    **the account service** (decided in [ADR-054](docs/adr/ADR-054-the-account-belongs-to-the-api.md)
-    — the API owns the account, Firebase issues the credential) is what can check a password, so the
-    flow runs on a stand-in that verifies nothing and accepts no credential in a production build
-    (known issue 24) and the session lives in memory (known issue 25); a sign-in carries **no
-    name**, so a returning account is named by its identifier until the provider can answer with
-    the account's own ([ADR-038](docs/adr/ADR-038-a-session-may-carry-no-name.md)); and §1.4 (which
-    states the frame must draw) and §2.2–§4 of
+    ([ADR-059](docs/adr/ADR-059-email-password-replaces-the-code-screen.md)). The account
+    service is the team API's (ADR-065): screens 03 and `/sign-in` send it the credential and it
+    checks the password, so the stand-in is gone (known issue 24); its access and refresh tokens
+    live in secure storage (known issue 25); a sign-in carries **no name**, so a returning account
+    is named by its identifier until the API answers with the account's own
+    ([ADR-038](docs/adr/ADR-038-a-session-may-carry-no-name.md)); and §1.4 (which states the frame
+    must draw) and §2.2–§4 of
     [to-questionnaire-sign-in.md](to-questionnaire-sign-in.md) are still unanswered, each keeping
-    its part unbuilt rather than defaulted. **Password recovery's request is wired** (2026-10-24):
-    `/sign-in` opens the app-drawn request at `/forgot-password`, which calls the Firebase adapter
-    behind the same port when `EXPO_PUBLIC_FIREBASE_API_KEY` is set; without it, the stand-in keeps
-    the journey walkable outside production, sends nothing and says so
-    ([ADR-062](docs/adr/ADR-062-password-reset-belongs-to-the-provider.md)). §1.5 is answered;
-    the Firebase project's email template and key remain deployment configuration. One piece of scaffolding also stays behind:
+    its part unbuilt rather than defaulted. **Password recovery is wired end to end** (2026-11-21):
+    `/sign-in` opens `/forgot-password`, which asks the API for a link, and the link opens
+    `/reset-password`, which spends the one-hour token on the new password
+    ([ADR-065](docs/adr/ADR-065-the-api-issues-the-credential.md)). §1.5 is answered; the API's
+    mail remains console-only, so no screen claims an email. One piece of scaffolding also stays behind:
     `npm run prototype:sign-in` still opens **three throwaway readings of the screen**
     (`/create-account?variant=A|B|C`, switchable from a floating bar) — prototype code, no tests,
     hard-coded English, ignored in a `production` build — because the switch that mounts them is
@@ -2086,53 +2079,30 @@ rest. Recorded as a question rather than decided in code.
     set is deleted with the switch that mounts both
     (`src/components/prototype/`, `src/features/onboarding/components/prototype/`).
 
-24. **The credential is a stand-in until the account service exists (re-cut 2026-10-24).**
-    Screen 03 and `/sign-in` hand an email + password to the session port, and `/forgot-password`
-    asks the same port for a reset link — a link Firebase really sends when the public key is
-    configured, and a stand-in sends nothing when it is not
-    ([ADR-054](docs/adr/ADR-054-the-account-belongs-to-the-api.md) decides the real credential).
-    The sign-in stand-in cannot check a password and does not pretend to: outside a **production**
-    build it accepts **any non-empty password** and issues a session; in a production build it
-    accepts **nothing**, and screens 03 and `/sign-in` draw their action disabled because no
-    service can answer there. `/forgot-password` is disabled in production only when no Firebase
-    key is configured. Without a key the reset request is accepted outside production and sends
-    nothing, with a test-build note saying so; with a key, Firebase sends the email and the
-    confirmation changes to “Check your inbox.” Nothing is stored but the session, nothing is
-    logged, and no password, address or reset token is kept.
-    To walk the flow: open `/create-account` in a development build, fill the form and press “Create
-    account” — the app opens screen 05; open `/sign-in`, type any email and a non-empty password,
-    and the app opens the map; press “Forgot password?” to walk the reset request. **The `000000` code and screen 04 are gone**,
-    deleted rather than left behind ([ADR-059](docs/adr/ADR-059-email-password-replaces-the-code-screen.md)
-    retires ADR-027), and the `pending-verification` hand-off, the countdown and the code field went
-    with them.
+24. ~~**The credential is a stand-in until the account service exists.**~~ **Resolved
+    2026-11-21.** Screen 03 and `/sign-in` hand an email + password to the session port, whose
+    adapter is the team API's (`api-port.ts`, ADR-065); the API hashes and checks the password and
+    issues its own JWTs. `/forgot-password` and `/reset-password` call the API's reset request and
+    completion, the link's token is held only by the open page, and the API's mail remains
+    console-only, so no screen claims an email. The `000000` code and screen 04 are gone
+    ([ADR-059](docs/adr/ADR-059-email-password-replaces-the-code-screen.md) retires ADR-027).
 
 25. **A session exists, and almost nothing uses it yet.** The seam is built
     ([ADR-028](docs/adr/ADR-028-an-authentication-seam-behind-a-port.md)): one port
-    (`sessionPort`, `src/services/session/`) with a stand-in provider behind it; screen 03 and
-    `/sign-in` establish a session through it (`/sign-in` since 2026-10-11 — ADR-034, known issue
-    23), and `/forgot-password` asks it for a reset link (ADR-062). What is deliberately **not**
-    there:
-    **no route guard or redirect** — nothing gates `(app)` on a session: the settings screen and the
-    account screen _read_ `current()` and say whose account the app is holding, and the shell renders
-    whether or not anyone is signed in — **no persistence** (the session is in memory and a reload
-    loses it, which is what
-    keeps ADR-006's secure-store adapter unbuilt-but-not-dodged — open question 25), **no server**
-    (the provider talks to nothing), and — until 2026-10-11 — **no session expiry a user could meet**:
-    the rule was implemented, tested and injectable but no screen observed it. The account surface now
-    does ([ADR-041](docs/adr/ADR-041-a-session-that-can-run-out-says-so.md)): it shows the time left in
-    the hour, states the end and offers the way back in. Screens 03 and `/sign-in` each have **one
-    failure line for two causes** — a refused credential and a session the app could not keep —
-    because the design draws no error treatment at all (open question 11).
+    (`sessionPort`, `src/services/session/`) whose adapter is the team API's (ADR-065). Screen 03
+    and `/sign-in` establish a session through it, and `/forgot-password` and `/reset-password`
+    use the same port's reset operations. The API's access and refresh tokens live in platform
+    secure storage on a device and in memory on the web export (ADR-006). What is deliberately
+    **not** there: **no route guard or redirect** — nothing gates `(app)` on a session, and the
+    shell renders whether or not anyone is signed in. The account surface reads `current()`, shows
+    the access token's time left and the way back in once it ends (ADR-041). Screens 03 and
+    `/sign-in` each have **one failure line for two causes** — a refused credential and a session
+    the app could not keep — because the design draws no error treatment at all (open question 11).
 
-26. **A saved report carries two of the design's sample values.** Frame 10's report is the
-    picker's own data except for the visit it belongs to: `buildVisitReport` stamps every entry
-    with `DEMO_ACTIVE_VISIT.zoneId` (the demo zone, Z14) and with 52 minutes read off
-    `DEMO_VISIT_WINDOW`, so a queue entry — and the rows screens 11 and 13 print back from it —
-    states a zone and a duration the picker never chose, in a zone the app cannot know they were
-    in. It is the one place in the app where a demo value is **stored** rather than displayed, and
-    it is finding F1 in [docs/demo-and-stand-ins.md](docs/demo-and-stand-ins.md). The fix is the
-    visit that measures itself: the zone arrives from position capture and the duration from the
-    timer screen 09 already runs; until then a saved report's zone and length are the design's.
+26. ~~**A saved report carries two of the design's sample values.**~~ **Fixed 2026-11-21.**
+    `buildVisitReport` now takes the finalized visit and stores its zone id and its own
+    `openedAt`–`endedAt` duration. Screens 11 and 13 print the picker's actual visit, and finding
+    F1 in [docs/demo-and-stand-ins.md](docs/demo-and-stand-ins.md) records the retirement.
 
 27. **The account row states a verification nothing has performed, and the name it shows awaits
     its lawful basis.** Frame 14's own line is “aino@example.fi · Email verified”, and the app
@@ -2278,8 +2248,9 @@ rest. Recorded as a question rather than decided in code.
     image node in the tree with no accessible name — an image is either named content or hidden
     decoration, and unnamed is neither — so this cannot come back on a screen nobody has walked yet.
     Held by the map's unit test (the drawing carries the name, and its labels are untouched), by
-    three checks in `e2e/accessibility.spec.ts` that read the built tree on all three routes, and by
-    a planted unnamed drawing inside the walk's planted-violation case.
+    two checks in `e2e/accessibility.spec.ts` that read the built tree on both routes that still
+    draw a map (09 no longer does), and by a planted unnamed drawing inside the walk's
+    planted-violation case.
 
 36. **The map's per-zone state names reach a native screen reader and not a web one — measured,
     recorded, not fixed.** The four labels the map positions over its drawing (two zone labels, the

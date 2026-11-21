@@ -125,7 +125,10 @@ Accepted policy (owner decision, 2026-10-08):
 - The bundle carries **no third-party key**. The team API is the only service the app calls
   (ADR-065), and its base URL is public configuration. No service account, admin credential or
   private key ever reaches the client. Password reset goes to the API's
-  `POST /auth/password-reset`; the app holds no reset link or token.
+  `POST /auth/password-reset`, and the emailed link opens the app's `/reset-password` page with a
+  one-hour, single-use token. That token is read from the link and held in memory only while the
+  page is open; it is written to no storage, log or catalogue, and the page sends it once to
+  `POST /auth/password-reset/confirm` with the new password.
 - Authentication tokens and personal data go into platform secure storage
   (iOS Keychain / Android Keystore) — never AsyncStorage, never plain files
   (ADR-006). `expo-secure-store` is installed and wrapped by

@@ -66,22 +66,42 @@ export const fi: Record<TranslationKey, string> = {
   'onboarding.signIn.supporting': 'Syötä sähköposti ja salasana, joilla loit tilin.',
   'onboarding.signIn.title': 'Kirjaudu sisään',
 
-  // The password-reset journey (ADR-062): the sign-in service owns the link, the app keeps no
-  // token, and no string claims that an email was sent while no service is connected.
+  // The password-reset journey (ADR-062, ADR-065): the API sends the link, and no string claims
+  // that an email was sent while its mail is console-only.
   'onboarding.forgotPassword.action': 'Pyydä palautuslinkki',
   'onboarding.forgotPassword.eyebrow': 'KÄYTTÖÖNOTTO · SALASANAN PALAUTUS',
   'onboarding.forgotPassword.failed': 'Palautuslinkkiä ei voitu pyytää. Yritä uudelleen.',
   'onboarding.forgotPassword.heading': 'Unohditko salasanasi?',
   'onboarding.forgotPassword.requested.another': 'Käytä toista osoitetta',
   'onboarding.forgotPassword.requested.body':
-    'Jos osoitteella {email} on tili, seuraava vaihe on kirjautumispalvelun palautuslinkki tähän osoitteeseen. Sovellus ei koskaan tallenna salasanaasi.',
+    'Jos osoitteella {email} on tili, sen palautuslinkki avaa sivun, jolla voit valita uuden salasanan.',
   'onboarding.forgotPassword.requested.heading': 'Palautuspyyntö vastaanotettu.',
   'onboarding.forgotPassword.requested.live.body':
-    'Jos osoitteella {email} on tili, kirjautumispalvelun palautuslinkki on matkalla tähän osoitteeseen. Sovellus ei koskaan tallenna salasanaasi.',
+    'Jos osoitteella {email} on tili, sen palautuslinkki on matkalla. Avaa se valitaksesi uuden salasanan.',
   'onboarding.forgotPassword.requested.live.heading': 'Tarkista sähköpostisi.',
   'onboarding.forgotPassword.supporting':
-    'Syötä tilisi sähköpostiosoite. Palautuslinkit kuuluvat kirjautumispalvelulle; sovellus ei koskaan tallenna salasanaasi.',
+    'Syötä tilisi sähköpostiosoite. Palautuslinkki avaa sivun, jolla valitset uuden salasanan; sovellus ei koskaan tallenna salasanaasi.',
   'onboarding.forgotPassword.title': 'Palauta salasana',
+
+  // The page an emailed link opens (ADR-065). The link works once, and the new password is never
+  // stored by the app.
+  'onboarding.resetPassword.action': 'Tallenna uusi salasana',
+  'onboarding.resetPassword.confirmPassword': 'Vahvista uusi salasana',
+  'onboarding.resetPassword.eyebrow': 'KÄYTTÖÖNOTTO · UUSI SALASANA',
+  'onboarding.resetPassword.heading': 'Valitse uusi salasana.',
+  'onboarding.resetPassword.invalid.action': 'Pyydä uusi linkki',
+  'onboarding.resetPassword.invalid.body':
+    'Se on voinut vanhentua tai sitä on jo käytetty. Pyydä uusi linkki valitaksesi salasanan.',
+  'onboarding.resetPassword.invalid.heading': 'Tätä palautuslinkkiä ei voi käyttää.',
+  'onboarding.resetPassword.mismatch': 'Salasanat eivät täsmää.',
+  'onboarding.resetPassword.newPassword': 'Uusi salasana',
+  'onboarding.resetPassword.success.body': 'Kirjaudu sisään uudella salasanallasi.',
+  'onboarding.resetPassword.success.heading': 'Salasana päivitetty.',
+  'onboarding.resetPassword.supporting':
+    'Käytä vähintään 10 merkkiä ja sisällytä numero. Tätä linkkiä voi käyttää kerran.',
+  'onboarding.resetPassword.title': 'Palauta salasana',
+  'onboarding.resetPassword.unavailable':
+    'Picky ei tavoittanut tilipalvelua. Tarkista yhteys ja yritä uudelleen.',
 
   'onboarding.createAccount.action': 'Luo tili',
   'onboarding.createAccount.consent':
@@ -298,36 +318,47 @@ export const fi: Record<TranslationKey, string> = {
   'discover.route.cancel': 'Peruuta reitti',
   'discover.route.start': 'Aloita kävely',
 
-  // Screen 09. “Käynti” is the domain's visit in the design's user-facing voice; the status
-  // label carries the species the way the zone card's title does (“Puolukka”), and the visit
-  // being timed is the design's own sample, so the eyebrow names the demo.
-  'discover.visit.eyebrow': 'POIMINTA · KÄYNTI KÄYNNISSÄ · KAUSIDEMO',
+  // Screen 09. “Käynti” is the domain's visit in the design's user-facing voice. The screen reads
+  // the app's tracker, so no string carries the design's demo disclosure any more.
+  'discover.visit.empty.eyebrow': 'POIMINTA · AKTIIVINEN KÄYNTI',
+  'discover.visit.empty.title': 'Käyntiä ei ole käynnissä',
+  'discover.visit.empty.callout': 'Käynnin seuranta',
+  'discover.visit.empty.body': 'Käynti alkaa, kun viivyt marja-alueella sovelluksen ollessa auki.',
+  'discover.visit.empty.hint': 'Avaa kartta löytääksesi alueen.',
+  'discover.visit.eyebrow': 'POIMINTA · KÄYNTI KÄYNNISSÄ',
   'discover.visit.title': 'Poiminta alueella {zone}',
-  'discover.visit.arrived.title': 'Saapuminen havaittiin automaattisesti',
+  'discover.visit.candidate.eyebrow': 'POIMINTA · SAAPUMASSA',
+  'discover.visit.candidate.title': 'Saapumassa alueelle {zone}',
+  'discover.visit.candidate.arrived.title': 'Saapuminen havaittu',
+  'discover.visit.candidate.arrived.body':
+    'Saavuit alueelle klo {time}. Käynti alkaa, kun olet viipynyt siellä hetken pidempään.',
+  'discover.visit.candidate.status': 'SAAPUMASSA · KÄYNTI EI OLE ALKANUT',
+  'discover.visit.candidate.timerHint': 'Aika alueella · ei tarvitse verkkoa',
+  'discover.visit.candidate.supporting':
+    'Käynnistä tulee aktiivinen, kun seuranta on nähnyt sinun viipyvän alueella.',
+  'discover.visit.arrived.title': 'Saapuminen havaittu',
   'discover.visit.arrived.body':
     'Saavuit alueelle klo {time}. Ajanotto toimii sovelluksen ollessa auki.',
-  'discover.visit.status': 'AKTIIVINEN · PUOLUKKA',
+  'discover.visit.status': 'AKTIIVINEN KÄYNTI',
   'discover.visit.timerHint': 'Aika alueella · ei tarvitse verkkoa',
   'discover.visit.privacy':
     'Vain sinä näet reittisi. Muut näkevät alueen tilan, eivät tarkkaa GPS-jälkeäsi.',
-  // Both action labels are shortened to the design's own action: the frame's label box holds
-  // 103 px, and “Keskeytä käynti” and “Lopeta käynti” both wrapped to two lines in it — the
-  // layout harness caught it, and the surrounding copy already says what is being paused or
-  // ended.
-  'discover.visit.pause': 'Keskeytä',
-  'discover.visit.resume': 'Jatka',
   'discover.visit.end': 'Lopeta',
   'discover.visit.supporting':
-    'Alueelta poistuminen päättää käynnin automaattisesti ja avaa pikaraportin.',
+    'Seuranta huomaa poistumisen ja päättää käynnin lyhyen armonajan jälkeen.',
 
-  // Screen 10. The date is the design's own demo and is written the Finnish way (“28.8.”);
-  // the five rating words are the frame's answers to one question, so each is a word of its
-  // own rather than a phrase a sentence builds. The visit the summary describes is the demo,
-  // so the eyebrow names it; what the picker answers below it is their own and is saved.
-  'report.eyebrow': 'POIMINTA · PIKARAPORTTI · KAUSIDEMO',
+  // Screen 10. The five rating words are the frame's answers to one question, so each is a word
+  // of its own rather than a phrase a sentence builds. The visit is the one the tracker just
+  // finalized, so the eyebrow carries no demo disclosure.
+  'report.empty.eyebrow': 'POIMINTA · PIKARAPORTTI',
+  'report.empty.title': 'Miten poiminta sujui?',
+  'report.empty.callout': 'Ei raportoitavaa käyntiä',
+  'report.empty.body': 'Raportti alkaa, kun seurattu käynti päättyy.',
+  'report.empty.hint': 'Avaa kartta löytääksesi alueen.',
+  'report.eyebrow': 'POIMINTA · PIKARAPORTTI',
   'report.title': 'Miten poiminta sujui?',
-  'report.exit.title': 'Poistuminen havaittu · käynti päättyi',
-  'report.exit.body': 'Alue {zone} · 28.8. · {arrival}–{departure} · {minutes} min',
+  'report.exit.title': 'Käynti päättyi',
+  'report.exit.body': 'Alue {zone} · {arrival}–{departure} · {minutes} min',
   'report.heading': 'Pieni raportti. Tuoreempi kartta.',
   'report.supporting': 'Arvioi löytämäsi marjat, älä vain kotiin tuotua määrää.',
   'report.species.label': 'Raportin laji',

@@ -24,6 +24,7 @@ const CORS = {
 export async function fakeAccountService(page: Page): Promise<void> {
   const nicknames = new Map<string, string | null>();
   const emailByToken = new Map<string, string>();
+  const usedResetTokens = new Set<string>();
   let issued = 0;
 
   function session(email: string) {
@@ -110,6 +111,21 @@ export async function fakeAccountService(page: Page): Promise<void> {
         // The service's own answer for every address: accepted, whether or not one is registered.
         await answer(route, 202);
         return;
+      case '/api/v1/auth/password-reset/confirm': {
+        const token = typeof body.token === 'string' ? body.token : '';
+        const password = typeof body.password === 'string' ? body.password : '';
+        const validPassword = password.length >= 10 && /\d/.test(password);
+        if (token === 'harness-reset-token' && validPassword && !usedResetTokens.has(token)) {
+          usedResetTokens.add(token);
+          await answer(route, 204);
+          return;
+        }
+        await answer(route, 422, {
+          error: { code: 'INVALID_RESET_TOKEN', message: 'x' },
+          request_id: 'reset',
+        });
+        return;
+      }
       case '/api/v1/me': {
         const token = (request.headers()['authorization'] ?? '').replace(/^Bearer /, '');
         const owner = emailByToken.get(token);

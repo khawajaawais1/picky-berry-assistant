@@ -3,7 +3,10 @@ import { Platform } from 'react-native';
 import { loadConfig, type ConfigResult } from '@/config/env';
 import { createApiClient, type ApiFetch } from '@/services/api/api-client';
 
-import { createApiPasswordResetRequest } from './api-password-reset';
+import {
+  createApiPasswordResetCompletion,
+  createApiPasswordResetRequest,
+} from './api-password-reset';
 import { createApiSessionPort, type ApiSessionPort } from './api-port';
 import { createSecureSessionStore, type SecureStorage } from './secure-store';
 import { createInMemorySessionStore } from './store';
@@ -36,6 +39,7 @@ const unconfiguredPort: ApiSessionPort = {
   current: nothing,
   signOut: async () => undefined,
   requestPasswordReset: unavailable,
+  completePasswordReset: unavailable,
   tokens: { accessToken: nothing, refresh: nothing },
 };
 
@@ -52,6 +56,7 @@ export function createAppSessionPort({
   return createApiSessionPort({
     client,
     passwordReset: createApiPasswordResetRequest({ client }),
+    passwordResetComplete: createApiPasswordResetCompletion({ client }),
     store:
       platform === 'web'
         ? createInMemorySessionStore()

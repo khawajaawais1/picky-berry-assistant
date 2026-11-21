@@ -9,14 +9,12 @@ import { useAppTheme } from '@/hooks/use-app-theme';
 import { interpolate, useTranslation } from '@/services/i18n';
 import type { VisitReport, YieldRating } from '@/services/report-queue';
 
-import { CARD_ZONE_STATE, DEMO_ZONES } from '../domain/zone';
+import { formatClockTime, type VisitSnapshot } from '../domain/active-visit';
 import {
   DEFAULT_YIELD_RATING,
-  DEMO_VISIT_WINDOW,
   REPORT_SPECIES,
   REPORT_SPECIES_MORE,
   buildVisitReport,
-  visitMinutes,
   type ReportSpecies,
 } from '../domain/visit-report';
 import { RATING_MEANING_KEY } from './report-copy';
@@ -24,6 +22,8 @@ import { SPECIES_LABEL_KEY } from './species-copy';
 import { YieldRatingRow } from './yield-rating';
 
 export type PostVisitFeedbackScreenProps = {
+  /** The tracked visit this report is about, or null when no visit has ended. */
+  visit?: VisitSnapshot | null;
   onBack?: () => void;
   /**
    * Writes the report to the device's queue. Supplied by the route, which calls the queue
@@ -43,11 +43,10 @@ export type PostVisitFeedbackScreenProps = {
  * brought home — and the design's own note that the report waits on the phone rather than on
  * a connection.
  *
- * Three things are deliberately absent, all recorded in PROJECT.md: the frame's **“Add a berry
- * photo” row** (evidence media needs an image picker, camera and photo permissions and its own
- * security rules — the owner deferred it on 2026-10-09) and the **frame's own rating is the
- * default** — the picker can save without touching the row, so the design's answer, “Good”, is
- * where it starts.
+ * The frame's **“Add a berry photo” row** is deliberately absent (evidence media needs an image
+ * picker, camera and photo permissions and its own security rules — the owner deferred it on
+ * 2026-10-09), and the **frame's own rating is the default** — the picker can save without
+ * touching the row, so the design's answer, “Good”, is where it starts.
  *
  * The frame's third species chip, **“More”**, is real: the design names three berries in its own
  * chips, and the app's vocabulary adds the pilot's fourth (crowberry), so pressing it reveals
@@ -58,13 +57,19 @@ export type PostVisitFeedbackScreenProps = {
  * outside the design's two stays on the collapsed row.
  *
  * Saving is real: `onSave` writes the report to the device's queue (`src/services/report-queue`)
- * and a failed write is reported on the screen. The report is the picker's own data and is
- * stored on this phone only; PROJECT.md records what that needs from the owner before release.
+ * and a failed write is reported on the screen. The visit in the summary is the finalized tracked
+ * visit the route hands in; a page with none draws an empty state rather than the design's sample.
+ * The report is the picker's own data and is stored on this phone only; PROJECT.md records what
+ * that needs from the owner before release.
  */
-export function PostVisitFeedbackScreen({ onBack, onSave, onSkip }: PostVisitFeedbackScreenProps) {
+export function PostVisitFeedbackScreen({
+  onBack,
+  onSave,
+  onSkip,
+  visit = null,
+}: PostVisitFeedbackScreenProps) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
-  const zone = DEMO_ZONES.find((candidate) => candidate.state === CARD_ZONE_STATE);
 
   const [speciesId, setSpeciesId] = useState<ReportSpecies>('lingonberry');
   const [showAllSpecies, setShowAllSpecies] = useState(false);
@@ -90,7 +95,7 @@ export function PostVisitFeedbackScreen({ onBack, onSave, onSkip }: PostVisitFee
     : allSpecies.filter((species, index) => index < REPORT_SPECIES.length || species === speciesId);
 
   async function save() {
-    if (!onSave) {
+    if (!onSave || visit === null) {
       return;
     }
 
@@ -98,7 +103,7 @@ export function PostVisitFeedbackScreen({ onBack, onSave, onSkip }: PostVisitFee
     setFailed(false);
 
     try {
-      await onSave(buildVisitReport({ amountText, speciesId, yieldRating }, new Date()));
+      await onSave(buildVisitReport({ amountText, speciesId, yieldRating }, new Date(), visit));
     } catch {
       // The service rejected the write — a full disk, a refused key. The picker has to know
       // the report is not on the phone, so the failure is shown rather than swallowed.
@@ -107,6 +112,35 @@ export function PostVisitFeedbackScreen({ onBack, onSave, onSkip }: PostVisitFee
       setSaving(false);
     }
   }
+
+  if (visit === null) {
+    return (
+      <Screen
+        edges={['top']}
+        eyebrow={t('report.empty.eyebrow')}
+        onBack={onBack}
+        title={t('report.empty.title')}
+      >
+        <View className="w-full gap-section">
+          <Callout
+            icon={<Feather color={colors.textMuted} name="clipboard" size={20} />}
+            testID="report-empty"
+            title={t('report.empty.callout')}
+          >
+            {t('report.empty.body')}
+          </Callout>
+          <AppText tone="muted" variant="bodySmall">
+            {t('report.empty.hint')}
+          </AppText>
+        </View>
+      </Screen>
+    );
+  }
+
+  const arrival = formatClockTime(visit.openedAt);
+  const endedAt = visit.endedAt ?? visit.openedAt;
+  const departure = formatClockTime(endedAt);
+  const minutes = Math.max(0, Math.floor((endedAt - visit.openedAt) / 60_000));
 
   return (
     <Screen edges={['top']} eyebrow={t('report.eyebrow')} onBack={onBack} title={t('report.title')}>
@@ -117,10 +151,10 @@ export function PostVisitFeedbackScreen({ onBack, onSave, onSkip }: PostVisitFee
           title={t('report.exit.title')}
         >
           {interpolate(t('report.exit.body'), {
-            arrival: DEMO_VISIT_WINDOW.arrival,
-            departure: DEMO_VISIT_WINDOW.departure,
-            minutes: String(visitMinutes(DEMO_VISIT_WINDOW.arrival, DEMO_VISIT_WINDOW.departure)),
-            zone: zone?.number ?? '',
+            arrival,
+            departure,
+            minutes: String(minutes),
+            zone: visit.zoneName,
           })}
         </Callout>
 

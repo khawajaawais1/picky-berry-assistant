@@ -33,6 +33,7 @@ const ONBOARDING_ROUTES = [
   '/sign-in',
   '/create-account',
   '/forgot-password',
+  '/reset-password',
   '/location-consent',
 ];
 

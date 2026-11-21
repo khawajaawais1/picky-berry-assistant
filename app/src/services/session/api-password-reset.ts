@@ -1,6 +1,6 @@
 import { failureVerdict, type ApiClient } from '@/services/api/api-client';
 
-import type { PasswordResetRequest } from './password-reset';
+import type { PasswordResetCompletion, PasswordResetRequest } from './password-reset';
 
 /**
  * The reset request through the team API's `POST /auth/password-reset` (ADR-065 decision 4,
@@ -30,6 +30,47 @@ export function createApiPasswordResetRequest({
       body: { email: address },
       auth: false,
       // The service answers `202` with no body.
+      expectsBody: false,
+      parse: () => true,
+    });
+
+    if (result.ok) return { ok: true };
+
+    return {
+      ok: false,
+      reason: failureVerdict(result.error) === 'refused' ? 'refused' : 'unavailable',
+    };
+  };
+}
+
+/**
+ * The completion through the team API's `POST /auth/password-reset/confirm`. The token arrived in
+ * the reset link; the password is the one the picker chose, and neither is kept here.
+ *
+ * - `204` — the password was changed. A `204` carries no body, so none is read.
+ * - `400`, `422` — refused: the token is invalid, expired or already used, or the body failed the
+ *   contract. The screen sends a valid client-side form, so the token is what it reports.
+ * - anything else — unavailable, including a `404` from a deploy without the endpoint.
+ */
+export function createApiPasswordResetCompletion({
+  client,
+}: {
+  client: ApiClient;
+}): PasswordResetCompletion {
+  return async (token, password) => {
+    const resetToken = token.trim();
+    if (resetToken === '') {
+      throw new RangeError('a password reset names a link, and this one carried no token');
+    }
+    if (password === '') {
+      throw new RangeError('a password reset replaces a password, and none was given');
+    }
+
+    const result = await client.request({
+      method: 'POST',
+      path: '/auth/password-reset/confirm',
+      body: { token: resetToken, password },
+      auth: false,
       expectsBody: false,
       parse: () => true,
     });

@@ -41,8 +41,8 @@ export default defineConfig({
     // to have running instead of this commit's export.
     reuseExistingServer: false,
     timeout: 300_000,
-    // The harness must never send a real reset email: an empty public key keeps the export on the
-    // test-build path, whatever a developer's `.env` contains.
+    // The harness must never reach a real account service: the reserved `.invalid` origin below
+    // keeps the export unreachable, whatever a developer's `.env` contains.
     env: {
       EXPO_NO_TELEMETRY: '1',
       // The reserved `.invalid` TLD never resolves: the export can reach no real API, and the

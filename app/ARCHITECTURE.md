@@ -90,11 +90,14 @@ It validates nothing: whether the account service accepts an identifier is the p
 
 `services/i18n/` is the first tenant of `services/`: it reads the device's languages
 and owns the copy (ADR-017). `services/session/` is the second: the authentication seam —
-one session port (`signIn`, `current`, `signOut`, `requestPasswordReset`, ADR-028) whose adapter
+one session port (`signIn`, `current`, `signOut`, `requestPasswordReset`,
+`completePasswordReset`, ADR-028) whose adapter
 is the team API's (`api-port.ts`, ADR-065), composed in `app-port.ts`: the API's access and
 refresh tokens in secure storage on a device (`secure-store.ts`, ADR-006) and in memory on the
-web export. The reset request is a port call, not a session: `api-password-reset.ts` passes an
-address to `POST /auth/password-reset` and keeps no token. It is a service rather than
+web export. The reset journey is two port calls, not a session: `api-password-reset.ts` passes an
+address to `POST /auth/password-reset`, then the emailed link's token and the new password to
+`POST /auth/password-reset/confirm`. The token is held by the open reset page and kept afterwards
+by nothing. It is a service rather than
 a feature because onboarding, the app shell and the profile all need it and none of them owns
 it. `services/location/` is the third: the position seam (ADR-045) — one port
 (`requestAvailability`, `watch`) with `expo-location` behind it, asking for the foreground
@@ -319,11 +322,12 @@ server-side for every resource.
   trusted from the client.
 - MFA is expected for privileged accounts once roles exist (SECURITY.md §5).
 
-**Implemented today (ADR-065):** sign-in, account creation, refresh, sign-out, deletion and the
-reset request all go to the team API. The API issues and verifies its own JWTs; the app holds the
-access and refresh tokens in secure storage, refreshes once on a 401, and keeps no password, reset
-link or token. The API's mail is console-only, so the reset screen claims an accepted request,
-never a sent email.
+**Implemented today (ADR-065):** sign-in, account creation, refresh, sign-out, deletion and both
+halves of password reset all go to the team API. The API issues and verifies its own JWTs; the app
+holds the access and refresh tokens in secure storage, refreshes once on a 401, and keeps no
+password. A reset link's token is read from the URL by the open `/reset-password` page, sent once to
+the completion endpoint, and written to no storage or log. The API's mail is console-only, so the
+reset screen claims an accepted request, never a sent email.
 
 ## 8. Offline architecture (planned, design accepted in ADR-005)
 

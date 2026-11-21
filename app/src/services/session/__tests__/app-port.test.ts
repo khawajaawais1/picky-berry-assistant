@@ -116,6 +116,25 @@ describe('createAppSessionPort', () => {
     expect(fetchImpl.mock.calls[0]![0]).toBe('https://api.example.test/api/v1/auth/password-reset');
   });
 
+  it('spends the emailed reset token at the completion endpoint', async () => {
+    const fetchImpl = jest.fn<ReturnType<ApiFetch>, Parameters<ApiFetch>>(async () => ({
+      ok: true,
+      status: 204,
+      json: async () => null,
+    }));
+    const port = createAppSessionPort({
+      config: GOOD,
+      platform: 'ios',
+      fetchImpl,
+      secureStorage: secureStorage(),
+    });
+
+    expect(await port.completePasswordReset('a-token', 'berries1234')).toEqual({ ok: true });
+    expect(fetchImpl.mock.calls[0]![0]).toBe(
+      'https://api.example.test/api/v1/auth/password-reset/confirm',
+    );
+  });
+
   it('answers unavailable, and sends nothing, when the configuration is unusable', async () => {
     const fetchImpl = recorder();
     const port = createAppSessionPort({
@@ -134,6 +153,10 @@ describe('createAppSessionPort', () => {
     expect(await port.tokens.accessToken()).toBeNull();
     expect(await port.tokens.refresh()).toBeNull();
     expect(await port.requestPasswordReset('aino@example.fi')).toEqual({
+      ok: false,
+      reason: 'unavailable',
+    });
+    expect(await port.completePasswordReset('a-token', 'berries1234')).toEqual({
       ok: false,
       reason: 'unavailable',
     });

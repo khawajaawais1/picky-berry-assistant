@@ -55,6 +55,15 @@ export {
   type OnboardingForgotPasswordScreenProps,
 } from './components/forgot-password-screen';
 
+/**
+ * The page an emailed reset link opens: the app's own new-password form, carrying the link's token
+ * only for as long as the screen is open (ADR-062, ADR-065).
+ */
+export {
+  OnboardingResetPasswordScreen,
+  type OnboardingResetPasswordScreenProps,
+} from './components/reset-password-screen';
+
 export {
   OnboardingWelcomeScreen,
   type OnboardingWelcomeScreenProps,

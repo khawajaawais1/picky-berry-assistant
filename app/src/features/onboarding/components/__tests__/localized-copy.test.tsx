@@ -17,6 +17,7 @@ import { OnboardingCreateAccountScreen } from '../create-account-screen';
 import { OnboardingLocationConsentScreen } from '../location-consent-screen';
 // eslint-disable-next-line import/first
 import { OnboardingForgotPasswordScreen } from '../forgot-password-screen';
+import { OnboardingResetPasswordScreen } from '../reset-password-screen';
 // eslint-disable-next-line import/first
 import { OnboardingSignInScreen } from '../sign-in-screen';
 // eslint-disable-next-line import/first
@@ -85,10 +86,23 @@ describe('screens on a Finnish device', () => {
     expect(await screen.findByText('Palautuspyyntö vastaanotettu.')).toBeOnTheScreen();
     expect(
       screen.getByText(
-        'Jos osoitteella aino@example.fi on tili, seuraava vaihe on kirjautumispalvelun palautuslinkki tähän osoitteeseen. Sovellus ei koskaan tallenna salasanaasi.',
+        'Jos osoitteella aino@example.fi on tili, sen palautuslinkki avaa sivun, jolla voit valita uuden salasanan.',
       ),
     ).toBeOnTheScreen();
     expect(screen.queryByText('Testiversio')).not.toBeOnTheScreen();
+  });
+
+  it('renders the emailed reset link’s new-password page in Finnish', async () => {
+    await render(<OnboardingResetPasswordScreen onSignIn={jest.fn()} token="token" />);
+
+    expect(screen.getByText('KÄYTTÖÖNOTTO · UUSI SALASANA')).toBeOnTheScreen();
+    expect(screen.getByText('Valitse uusi salasana.')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Uusi salasana')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Vahvista uusi salasana')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Tallenna uusi salasana' })).toBeDisabled();
+    expect(screen.getByText('Vähintään 10 merkkiä, sisältää numeron.')).toBeOnTheScreen();
+
+    expect(screen.queryByText('Choose a new password.')).not.toBeOnTheScreen();
   });
 
   it('renders the live reset confirmation in Finnish when a provider is configured', async () => {
@@ -102,7 +116,7 @@ describe('screens on a Finnish device', () => {
     expect(await screen.findByText('Tarkista sähköpostisi.')).toBeOnTheScreen();
     expect(
       screen.getByText(
-        'Jos osoitteella aino@example.fi on tili, kirjautumispalvelun palautuslinkki on matkalla tähän osoitteeseen. Sovellus ei koskaan tallenna salasanaasi.',
+        'Jos osoitteella aino@example.fi on tili, sen palautuslinkki on matkalla. Avaa se valitaksesi uuden salasanan.',
       ),
     ).toBeOnTheScreen();
     expect(screen.queryByText('Testiversio')).not.toBeOnTheScreen();

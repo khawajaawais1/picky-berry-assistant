@@ -40,6 +40,13 @@ describe('visitSubmission', () => {
     expect(visitSubmission(open)?.ended_at).toBe('2026-08-03T09:40:00.000Z');
   });
 
+  it('tells the server when the picker ended the visit rather than presence', () => {
+    const manual = visit({ endedManually: true });
+
+    expect(visitSubmission(manual)?.manual).toBe(true);
+    expect(visitSubmission(visit())?.manual).toBe(false);
+  });
+
   it('sends nothing for a visit that may still resume', () => {
     expect(visitSubmission(visit({ finalizedAt: null }))).toBeNull();
   });

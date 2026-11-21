@@ -58,19 +58,19 @@ says so, not that this repository records it.
 | # | Value | Screens | Disclosed on screen | Lives in |
 | - | ----- | ------- | ------------------- | -------- |
 | A1 | `EXAMPLE_NAME` `'Aino Korhonen'`, `EXAMPLE_EMAIL` `'aino@example.fi'` | 03 (as placeholders, never pre-filled) | Yes — they are placeholders, not a filled form | `src/features/onboarding/domain/example-values.ts` |
-| A2 | `DEMO_ZONES` — Z14 unpicked score 78 · Z09 recently picked · Z21 ripening; place “Laajavuori” | 07 without a zone id (a bare URL alone since the plan reads the source — ADR-060); 08–10 read the same demo zone. **No longer the map or the plan**: since 2026-10-22 screen 06's map reads the pilot stub through `ZoneSource` (B7, ADR-053), since 2026-10-24 its card, list and filters do too (ADR-057/ADR-058), and the saved plan's rows do since the same day (ADR-060) | **Yes**: eyebrow `CORE PICKER · SEASON DEMO / 28 AUG` on the screens that still draw it, and the map's own `50 zones · test data` line | `src/features/discover/domain/zone.ts:61` |
+| A2 | `DEMO_ZONES` — Z14 unpicked score 78 · Z09 recently picked · Z21 ripening; place “Laajavuori” | 07 without a zone id (a bare URL alone since the plan reads the source — ADR-060); 08 still draws the same demo zone. **No longer 09 or 10**: those read the tracked visit. **No longer the map or the plan**: since 2026-10-22 screen 06's map reads the pilot stub through `ZoneSource` (B7, ADR-053), since 2026-10-24 its card, list and filters do too (ADR-057/ADR-058), and the saved plan's rows do since the same day (ADR-060) | **Yes**: eyebrow `CORE PICKER · SEASON DEMO / 28 AUG` on the screens that still draw it, and the map's own `50 zones · test data` line | `src/features/discover/domain/zone.ts:61` |
 | A3 | `DEMO_ZONE_DETAILS` — 11 reports this week, 18 °C light wind 08:00, a trusted report 38 min old at 4/5 (its score 78 and season also fill screen 07's no-id path) | 07: the outlook, freshest report, walk and report list **even when the zone's figures come from the source** (the score and season are the source's there); and the whole screen without a zone id. The list behind “See all 11” states the eleven as the design's sample week (their count is read from this one constant, so the card and the line cannot disagree) | **Yes**, since 2026-10-10: screen 07's eyebrow `CORE PICKER · ZONE INSIGHT · SEASON DEMO`, beside the frame's forecast disclaimer, and since 2026-10-24 one sentence before those blocks on a source zone (ADR-058); the list's eyebrow carries the same disclosure, and its own sentence names the week as the design's (ADR-044) | `zone-details.ts:65` |
 | A4 | `DEMO_ROUTE` — 1400 m, 22 min, arrival 10:03, keep right in 180 m | 08; and frame 07's “Navigate · 1.4 km” | **Yes**, since 2026-10-10: eyebrow `… · WALKING ROUTE · SEASON DEMO`, and the same change removed the note's claim that tiles are cached (see F2) | `route.ts:33` |
-| A5 | `DEMO_ACTIVE_VISIT` — 42 min 17 s | 09 (the timer is **seeded** from it: `Date.now() - elapsedMs`), 10 | **Yes**, since 2026-10-10: eyebrow `… · VISIT IN PROGRESS · SEASON DEMO` | `active-visit.ts:13` |
-| A6 | `DEMO_VISIT_WINDOW` — arrival 10:03, departure 10:55 → 52 min | 10's exit summary **and every report the picker saves** | **Yes on the screen**, since 2026-10-10: eyebrow `… · QUICK REPORT · SEASON DEMO`. The **stored** half is disclosed where the report is read back by nothing — that is F1 | `visit-report.ts:55` (see F1) |
+| A5 | ~~`DEMO_ACTIVE_VISIT` — 42 min 17 s~~ | **Retired 2026-11-21.** Screen 09 reads the mounted tracker's visit, arrival time and zone; no demo value remains | n/a — the screen no longer draws a sample | — |
+| A6 | ~~`DEMO_VISIT_WINDOW` — arrival 10:03, departure 10:55 → 52 min~~ | **Retired 2026-11-21.** Screen 10 reports the finalized tracked visit that opened it, and stores that visit's real zone and duration (F1 fixed) | n/a — the screen no longer draws a sample | — |
 | A7 | `DEFAULT_YIELD_RATING` = 4 (“Good”), the frame's drawn selection | 10 (the row starts there) | n/a — the design's drawn state, adopted deliberately | `visit-report.ts:52` |
 | A8 | `DEMO_SEASON_TOTALS` — 4.5 kg, 1.5 kg/h, 3 zones, 3 h, median 60 min; `DEMO_HARVEST_BY_VISIT` — 20/24/28 Aug bars | 11 summary and chart | **Yes**: eyebrow `CORE PICKER · PERSONAL INSIGHTS · SEASON DEMO` | `season-insights.ts:31,38` |
 | A9 | `DEMO_VISIT_HISTORY` — three visits, two of them marked `synced` | 11 history, listed **under** the picker's own rows in one list | Partly: the eyebrow covers the screen, but the rows carry no marker of their own (see F3) | `season-insights.ts:80` |
 | A10 | `DEMO_ALERT` — ripe bilberries 1.8 km north, 82/100, high confidence, Zone 18 Laajavuori, latest report 1 h ago, stamped `TODAY · 28 AUG · 09:30` | 12 | **Yes**, since 2026-10-10: eyebrow `… · FORECAST REASONING · SEASON DEMO`, and the closing note says the alert is a sample (see F2) | `alert.ts:33` |
 | A11 | `DEMO_ALERT_REASON_COUNT` = 3 (“A warm week”, “Rain on Sunday”, “Last picked 6 days ago”) | 12 | **Yes**, with A10's eyebrow | `alert.ts:53` |
 | A12 | `DEMO_LISTINGS` — Matti Laine 4.9/24, Liisa Niemi 4.8/18, €8/kg, €6/kg, 20 kg, 8 kg; `DEMO_LISTING_DETAIL` — harvested 28 Aug 2026, Laajavuori car park 17:00–19:00; `DEMO_ORDER` — 5 kg, €40 held, pickup 18:30; `DEMO_THREAD` — four messages 14:02–14:06 | 15–18 | **Yes, on all four**: the common `Planned extra` chip (frame 15 `5:23793`, 16 `5:23846`, 17 `5:23897`, 18 `5:23949`), plus `Buyer mode · Preview` (15) and `Provider test mode` + “Test order confirmed · No real money was charged. Demo payment is held by the provider.” (18) | `src/features/marketplace/domain/{listing,order,chat}.ts` |
-| A13 | The design map's geometry — the three zone polygons, the position marker, the route line | 08, 09 (screen 06 draws real geography since ADR-053) | Covered by A2's disclosure | `zone-map-geometry.ts` (ADR-021) |
-| A14 | `ACTIVE · LINGONBERRY` (09) and `28 Aug` inside 10's exit summary (`discover.visit.status`, `report.exit.body`) | 09, 10 | Covered by A5's and A6's eyebrows since 2026-10-10; the two strings are still the design's own words, and `28 Aug` is still printed as a date (F3) | `locales/en.ts` |
+| A13 | The design map's geometry — the three zone polygons, the position marker, the route line | 08 (screen 06 draws real geography since ADR-053; 09 no longer draws a map) | Covered by A2's disclosure | `zone-map-geometry.ts` (ADR-021) |
+| A14 | ~~`ACTIVE · LINGONBERRY` (09) and `28 Aug` inside 10's exit summary~~ | **Retired 2026-11-21.** The status label is `ACTIVE VISIT`, and 10's summary prints the tracked visit's own clock and zone | n/a | — |
 | A15 | `discover.map.place` `'Laajavuori'`, `discover.map.lake` `'Tuomiojärvi'` | the lake name on 08–09's drawing; the place name on 06–10 (on 06 it names the pilot area the real map frames) | Covered by A2 | `locales/en.ts:114-115` |
 | A16 | `DEMO_DOWNLOADS` — 12 km², 86 MB of 500, 24 zones' tiles, a forecast saved 28 Aug 08:00, last sync 08:12 | 13 | **Yes**, since 2026-10-11: the eyebrow's `· SEASON DEMO` and the screen's own sentence above the block saying these are the design's sample and nothing is downloaded (ADR-042) | `features/offline/domain/downloads.ts` |
 | A17 | `DEMO_ALERT_PREFERENCES` — ripe-berry push alerts on, a 3 km search radius, quiet hours 21:00–07:00, bilberry + 1 species | 12 | **Yes**, since 2026-10-11: the eyebrow's `· SEASON DEMO` and a line **on the card itself** saying the four settings are the design's and that nothing reads them; the switch is a figure with no role and the three rows are readings (ADR-043). **Since 2026-11-21 drawn only without the account service** (the layout harness): with it, the card is the account's own (ADR-067) | `features/discover/domain/alert.ts` |
@@ -230,17 +230,13 @@ zone invented for it; the link stays out ([ADR-044](adr/ADR-044-the-partial-fram
 
 ## 8. Findings
 
-**F1 — the design's sample is written into the picker's own record.** (`buildVisitReport`,
-`visit-report.ts:98-109`; recorded as known issue 26 in PROJECT.md on 2026-10-10.)
-Every report frame 10 saves is stamped with `zoneId` = the demo zone
-(`DEMO_ACTIVE_VISIT.zoneId` → Z14) and `minutes` = 52, the design's own window
-(`DEMO_VISIT_WINDOW`, line 103). Screens 11 and 13 then read that back as the picker's own
-record — “Zone 14 · 52 min” on a visit they may never have had, in a zone the app cannot know
-they were in. Row A9 shows the same thing in the other direction: the design's three sample
-visits sit in the *same list* as the picker's, and two of them say **“Synced”** while nothing
-syncs. This is the one class of entry in this audit where a demo value is not merely displayed
-but **stored**, and it is what makes the two screens that read the queue less true than they
-mean to be.
+**F1 — the design's sample was written into the picker's own record. Fixed 2026-11-21.**
+(`buildVisitReport`, `visit-report.ts`; recorded as known issue 26 in PROJECT.md on 2026-10-10.)
+Every report frame 10 saved used to be stamped with the demo zone (`DEMO_ACTIVE_VISIT.zoneId` →
+Z14) and 52 minutes, the design's own window. Screens 11 and 13 then read that back as the
+picker's own record. Reports are now built from the finalized visit the tracker published: its
+zone and its own opened/ended window. Row A9's separate sample-history problem remains, but the
+stored half of this finding is gone.
 
 **F2 — the disclosure was not uniform. Fixed 2026-10-10.** Frames 06, 11 and 15–18 said on the
 screen that what they show is the design's composition (A2, A8, A12). Frames 07, 08, 09, 10 and

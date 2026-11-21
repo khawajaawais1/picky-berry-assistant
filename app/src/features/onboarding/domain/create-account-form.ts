@@ -37,6 +37,15 @@ export const PASSWORD_MIN_LENGTH = 10;
 export const PASSWORD_MAX_LENGTH = 128;
 export const NAME_MAX_LENGTH = 30;
 
+/** Whether a password meets the design's hint and the API's length bounds. */
+export function isPasswordValid(password: string): boolean {
+  return (
+    password.length >= PASSWORD_MIN_LENGTH &&
+    password.length <= PASSWORD_MAX_LENGTH &&
+    /\d/.test(password)
+  );
+}
+
 /** Whether the form may be submitted: every control answered, and the rules met. */
 export function isSubmittable(form: CreateAccountForm): boolean {
   const name = form.name.trim();
@@ -45,9 +54,7 @@ export function isSubmittable(form: CreateAccountForm): boolean {
     name.length > 0 &&
     name.length <= NAME_MAX_LENGTH &&
     form.email.trim().length > 0 &&
-    form.password.length >= PASSWORD_MIN_LENGTH &&
-    form.password.length <= PASSWORD_MAX_LENGTH &&
-    /\d/.test(form.password) &&
+    isPasswordValid(form.password) &&
     form.consent
   );
 }

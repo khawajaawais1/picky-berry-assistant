@@ -73,20 +73,10 @@ const FAMILIES: readonly Family[] = [
     subject: 'an arrival or an exit the app detected on its own',
     pattern:
       /detected automatically|automatically detected|ends the visit automatically|havaittiin automaattisesti|päättää käynnin automaattisesti|Exit detected/i,
-    recorded: [
-      {
-        key: 'discover.visit.arrived.title',
-        why: 'The frame’s own title on screen 09, disclosed by its SEASON DEMO eyebrow (demo row A5); nothing detects an arrival (known issue 17).',
-      },
-      {
-        key: 'discover.visit.supporting',
-        why: 'The frame’s exit sentence on screen 09, under the same disclosure (demo row A5); the visit it closes is the design’s sample (known issue 26).',
-      },
-      {
-        key: 'report.exit.title',
-        why: 'The frame’s own heading for the exit summary screen 10 draws (demo row A6).',
-      },
-    ],
+    // Empty since 2026-11-21: the tracker detects presence itself, and the copy now says what it
+    // saw (“Arrival noted”, “Visit complete”) without claiming a background watch. Screens 09 and
+    // 10 read the tracked visit; demo rows A5 and A6 are retired.
+    recorded: [],
   },
   {
     id: 'a-message-the-app-sent',
@@ -520,6 +510,7 @@ describe('the claims the copy makes', () => {
 
     expect(cleared.map((family) => family.id)).toEqual([
       'background-capture',
+      'automatic-detection',
       'identifier-is-an-address',
       'a-settings-step-the-app-never-takes',
     ]);

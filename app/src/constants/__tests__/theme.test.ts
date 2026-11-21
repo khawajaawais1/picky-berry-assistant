@@ -254,11 +254,10 @@ describe('design-sourced tokens (Figma file “Picky”, extracted 2026-10-08)',
     expect(typography.rowTitle).toMatchObject({ fontSize: 17, lineHeight: 24, fontWeight: '600' });
   });
 
-  it('carries frame 09’s visit metrics: its map height, its status label and its timer', () => {
-    // Frame 09 (Core picker · Active visit, node 5:23185): the same map as frame 06 drawn
-    // 342x210, the timer card's label at 12/16.8 semibold and its elapsed reading at 52/62.9
-    // semibold, and the card's own 20 px inset with its lines 6 px apart.
-    expect(layout.visitMapHeight).toBe(210);
+  it('carries frame 09’s visit metrics: its status label and its timer', () => {
+    // Frame 09 (Core picker · Active visit, node 5:23185): the timer card's label at 12/16.8
+    // semibold and its elapsed reading at 52/62.9 semibold, and the card's own 20 px inset with
+    // its lines 6 px apart. The frame's map is no longer drawn on this screen.
     expect(typography.statusLabel).toMatchObject({
       fontSize: 12,
       lineHeight: 17,
