@@ -6,7 +6,9 @@ import { Card } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { layout, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import type { ProfileApi } from '@/features/privacy';
 import { formatShortDate, interpolate, useTranslation, type TranslationKey } from '@/services/i18n';
+import { appPushPort, type PushPort, type RegisterDevice } from '@/services/push';
 
 import {
   DEMO_ALERT,
@@ -16,10 +18,22 @@ import {
 } from '../domain/alert';
 import { formatDistance } from '../domain/route';
 import { SCORE_MAX } from '../domain/zone-details';
+import { LiveAlertPreferences } from './live-alert-preferences';
 import { SPECIES_LABEL_KEY } from './species-copy';
 
 export type AlertsScreenProps = {
   onBack?: () => void;
+  /**
+   * The account service. With it the alert-preferences card is the account's own (ADR-067); without
+   * it the card stays the design's sample (ADR-043), which is what the layout harness draws.
+   */
+  accountApi?: ProfileApi;
+  /** The platform's push permission and token, behind the card's switch (ADR-067). */
+  push?: PushPort;
+  /** Registers this phone with the account service (`POST /me/devices`). */
+  register?: RegisterDevice;
+  /** Opens the Alert preferences screen from the card's radius and species rows. */
+  onOpenPreferences?: () => void;
 };
 
 /**
@@ -61,8 +75,8 @@ const ALERT_REASONS: readonly {
  * note: no weather source, season model or report stream exists behind it (PROJECT.md records it,
  * and the frame's own note is the disclaimer the design draws for exactly that reason).
  *
- * The frame's **alert preferences** card is drawn as the design's own sample (ADR-043): no alert is
- * delivered and no permission is asked for, so its switch is a figure rather than a control, its
+ * With the account service the frame's **alert preferences** card is the account's own
+ * (`LiveAlertPreferences`, ADR-067). Without one it is drawn as the design's own sample (ADR-043): so its switch is a figure rather than a control, its
  * four rows claim no role and draw no chevron — a row that will never open anything may not draw
  * the sign that says it will (AGENTS.md §11.2) — and a line on the card says the settings are the
  * design's, not this phone's.
@@ -72,7 +86,13 @@ const ALERT_REASONS: readonly {
  *
  * Its **core navigation** is absent as it is on every other core picker screen.
  */
-export function AlertsScreen({ onBack }: AlertsScreenProps) {
+export function AlertsScreen({
+  accountApi,
+  onBack,
+  onOpenPreferences,
+  push = appPushPort,
+  register,
+}: AlertsScreenProps) {
   const { colors } = useAppTheme();
   const { locale, t } = useTranslation();
 
@@ -155,64 +175,77 @@ export function AlertsScreen({ onBack }: AlertsScreenProps) {
 
         {/*
           The frame's preferences card (nodes 5:23480–5:23504), in the frame's own place: after its
-          three reasons and before its closing note.
+          three reasons and before its closing note. With the account service it is the account's
+          own (ADR-067); without one it is the design's sample (ADR-043).
         */}
-        <Card style={{ gap: spacing.cardGap, padding: spacing.section }} testID="alert-preferences">
-          <AppText style={{ fontWeight: '600' }} variant="cardLead">
-            {t('discover.alert.preferences.title')}
-          </AppText>
+        {accountApi ? (
+          <LiveAlertPreferences
+            accountApi={accountApi}
+            onOpenPreferences={onOpenPreferences}
+            push={push}
+            register={register}
+          />
+        ) : (
+          <Card
+            style={{ gap: spacing.cardGap, padding: spacing.section }}
+            testID="alert-preferences"
+          >
+            <AppText style={{ fontWeight: '600' }} variant="cardLead">
+              {t('discover.alert.preferences.title')}
+            </AppText>
 
-          {/*
+            {/*
             The frame's switch is a figure, not a control: nothing delivers an alert and no
             permission is asked for. It is still a reading whose state matters, so the row is one
             accessible group named with its answer rather than a switch that goes nowhere
             (frontend review, 2026-10-25).
           */}
-          <View
-            accessibilityLabel={`${t('discover.alert.preferences.push')}, ${t(
-              DEMO_ALERT_PREFERENCES.pushAlerts ? 'common.on' : 'common.off',
-            )}`}
-            accessible
-            className="w-full flex-row items-center gap-gap py-setting"
-            role="group"
-            testID="alert-preferences-push"
-          >
-            <AppText className="flex-1" variant="cardTitle">
-              {t('discover.alert.preferences.push')}
+            <View
+              accessibilityLabel={`${t('discover.alert.preferences.push')}, ${t(
+                DEMO_ALERT_PREFERENCES.pushAlerts ? 'common.on' : 'common.off',
+              )}`}
+              accessible
+              className="w-full flex-row items-center gap-gap py-setting"
+              role="group"
+              testID="alert-preferences-push"
+            >
+              <AppText className="flex-1" variant="cardTitle">
+                {t('discover.alert.preferences.push')}
+              </AppText>
+              <SwitchFigure on={DEMO_ALERT_PREFERENCES.pushAlerts} />
+            </View>
+
+            {/* The frame draws one divider, under its first setting (node 5:23487). */}
+            <View
+              className="w-full"
+              style={{ backgroundColor: colors.border, height: 1 }}
+              testID="alert-preferences-divider"
+            />
+
+            <PreferenceRow
+              label={t('discover.alert.preferences.radius')}
+              value={formatRadius(DEMO_ALERT_PREFERENCES.radiusKm, locale)}
+            />
+            <PreferenceRow
+              label={t('discover.alert.preferences.quiet')}
+              value={interpolate(t('discover.alert.preferences.quietValue'), {
+                from: DEMO_ALERT_PREFERENCES.quietFrom,
+                to: DEMO_ALERT_PREFERENCES.quietTo,
+              })}
+            />
+            <PreferenceRow
+              label={t('discover.alert.preferences.species')}
+              value={interpolate(t('discover.alert.preferences.speciesValue'), {
+                count: String(DEMO_ALERT_PREFERENCES.extraSpecies),
+                species: t(SPECIES_LABEL_KEY[DEMO_ALERT_PREFERENCES.speciesId]),
+              })}
+            />
+
+            <AppText testID="alert-preferences-sample" tone="muted" variant="metadata">
+              {t('discover.alert.preferences.sample')}
             </AppText>
-            <SwitchFigure on={DEMO_ALERT_PREFERENCES.pushAlerts} />
-          </View>
-
-          {/* The frame draws one divider, under its first setting (node 5:23487). */}
-          <View
-            className="w-full"
-            style={{ backgroundColor: colors.border, height: 1 }}
-            testID="alert-preferences-divider"
-          />
-
-          <PreferenceRow
-            label={t('discover.alert.preferences.radius')}
-            value={formatRadius(DEMO_ALERT_PREFERENCES.radiusKm, locale)}
-          />
-          <PreferenceRow
-            label={t('discover.alert.preferences.quiet')}
-            value={interpolate(t('discover.alert.preferences.quietValue'), {
-              from: DEMO_ALERT_PREFERENCES.quietFrom,
-              to: DEMO_ALERT_PREFERENCES.quietTo,
-            })}
-          />
-          <PreferenceRow
-            label={t('discover.alert.preferences.species')}
-            value={interpolate(t('discover.alert.preferences.speciesValue'), {
-              count: String(DEMO_ALERT_PREFERENCES.extraSpecies),
-              species: t(SPECIES_LABEL_KEY[DEMO_ALERT_PREFERENCES.speciesId]),
-            })}
-          />
-
-          <AppText testID="alert-preferences-sample" tone="muted" variant="metadata">
-            {t('discover.alert.preferences.sample')}
-          </AppText>
-        </Card>
+          </Card>
+        )}
 
         <AppText tone="muted" variant="metadata">
           {t('discover.alert.note')}

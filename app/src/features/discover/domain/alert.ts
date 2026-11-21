@@ -1,8 +1,11 @@
-import type { Locale, TranslationKey } from '@/services/i18n';
+import type { TranslationKey } from '@/services/i18n';
 
-import { formatDecimal } from './season-insights';
 import type { Species } from './species';
 import type { Confidence } from './zone-details';
+
+// The radius is a setting of the account's, not part of the sample (ADR-067); it is re-exported
+// so the sample card keeps one import.
+export { formatRadius } from './alert-radius';
 
 /**
  * What frame 12 (Core picker · Alerts and forecast, node `5:23439`) says, and what it is worth.
@@ -72,21 +75,3 @@ export const DEMO_ALERT_PREFERENCES = {
   /** How many species beyond the first the sample subscribes to (“+ 1” on the frame). */
   extraSpecies: 1,
 } as const;
-
-/**
- * A radius setting as the frame prints it: a whole number of kilometres with the language's own
- * decimal mark (“3 km”), never a trailing zero.
- *
- * The app's distances print one decimal — frame 08's route is “1.4 km” because it is a measured
- * walk — while a radius is a number the picker set, and the frame draws this one as “3 km” on the
- * same screen its headline prints “1.8 km”. A radius that is not a whole kilometre still writes
- * the language's number (“2,5 km” in Finnish), and a negative one is a mistake the caller has to
- * see rather than a radius drawn backwards.
- */
-export function formatRadius(kilometres: number, locale: Locale): string {
-  if (!Number.isFinite(kilometres) || kilometres < 0) {
-    throw new RangeError(`a radius is a non-negative number of kilometres, got ${kilometres}`);
-  }
-
-  return `${formatDecimal(kilometres, locale)} km`;
-}

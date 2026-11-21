@@ -19,6 +19,10 @@
  */
 export { ActiveVisitScreen, type ActiveVisitScreenProps } from './components/active-visit-screen';
 export { AlertsScreen, type AlertsScreenProps } from './components/alerts-screen';
+export {
+  AlertPreferencesScreen,
+  type AlertPreferencesScreenProps,
+} from './components/alert-preferences-screen';
 export { DiscoverScreen, type DiscoverScreenProps } from './components/discover-screen';
 export {
   PostVisitFeedbackScreen,
