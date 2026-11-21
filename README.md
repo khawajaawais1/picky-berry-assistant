@@ -64,7 +64,8 @@ picky-berry-assistant/
 | `data/` | ✅ Pipelines for 6.2 + 28 tests; 50 stub zones committed; the real backfill and bucket upload are not run |
 | `docker/` | 🟡 Postgres 17 + PostGIS + h3 image and dev compose defined; no CI build |
 | `ml/` | ✅ v1 models + `berry_ml` package + reference API, 24 tests — see [ml/API.md](ml/API.md) for wiring it into the backend |
-| `backend/`, `ontology/`, `deploy/` | ⬜ Planned layout in each README; no code in any of them yet |
+| `ontology/` | 🟡 v1 vocabulary + two SPARQL rules, loaded and validated by the backend's `reasoning` module (37 backend + ontology tests); no job or `alerts` table yet ([`ontology/README.md`](ontology/README.md)) |
+| `backend/`, `deploy/` | ⬜ Planned layout in each README; no code in any of them yet |
 
 Sprint plan and first deliverables (due 3 Nov): [docs/sprints.md](docs/sprints.md).
 
@@ -102,9 +103,9 @@ S3 bucket, rdflib ontology, YOLO/XGBoost models ← FMI, Sentinel-2, OSM/Protoma
 One EU VM, ≈ €485/yr. Details: [docs/architecture.md](docs/architecture.md) and the
 [MVP Architecture doc](https://claude.ai/artifact/EnkBHuaL7DENBFutQMPEqw).
 
-**That chain is the target design.** Only the app and the `data/` package exist today: the app runs
-on device records and the committed zone stub, and there is no API, bucket, ontology or model in
-the repository. [docs/architecture.md](docs/architecture.md) keeps the per-layer status.
+**That chain is the target design.** The app, the `data/` package, the `ml/` package and the
+ontology's v1 vocabulary exist today, but nothing serves the last three: the app runs on device
+records and the committed zone stub, and there is no API or bucket in the repository. [docs/architecture.md](docs/architecture.md) keeps the per-layer status.
 
 ## Tech stack
 

@@ -11,9 +11,9 @@ No upgrades mid-sprint; an upgrade is its own PR with a one-line reason.
 | app | Expo SDK | 58.0.19 | `app/package.json` | Salman |
 | app | React Native | 0.88.0 | `app/package.json` | Salman |
 | app | @maplibre/maplibre-react-native | — | `app/package.json` | Salman |
-| backend | FastAPI / SQLAlchemy / Alembic | — | `backend/pyproject.toml` | Hassan |
+| backend | FastAPI / SQLAlchemy / Alembic | FastAPI 0.165.0, others — | `backend/pyproject.toml` | Hassan |
 | ml | Python | 3.11–3.13 (CI 3.12) | `ml/pyproject.toml` | Sayeem |
 | ml | numpy / pandas / pillow / onnxruntime / joblib | 2.4.6 / 3.0.5 / 13.0.0 / 1.29.0 / 1.6.0 | `ml/requirements.txt` | Sayeem |
 | ml | fastapi / uvicorn / python-multipart (reference service) | 0.165.0 / 0.54.0 / 0.32 | `ml/requirements-service.txt` | Sayeem |
 | ml | ultralytics (training only, Kaggle) | 8.4.209 | `ml/notebooks/` | Remon |
-| ontology | rdflib | — | `backend/pyproject.toml` | Asmer |
+| ontology | rdflib | 7.6.0 | `backend/pyproject.toml` | Asmer |

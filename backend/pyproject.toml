@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "picky-backend"
+version = "0.1.0"
+description = "Picky FastAPI modular monolith: accounts, zones, visits, feedback, trust, prediction, reasoning, analytics, ingest, media (Team Picky)"
+requires-python = ">=3.11"
+# Postgres stays the system of record; rdflib loads the committed ontology into memory for
+# each reasoning run (docs/architecture.md §8, ../ontology/README.md).
+dependencies = [
+  "rdflib==7.6.0",
+  "fastapi==0.165.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest==9.1.1", "ruff==0.17.6", "httpx==0.28.1", "pyyaml==6.0.3"]
+
+[tool.setuptools]
+# The app/ package arrives with the FastAPI skeleton (D5); there is nothing to install yet.
+packages = []
+
+[tool.pytest.ini_options]
+# The ontology's fixture-graph test lives with the ontology it tests; the reasoning module's
+# tests stay with the backend.
+testpaths = ["tests", "../ontology/tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 125
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["B905"]
