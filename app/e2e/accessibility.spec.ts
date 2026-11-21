@@ -665,15 +665,19 @@ test.describe('signing in, in the built web app', () => {
 });
 
 test.describe('resetting a password, in the built web app', () => {
-  test('offers no reset, because the account service has none yet (ADR-065)', async ({ page }) => {
+  test('asks the account service for a link and claims no delivery (ADR-065)', async ({ page }) => {
+    await fakeAccountService(page);
     await page.goto('/sign-in');
     await page.getByRole('button', { name: 'Forgot password?' }).click();
     await expect(page).toHaveURL(/\/forgot-password$/);
 
     await page.getByRole('textbox', { name: 'Email address' }).fill('aino@example.fi');
+    await page.getByRole('button', { name: 'Request reset link' }).click();
 
-    await expect(page.getByRole('button', { name: 'Request reset link' })).toBeDisabled();
-    await expectTreeReadable(page, '/forgot-password, with no reset to offer');
+    // Accepted, with no email claimed: the service's mail is not delivered yet (ADR-048's rule).
+    await expect(page.getByText('Reset request accepted.')).toBeVisible();
+    await expect(page.getByText('Check your inbox.')).toHaveCount(0);
+    await expectTreeReadable(page, '/forgot-password, with the confirmation');
 
     await page.getByRole('button', { name: 'Sign in' }).click();
     await expect(page).toHaveURL(/\/sign-in$/);

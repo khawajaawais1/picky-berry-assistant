@@ -1,29 +1,28 @@
+import type { ConfigResult } from '@/config/env';
+
 import { passwordResetAvailability } from '../password-reset';
 
-afterEach(() => {
-  delete process.env.EXPO_PUBLIC_APP_ENV;
-  delete process.env.EXPO_PUBLIC_FIREBASE_API_KEY;
-});
-
 /**
- * The one question the route asks before it wires a reset screen. Accounts live in the team API
- * (ADR-065), and the API has no reset endpoint yet, so no build can honestly offer a reset. A
- * Firebase key no longer helps: Firebase holds none of these accounts, so a request there would
- * report success for a link that can never arrive.
+ * The one question the route asks before it wires the reset screen (ADR-065 decision 4,
+ * amended): the team API's account service takes reset requests, so a build that can reach it
+ * offers one. Its mail is not delivered yet, so the screen claims an accepted request, never a
+ * sent email.
  */
+const CONFIGURED: ConfigResult = {
+  ok: true,
+  config: { environment: 'production', apiBaseUrl: 'https://api.example.test' },
+};
+const UNUSABLE: ConfigResult = {
+  ok: false,
+  problems: [{ variable: 'EXPO_PUBLIC_API_BASE_URL', reason: 'missing' }],
+};
+
 describe('passwordResetAvailability', () => {
-  it.each(['development', 'preview', 'production'])(
-    'is unavailable in a %s build, because the account service has no reset yet',
-    (environment) => {
-      process.env.EXPO_PUBLIC_APP_ENV = environment;
+  it('offers a reset, as an accepted request, in a build that can reach the account service', () => {
+    expect(passwordResetAvailability(CONFIGURED)).toBe('accepted');
+  });
 
-      expect(passwordResetAvailability()).toBe('unavailable');
-    },
-  );
-
-  it('stays unavailable when a Firebase key is configured, since Firebase holds no accounts', () => {
-    process.env.EXPO_PUBLIC_FIREBASE_API_KEY = 'firebase-key';
-
-    expect(passwordResetAvailability()).toBe('unavailable');
+  it('offers none in a build whose API configuration is unusable', () => {
+    expect(passwordResetAvailability(UNUSABLE)).toBe('unavailable');
   });
 });

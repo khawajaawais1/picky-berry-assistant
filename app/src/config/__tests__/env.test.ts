@@ -1,7 +1,6 @@
 import {
   PUBLIC_ENV_VARS,
   appEnvironment,
-  firebaseApiKey,
   isLoopbackHost,
   loadConfig,
   parseApiBaseUrl,
@@ -12,7 +11,6 @@ import {
 const {
   apiBaseUrl: API_URL_VAR,
   appEnvironment: APP_ENV_VAR,
-  firebaseApiKey: FIREBASE_KEY_VAR,
   zoneSource: ZONE_SOURCE_VAR,
 } = PUBLIC_ENV_VARS;
 
@@ -145,16 +143,6 @@ describe('appEnvironment', () => {
   });
 });
 
-describe('firebaseApiKey', () => {
-  it('returns the configured public key, trimmed', () => {
-    expect(firebaseApiKey({ [FIREBASE_KEY_VAR]: '  firebase-web-key  ' })).toBe('firebase-web-key');
-  });
-
-  it.each([undefined, '', '   '])('returns null when the key is %p', (value) => {
-    expect(firebaseApiKey({ [FIREBASE_KEY_VAR]: value })).toBeNull();
-  });
-});
-
 describe('zoneSourceKind', () => {
   // The map reads the team API (ADR-065). The layout harness opens every screen without a
   // session, so it asks for the bundled stub by name, and a shipped build cannot.
@@ -189,7 +177,6 @@ describe('loadConfig', () => {
       config: {
         environment: 'development',
         apiBaseUrl: 'https://api.picky.app',
-        firebaseApiKey: null,
       },
     });
   });
@@ -211,7 +198,6 @@ describe('loadConfig', () => {
       config: {
         environment: 'development',
         apiBaseUrl: 'http://127.0.0.1:8000',
-        firebaseApiKey: null,
       },
     });
   });
@@ -238,7 +224,7 @@ describe('loadConfig', () => {
     });
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error('expected configuration to be valid');
-    expect(Object.keys(result.config)).toEqual(['environment', 'apiBaseUrl', 'firebaseApiKey']);
+    expect(Object.keys(result.config)).toEqual(['environment', 'apiBaseUrl']);
     expect(JSON.stringify(result.config)).not.toContain('super-secret');
   });
 });

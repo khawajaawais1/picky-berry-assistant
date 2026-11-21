@@ -104,13 +104,14 @@ const FAMILIES: readonly Family[] = [
     // destination the code belongs to (ADR-048).
     //
     // One entry since 2026-10-24, and it is the branch ADR-048 recorded: the reset confirmation's
-    // live heading is drawn only where `EXPO_PUBLIC_FIREBASE_API_KEY` configures the provider that
-    // sends the email, so the sentence is true in exactly the build that shows it (ADR-062). Without
-    // a key the screen keeps `requested.heading`, which claims acceptance rather than delivery.
+    // live heading is drawn only where the reset service sends the email (availability `live`), so
+    // the sentence is true in exactly the build that shows it. Since 2026-11-21 the team API takes
+    // the request but sends no mail yet, so every build answers `accepted` and draws
+    // `requested.heading`, which claims acceptance rather than delivery (ADR-065).
     recorded: [
       {
         key: 'onboarding.forgotPassword.requested.live.heading',
-        why: 'Drawn only with a configured reset provider (`passwordResetAvailability` is `live`, ADR-062), where the address really is in the provider’s hands; the keyless build draws `requested.heading` and the test-build note instead.',
+        why: 'Drawn only when the reset service sends the email (`passwordResetAvailability` is `live`); while the team API takes the request without sending mail, every build draws `requested.heading` instead (ADR-065).',
       },
     ],
   },

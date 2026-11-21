@@ -93,6 +93,10 @@ export async function fakeAccountService(page: Page): Promise<void> {
       case '/api/v1/auth/logout':
         await answer(route, 204);
         return;
+      case '/api/v1/auth/password-reset':
+        // The service's own answer for every address: accepted, whether or not one is registered.
+        await answer(route, 202);
+        return;
       case '/api/v1/me': {
         const token = (request.headers()['authorization'] ?? '').replace(/^Bearer /, '');
         const owner = emailByToken.get(token);

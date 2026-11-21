@@ -87,8 +87,9 @@ describe('OnboardingForgotPasswordScreen', () => {
 
     expect(await screen.findByText('Reset request accepted.')).toBeOnTheScreen();
     expect(screen.getByText(REQUESTED)).toBeOnTheScreen();
-    expect(screen.getByText('Test build')).toBeOnTheScreen();
-    expect(screen.getByText(TEST_BUILD)).toBeOnTheScreen();
+    // The account service accepted it (ADR-065); nothing here claims an email was sent.
+    expect(screen.queryByText('Check your inbox.')).not.toBeOnTheScreen();
+    expect(screen.queryByText(TEST_BUILD)).not.toBeOnTheScreen();
 
     // The form is gone: the address it asked for is the state, not something to type again.
     expect(screen.queryByTestId('forgot-password-email')).not.toBeOnTheScreen();
@@ -121,9 +122,8 @@ describe('OnboardingForgotPasswordScreen', () => {
 
     expect(await screen.findByText('Check your inbox.')).toBeOnTheScreen();
     expect(screen.getByText(LIVE_REQUESTED)).toBeOnTheScreen();
-    // The test note belongs to the stand-in alone: a live provider earns the delivery claim.
-    expect(screen.queryByText('Test build')).not.toBeOnTheScreen();
-    expect(screen.queryByText(TEST_BUILD)).not.toBeOnTheScreen();
+    // Only a service that sends the email earns the delivery claim.
+    expect(screen.queryByText('Reset request accepted.')).not.toBeOnTheScreen();
   });
 
   it('reports a request the service refused, rather than moving on silently', async () => {
