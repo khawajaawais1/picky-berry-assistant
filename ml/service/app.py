@@ -16,12 +16,11 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import os
+import secrets
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
-
-import os
-import secrets
 
 from fastapi import APIRouter, Depends, FastAPI, File, HTTPException, Query, Request, Security, UploadFile
 from fastapi.exceptions import RequestValidationError
