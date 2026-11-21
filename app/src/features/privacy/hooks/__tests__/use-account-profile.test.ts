@@ -19,6 +19,10 @@ describe('useAccountProfile', () => {
     expect(without.result.current.status).toBe('none');
     expect(signedOut.result.current.status).toBe('none');
     expect(api.profile).not.toHaveBeenCalled();
+
+    // Leaving holds nothing to let go of.
+    await without.unmount();
+    await signedOut.unmount();
   });
 
   it('reads the profile, and answers it once the service has', async () => {

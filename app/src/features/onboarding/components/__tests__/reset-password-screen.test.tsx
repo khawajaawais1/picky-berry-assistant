@@ -168,6 +168,20 @@ describe('OnboardingResetPasswordScreen', () => {
     expect(screen.getByLabelText('New password')).toBeOnTheScreen();
   });
 
+  it('shows and hides each password on its own', async () => {
+    await render(<OnboardingResetPasswordScreen onSignIn={jest.fn()} token={TOKEN} />);
+    const [password, confirmation] = screen.getAllByRole('button', { name: 'Show password' });
+
+    await fireEvent.press(password!);
+    expect(screen.getAllByRole('button', { name: 'Hide password' })).toHaveLength(1);
+
+    await fireEvent.press(confirmation!);
+    expect(screen.getAllByRole('button', { name: 'Hide password' })).toHaveLength(2);
+
+    await fireEvent.press(screen.getAllByRole('button', { name: 'Hide password' })[0]!);
+    expect(screen.getAllByRole('button', { name: 'Show password' })).toHaveLength(1);
+  });
+
   it('offers the back control only when there is somewhere to go back to', async () => {
     const onBack = jest.fn();
     const { rerender } = await render(
