@@ -26,6 +26,21 @@ ZONE = Namespace("https://picky.example/zone/")
 DEFAULT_ONTOLOGY_DIR = Path(__file__).resolve().parents[4] / "ontology"
 
 
+# A row missing any of these describes a zone the pipeline has no reading for: ml/'s grid
+# covers 40 x 40 km, so a zone outside it has no score, and ml/API.md says to omit the scores
+# rather than fail the run. Such a row is skipped; a *wrong* value (an unknown species or
+# ripeness) is still an error.
+REQUIRED_ROW_FIELDS = (
+    "zone_id",
+    "zone_name",
+    "species",
+    "ripeness",
+    "score",
+    "confidence",
+    "suitability",
+)
+
+
 class OntologyError(Exception):
     """A snapshot value the committed ontology cannot name."""
 
@@ -69,6 +84,9 @@ def add_zone_rows(graph: Graph, rows: Iterable[Mapping[str, object]]) -> int:
 
     pending = []
     for row in rows:
+        if any(row.get(field) is None for field in REQUIRED_ROW_FIELDS):
+            continue
+
         code = str(row["species"])
         ripeness = str(row["ripeness"])
 

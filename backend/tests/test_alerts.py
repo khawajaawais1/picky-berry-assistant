@@ -6,9 +6,12 @@ query that fired cannot drift apart.
 
 from pathlib import Path
 
-from app.modules.reasoning.service import alerts_from_rows
+from rdflib import Literal, Namespace
 
 from app.modules.reasoning.graph import load_ontology
+from app.modules.reasoning.service import alerts_from_rows
+
+BPA = Namespace("https://picky.example/onto#")
 
 
 def test_only_ripe_zones_the_species_can_live_in_produce_an_alert(
@@ -66,9 +69,25 @@ def test_alert_as_api_speaks_the_apis_vocabulary(
         "score": 82,
         "confidence": "high",
         "suitability": 0.70,
+        "ecologyVerified": False,
         "ripeness": "ripe",
         "sentence": "Ripe bilberry in zone Laajavuori 18 — yield score 82, high confidence.",
     }
+
+
+def test_the_alert_carries_whether_the_ecology_behind_it_is_verified(
+    ontology_dir: Path, rule_path: Path, snapshot_rows: list[dict]
+) -> None:
+    graph = load_ontology(ontology_dir)
+
+    # Every species in species.ttl is copied from a config marked `verified: false`.
+    assert alerts_from_rows(graph, snapshot_rows[:1], rule_path)[0].ecology_verified is False
+
+    # Flip it in the graph and the alert follows: this is read, not hard-coded.
+    graph.remove((BPA.Bilberry, BPA.verified, None))
+    graph.add((BPA.Bilberry, BPA.verified, Literal(True)))
+
+    assert alerts_from_rows(graph, snapshot_rows[:1], rule_path)[0].ecology_verified is True
 
 
 def test_the_committed_ontology_is_not_mutated_by_a_run(

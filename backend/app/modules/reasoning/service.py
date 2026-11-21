@@ -16,7 +16,7 @@ from pathlib import Path
 
 from rdflib import RDFS, Graph
 
-from app.modules.reasoning.graph import ZONE, add_zone_rows
+from app.modules.reasoning.graph import BPA, ZONE, add_zone_rows
 from app.modules.reasoning.rules import Rule, placeholders
 
 
@@ -38,6 +38,9 @@ class Alert:
     confidence: str
     suitability: float
     ripeness: str
+    # Whether the ecology behind the score is sourced. species.ttl carries the config's
+    # `verified: false` today, so an alert can disclose that it rests on an unsourced rule.
+    ecology_verified: bool
     sentence: str
 
     def as_api(self) -> dict[str, object]:
@@ -57,6 +60,7 @@ class Alert:
             "confidence": self.confidence,
             "suitability": self.suitability,
             "ripeness": self.ripeness,
+            "ecologyVerified": self.ecology_verified,
             "sentence": self.sentence,
         }
 
@@ -92,6 +96,7 @@ def alerts_from_rule(
         values = {
             field: _render(getattr(result, field, None)) for field in placeholders(template)
         }
+        verified = graph.value(result.species, BPA.verified)
         zone_iri = str(result.zone)
         alerts.append(
             Alert(
@@ -109,6 +114,8 @@ def alerts_from_rule(
                 score=int(result.yieldScore),
                 confidence=str(result.confidence),
                 suitability=float(result.zoneSuitability),
+                # No `verified` triple means no claim of verification.
+                ecology_verified=bool(verified.toPython()) if verified is not None else False,
                 # The app's own word comes from the stage's label, not the IRI's local name.
                 ripeness=str(graph.value(result.ripenessStage, RDFS.label)),
                 sentence=template.format_map(values),

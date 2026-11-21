@@ -67,6 +67,29 @@ def test_add_zone_rows_keeps_an_optional_place(
     assert str(graph.value(ZONE[zone_b], BPA.placeName)) == "Killerjärvi"
 
 
+def test_a_row_with_a_missing_score_is_skipped_not_fatal(
+    ontology_dir: Path, snapshot_rows: list[dict]
+) -> None:
+    graph = load_ontology(ontology_dir)
+
+    # ml/'s grid covers 40 x 40 km, so a zone outside it has no score; ml/API.md says to omit
+    # the scores, not to fail the run.
+    rows = [dict(snapshot_rows[0], score=None), snapshot_rows[1]]
+
+    assert add_zone_rows(graph, rows) == 1
+    assert len(set(graph.subjects(RDF.type, BPA.SpeciesAssessment))) == 1
+
+
+def test_a_row_with_no_ripeness_is_skipped(
+    ontology_dir: Path, snapshot_rows: list[dict]
+) -> None:
+    graph = load_ontology(ontology_dir)
+
+    rows = [dict(snapshot_rows[0], ripeness=None), dict(snapshot_rows[1], confidence=None)]
+
+    assert add_zone_rows(graph, rows) == 0
+
+
 def test_unknown_species_is_refused_and_nothing_is_written(
     ontology_dir: Path, snapshot_rows: list[dict]
 ) -> None:
