@@ -1,8 +1,16 @@
 import { Feather } from '@/components/atoms/app-icon';
+import { useState } from 'react';
 import { Platform, Pressable, Switch, View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
-import { Callout, Card, Chip, SignOutAction, StatusMessage } from '@/components/molecules';
+import {
+  Callout,
+  Card,
+  Chip,
+  ChoiceChips,
+  SignOutAction,
+  StatusMessage,
+} from '@/components/molecules';
 import { appEnvironment } from '@/config/env';
 import { Screen } from '@/components/templates';
 import { layout, spacing } from '@/constants/theme';
@@ -14,16 +22,23 @@ import { useSession } from '@/hooks/use-session';
 import { interpolate, useTranslation } from '@/services/i18n';
 
 import { profileInitials } from '../domain/profile';
+import { useAccountProfile, type ProfileApi } from '../hooks/use-account-profile';
 import { useVerificationLine } from '../hooks/use-verification-line';
-import type { AccountApi } from '../services/account-api';
+import type { AccountApi, PrivacyLevel } from '../services/account-api';
 
 export type PrivacySettingsScreenProps = {
   /**
    * The account service (ADR-065). With it, the account row's verification line is what
    * `GET /me` says rather than a claim drawn from the identifier.
    */
-  accountApi?: Pick<AccountApi, 'profile'>;
+  accountApi?: Pick<AccountApi, 'profile'> &
+    Partial<Pick<AccountApi, 'updateProfile' | 'updatePrivacy'>>;
   onBack?: () => void;
+  /**
+   * Opens the Language screen (`src/app/(app)/language.tsx`) — the frame's “Language” row, whose
+   * destination the design never drew (ADR-067). Without it the row is drawn as the reading it is.
+   */
+  onOpenLanguage?: () => void;
   /**
    * Opens the list of the zones the picker saved (`src/app/saved-spots.tsx`) — the frame's
    * “Saved spots” row. The list is the screen the design never drew (ADR-030); without a
@@ -84,14 +99,15 @@ export type PrivacySettingsScreenProps = {
  *
  * Deliberate limits, all recorded in PROJECT.md and `docs/design-source.md`:
  *
- * - The frame's **“Default spot visibility”** block is not drawn. Its Private/Shared/Public chips
- *   do not set a preference, they describe how *other people* see a spot — invites, a community
- *   map, a sharing model the app does not have. Drawing them would promise all three.
+ * - The frame's **“Default spot visibility”** block is drawn since ADR-067, once the account's
+ *   own level has been read: its Private/Shared/Public chips save `privacy_level` with
+ *   `PATCH /me/privacy`. Nothing in the app shows a spot to anyone yet, so a note under the chips
+ *   says the level is kept for when sharing arrives rather than promising a sharing model.
  * - Its **“Account & security”** and **“Terms & privacy”** rows are drawn where the frame draws
  *   them, each opening the screen behind it — neither of which the design drew, so both are
  *   app-drawn (ADR-039). Until a route supplies a destination, each row is a reading.
- * - The **Language** row keeps the frame's label and value and drops its chevron: the app follows
- *   the device's language by design and has no picker to open (ADR-017), so the row is a reading.
+ * - The **Language** row opens the app-drawn Language screen (ADR-067, amending ADR-017), which
+ *   sets the account's language. Without a destination it is the reading it was.
  * - The **account row** is drawn only once the session read has answered and there is one; a cold
  *   start holds no session (it is a process-length memory), and the screen draws no empty account.
  * - The frame draws its `Switch` at 46x28. This is the platform's own switch, a few pixels larger
@@ -105,6 +121,7 @@ export function PrivacySettingsScreen({
   accountApi,
   onBack,
   onOpenAccountSecurity,
+  onOpenLanguage,
   onOpenSavedSpots,
   onOpenSync,
   onOpenTermsPrivacy,
@@ -147,13 +164,25 @@ export function PrivacySettingsScreen({
           { count: savedSpotsCount },
         );
   const verified = useVerificationLine(session, accountApi);
+  const profileApi = hasProfileWrites(accountApi) ? accountApi : undefined;
+  const { profile, savePrivacy } = useAccountProfile(profileApi, session?.accountId ?? null);
+  // A name saved on Account & security is the account's own (ADR-067), drawn before the session
+  // catches up with it.
+  const displayName = profile?.nickname ?? session?.displayName ?? null;
+  const [visibilityFailed, setVisibilityFailed] = useState(false);
+  const chooseVisibility = async (level: PrivacyLevel) => {
+    if (level === profile?.privacyLevel) return;
+    setVisibilityFailed(false);
+    const outcome = await savePrivacy(level);
+    if (!outcome.ok) setVisibilityFailed(true);
+  };
   // A returning account carries no name: it is the account service's answer, and no service
   // exists yet (ADR-038). The row then names the account by its identifier — the only thing the
   // app knows about it — and the line under it carries the verification claim alone, rather than
   // printing the same identifier twice.
-  const accountName = session === null ? '' : (session.displayName ?? session.accountId);
+  const accountName = session === null ? '' : (displayName ?? session.accountId);
   const accountLine = session
-    ? session.displayName === null
+    ? displayName === null
       ? verified
       : interpolate(t('privacy.account.line'), {
           identifier: session.accountId,
@@ -232,6 +261,39 @@ export function PrivacySettingsScreen({
             testID="privacy-saved-spots-row"
             value={savedSpotsCount}
           />
+
+          {/*
+            The card's other row, “Default spot visibility” (ADR-067): drawn once the account's
+            own level has been read, behind the divider the frame draws between the two. Its note
+            says what the level is for, because nothing in the app shows a spot to anyone yet.
+          */}
+          {profile ? (
+            <View className="w-full gap-cardGap" testID="privacy-visibility">
+              <View
+                className="w-full"
+                style={{ backgroundColor: colors.border, height: 1, marginTop: spacing.cardGap }}
+              />
+              <AppText variant="cardTitle">{t('privacy.visibility.title')}</AppText>
+              <ChoiceChips<PrivacyLevel>
+                label={t('privacy.visibility.title')}
+                onChange={(level) => void chooseVisibility(level)}
+                options={[
+                  { label: t('privacy.visibility.private'), value: 'private' },
+                  { label: t('privacy.visibility.shared'), value: 'shared' },
+                  { label: t('privacy.visibility.public'), value: 'public' },
+                ]}
+                value={profile.privacyLevel}
+              />
+              <AppText tone="muted" variant="metadata">
+                {t('privacy.visibility.note')}
+              </AppText>
+              {visibilityFailed ? (
+                <StatusMessage testID="privacy-visibility-failed" tone="danger" variant="caption">
+                  {t('privacy.visibility.saveFailed')}
+                </StatusMessage>
+              ) : null}
+            </View>
+          ) : null}
         </Card>
 
         <Callout
@@ -292,12 +354,13 @@ export function PrivacySettingsScreen({
           />
 
           {/*
-            The frame's “Language” row, at the device's answer: no control, because the app
-            follows the device's language and has no picker to open (ADR-017).
+            The frame's “Language” row, at the language the app is in. It opens the app-drawn
+            Language screen when the route hands it one (ADR-067).
           */}
           <SettingRow
-            chevron={false}
+            chevron={onOpenLanguage !== undefined}
             label={t('privacy.language.title')}
+            onPress={onOpenLanguage}
             testID="privacy-language-row"
             value={t('privacy.language.value')}
           />
@@ -343,8 +406,8 @@ export function PrivacySettingsScreen({
  * a reading, and the row's own name says where it leads when it does lead somewhere — a settings
  * row that opens a screen reads as a button to a screen reader, not as a setting whose value was
  * read out. `chevron` is the same honesty for a row that will never open anything: the language
- * row keeps the frame's label and value and drops the arrow, because the app has no picker to
- * open (ADR-017).
+ * row keeps the frame's label and value and drops the arrow until the route hands it the Language
+ * screen (ADR-067).
  */
 function SettingRow({
   chevron = true,
@@ -410,4 +473,11 @@ function SettingRow({
       {content}
     </Pressable>
   );
+}
+
+/** Whether the account service handed over can also save, which the visibility chips need. */
+function hasProfileWrites(
+  api: PrivacySettingsScreenProps['accountApi'],
+): api is ProfileApi & NonNullable<PrivacySettingsScreenProps['accountApi']> {
+  return api?.updateProfile !== undefined && api.updatePrivacy !== undefined;
 }

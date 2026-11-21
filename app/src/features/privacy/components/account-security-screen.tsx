@@ -19,17 +19,19 @@ import { useSession } from '@/hooks/use-session';
 import { interpolate, useTranslation } from '@/services/i18n';
 
 import { profileInitials } from '../domain/profile';
+import { useAccountProfile, type ProfileApi } from '../hooks/use-account-profile';
 import { useVerificationLine } from '../hooks/use-verification-line';
 import type { DeleteAccountOutcome } from '@/services/delete-account';
 
-import type { AccountApi } from '../services/account-api';
+import { NICKNAME_MAX_LENGTH, type AccountApi } from '../services/account-api';
 
 export type AccountSecurityScreenProps = {
   /**
    * The account service (ADR-065). With it, the account row's verification line is what
    * `GET /me` says rather than a claim drawn from the identifier.
    */
-  accountApi?: Pick<AccountApi, 'profile'>;
+  accountApi?: Pick<AccountApi, 'profile'> &
+    Partial<Pick<AccountApi, 'updateProfile' | 'updatePrivacy'>>;
   onBack?: () => void;
   /**
    * Opens the sign-in screen — the way back in when the session the app was holding has run out
@@ -99,9 +101,15 @@ export function AccountSecurityScreen({
   // yet (ADR-038). The row then names the account by its identifier — the only thing the app knows
   // about it — and the line under it carries the verification claim alone, rather than printing the
   // same identifier twice. This is frame 14's row drawn the same way.
-  const accountName = session === null ? '' : (session.displayName ?? session.accountId);
+  const profileApi =
+    accountApi?.updateProfile && accountApi.updatePrivacy ? (accountApi as ProfileApi) : undefined;
+  const { profile, save } = useAccountProfile(profileApi, session?.accountId ?? null);
+  // A saved name is the account's own (ADR-067): the row draws it at once, before the next sign-in
+  // or refresh hands the session the same name.
+  const displayName = profile?.nickname ?? session?.displayName ?? null;
+  const accountName = session === null ? '' : (displayName ?? session.accountId);
   const accountLine = session
-    ? session.displayName === null
+    ? displayName === null
       ? verified
       : interpolate(t('privacy.account.line'), { identifier: session.accountId, verified })
     : '';
@@ -140,6 +148,13 @@ export function AccountSecurityScreen({
               </AppText>
             </View>
           </View>
+        ) : null}
+
+        {!loading && session && profile ? (
+          <NicknameCard
+            initial={profile.nickname ?? ''}
+            onSave={(nickname) => save({ nickname })}
+          />
         ) : null}
 
         {noSession ? (
@@ -296,6 +311,69 @@ function DeleteAccount({
       {refusal ? (
         <StatusMessage testID="account-delete-refused" tone="danger" variant="bodySmall">
           {t(DELETE_REFUSAL_KEY[refusal])}
+        </StatusMessage>
+      ) : null}
+    </Card>
+  );
+}
+
+/**
+ * The account's name, editable (ADR-067). No frame draws this: frame 14 draws the name in the
+ * account row and stops, so the field is app-drawn from the form molecules screen 03 uses. The
+ * contract's bounds (1–30 characters) are checked before anything is sent, and the result is said
+ * either way — a save that did not happen is not left silent (AGENTS.md §2.3).
+ */
+function NicknameCard({
+  initial,
+  onSave,
+}: {
+  initial: string;
+  onSave: (nickname: string) => Promise<{ ok: boolean }>;
+}) {
+  const { t } = useTranslation();
+  const [nickname, setNickname] = useState(initial);
+  const [state, setState] = useState<'idle' | 'saving' | 'saved' | 'invalid' | 'failed'>('idle');
+
+  const submit = async () => {
+    const trimmed = nickname.trim();
+    if (trimmed === '' || trimmed.length > NICKNAME_MAX_LENGTH) {
+      setState('invalid');
+      return;
+    }
+    setState('saving');
+    const outcome = await onSave(trimmed);
+    setState(outcome.ok ? 'saved' : 'failed');
+  };
+
+  return (
+    <Card style={{ gap: spacing.cardGap, padding: spacing.section }} testID="account-nickname-card">
+      <FormField
+        autoCapitalize="words"
+        autoComplete="name"
+        label={t('privacy.nickname.label')}
+        maxLength={NICKNAME_MAX_LENGTH}
+        onChangeText={(next) => {
+          setNickname(next);
+          if (state !== 'saving') setState('idle');
+        }}
+        testID="account-nickname"
+        value={nickname}
+      />
+      <AppButton
+        busy={state === 'saving'}
+        label={t('privacy.nickname.save')}
+        onPress={() => void submit()}
+        testID="account-nickname-save"
+        variant="secondary"
+      />
+      {state === 'saved' ? (
+        <StatusMessage testID="account-nickname-saved" variant="caption">
+          {t('privacy.nickname.saved')}
+        </StatusMessage>
+      ) : null}
+      {state === 'invalid' || state === 'failed' ? (
+        <StatusMessage testID="account-nickname-error" tone="danger" variant="caption">
+          {t(state === 'invalid' ? 'privacy.nickname.invalid' : 'privacy.nickname.saveFailed')}
         </StatusMessage>
       ) : null}
     </Card>

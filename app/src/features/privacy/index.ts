@@ -27,13 +27,30 @@ export {
 
 export { YourDataScreen, type YourDataScreenProps } from './components/your-data-screen';
 
+// The account's own profile, read once and shared by every screen that shows a part of it, the
+// Language screen, and the shell's language follower (ADR-067).
+export { AccountLanguage, type AccountLanguageProps } from './components/account-language';
+export { LanguageScreen, type LanguageScreenProps } from './components/language-screen';
+export { PushRegistration, type PushRegistrationProps } from './components/push-registration';
+export {
+  useAccountProfile,
+  type AccountProfileState,
+  type ProfileApi,
+  type ProfileSave,
+} from './hooks/use-account-profile';
+
 // The team API's account endpoints (ADR-065, the API integration plan's phase 5).
 export {
   AccountReadError,
   createAccountApi,
   parseProfile,
   type AccountApi,
+  ALERT_RADIUS_KM,
   type AccountProfile,
   type DeleteAccountResult,
+  type DeviceRegistration,
+  type PrivacyLevel,
+  type ProfilePatch,
+  type RegisterDeviceResult,
 } from './services/account-api';
-export { appAccountApi } from './services/app-account-api';
+export { appAccountApi, appProfileApi } from './services/app-account-api';

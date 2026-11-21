@@ -9,7 +9,7 @@ import { sessionPort } from '@/services/session';
 
 import { PrivacySettingsScreen } from '../privacy-settings-screen';
 import { installFakeAuthServer } from '@/services/session/testing';
-import { accountProfile } from '../../services/testing';
+import { accountProfile, fakeAccountApi } from '../../services/testing';
 
 /**
  * Content and metrics come from Figma frame `14 · Account and offline · Profile and privacy`
@@ -52,6 +52,68 @@ beforeEach(async () => {
   // The session lives in the process rather than in the storage the tests clear (ADR-028), so
   // every test starts by leaving whatever the last one was holding.
   await sessionPort.signOut();
+});
+
+// Before the main block: its last tests leave the shared store mocked on purpose.
+describe('PrivacySettingsScreen, with the account service (ADR-067)', () => {
+  it('opens the Language screen from the frame’s row once there is one', async () => {
+    const onOpenLanguage = jest.fn();
+    await render(<PrivacySettingsScreen onOpenLanguage={onOpenLanguage} />);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Language, English' }));
+
+    expect(onOpenLanguage).toHaveBeenCalledTimes(1);
+  });
+
+  it('draws the frame’s spot visibility chips at the account’s own level', async () => {
+    await signedIn();
+    await render(
+      <PrivacySettingsScreen
+        accountApi={fakeAccountApi(accountProfile({ privacyLevel: 'shared' }))}
+      />,
+    );
+
+    expect(await screen.findByText('Default spot visibility')).toBeOnTheScreen();
+    expect(screen.getByRole('radio', { name: 'Shared' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Private' })).not.toBeChecked();
+    // The chips say what the level is for, because nothing is shared yet.
+    expect(
+      screen.getByText(
+        'Saved to your account for when sharing arrives. Nothing of yours is shown to anyone yet.',
+      ),
+    ).toBeOnTheScreen();
+  });
+
+  it('saves a new visibility to the account', async () => {
+    await signedIn();
+    const api = fakeAccountApi(accountProfile({ privacyLevel: 'private' }));
+    await render(<PrivacySettingsScreen accountApi={api} />);
+
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Public' }));
+
+    expect(api.updatePrivacy).toHaveBeenCalledWith('public');
+    await waitFor(() => expect(screen.getByRole('radio', { name: 'Public' })).toBeChecked());
+  });
+
+  it('keeps the visibility it had and says so when the save fails', async () => {
+    await signedIn();
+    const api = fakeAccountApi(accountProfile({ privacyLevel: 'private' }));
+    api.updatePrivacy.mockResolvedValueOnce({ ok: false, reason: 'unavailable' });
+    await render(<PrivacySettingsScreen accountApi={api} />);
+
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Public' }));
+
+    expect(
+      await screen.findByText('The visibility could not be saved. Try again.'),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole('radio', { name: 'Private' })).toBeChecked();
+  });
+
+  it('draws no visibility it has not read', async () => {
+    await render(<PrivacySettingsScreen />);
+
+    expect(screen.queryByText('Default spot visibility')).not.toBeOnTheScreen();
+  });
 });
 
 describe('PrivacySettingsScreen', () => {
@@ -411,11 +473,11 @@ describe('PrivacySettingsScreen', () => {
     expect(onOpenTermsPrivacy).toHaveBeenCalledTimes(1);
   });
 
-  it('names the language the app is in, as the reading it is', async () => {
+  it('names the language the app is in, as a reading until there is a screen to open', async () => {
     await render(<PrivacySettingsScreen />);
 
-    // The app follows the device's language and has no picker to open (ADR-017), so the row is
-    // the design's drawing with its value and no control.
+    // Without a destination the row is the design's drawing with its value and no control
+    // (AGENTS.md §11.2); the route hands it the Language screen (ADR-067).
     expect(screen.getByText('Language')).toBeOnTheScreen();
     expect(screen.getByText('English')).toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Language' })).not.toBeOnTheScreen();
