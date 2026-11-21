@@ -1,7 +1,10 @@
 # The API contract — first revision
 
-**Status:** written 2026-10-10, first cut; **status line updated 2026-10-22**. **Nothing
-implements it yet.** The app no longer lives alone: it is `app/` in the team monorepo, whose
+**Status:** written 2026-10-10, first cut; **status line updated 2026-11-21**. **Superseded
+for the app by the served contract:** the app integrates the team API's OpenAPI document at
+`/docs-json` ([ADR-065](adr/ADR-065-the-api-issues-the-credential.md),
+[the integration plan](plans/api-integration-plan.md)). The sharing slice below is still
+unbuilt. The app no longer lives alone: it is `app/` in the team monorepo, whose
 `../../backend/` is a FastAPI modular monolith and whose API convention is `/api/v1`,
 OpenAPI-first, with RFC 9457 problem JSON
 ([`../../docs/architecture.md`](../../docs/architecture.md)). This slice's

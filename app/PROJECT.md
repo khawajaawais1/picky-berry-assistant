@@ -1,5 +1,12 @@
 # PROJECT.md — Picky
 
+> **API integration (2026-11-21):** the app now runs against the team API as served
+> (`https://picky-berry-assistant.vercel.app/api/v1`, [ADR-065](docs/adr/ADR-065-the-api-issues-the-credential.md)):
+> accounts and sessions, zones, zone details, visits, the account's profile, export and deletion,
+> and the offline snapshot. Where this document says no service or backend exists, that predates
+> it. What is built, and what is left with its reason, is in
+> [docs/plans/api-integration-plan.md](docs/plans/api-integration-plan.md).
+
 > **Status:** Initialization approved (2026-10-08); the design is being implemented screen
 > by screen. **Every design frame except 02 has a built screen behind its route** (15–18 as the
 > frames' own disclosed demo), each missing whatever needs a service, a permission or an owner
@@ -2370,7 +2377,9 @@ rest. Recorded as a question rather than decided in code.
 
 ## Deployment
 
-**Test builds only. No store listing, no hosting and no backend environment.**
+**Test builds only. No store listing and no hosting of the app.** The team API is deployed at
+`https://picky-berry-assistant.vercel.app/api/v1` (ADR-065); a build reads it from
+`EXPO_PUBLIC_API_BASE_URL`.
 
 EAS is configured as of 2026-10-21: the project is `@salmanprottoy/picky-mobile-app`
 (`9f7a759d-dde7-423f-b7bf-b9f021e6c036`, linked in `app.json`), `eas.json` carries the three
