@@ -9,6 +9,17 @@ recorded in [docs/adr/](docs/adr/).
 
 ### Added
 
+- Frame 12's alert-preferences card reads and saves the account's search radius and species
+  (`PATCH /me`), through a new app-drawn Alert preferences screen. Quiet hours reads "Not offered
+  yet", because the API has no field for it (ADR-067).
+- Push alerts: the card's switch asks for the notification permission and registers this phone's
+  native token with `POST /me/devices`; the shell re-registers on each start. Turning alerts off
+  opens the phone's settings. Adds `expo-notifications` and its config plugin. Real tokens need
+  the Firebase and APNs configuration in the build.
+- Frame 14's "Default spot visibility" chips save `privacy_level` (`PATCH /me/privacy`).
+- A Language screen behind frame 14's Language row saves the account's language, and the app
+  speaks it while that account is signed in (amends ADR-017).
+- The account's name can be edited on Account & security.
 - Password reset asks the team API (`POST /auth/password-reset`) and says the request was
   accepted, without claiming an email was sent (ADR-065, amended).
 

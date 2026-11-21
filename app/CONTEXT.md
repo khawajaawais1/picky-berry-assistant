@@ -153,6 +153,14 @@ decides whether a credential is valid. A code was the design's credential and is
 sign-in is deferred, so a code survives only as that branch's word.
 _Avoid_: secret, login, hash (the app holds none), code (not v1's credential)
 
+**Push registration**:
+This phone's native push token (FCM on Android, APNs on iOS) handed to the account service, so an
+alert can reach it. It exists only once the picker has allowed alerts in the platform's own
+permission, which is the alerts switch's whole state ([ADR-067](docs/adr/ADR-067-the-account-holds-its-preferences-and-push-registration.md)).
+Nothing of it is kept on the phone.
+_Avoid_: subscription, notification setting (the permission is the platform's), push token alone
+(the token is the platform's; the registration is the account's record of it)
+
 **Refusal**:
 The server reading a request and saying no to it, so that sending it again changes nothing. It is
 one of the three verdicts the API transport gives a failure (`failureVerdict`), beside **retry**

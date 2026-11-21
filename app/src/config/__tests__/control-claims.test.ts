@@ -138,6 +138,16 @@ const LEDGER: readonly LedgerEntry[] = [
     why: 'The back control, drawn only when the route has somewhere to go back to, and the screen title, announced as a heading rather than painted as text (frontend review, 2026-10-25). The heading is a reading, not a control.',
   },
   {
+    file: 'src/features/discover/components/alert-preferences-screen.tsx',
+    offers: { chips: 1 },
+    why: 'The radius chips save `alert_radius_km` with `PATCH /me` and the species chips are the shared `SpeciesChips`; both are drawn only once the account’s profile has been read, and a save the service did not keep is said (ADR-067).',
+  },
+  {
+    file: 'src/features/discover/components/live-alert-preferences.tsx',
+    offers: { pressable: 1, role: 1, switch: 1, textAction: 1 },
+    why: 'Frame 12’s push switch is the platform’s permission: on asks for it and registers this phone, off opens the phone’s settings, and its hint says so; the phone-settings action is drawn only when the permission was refused. The radius and species rows open the Alert preferences screen only when the route supplies it; quiet hours is a reading, because the contract has no field for it (ADR-067).',
+  },
+  {
     file: 'src/features/discover/components/active-visit-screen.tsx',
     offers: { button: 2, role: 2 },
     why: 'Pause and End visit act on the demo visit the screen discloses (demo row A5); the elapsed reading is `role="text"`, so it claims nothing it cannot count.',
@@ -309,13 +319,18 @@ const LEDGER: readonly LedgerEntry[] = [
   },
   {
     file: 'src/features/privacy/components/account-security-screen.tsx',
-    offers: { button: 1, formField: 1, textAction: 1 },
-    why: 'The way back in is drawn when there is no session to carry on with; signing out is the shared `SignOutAction`, which confirms the deletion first (frontend review, 2026-10-25). Deleting the account is a password field and a button, drawn only for a signed-in account when the route can delete it: the password is the confirmation, the button stays disabled until one is typed, and the server checks it (ADR-065).',
+    offers: { button: 2, formField: 2, textAction: 1 },
+    why: 'The way back in is drawn when there is no session to carry on with; signing out is the shared `SignOutAction`, which confirms the deletion first (frontend review, 2026-10-25). Deleting the account is a password field and a button, drawn only for a signed-in account when the route can delete it: the password is the confirmation, the button stays disabled until one is typed, and the server checks it (ADR-065). The name field and its Save button are drawn only once the account service has answered the profile, check the contract’s 1–30 characters before sending, and say the outcome either way (ADR-067).',
+  },
+  {
+    file: 'src/features/privacy/components/language-screen.tsx',
+    offers: { chips: 1 },
+    why: 'The two languages are one radio group, each named in its own words, drawn only for a signed-in account whose profile has been read; the app speaks the choice only once the account has kept it (ADR-067).',
   },
   {
     file: 'src/features/privacy/components/privacy-settings-screen.tsx',
-    offers: { pressable: 1, role: 1, switch: 1 },
-    why: 'The visit-tracking switch writes the consent record, the setting rows are controls only where their route supplies a destination, the language row drops the chevron (ADR-017), and signing out is the shared `SignOutAction`, which confirms the deletion first (frontend review, 2026-10-25).',
+    offers: { chips: 1, pressable: 1, role: 1, switch: 1 },
+    why: 'The visit-tracking switch writes the consent record, the setting rows are controls only where their route supplies a destination (the language row opens the Language screen, ADR-067), and signing out is the shared `SignOutAction`, which confirms the deletion first (frontend review, 2026-10-25). The spot visibility chips save `privacy_level` and are drawn only once the account’s level has been read; their note says nothing is shared yet (ADR-067).',
   },
   {
     file: 'src/features/privacy/components/terms-privacy-screen.tsx',

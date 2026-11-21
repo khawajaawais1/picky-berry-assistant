@@ -247,8 +247,11 @@ new string without a translation fails the typecheck. Screens resolve copy with
 `useTranslation()` and never carry user-visible literals — the rules and the review
 requirement are in ADR-017, the wording itself in `src/services/i18n/locales/`.
 
-The language is chosen by the operating system's per-app language setting; the app
-declares its supported locales in `app.json` and has no language picker of its own.
+The language follows the operating system's per-app language setting, and the app declares
+its supported locales in `app.json`. Since ADR-067 a signed-in account's own language takes its
+place: frame 14's Language row opens a screen that saves `lang` on the account, and the shell's
+`AccountLanguage` makes the app speak it (`setAppLocale`, memory only). A signed-out app follows
+the device.
 Localized app metadata (display name, permission prompts) is not configured yet and
 arrives with the first string that needs it.
 
@@ -335,7 +338,10 @@ data, and media uploads must validate type/size before being persisted.
 
 The team API (`EXPO_PUBLIC_API_BASE_URL`, ADR-065) is the only service the app calls. The stack
 names one more provider, still planned:
-- **Firebase Cloud Messaging** — push delivery for 6.7 (planned; the app sends no token).
+- **Firebase Cloud Messaging / APNs** — push delivery for 6.7. Since ADR-067 the app reads the
+  platform's native token through `expo-notifications` (`src/services/push/`), only once the
+  picker has allowed alerts, and hands it to `POST /me/devices`. The service sends nothing yet,
+  and a build without its Firebase or APNs configuration gets no token.
 - **Protomaps / OpenStreetMap** — the PMTiles basemap the project hosts (ADR-031).
 - **FMI** and **Sentinel-2 (Copernicus)** — weather and NDVI, consumed by `../data/`, never
   by the app.

@@ -105,6 +105,12 @@ Accepted policy (owner decision, 2026-10-08):
 - Push notifications (FCM): payloads are untrusted input; never make a security
   decision in the client because a payload said so. Server-side device-token
   ownership checks are required.
+- The app (ADR-067) reads the native token only after the picker allowed alerts,
+  sends it only to the team API's `POST /me/devices` over the authenticated
+  transport, and stores and logs nothing of it. The permission is asked only from
+  the alerts switch, and turning alerts off is the platform's own setting. There is
+  no device `DELETE` yet, so signing out leaves the token registered until the
+  account is deleted — a backend follow-up.
 
 ## 9. Credentials, secrets and storage
 

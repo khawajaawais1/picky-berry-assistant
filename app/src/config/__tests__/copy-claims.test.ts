@@ -201,7 +201,11 @@ const FAMILIES: readonly Family[] = [
     recorded: [
       {
         key: 'discover.alert.preferences.push',
-        why: 'The design’s own sample switch, with the card saying nothing reads it and the switch carrying no role (demo row A17, ADR-043).',
+        why: 'The design’s own sample switch, with the card saying nothing reads it and the switch carrying no role (demo row A17, ADR-043). With the account service it is the platform’s own permission, and the card says the service sends no alert yet (ADR-067).',
+      },
+      {
+        key: 'discover.alert.push.unsupported',
+        why: 'Says this build cannot receive one — a claim of absence, true of the web build and drawn in place of the switch (ADR-067).',
       },
     ],
   },
