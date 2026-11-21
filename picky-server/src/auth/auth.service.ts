@@ -10,6 +10,10 @@ import { PoolClient, QueryResultRow } from 'pg';
 import { createHash, randomBytes } from 'node:crypto';
 import { UserRole } from '../common/decorators/roles.decorator';
 import { DbService } from '../db/db.service';
+import {
+  ConfirmPasswordResetDto,
+  RequestPasswordResetDto,
+} from './dto/password-reset.dto';
 import { DeleteAccountDto } from './dto/delete-account.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -155,7 +159,7 @@ export class AuthService {
 
     const baseUrl = this.config.get<string>(
       'APP_PUBLIC_URL',
-      'http://localhost:3000',
+      'http://localhost:8081',
     );
     const verificationUrl = new URL('/verify-email', baseUrl);
     verificationUrl.searchParams.set('token', verificationToken);
@@ -279,6 +283,111 @@ export class AuthService {
       await client.query(
         'UPDATE users SET email_verified_at = now() WHERE id = $1',
         [token.rows[0].user_id],
+      );
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Starts a password reset (OWASP Forgot Password Cheat Sheet). It answers the same whether or
+   * not the address has an account, so the endpoint cannot be used to learn which do. For an
+   * account, earlier unused reset tokens are retired and a new one is stored as a SHA-256 hash,
+   * valid for an hour; only the link mailed to the address carries the token itself.
+   */
+  async requestPasswordReset(input: RequestPasswordResetDto): Promise<void> {
+    const email = input.email.trim().toLowerCase();
+    const client = await this.database.pool.connect();
+    let resetToken: string | null = null;
+    let account: { id: string; email: string } | undefined;
+    try {
+      await client.query('BEGIN');
+      const found = await client.query<{ id: string; email: string }>(
+        `SELECT id, email FROM users
+         WHERE lower(email) = $1 AND deleted_at IS NULL`,
+        [email],
+      );
+      account = found.rows[0];
+      if (account) {
+        await client.query(
+          `UPDATE email_tokens SET used_at = now()
+           WHERE user_id = $1 AND purpose = 'reset_password' AND used_at IS NULL`,
+          [account.id],
+        );
+        resetToken = randomBytes(32).toString('base64url');
+        await client.query(
+          `INSERT INTO email_tokens (user_id, purpose, token_hash, expires_at)
+           VALUES ($1, 'reset_password', $2, now() + interval '1 hour')`,
+          [account.id, tokenHash(resetToken)],
+        );
+      }
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+
+    if (account && resetToken) {
+      const baseUrl = this.config.get<string>(
+        'APP_PUBLIC_URL',
+        'http://localhost:8081',
+      );
+      const resetUrl = new URL('/reset-password', baseUrl);
+      resetUrl.searchParams.set('token', resetToken);
+      this.mail.sendPasswordReset(
+        account.id,
+        account.email,
+        resetUrl.toString(),
+      );
+    }
+  }
+
+  /**
+   * Completes a password reset: the token must be an unused, unexpired reset token. The new
+   * password is hashed, the token is spent, and every refresh token is revoked, so each device
+   * has to sign in again with the new password.
+   */
+  async confirmPasswordReset(input: ConfirmPasswordResetDto): Promise<void> {
+    const client = await this.database.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const token = await client.query<{ id: string; user_id: string }>(
+        `SELECT et.id, et.user_id
+         FROM email_tokens et
+         JOIN users u ON u.id = et.user_id
+         WHERE et.token_hash = $1 AND et.purpose = 'reset_password'
+           AND et.used_at IS NULL AND et.expires_at > now()
+           AND u.deleted_at IS NULL
+         FOR UPDATE OF et`,
+        [tokenHash(input.token)],
+      );
+      const row = token.rows[0];
+      if (!row) {
+        throw new UnprocessableEntityException({
+          error: 'INVALID_RESET_TOKEN',
+          message: 'Reset token is invalid or expired.',
+        });
+      }
+      const passwordHash = await this.passwords.hash(input.password);
+      await client.query('UPDATE users SET password_hash = $2 WHERE id = $1', [
+        row.user_id,
+        passwordHash,
+      ]);
+      await client.query(
+        `UPDATE email_tokens SET used_at = now()
+         WHERE user_id = $1 AND purpose = 'reset_password' AND used_at IS NULL`,
+        [row.user_id],
+      );
+      await client.query(
+        `UPDATE refresh_tokens SET revoked_at = now()
+         WHERE user_id = $1 AND revoked_at IS NULL`,
+        [row.user_id],
       );
       await client.query('COMMIT');
     } catch (error) {
