@@ -36,7 +36,9 @@ python3.11 -m venv .venv && .venv/bin/pip install -e ".[dev]"
 ## Reading it from the backend
 `backend/app/modules/reasoning/` is the only reader, and the request path never runs a rule:
 
-* `graph.py` — `load_ontology()` parses `bpa.ttl` + `species.ttl` once; `add_zone_rows()` maps one
+* `lifespan.py` — `ontology_lifespan` parses `bpa.ttl` + `species.ttl` once, at app startup, and
+  keeps the graph on `app.state.ontology_graph` for every run after it.
+* `graph.py` — `load_ontology()` parses the two Turtle files; `add_zone_rows()` maps one
   run's zone × species rows (`zones` ⋈ `zone_scores_current` ⋈ `zone_species`) to
   `bpa:Zone`/`bpa:SpeciesAssessment` triples, and refuses a species or ripeness the graph cannot
   name before anything is written.
