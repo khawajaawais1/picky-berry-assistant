@@ -84,7 +84,7 @@ Pin exact versions in the first PR (`package.json`, `.nvmrc`) and do not upgrade
 | DB types | `kysely-codegen` generates `src/db/db.types.ts` from the live schema |
 | Migrations | `node-pg-migrate` with plain `.sql` files |
 | Validation | `class-validator` + `class-transformer` (global `ValidationPipe`, `whitelist: true`, `transform: true`) |
-| OpenAPI | `docs/openapi/*.yaml` are the source of truth; `@nestjs/swagger` UI is available at `/docs` in all environments |
+| OpenAPI | `docs/openapi/*.yaml` are the source of truth; Swagger UI is available at `/docs` in all environments, with assets loaded from pinned jsDelivr and the merged contract at `/docs-json` |
 | H3 helpers | `h3-js` (for parent hexagon outlines; **do not rely on the `h3-pg` extension**, Supabase does not provide it as far as we know) |
 | Auth | `@nestjs/jwt` (verify only), global guard, roles decorator |
 | Security | `helmet`, CORS allow-list, `@nestjs/throttler` |

@@ -8,6 +8,9 @@ info:
   description: Read-only zone scores and scoring-job enqueue API for feature 6.2.
 servers:
   - url: /api/v1
+    description: Current host (local or deployed)
+  - url: https://picky-berry-assistant.vercel.app/api/v1
+    description: Production
 security:
   - bearerAuth: []
 paths:
