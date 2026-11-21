@@ -8,7 +8,8 @@ import type { ZonePolygon } from '@/features/visits/domain/zone-containment';
 import type { VisitsApi } from '@/features/visits/services/visits-api';
 import { clearVisitSession } from '@/features/visits/hooks/use-visit-session';
 
-import ActiveVisitRoute from '../active-visit';
+// The route under test: it lives in `src/app`, where every file is a route, so its test lives here.
+import ActiveVisitRoute from '@/app/(app)/active-visit';
 
 const mockReplace = jest.fn();
 
