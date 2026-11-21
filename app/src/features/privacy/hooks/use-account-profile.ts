@@ -74,6 +74,7 @@ function load(api: ProfileApi, store: Store, accountId: string) {
 }
 
 const NO_STORE: Store = { entry: null, listeners: new Set() };
+const readNoEntry = (): Entry | null => null;
 const noSubscription = () => () => undefined;
 const UNAVAILABLE: ProfileSave = { ok: false, reason: 'unavailable' };
 
@@ -91,7 +92,8 @@ export function useAccountProfile(
     },
     [store],
   );
-  const entry = useSyncExternalStore(subscribe, () => store.entry);
+  // A static web render has read no profile: its snapshot is none.
+  const entry = useSyncExternalStore(subscribe, () => store.entry, readNoEntry);
 
   useEffect(() => {
     if (api && accountId !== null) load(api, store, accountId);

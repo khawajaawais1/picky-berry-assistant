@@ -92,6 +92,7 @@ function subscribeAppLocale(listener: () => void) {
 }
 
 const readAppLocale = () => appLocale;
+const readNoAppLocale = () => null;
 
 /**
  * The hook screens use: the account's language when one is set, otherwise the device's, and a
@@ -99,7 +100,8 @@ const readAppLocale = () => appLocale;
  */
 export function useTranslation(): Translation {
   const locales = useLocales();
-  const chosen = useSyncExternalStore(subscribeAppLocale, readAppLocale);
+  // The server snapshot is the device's answer: a static web render has no account yet.
+  const chosen = useSyncExternalStore(subscribeAppLocale, readAppLocale, readNoAppLocale);
   const locale =
     chosen ?? resolveLocale(locales.map((entry) => entry.languageTag ?? entry.languageCode));
 
