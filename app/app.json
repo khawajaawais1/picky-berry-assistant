@@ -58,8 +58,7 @@
         }
       ],
       "@maplibre/maplibre-react-native",
-      "expo-sqlite",
-      "expo-secure-store"
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,
