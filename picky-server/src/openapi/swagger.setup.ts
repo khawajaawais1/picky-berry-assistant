@@ -1,40 +1,19 @@
 import { INestApplication } from '@nestjs/common';
 import { OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { load } from 'js-yaml';
 
-const contractFiles = ['zones.yaml', 'auth.yaml', 'visits.yaml'];
-
-function findOpenApiDirectory(): string {
-  const directories = [
-    resolve(process.cwd(), 'docs', 'openapi'),
-    resolve(__dirname, '..', 'docs', 'openapi'),
-    resolve(__dirname, '..', '..', 'docs', 'openapi'),
-    resolve(process.cwd(), 'picky-server', 'docs', 'openapi'),
-  ];
-  const directory = directories.find((candidate) =>
-    contractFiles.every((fileName) => existsSync(resolve(candidate, fileName))),
-  );
-  if (!directory) {
-    throw new Error(
-      `OpenAPI contracts not found. Checked: ${directories.join(', ')}`,
-    );
-  }
-  return directory;
-}
-
 export function setupSwagger(app: INestApplication): void {
-  const openApiDirectory = findOpenApiDirectory();
-  const [zones, auth, visits] = contractFiles.map(
-    (fileName) =>
-      load(readFileSync(resolve(openApiDirectory, fileName), 'utf8')) as
-        | OpenAPIObject
-        | undefined,
-  );
-  if (!zones || !auth || !visits) {
-    throw new Error('Unable to load OpenAPI contracts for Swagger UI.');
-  }
+  const zones = load(
+    readFileSync(resolve(__dirname, '../../docs/openapi/zones.yaml'), 'utf8'),
+  ) as OpenAPIObject;
+  const auth = load(
+    readFileSync(resolve(__dirname, '../../docs/openapi/auth.yaml'), 'utf8'),
+  ) as OpenAPIObject;
+  const visits = load(
+    readFileSync(resolve(__dirname, '../../docs/openapi/visits.yaml'), 'utf8'),
+  ) as OpenAPIObject;
 
   const contract: OpenAPIObject = {
     ...zones,
