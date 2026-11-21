@@ -12,11 +12,17 @@ import { useReportQueue } from '@/hooks/use-report-queue';
 import { useSavedZones } from '@/hooks/use-saved-zones';
 import { useSession } from '@/hooks/use-session';
 import { interpolate, useTranslation } from '@/services/i18n';
-import { identifierKind } from '@/utils/identifier';
 
 import { profileInitials } from '../domain/profile';
+import { useVerificationLine } from '../hooks/use-verification-line';
+import type { AccountApi } from '../services/account-api';
 
 export type PrivacySettingsScreenProps = {
+  /**
+   * The account service (ADR-065). With it, the account row's verification line is what
+   * `GET /me` says rather than a claim drawn from the identifier.
+   */
+  accountApi?: Pick<AccountApi, 'profile'>;
   onBack?: () => void;
   /**
    * Opens the list of the zones the picker saved (`src/app/saved-spots.tsx`) — the frame's
@@ -96,6 +102,7 @@ export type PrivacySettingsScreenProps = {
  *   when the screen was pushed onto a stack, so a deep link has no control that cannot act.
  */
 export function PrivacySettingsScreen({
+  accountApi,
   onBack,
   onOpenAccountSecurity,
   onOpenSavedSpots,
@@ -139,13 +146,7 @@ export function PrivacySettingsScreen({
           ),
           { count: savedSpotsCount },
         );
-  const verified = session
-    ? t(
-        identifierKind(session.accountId) === 'email'
-          ? 'privacy.account.verifiedEmail'
-          : 'privacy.account.verifiedPhone',
-      )
-    : '';
+  const verified = useVerificationLine(session, accountApi);
   // A returning account carries no name: it is the account service's answer, and no service
   // exists yet (ADR-038). The row then names the account by its identifier — the only thing the
   // app knows about it — and the line under it carries the verification claim alone, rather than

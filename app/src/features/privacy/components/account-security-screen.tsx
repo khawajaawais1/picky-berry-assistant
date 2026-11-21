@@ -1,10 +1,12 @@
 import { Feather } from '@/components/atoms/app-icon';
+import { useState } from 'react';
 import { View } from 'react-native';
 
-import { AppText } from '@/components/atoms';
+import { AppButton, AppText } from '@/components/atoms';
 import {
   Callout,
   Card,
+  FormField,
   InfoRow,
   SignOutAction,
   StatusMessage,
@@ -15,11 +17,19 @@ import { layout, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useSession } from '@/hooks/use-session';
 import { interpolate, useTranslation } from '@/services/i18n';
-import { identifierKind } from '@/utils/identifier';
 
 import { profileInitials } from '../domain/profile';
+import { useVerificationLine } from '../hooks/use-verification-line';
+import type { DeleteAccountOutcome } from '@/services/delete-account';
+
+import type { AccountApi } from '../services/account-api';
 
 export type AccountSecurityScreenProps = {
+  /**
+   * The account service (ADR-065). With it, the account row's verification line is what
+   * `GET /me` says rather than a claim drawn from the identifier.
+   */
+  accountApi?: Pick<AccountApi, 'profile'>;
   onBack?: () => void;
   /**
    * Opens the sign-in screen — the way back in when the session the app was holding has run out
@@ -33,6 +43,12 @@ export type AccountSecurityScreenProps = {
    * claiming the account is gone, and the caller decides where the user goes afterwards.
    */
   onSignOut?: () => Promise<void>;
+  /**
+   * Deletes the account at the service with its password (`DELETE /me`, ADR-065). The route
+   * composes it with the device clean-up sign-out does, and leaves the screen once it answers
+   * `ok`. Without it, deletion is not offered.
+   */
+  onDeleteAccount?: (password: string) => Promise<DeleteAccountOutcome>;
 };
 
 /**
@@ -63,7 +79,13 @@ export type AccountSecurityScreenProps = {
  * service refuses to renew it. Either way `current()` answers nobody, and the screen says so and
  * offers the way back in.
  */
-export function AccountSecurityScreen({ onBack, onSignIn, onSignOut }: AccountSecurityScreenProps) {
+export function AccountSecurityScreen({
+  accountApi,
+  onBack,
+  onSignIn,
+  onSignOut,
+  onDeleteAccount,
+}: AccountSecurityScreenProps) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
   const { error: sessionError, loading, session } = useSession();
@@ -72,13 +94,7 @@ export function AccountSecurityScreen({ onBack, onSignIn, onSignOut }: AccountSe
   // to go — offers the way in, exactly as the ended state does.
   const noSession = !loading && session === null && !sessionError;
 
-  const verified = session
-    ? t(
-        identifierKind(session.accountId) === 'email'
-          ? 'privacy.account.verifiedEmail'
-          : 'privacy.account.verifiedPhone',
-      )
-    : '';
+  const verified = useVerificationLine(session, accountApi);
   // A returning account carries no name: it is the account service's answer, and no service exists
   // yet (ADR-038). The row then names the account by its identifier — the only thing the app knows
   // about it — and the line under it carries the verification claim alone, rather than printing the
@@ -202,10 +218,86 @@ export function AccountSecurityScreen({ onBack, onSignIn, onSignOut }: AccountSe
           {t('privacy.accountSecurity.signOut.note')}
         </AppText>
 
+        {!loading && session && onDeleteAccount ? (
+          <DeleteAccount onDeleteAccount={onDeleteAccount} />
+        ) : null}
+
         {onSignOut ? (
           <SignOutAction onSignOut={onSignOut} testID="account-security-sign-out" />
         ) : null}
       </View>
     </Screen>
+  );
+}
+
+const DELETE_REFUSAL_KEY = {
+  refused: 'privacy.accountSecurity.delete.refused',
+  unavailable: 'privacy.accountSecurity.delete.unavailable',
+  'device-not-cleared': 'privacy.accountSecurity.delete.deviceNotCleared',
+} as const;
+
+/**
+ * Deleting the account at the service (ADR-065). The password is the confirmation: the action
+ * stays disabled until one is typed, and the server checks it. Every refusal says that nothing
+ * was deleted, because that is the fact the user needs after a press that could not be undone.
+ */
+function DeleteAccount({
+  onDeleteAccount,
+}: {
+  onDeleteAccount: (password: string) => Promise<DeleteAccountOutcome>;
+}) {
+  const { t } = useTranslation();
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [refusal, setRefusal] = useState<'refused' | 'unavailable' | 'device-not-cleared' | null>(
+    null,
+  );
+
+  const submit = async () => {
+    if (busy || password === '') return;
+    setBusy(true);
+    setRefusal(null);
+
+    try {
+      const result = await onDeleteAccount(password);
+      if (!result.ok) setRefusal(result.reason);
+    } catch {
+      setRefusal('unavailable');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card style={{ gap: spacing.cardGap, padding: spacing.section }} testID="account-delete-card">
+      <AppText style={{ fontWeight: '600' }} variant="cardTitle">
+        {t('privacy.accountSecurity.delete.title')}
+      </AppText>
+      <AppText tone="muted" variant="bodySmall">
+        {t('privacy.accountSecurity.delete.body')}
+      </AppText>
+      <FormField
+        autoCapitalize="none"
+        autoComplete="current-password"
+        label={t('privacy.accountSecurity.delete.password')}
+        onChangeText={setPassword}
+        secureTextEntry
+        testID="account-delete-password"
+        value={password}
+      />
+      <AppButton
+        busy={busy}
+        disabled={password === ''}
+        label={t('privacy.accountSecurity.delete.action')}
+        onPress={() => void submit()}
+        testID="account-delete-action"
+        variant="secondary"
+      />
+      {refusal ? (
+        <StatusMessage testID="account-delete-refused" tone="danger" variant="bodySmall">
+          {t(DELETE_REFUSAL_KEY[refusal])}
+        </StatusMessage>
+      ) : null}
+    </Card>
   );
 }

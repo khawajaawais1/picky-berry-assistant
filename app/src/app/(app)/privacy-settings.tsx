@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 
-import { PrivacySettingsScreen } from '@/features/privacy';
+import { appAccountApi, PrivacySettingsScreen } from '@/features/privacy';
 import { signOut } from '@/services/sign-out';
 
 /**
@@ -29,6 +29,7 @@ import { signOut } from '@/services/sign-out';
 export default function PrivacySettingsRoute() {
   return (
     <PrivacySettingsScreen
+      accountApi={appAccountApi}
       onOpenAccountSecurity={() => router.push('/account-security')}
       onOpenSavedSpots={() => router.push('/saved-spots')}
       onOpenSync={() => router.push('/downloads')}

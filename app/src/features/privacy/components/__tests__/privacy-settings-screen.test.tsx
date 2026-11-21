@@ -491,3 +491,54 @@ describe('PrivacySettingsScreen', () => {
     }
   });
 });
+
+/**
+ * The account row's verification line, read from the account service when the route supplies it
+ * (ADR-065, the plan's phase 5): `GET /me` says whether the address is verified, so the row no
+ * longer claims it without asking.
+ */
+describe('PrivacySettingsScreen, with the account service', () => {
+  const profile = (emailVerified: boolean) => async () => ({
+    email: 'aino@example.fi',
+    emailVerified,
+    nickname: 'Aino Korhonen',
+    lang: 'en' as const,
+  });
+
+  async function signedUp() {
+    await sessionPort.register({
+      displayName: 'Aino Korhonen',
+      email: 'aino@example.fi',
+      password: 'berries1234',
+      lang: 'en',
+      consents: {},
+    });
+  }
+
+  it('says the address is not verified yet when the service says so', async () => {
+    await signedUp();
+
+    await render(<PrivacySettingsScreen accountApi={{ profile: profile(false) }} />);
+
+    expect(await screen.findByText('aino@example.fi · Email not verified yet')).toBeOnTheScreen();
+  });
+
+  it('says the address is verified when the service says so', async () => {
+    await signedUp();
+
+    await render(<PrivacySettingsScreen accountApi={{ profile: profile(true) }} />);
+
+    expect(await screen.findByText('aino@example.fi · Email verified')).toBeOnTheScreen();
+  });
+
+  it('claims no verification while the service has not answered', async () => {
+    await signedUp();
+
+    await render(
+      <PrivacySettingsScreen accountApi={{ profile: () => new Promise(() => undefined) }} />,
+    );
+
+    expect(await screen.findByTestId('privacy-account-row')).toBeOnTheScreen();
+    expect(screen.queryByText(/verified/)).not.toBeOnTheScreen();
+  });
+});

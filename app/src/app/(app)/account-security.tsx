@@ -1,6 +1,7 @@
 import { router, useCanGoBack } from 'expo-router';
 
-import { AccountSecurityScreen } from '@/features/privacy';
+import { AccountSecurityScreen, appAccountApi } from '@/features/privacy';
+import { deleteAccountEverywhere } from '@/services/delete-account';
 import { signOut } from '@/services/sign-out';
 
 /**
@@ -30,6 +31,15 @@ export default function AccountSecurityRoute() {
     <AccountSecurityScreen
       onBack={canGoBack ? () => router.back() : undefined}
       onSignIn={() => router.push('/sign-in')}
+      accountApi={appAccountApi}
+      onDeleteAccount={async (password) => {
+        const outcome = await deleteAccountEverywhere(password, {
+          deleteAtService: (entered) => appAccountApi.deleteAccount(entered),
+          clearDevice: signOut,
+        });
+        if (outcome.ok) router.replace('/');
+        return outcome;
+      }}
       onSignOut={async () => {
         await signOut();
         router.replace('/');

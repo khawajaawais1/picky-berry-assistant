@@ -26,3 +26,14 @@ export {
 } from './components/terms-privacy-screen';
 
 export { YourDataScreen, type YourDataScreenProps } from './components/your-data-screen';
+
+// The team API's account endpoints (ADR-065, the API integration plan's phase 5).
+export {
+  AccountReadError,
+  createAccountApi,
+  parseProfile,
+  type AccountApi,
+  type AccountProfile,
+  type DeleteAccountResult,
+} from './services/account-api';
+export { appAccountApi } from './services/app-account-api';

@@ -207,3 +207,49 @@ describe('YourDataScreen', () => {
     ).not.toBeOnTheScreen();
   });
 });
+
+/**
+ * The account service's own copy (ADR-065, the plan's phase 5): `POST /me/export` holds what the
+ * service keeps about the account, which is more than this phone holds. The screen hands it to
+ * the same share sheet as the device's copy.
+ */
+describe('YourDataScreen, with the account service', () => {
+  const EXPORT = '{\n  "profile": {}\n}';
+
+  it('hands the service’s copy to the share sheet under its own title', async () => {
+    const onShare = jest.fn(async () => 'shared' as const);
+    const exportData = jest.fn(async () => EXPORT);
+
+    await render(<YourDataScreen accountApi={{ exportData }} onShare={onShare} />);
+    expect(await screen.findByText('The account service’s copy')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByTestId('your-data-service-share'));
+
+    await waitFor(() => expect(onShare).toHaveBeenCalledWith(EXPORT, 'Picky account service data'));
+    expect(await screen.findByTestId('your-data-service-outcome')).toHaveTextContent(
+      'The copy was handed to the share sheet.',
+    );
+  });
+
+  it('says so when the service could not hand its copy over, and opens no sheet', async () => {
+    const onShare = jest.fn(async () => 'shared' as const);
+
+    await render(
+      <YourDataScreen
+        accountApi={{ exportData: async () => Promise.reject(new Error('offline')) }}
+        onShare={onShare}
+      />,
+    );
+    await fireEvent.press(await screen.findByTestId('your-data-service-share'));
+
+    expect(
+      await screen.findByText('The account service could not hand over its copy. Try again.'),
+    ).toBeOnTheScreen();
+    expect(onShare).not.toHaveBeenCalled();
+  });
+
+  it('draws no service copy without the account service', async () => {
+    await render(<YourDataScreen onShare={async () => 'shared'} />);
+
+    expect(screen.queryByTestId('your-data-service-share')).not.toBeOnTheScreen();
+  });
+});

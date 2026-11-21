@@ -117,9 +117,7 @@ describe('AccountSecurityScreen', () => {
 
     expect(screen.getByText('Not here yet')).toBeOnTheScreen();
     expect(
-      screen.getByText(
-        'Your name and email address cannot be changed in the app yet, and the account cannot be deleted from here yet.',
-      ),
+      screen.getByText('Your name and email address cannot be changed in the app yet.'),
     ).toBeOnTheScreen();
     expect(
       screen.getByText('There is no list of your devices and no second session to end.'),
@@ -229,5 +227,116 @@ describe('AccountSecurityScreen, with no session', () => {
     // A control that cannot act claims no role (AGENTS.md §11.2), and the sentence above it still
     // says what the state is.
     expect(screen.queryByRole('button', { name: 'Sign in' })).not.toBeOnTheScreen();
+  });
+});
+
+/**
+ * The account row's verification line, read from the account service when the route supplies it
+ * (ADR-065, the plan's phase 5): `GET /me` says whether the address is verified, so the row no
+ * longer claims it without asking.
+ */
+describe('AccountSecurityScreen, with the account service', () => {
+  const profile = (emailVerified: boolean) => async () => ({
+    email: 'aino@example.fi',
+    emailVerified,
+    nickname: 'Aino Korhonen',
+    lang: 'en' as const,
+  });
+
+  async function signedUp() {
+    await sessionPort.register({
+      displayName: 'Aino Korhonen',
+      email: 'aino@example.fi',
+      password: 'berries1234',
+      lang: 'en',
+      consents: {},
+    });
+  }
+
+  it('says the address is not verified yet when the service says so', async () => {
+    await signedUp();
+
+    await render(<AccountSecurityScreen accountApi={{ profile: profile(false) }} />);
+
+    expect(await screen.findByText('aino@example.fi · Email not verified yet')).toBeOnTheScreen();
+  });
+
+  it('says the address is verified when the service says so', async () => {
+    await signedUp();
+
+    await render(<AccountSecurityScreen accountApi={{ profile: profile(true) }} />);
+
+    expect(await screen.findByText('aino@example.fi · Email verified')).toBeOnTheScreen();
+  });
+
+  it('claims no verification while the service has not answered', async () => {
+    await signedUp();
+
+    await render(
+      <AccountSecurityScreen accountApi={{ profile: () => new Promise(() => undefined) }} />,
+    );
+
+    expect(await screen.findByTestId('account-security-row')).toBeOnTheScreen();
+    expect(screen.queryByText(/verified/)).not.toBeOnTheScreen();
+  });
+});
+
+/**
+ * Deleting the account (ADR-065, the plan's phase 5): `DELETE /me` with the account's password,
+ * which the server checks. The password is the confirmation, so nothing is deleted by one press.
+ * The route clears the device and leaves the screen once the service has deleted the account.
+ */
+describe('AccountSecurityScreen, deleting the account', () => {
+  async function signedUp() {
+    await sessionPort.register({
+      displayName: 'Aino Korhonen',
+      email: 'aino@example.fi',
+      password: 'berries1234',
+      lang: 'en',
+      consents: {},
+    });
+  }
+
+  it('offers deletion only for a signed-in account and a route that can delete it', async () => {
+    await render(<AccountSecurityScreen onDeleteAccount={async () => ({ ok: true })} />);
+    await screen.findByTestId('account-security-none');
+    expect(screen.queryByTestId('account-delete-action')).not.toBeOnTheScreen();
+
+    await signedUp();
+    await render(<AccountSecurityScreen />);
+    await screen.findByTestId('account-security-row');
+    expect(screen.queryByTestId('account-delete-action')).not.toBeOnTheScreen();
+  });
+
+  it('asks for the password before it will delete anything', async () => {
+    await signedUp();
+    const onDeleteAccount = jest.fn(async () => ({ ok: true }) as const);
+
+    await render(<AccountSecurityScreen onDeleteAccount={onDeleteAccount} />);
+
+    expect(await screen.findByText('Delete account')).toBeOnTheScreen();
+    expect(screen.getByTestId('account-delete-action')).toBeDisabled();
+
+    await fireEvent.changeText(screen.getByTestId('account-delete-password'), 'berries1234');
+    await fireEvent.press(screen.getByTestId('account-delete-action'));
+
+    await waitFor(() => expect(onDeleteAccount).toHaveBeenCalledWith('berries1234'));
+  });
+
+  it.each<['refused' | 'unavailable' | 'device-not-cleared', string]>([
+    ['refused', 'That password didn’t match. Nothing was deleted.'],
+    ['unavailable', 'The account service could not answer. Nothing was deleted.'],
+    [
+      'device-not-cleared',
+      'The account was deleted, but this phone could not clear its records. Sign out to try again.',
+    ],
+  ])('says what happened when deleting answers %s', async (reason, sentence) => {
+    await signedUp();
+
+    await render(<AccountSecurityScreen onDeleteAccount={async () => ({ ok: false, reason })} />);
+    await fireEvent.changeText(await screen.findByTestId('account-delete-password'), 'x');
+    await fireEvent.press(screen.getByTestId('account-delete-action'));
+
+    expect(await screen.findByText(sentence)).toBeOnTheScreen();
   });
 });

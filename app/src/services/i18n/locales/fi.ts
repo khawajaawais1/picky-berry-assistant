@@ -488,6 +488,7 @@ export const fi: Record<TranslationKey, string> = {
   'privacy.account.line': '{identifier} · {verified}',
   'privacy.account.readFailed': 'Tiliäsi ei voitu lukea.',
   'privacy.account.verifiedEmail': 'Sähköposti vahvistettu',
+  'privacy.account.unverifiedEmail': 'Sähköpostia ei ole vielä vahvistettu',
   'privacy.account.verifiedPhone': 'Puhelin vahvistettu',
   // “Käytä Pickyä” is the frame's “Use Picky as”; the chips are its answer in the essive, the case
   // a Finnish reader expects under a heading that asks what the app is used as.
@@ -551,8 +552,18 @@ export const fi: Record<TranslationKey, string> = {
     'Uloskirjautuminen ilmoittaa myös tilipalvelulle, joten istuntoa ei voi enää uusia.',
   'privacy.accountSecurity.absent.title': 'Ei vielä täällä',
   'privacy.accountSecurity.absent.service':
-    'Nimeäsi ja sähköpostiosoitettasi ei voi vielä muuttaa sovelluksessa, eikä tiliä voi vielä poistaa täältä.',
+    'Nimeäsi ja sähköpostiosoitettasi ei voi vielä muuttaa sovelluksessa.',
   'privacy.accountSecurity.absent.devices': 'Laitelistaa ei ole, eikä toista istuntoa voi päättää.',
+  // Deleting the account at the service (ADR-065, the API plan's phase 5).
+  'privacy.accountSecurity.delete.title': 'Poista tili',
+  'privacy.accountSecurity.delete.body':
+    'Tämä poistaa tilin Pickyn tilipalvelusta ja anonymisoi sen käynnit ja raportit. Tätä ei voi perua. Vahvista syöttämällä salasanasi.',
+  'privacy.accountSecurity.delete.password': 'Salasana',
+  'privacy.accountSecurity.delete.action': 'Poista tili pysyvästi',
+  'privacy.accountSecurity.delete.refused': 'Salasana ei täsmännyt. Mitään ei poistettu.',
+  'privacy.accountSecurity.delete.unavailable': 'Tilipalvelu ei vastannut. Mitään ei poistettu.',
+  'privacy.accountSecurity.delete.deviceNotCleared':
+    'Tili poistettiin, mutta puhelin ei voinut tyhjentää tietojaan. Kirjaudu ulos ja yritä uudelleen.',
   'privacy.accountSecurity.signOut.note':
     'Uloskirjautuminen poistaa tältä puhelimelta käyntien seurannan suostumuksen, tallennetut paikat ja jonossa olevat raportit ja pudottaa sitten istunnon.',
 
@@ -626,6 +637,13 @@ export const fi: Record<TranslationKey, string> = {
   'privacy.export.share.noteTitle': 'Minne kopio menee',
   'privacy.export.share.note':
     'Laitteen oma jakovalikko avautuu, ja sinä valitset, minne kopio menee. Sovellus ei lähetä mitään itse.',
+  // The account service's own copy (ADR-065, the API plan's phase 5).
+  'privacy.export.service.title': 'Tilipalvelun kopio',
+  'privacy.export.service.body':
+    'Pickyn tilipalvelu säilyttää profiilisi, suostumuksesi, käyntisi ja raporttisi. Tämä kopio tulee suoraan siltä.',
+  'privacy.export.service.label': 'Jaa palvelun kopio',
+  'privacy.export.service.sheetTitle': 'Pickyn tilipalvelun tiedot',
+  'privacy.export.service.failed': 'Tilipalvelu ei voinut luovuttaa kopiotaan. Yritä uudelleen.',
   'privacy.export.share.shared': 'Kopio luovutettiin jakovalikkoon.',
   'privacy.export.share.dismissed': 'Jakovalikko suljettiin valitsematta kohdetta.',
   'privacy.export.share.failed': 'Kopiota ei voitu luovuttaa.',

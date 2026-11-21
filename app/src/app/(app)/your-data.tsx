@@ -1,6 +1,6 @@
 import { router, useCanGoBack } from 'expo-router';
 
-import { YourDataScreen } from '@/features/privacy';
+import { appAccountApi, YourDataScreen } from '@/features/privacy';
 import { shareText } from '@/services/share-text';
 
 /**
@@ -21,6 +21,10 @@ export default function YourDataRoute() {
   const canGoBack = useCanGoBack();
 
   return (
-    <YourDataScreen onBack={canGoBack ? () => router.back() : undefined} onShare={shareText} />
+    <YourDataScreen
+      accountApi={appAccountApi}
+      onBack={canGoBack ? () => router.back() : undefined}
+      onShare={shareText}
+    />
   );
 }

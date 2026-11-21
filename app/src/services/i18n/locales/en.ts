@@ -572,6 +572,7 @@ export const en = {
   'privacy.account.line': '{identifier} · {verified}',
   'privacy.account.readFailed': 'Your account could not be read.',
   'privacy.account.verifiedEmail': 'Email verified',
+  'privacy.account.unverifiedEmail': 'Email not verified yet',
   'privacy.account.verifiedPhone': 'Phone verified',
   // Frame 14's “Use Picky as” card: the app's one real role, and the design's own note that
   // buying is not one of them (CONTEXT.md, **Buyer**).
@@ -647,9 +648,20 @@ export const en = {
     'Signing out tells the account service too, so the session cannot be renewed.',
   'privacy.accountSecurity.absent.title': 'Not here yet',
   'privacy.accountSecurity.absent.service':
-    'Your name and email address cannot be changed in the app yet, and the account cannot be deleted from here yet.',
+    'Your name and email address cannot be changed in the app yet.',
   'privacy.accountSecurity.absent.devices':
     'There is no list of your devices and no second session to end.',
+  // Deleting the account at the service (ADR-065, the API plan's phase 5).
+  'privacy.accountSecurity.delete.title': 'Delete account',
+  'privacy.accountSecurity.delete.body':
+    'This deletes the account at the Picky account service and anonymises its visits and reports. It cannot be undone. Enter your password to confirm.',
+  'privacy.accountSecurity.delete.password': 'Password',
+  'privacy.accountSecurity.delete.action': 'Delete account permanently',
+  'privacy.accountSecurity.delete.refused': 'That password didn’t match. Nothing was deleted.',
+  'privacy.accountSecurity.delete.unavailable':
+    'The account service could not answer. Nothing was deleted.',
+  'privacy.accountSecurity.delete.deviceNotCleared':
+    'The account was deleted, but this phone could not clear its records. Sign out to try again.',
   'privacy.accountSecurity.signOut.note':
     'Signing out deletes the visit tracking consent, the saved spots and the waiting reports on this phone, and then drops the session.',
 
@@ -729,6 +741,13 @@ export const en = {
   // The three things the platform can answer, and each one is said as itself: a copy handed to the
   // sheet is not a copy that arrived anywhere (iOS reports the share action even when the user backs
   // out of the sheet), and a platform that refused is not a share at all.
+  // The account service's own copy (ADR-065, the API plan's phase 5).
+  'privacy.export.service.title': 'The account service’s copy',
+  'privacy.export.service.body':
+    'The Picky account service keeps your profile, consents, visits and reports. This copy comes straight from it.',
+  'privacy.export.service.label': 'Share the service’s copy',
+  'privacy.export.service.sheetTitle': 'Picky account service data',
+  'privacy.export.service.failed': 'The account service could not hand over its copy. Try again.',
   'privacy.export.share.shared': 'The copy was handed to the share sheet.',
   'privacy.export.share.dismissed': 'The share sheet was closed without choosing.',
   'privacy.export.share.failed': 'The copy could not be handed over.',
