@@ -1,0 +1,102 @@
+{
+  "leave_one_year_out_test": {
+    "bilberry": {
+      "rows": 44,
+      "years": 11,
+      "MAE_baseline": 0.777,
+      "chosen": "baseline (normal year)",
+      "MAE_chosen": 0.777,
+      "all_candidates": [
+        {
+          "berry": "bilberry",
+          "candidate": "baseline (normal year)",
+          "MAE": 0.777,
+          "rank_corr": 0.0
+        },
+        {
+          "berry": "bilberry",
+          "candidate": "frost rule",
+          "MAE": 0.792,
+          "rank_corr": 0.138
+        },
+        {
+          "berry": "bilberry",
+          "candidate": "ridge 7 features",
+          "MAE": 0.889,
+          "rank_corr": -0.437
+        },
+        {
+          "berry": "bilberry",
+          "candidate": "gradient boosting all features",
+          "MAE": 1.358,
+          "rank_corr": -0.311
+        }
+      ]
+    },
+    "lingonberry": {
+      "rows": 43,
+      "years": 11,
+      "MAE_baseline": 0.854,
+      "chosen": "baseline (normal year)",
+      "MAE_chosen": 0.854,
+      "all_candidates": [
+        {
+          "berry": "lingonberry",
+          "candidate": "baseline (normal year)",
+          "MAE": 0.854,
+          "rank_corr": 0.0
+        },
+        {
+          "berry": "lingonberry",
+          "candidate": "frost rule",
+          "MAE": 0.895,
+          "rank_corr": -0.043
+        },
+        {
+          "berry": "lingonberry",
+          "candidate": "ridge 7 features",
+          "MAE": 0.982,
+          "rank_corr": -0.694
+        },
+        {
+          "berry": "lingonberry",
+          "candidate": "gradient boosting all features",
+          "MAE": 1.246,
+          "rank_corr": -0.348
+        }
+      ]
+    }
+  },
+  "features": [
+    "gdd5_apr_aug",
+    "gdd5_may_jun",
+    "frost_days_flower",
+    "min_temp_flower",
+    "warm_days_jun",
+    "rain_may_jun",
+    "rain_jul",
+    "rain_aug",
+    "dry_days_jul",
+    "tmean_jul",
+    "snow_max_winter",
+    "gdd5_apr_aug_prev",
+    "rain_jul_prev",
+    "rain_aug_prev"
+  ],
+  "areas": [
+    "Ita-Suomi",
+    "Lansi-Suomi",
+    "Lappi",
+    "Oulu-Kainuu"
+  ],
+  "area_of_weather_region": {
+    "Lappi-south": "Lappi",
+    "Lappi-north": "Lappi",
+    "Pohjois-Pohjanmaa": "Oulu-Kainuu",
+    "Kainuu": "Oulu-Kainuu",
+    "Pohjois-Karjala": "Ita-Suomi",
+    "Pohjois-Savo": "Ita-Suomi",
+    "Etela-Savo": "Ita-Suomi",
+    "(all other regions)": "Lansi-Suomi"
+  }
+}

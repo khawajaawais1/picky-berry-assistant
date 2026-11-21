@@ -32,6 +32,17 @@ services:
     volumes:
       - miniodata:/data
 
+  ml:
+    build:
+      context: .
+      dockerfile: docker/ml/Dockerfile
+    image: picky/ml:dev
+    container_name: picky-ml
+    ports:
+      - "8100:8100"
+    environment:
+      PYTHONUNBUFFERED: "1"
+
 volumes:
   pgdata:
   miniodata:

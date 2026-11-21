@@ -1,0 +1,23 @@
+[project]
+name = "berry-ml"
+version = "1.0.0"
+description = "Berry Picker Assistant ML: berry detector, zone scores, report rules (Team Picky)"
+requires-python = ">=3.11"
+dependencies = ["numpy==2.4.6", "pandas==3.0.5", "pillow==13.0.0", "onnxruntime==1.29.0", "joblib==1.6.0"]
+
+[project.optional-dependencies]
+service = ["fastapi==0.165.0", "uvicorn[standard]==0.54.0", "python-multipart==0.0.32"]
+dev = ["pytest==9.1.1", "httpx==0.28.1", "ruff==0.17.6"]
+
+[tool.setuptools]
+packages = ["berry_ml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 125
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["B905", "E702"]
