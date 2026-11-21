@@ -6,12 +6,14 @@ import {
   loadConfig,
   parseApiBaseUrl,
   parseEnvironment,
+  zoneSourceKind,
 } from '../env';
 
 const {
   apiBaseUrl: API_URL_VAR,
   appEnvironment: APP_ENV_VAR,
   firebaseApiKey: FIREBASE_KEY_VAR,
+  zoneSource: ZONE_SOURCE_VAR,
 } = PUBLIC_ENV_VARS;
 
 describe('isLoopbackHost', () => {
@@ -150,6 +152,26 @@ describe('firebaseApiKey', () => {
 
   it.each([undefined, '', '   '])('returns null when the key is %p', (value) => {
     expect(firebaseApiKey({ [FIREBASE_KEY_VAR]: value })).toBeNull();
+  });
+});
+
+describe('zoneSourceKind', () => {
+  // The map reads the team API (ADR-065). The layout harness opens every screen without a
+  // session, so it asks for the bundled stub by name, and a shipped build cannot.
+  it('reads the API when nothing is set', () => {
+    expect(zoneSourceKind({})).toBe('api');
+  });
+
+  it.each(['development', 'preview'])('reads the stub in a %s build that asks for it', (env) => {
+    expect(zoneSourceKind({ [APP_ENV_VAR]: env, [ZONE_SOURCE_VAR]: ' stub ' })).toBe('stub');
+  });
+
+  it('never reads the stub in a production build', () => {
+    expect(zoneSourceKind({ [APP_ENV_VAR]: 'production', [ZONE_SOURCE_VAR]: 'stub' })).toBe('api');
+  });
+
+  it('reads anything it does not recognise as the API', () => {
+    expect(zoneSourceKind({ [ZONE_SOURCE_VAR]: 'demo' })).toBe('api');
   });
 });
 

@@ -52,6 +52,8 @@ export {
 // The cache a berry's last answer survives the process in. Exported because the app root is the
 // composition point and a feature's rules reach it only through this file (`src/app/_layout.tsx`).
 export { zonesQueryCachePersistence } from './services/zone-cache';
+export { appZoneSource } from './services/app-zone-source';
+export { createApiZoneSource, PILOT_BBOX, ZoneSourceError } from './services/api-zone-source';
 export {
   CARD_ZONE_STATE,
   DEMO_ZONES,

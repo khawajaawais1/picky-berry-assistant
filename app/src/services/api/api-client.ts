@@ -40,6 +40,8 @@ export type TokenProvider = {
 export type ApiFailure =
   /** The request never got an answer: offline, DNS, TLS, a timeout. */
   | { kind: 'network' }
+  /** The build's API base URL failed validation, so nothing was sent (`app-client.ts`). */
+  | { kind: 'unconfigured' }
   /** There is no session to send, or the server refused it and a refresh could not renew it. */
   | { kind: 'unauthenticated' }
   /** The server answered with a refusal. `code` is the envelope's, when it sent one. */

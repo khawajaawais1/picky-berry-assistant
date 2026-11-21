@@ -197,19 +197,36 @@ function asScores(properties: Record<string, unknown>): Partial<Record<Species, 
   return scores;
 }
 
+/**
+ * The name the data contract gives a zone with no OSM place (docs/data-contract.md: fallback
+ * “Zone 5CF1B”): the H3 cell's last five significant hex digits, upper-case. The API serves
+ * `name` as nullable (ADR-065), so the app names such a zone the same way rather than drop it.
+ */
+function fallbackName(h3: unknown): string | null {
+  if (typeof h3 !== 'string') return null;
+
+  const significant = h3.trim().replace(/f+$/i, '');
+  return significant.length < 5 ? null : `Zone ${significant.slice(-5).toUpperCase()}`;
+}
+
 function parseFeature(value: unknown, species: Species): Zone | null {
   if (!isRecord(value) || value.type !== 'Feature' || !isRecord(value.properties)) return null;
 
   const id = asText(value.id);
-  const name = asText(value.properties.name);
+  const name = asText(value.properties.name) ?? fallbackName(value.properties.h3);
   const ring = asRing(value.geometry);
   if (!id || !name || !ring) return null;
 
-  const scores = asScores(value.properties);
   // A payload that shipped `scores` is answered from `scores` alone: falling back to the
   // top-level score there would paint the file's default berry under another berry's name.
-  // The top-level score is the fallback only for a payload with no `scores` map at all.
-  const score = isRecord(value.properties.scores) ? scores[species] : asScore(value.properties);
+  // A payload with no `scores` map is `GET /zones` as served: one species per request, at the
+  // top level, and it must be the species asked about.
+  const served = !isRecord(value.properties.scores);
+  if (served && value.properties.species !== species) return null;
+
+  const topLevel = served ? asScore(value.properties) : null;
+  const scores = served ? (topLevel ? { [species]: topLevel } : {}) : asScores(value.properties);
+  const score = scores[species];
   if (!score) return null;
 
   return {
