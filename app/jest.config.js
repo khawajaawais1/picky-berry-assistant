@@ -28,6 +28,8 @@ module.exports = {
     '!src/**/*.d.ts',
     // Barrel files only re-export; they carry no behaviour to cover.
     '!src/**/index.ts',
+    // Test support: a fake of the API that only tests import.
+    '!src/services/session/testing.ts',
     // Route files are thin adapters: they are covered by E2E, not unit tests.
     '!src/app/**',
     // PROTOTYPE — throwaway scaffolding that answers a design question carries no tests, by

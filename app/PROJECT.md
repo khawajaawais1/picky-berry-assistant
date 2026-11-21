@@ -1,5 +1,12 @@
 # PROJECT.md — Picky
 
+> **API integration (2026-11-21):** the app now runs against the team API as served
+> (`https://picky-berry-assistant.vercel.app/api/v1`, [ADR-065](docs/adr/ADR-065-the-api-issues-the-credential.md)):
+> accounts and sessions, zones, zone details, visits, the account's profile, export and deletion,
+> and the offline snapshot. Where this document says no service or backend exists, that predates
+> it. What is built, and what is left with its reason, is in
+> [docs/plans/api-integration-plan.md](docs/plans/api-integration-plan.md).
+
 > **Status:** Initialization approved (2026-10-08); the design is being implemented screen
 > by screen. **Every design frame except 02 has a built screen behind its route** (15–18 as the
 > frames' own disclosed demo), each missing whatever needs a service, a permission or an owner
@@ -2366,10 +2373,14 @@ rest. Recorded as a question rather than decided in code.
 | [ADR-062](docs/adr/ADR-062-password-reset-belongs-to-the-provider.md)                 | Password reset asks the provider, and the app keeps no token: `/sign-in` gains “Forgot password?”, an app-drawn request screen keeps the sign-in framing, `SessionPort.requestPasswordReset` is the one new operation, the provider sends the email and hosts the new-password page, the stand-in accepts outside production and says no email was sent, no string claims a delivery or reveals an account, and a production build cannot request a link                                                                                                                                                               | Accepted (2026-10-24; answers ADR-034 §1.5, amends ADR-059 decision 4, extends ADR-028 and ADR-048)                                                                                                                                                                                                                                                                                                                                                                                                              |
 | [ADR-063](docs/adr/ADR-063-the-watch-has-a-cadence-and-an-accuracy-budget.md)         | The foreground watch has a budget: high accuracy, a 50 m distance filter, and a 60 s time ceiling on Android (iOS filters by distance alone), foreground only — chosen for kilometre-scale zone boundaries against a 5-minute dwell, with the battery cost, the sub-50 m movement it can miss and the platform asymmetry recorded, and no ticker or background capture added                                                                                                                                                                                                                                           | Accepted (2026-10-24; answers ADR-045 decision 8's foreground half, ADR-047 §2.3 and PROJECT open question 21; extends ADR-046 and ADR-056)                                                                                                                                                                                                                                                                                                                                                                      |
 | [ADR-064](docs/adr/ADR-064-a-yield-score-is-a-zone-forecast.md)                       | A yield score is the zone's 0–100 forecast; a picker's 1–5 plentifulness answer is a harvest rating, and the app's report copy says so                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Accepted (2026-10-25)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| [ADR-065](docs/adr/ADR-065-the-api-issues-the-credential.md) | The team API issues the credential: the app sends email + password to `/auth/register` and `/auth/login`, keeps the API's access and refresh tokens in secure storage, refreshes on a 401 inside one transport module, and validates every response at that boundary | Accepted (2026-11-21; supersedes ADR-054 decisions 2, 3 and 6) |
+| [ADR-066](docs/adr/ADR-066-the-tracker-is-mounted-over-the-zone-service.md) | The visit tracker is mounted in the app shell over the zone service's zones, under the same consent and foreground permission; a visit finalizes on the next fix after its grace window, and each finalized visit is posted once | Accepted (2026-11-21; supersedes ADR-046 decisions 2 and 6) |
 
 ## Deployment
 
-**Test builds only. No store listing, no hosting and no backend environment.**
+**Test builds only. No store listing and no hosting of the app.** The team API is deployed at
+`https://picky-berry-assistant.vercel.app/api/v1` (ADR-065); a build reads it from
+`EXPO_PUBLIC_API_BASE_URL`.
 
 EAS is configured as of 2026-10-21: the project is `@salmanprottoy/picky-mobile-app`
 (`9f7a759d-dde7-423f-b7bf-b9f021e6c036`, linked in `app.json`), `eas.json` carries the three

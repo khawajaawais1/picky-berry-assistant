@@ -4,9 +4,11 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import { recordPrivacyConsent, CONSENT_STORAGE_KEY } from '@/services/privacy-consent';
 import { enqueueReport } from '@/services/report-queue';
 import { saveZone } from '@/services/saved-zones';
+import { addToVisitOutbox } from '@/services/visit-outbox';
 import { sessionPort } from '@/services/session';
 
 import { TermsPrivacyScreen } from '../terms-privacy-screen';
+import { installFakeAuthServer } from '@/services/session/testing';
 
 /**
  * The screen frame 14's “Terms & privacy” row opens (node 5:23688). **The design never drew it**
@@ -23,10 +25,29 @@ const READ_FAILED =
 const SIGN_OUT = 'Sign out';
 
 beforeEach(async () => {
+  installFakeAuthServer();
   await AsyncStorage.clear();
   // The session lives in the process rather than in the storage the tests clear (ADR-028), so every
   // test starts by leaving go of whatever the last one was holding.
   await sessionPort.signOut();
+});
+
+// Before the main block: its last test leaves the shared store hanging on purpose.
+describe('TermsPrivacyScreen, with finished visits waiting to send (ADR-066)', () => {
+  const WAITING = {
+    clientId: '4cd7a7d4-e6da-4d4c-bdbf-d0997c5ac60d',
+    zoneId: 'cc0e7929-de9f-516a-9049-7a25a1a6d092',
+    startedAt: '2026-08-03T09:00:00.000Z',
+    endedAt: '2026-08-03T09:45:00.000Z',
+  };
+
+  it('names the record while the phone holds one', async () => {
+    await addToVisitOutbox(WAITING);
+
+    await render(<TermsPrivacyScreen />);
+
+    expect(await screen.findByText('Finished visits waiting to send')).toBeOnTheScreen();
+  });
 });
 
 describe('TermsPrivacyScreen', () => {
@@ -51,10 +72,12 @@ describe('TermsPrivacyScreen', () => {
       yieldRating: 4,
       zoneId: 'Z14',
     });
-    await sessionPort.signIn({
+    await sessionPort.register({
       displayName: 'Aino Korhonen',
       email: 'aino@example.fi',
       password: 'berries1234',
+      lang: 'en',
+      consents: {},
     });
 
     await render(<TermsPrivacyScreen />);

@@ -43,7 +43,16 @@ export default defineConfig({
     timeout: 300_000,
     // The harness must never send a real reset email: an empty public key keeps the export on the
     // test-build path, whatever a developer's `.env` contains.
-    env: { EXPO_NO_TELEMETRY: '1', EXPO_PUBLIC_FIREBASE_API_KEY: '' },
+    env: {
+      EXPO_NO_TELEMETRY: '1',
+      EXPO_PUBLIC_FIREBASE_API_KEY: '',
+      // The reserved `.invalid` TLD never resolves: the export can reach no real API, and the
+      // journeys that need one fake it (`e2e/fake-api.ts`).
+      EXPO_PUBLIC_API_BASE_URL: 'https://picky-api.invalid',
+      // Every screen is opened on a fresh load with no session, and `/zones` needs one, so the
+      // harness measures the bundled stub zones (`zoneSourceKind`, ignored in production).
+      EXPO_PUBLIC_ZONE_SOURCE: 'stub',
+    },
   },
   // The production spec belongs to the other config, which is the only place it can run
   // against a bundle built for people.

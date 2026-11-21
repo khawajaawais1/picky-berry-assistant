@@ -7,6 +7,7 @@ import {
   readingsOffTheirPrototype,
   undescribedReadings,
 } from './prototype-readings';
+import { fakeAccountService } from './fake-api';
 
 /**
  * The states of the two consent controls, checked in the **built** web export rather than in
@@ -630,13 +631,13 @@ test.describe('signing in, in the built web app', () => {
   test('leaves frame 01 through its own link and lands in the app with no name invented', async ({
     page,
   }) => {
+    await fakeAccountService(page);
     await page.goto('/');
     await page.getByRole('button', { name: 'Already have an account? Sign in' }).click();
     await expect(page).toHaveURL(/\/sign-in$/);
 
-    // The account's own credential: an address and a password. The stand-in behind the port
-    // accepts them and verifies nothing, which is recorded on the seam and refused in a shipped
-    // build (ADR-054 §8, ADR-059).
+    // The account's own credential: an address and a password, checked by the account service
+    // (ADR-065), which the harness fakes.
     await page.getByRole('textbox', { name: 'Email address' }).fill('aino@example.fi');
     await page.getByRole('textbox', { name: 'Password' }).fill('berries1234');
     await page.getByRole('button', { name: 'Sign in' }).click();
@@ -664,27 +665,16 @@ test.describe('signing in, in the built web app', () => {
 });
 
 test.describe('resetting a password, in the built web app', () => {
-  test('asks for a reset link and says no email was sent in a test build', async ({ page }) => {
+  test('offers no reset, because the account service has none yet (ADR-065)', async ({ page }) => {
     await page.goto('/sign-in');
     await page.getByRole('button', { name: 'Forgot password?' }).click();
     await expect(page).toHaveURL(/\/forgot-password$/);
 
-    // The request half only: the address goes to the port, and the provider owns the link, the
-    // token and the new-password page the app never draws (ADR-054, ADR-062).
     await page.getByRole('textbox', { name: 'Email address' }).fill('aino@example.fi');
-    await page.getByRole('button', { name: 'Request reset link' }).click();
 
-    // Accepted, with no delivery claimed: the stand-in sends nothing, and the test-build note says
-    // so in the same breath as the confirmation (ADR-048's rule applied to reset).
-    await expect(page.getByText('Reset request accepted.')).toBeVisible();
-    await expect(page.getByText('aino@example.fi', { exact: false })).toBeVisible();
-    await expect(page.getByTestId('forgot-password-test-note')).toContainText(
-      'no reset email is sent',
-    );
-    await expectTreeReadable(page, '/forgot-password, with the confirmation');
+    await expect(page.getByRole('button', { name: 'Request reset link' })).toBeDisabled();
+    await expectTreeReadable(page, '/forgot-password, with no reset to offer');
 
-    // The way on is the sign-in screen this journey came from — the provider's page is where a
-    // new password is set, and it is not part of this app.
     await page.getByRole('button', { name: 'Sign in' }).click();
     await expect(page).toHaveURL(/\/sign-in$/);
   });
@@ -694,7 +684,8 @@ test.describe('the account and the plan in the built web app', () => {
   test('signs up, draws the account it holds, lists the plan, and signs out for real', async ({
     page,
   }) => {
-    // Screen 03, filled the way its own rules ask (a name, an address, eight characters with a
+    await fakeAccountService(page);
+    // Screen 03, filled the way its own rules ask (a name, an address, ten characters with a
     // number, and the consent row as the affirmative action it is). The press creates the account
     // and acquires its session in one call; screen 04's code is retired (ADR-059).
     await page.goto('/create-account');
@@ -807,7 +798,7 @@ test.describe('the account and the plan in the built web app', () => {
     await page.getByRole('button', { name: 'Account & security' }).click();
     await expect(page).toHaveURL(/\/account-security$/);
     await expect(page.getByTestId('account-security-row')).toContainText('Aino Korhonen');
-    await expect(page.getByText('An hour from the moment you sign in.')).toBeVisible();
+    await expect(page.getByText('Renewed while you use the app.')).toBeVisible();
     await expect(
       page.getByText('The app keeps no password of its own', { exact: false }),
     ).toBeVisible();

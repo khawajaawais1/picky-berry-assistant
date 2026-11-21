@@ -59,9 +59,7 @@ describe('the account screen on a Finnish device', () => {
     expect(screen.getByText('Istunto')).toBeOnTheScreen();
     // No session is held in a fresh process, so the line for exactly that is what renders here.
     expect(
-      screen.getByText(
-        'Istuntoa ei ole käytössä. Istunto kestää tunnin siitä hetkestä, kun kirjaudut sisään.',
-      ),
+      screen.getByText('Istuntoa ei ole käytössä. Kirjaudu sisään aloittaaksesi.'),
     ).toBeOnTheScreen();
     expect(screen.getByText('Ei vielä täällä')).toBeOnTheScreen();
 

@@ -50,7 +50,7 @@ import { parseZoneListStrict } from '../domain/zone-schema';
 export const ZONES_QUERY_CACHE_KEY = 'picky.zones-cache.v1';
 
 /** Change when a cached list that still parses would now mean something different. */
-export const ZONES_QUERY_CACHE_BUSTER = 'zone-source-v1';
+export const ZONES_QUERY_CACHE_BUSTER = 'zone-source-api-v1';
 
 /** Long enough for a trip without signal; a map left unopened for longer starts fresh. */
 export const ZONES_QUERY_CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;

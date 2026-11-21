@@ -9,6 +9,7 @@ import {
 import { StyleSheet, View } from 'react-native';
 
 import { CoreNavigation, type CoreNavKey } from '@/components/organisms';
+import { AppVisitTracking } from '@/features/visits';
 import { ErrorScreen } from '@/components/templates';
 import { useAppTheme } from '@/hooks/use-app-theme';
 
@@ -97,6 +98,11 @@ export default function AppShellLayout() {
         change a hard cut with no transition (reported twice from Expo Go, 2026-10-25). The stack
         gives each screen the platform's own fade; the bar stays outside it, so it never moves.
       */}
+      {/*
+        The visit tracker runs while the shell is open (ADR-066): position only under the picker's
+        consent and the platform's permission, foreground only, and it draws nothing.
+      */}
+      <AppVisitTracking />
       <Stack screenOptions={{ animation: 'fade', headerShown: false }} />
       {activeKey ? (
         <CoreNavigation

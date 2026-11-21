@@ -8,6 +8,7 @@ import { presenceSamplesFor } from '../domain/position-presence';
 import { DEFAULT_VISIT_POLICY, type VisitPolicy } from '../domain/visit-policy';
 import {
   applyPresence,
+  finalizeExpired,
   createVisitTrackerState,
   type CandidateEntry,
   type Visit,
@@ -71,6 +72,12 @@ export type VisitPresenceState = {
   candidate: CandidateEntry | null;
   visits: readonly Visit[];
   events: readonly VisitEvent[];
+  /**
+   * Finalizes every visit whose grace window has passed by `at` (ADR-066). The tracker calls it
+   * when the app returns to the foreground, which is evidence of time a fix may not bring: iOS
+   * filters by distance alone, so a picker who stood still after walking out sends no fix.
+   */
+  finalizeNow: (at: number) => void;
 };
 
 export function useVisitPresence({
@@ -80,7 +87,7 @@ export function useVisitPresence({
   source,
   zones,
 }: UseVisitPresenceOptions): VisitPresenceState {
-  const [snapshot, setSnapshot] = useState<Omit<VisitPresenceState, 'status'>>({
+  const [snapshot, setSnapshot] = useState<Omit<VisitPresenceState, 'status' | 'finalizeNow'>>({
     candidate: null,
     events: [],
     visits: [],
@@ -114,6 +121,12 @@ export function useVisitPresence({
       events.push(...applied.events);
     }
 
+    // No ticker closes a visit (ADR-063): the fix is the time evidence. A visit whose grace window
+    // has passed by this fix's instant can no longer resume, so it is finalized here (ADR-066).
+    const finalized = finalizeExpired(state, next.at, policy);
+    state = finalized.state;
+    events.push(...finalized.events);
+
     const changed =
       state !== held.state || events.length !== held.events.length || zone !== held.zone;
     tracker.current = { events, state, zone };
@@ -123,10 +136,26 @@ export function useVisitPresence({
     }
   };
 
+  const finalizeNow = (at: number): void => {
+    const held = tracker.current;
+    const finalized = finalizeExpired(held.state, at, policy);
+    if (finalized.events.length === 0) return;
+
+    const events = [...held.events, ...finalized.events];
+    tracker.current = { ...held, events, state: finalized.state };
+    setSnapshot({
+      candidate: finalized.state.candidate,
+      events,
+      visits: finalized.state.visits,
+      zone: held.zone,
+    });
+  };
+
   const { status } = useDevicePosition({ onFix: handleFix, source });
 
   return {
     ...snapshot,
+    finalizeNow,
     status,
     // A zone the app is no longer watching is not where the picker is now.
     zone: status === 'tracking' ? snapshot.zone : null,

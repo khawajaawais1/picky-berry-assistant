@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { render, screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useNetworkState } from 'expo-network';
+import type { ReactNode } from 'react';
 
 import { themes } from '@/constants/theme';
 import { enqueueReport } from '@/services/report-queue';
@@ -205,5 +207,89 @@ describe('OfflineSyncScreen', () => {
     // 86 of 500 MB, which is the frame's own 59 px of a 342 px bar — computed from the two figures
     // above it so the bar cannot disagree with the line (ADR-042).
     expect(screen.getByTestId('offline-storage-meter-fill')).toHaveStyle({ width: '17.2%' });
+  });
+});
+
+/**
+ * Downloading the pilot area for offline use (ADR-065, the plan's phase 6): the zone service's
+ * snapshot is written into the zone cache, so the map opens without a connection for every berry.
+ */
+/** A cache with no timers: this file mocks `expo-network`, which `QueryProvider` listens to. */
+function CacheProvider({ children }: { children: ReactNode }) {
+  const [client] = [new QueryClient({ defaultOptions: { queries: { gcTime: Infinity } } })];
+  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+}
+
+describe('OfflineSyncScreen, downloading the pilot area', () => {
+  const zone = (id: string) => ({
+    id,
+    h3: id,
+    name: id,
+    score: 50,
+    confidence: 'medium' as const,
+    ripeness: 'ripe' as const,
+    scores: {},
+    ring: [],
+    updatedAt: null,
+  });
+
+  const SNAPSHOT = {
+    generatedAt: '2026-08-03T05:00:00.000Z',
+    incremental: false,
+    zones: {
+      bilberry: [zone('a'), zone('b')],
+      lingonberry: [zone('a')],
+      cloudberry: [],
+      crowberry: [],
+    },
+  };
+
+  it('saves the snapshot and says how many zones it holds', async () => {
+    const download = jest.fn(async () => SNAPSHOT);
+
+    await render(<OfflineSyncScreen snapshotSource={{ download }} />, { wrapper: CacheProvider });
+    await fireEvent.press(await screen.findByTestId('offline-snapshot-download'));
+
+    expect(await screen.findByText('2 zones saved for offline use.')).toBeOnTheScreen();
+    expect(download).toHaveBeenCalledWith(undefined);
+  });
+
+  it('asks only for what changed on a second download', async () => {
+    const download = jest
+      .fn()
+      .mockResolvedValueOnce(SNAPSHOT)
+      .mockResolvedValueOnce({
+        ...SNAPSHOT,
+        incremental: true,
+        zones: { ...SNAPSHOT.zones, bilberry: [zone('b')], lingonberry: [] },
+      });
+
+    await render(<OfflineSyncScreen snapshotSource={{ download }} />, { wrapper: CacheProvider });
+    await fireEvent.press(await screen.findByTestId('offline-snapshot-download'));
+    await screen.findByText('2 zones saved for offline use.');
+    await fireEvent.press(screen.getByTestId('offline-snapshot-download'));
+
+    expect(await screen.findByText('Updated: 1 zone changed.')).toBeOnTheScreen();
+    expect(download).toHaveBeenLastCalledWith('2026-08-03T05:00:00.000Z');
+  });
+
+  it('says nothing new was saved when the service could not answer', async () => {
+    await render(
+      <OfflineSyncScreen
+        snapshotSource={{ download: async () => Promise.reject(new Error('x')) }}
+      />,
+      { wrapper: CacheProvider },
+    );
+    await fireEvent.press(await screen.findByTestId('offline-snapshot-download'));
+
+    expect(
+      await screen.findByText('The zone service could not answer. Nothing new was saved.'),
+    ).toBeOnTheScreen();
+  });
+
+  it('offers no download without the zone service', async () => {
+    await render(<OfflineSyncScreen />);
+
+    expect(screen.queryByTestId('offline-snapshot-download')).not.toBeOnTheScreen();
   });
 });

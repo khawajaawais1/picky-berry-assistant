@@ -28,6 +28,7 @@ const EMPTY: ExportRecords = {
   readFailed: false,
   reports: [],
   session: null,
+  waitingVisits: [],
   zones: [],
 };
 
@@ -64,6 +65,19 @@ function document(records: ExportRecords): Record<string, unknown> {
 }
 
 describe('buildExportDocument', () => {
+  it('carries the finished visits waiting to send, as the outbox holds them (ADR-066)', () => {
+    const waiting = {
+      clientId: '4cd7a7d4-e6da-4d4c-bdbf-d0997c5ac60d',
+      zoneId: 'cc0e7929-de9f-516a-9049-7a25a1a6d092',
+      startedAt: '2026-08-03T09:00:00.000Z',
+      endedAt: '2026-08-03T09:45:00.000Z',
+    };
+
+    expect(document({ ...EMPTY, waitingVisits: [waiting] }).waitingVisits).toEqual([waiting]);
+    // A new record is a new shape, so the format names a new version.
+    expect(EXPORT_FORMAT).toBe('picky.personal-data.v2');
+  });
+
   it('names its own format and the moment the copy was made', () => {
     const copy = document(EMPTY);
 
@@ -85,6 +99,7 @@ describe('buildExportDocument', () => {
       'incomplete',
       'queuedReports',
       'savedZones',
+      'waitingVisits',
     ]);
   });
 
@@ -97,11 +112,13 @@ describe('buildExportDocument', () => {
     expect(copy.consent).toBeNull();
     expect(copy.savedZones).toEqual([]);
     expect(copy.queuedReports).toEqual([]);
+    expect(copy.waitingVisits).toEqual([]);
     expect(copy.incomplete).toBe(false);
   });
 
   it('copies each record’s own values, restamping nothing', () => {
     const copy = document({
+      waitingVisits: [],
       consent: CONSENT,
       readFailed: false,
       reports: REPORTS,
@@ -127,6 +144,7 @@ describe('buildExportDocument', () => {
       readFailed: true,
       reports: [],
       session: null,
+      waitingVisits: [],
       zones: ZONES,
     });
 

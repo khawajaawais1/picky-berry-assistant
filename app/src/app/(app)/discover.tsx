@@ -1,7 +1,12 @@
 import { router, useLocalSearchParams } from 'expo-router';
 
 import { appEnvironment } from '@/config/env';
-import { DiscoverScreen, CommunityMapPrototype, communityMapReading } from '@/features/discover';
+import {
+  appZoneSource,
+  CommunityMapPrototype,
+  communityMapReading,
+  DiscoverScreen,
+} from '@/features/discover';
 
 /**
  * Screen 06 · Core picker · Discover map (Figma node 5:22942).
@@ -40,6 +45,7 @@ export default function DiscoverRoute() {
 
   return (
     <DiscoverScreen
+      zoneSource={appZoneSource}
       onOpenDownloads={() => router.push('/downloads')}
       onOpenZone={(zone, species) =>
         router.push({ pathname: '/zone-details', params: { species, zone: zone.id } })

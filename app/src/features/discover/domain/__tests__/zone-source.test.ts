@@ -150,12 +150,66 @@ describe('parseZones', () => {
     expect(parseZones(collection(twoVertices, infinite, outOfRange), 'bilberry')).toEqual([]);
   });
 
-  it('drops a feature with no identifier or no name to print', () => {
-    const unnamed = feature({}, { name: undefined });
+  it('drops a feature with no identifier', () => {
     const unidentified = feature({ id: undefined });
     const blankId = feature({ id: '   ' });
 
-    expect(parseZones(collection(unnamed, unidentified, blankId), 'bilberry')).toEqual([]);
+    expect(parseZones(collection(unidentified, blankId), 'bilberry')).toEqual([]);
+  });
+
+  it.each([null, undefined, '  '])(
+    'names a zone whose name is %p the way the data contract does, from its H3 cell',
+    (name) => {
+      // docs/data-contract.md: "nearest OSM place + rank, … fallback “Zone 5CF1B”". The API
+      // serves `name` as nullable (ADR-065), so the app applies the same fallback shape: the
+      // cell's last five significant hex digits, upper-case.
+      const [zone] = parseZones(collection(feature({}, { name })), 'bilberry');
+
+      expect(zone?.name).toBe('Zone 50E25');
+    },
+  );
+
+  it('drops an unnamed feature with no H3 cell to name it by', () => {
+    expect(parseZones(collection(feature({}, { name: null, h3: undefined })), 'bilberry')).toEqual(
+      [],
+    );
+  });
+
+  it('reads a snapshot feature’s freshness from the asked berry’s own score', () => {
+    // `GET /zones/snapshot` carries `updated_at` per species, not at the top level.
+    const snapshot = feature(
+      {},
+      {
+        updated_at: undefined,
+        scores: {
+          bilberry: { ...scores.bilberry, updated_at: '2026-08-02T04:00:00.000Z' },
+          lingonberry: { ...scores.lingonberry, updated_at: '2026-08-03T04:00:00.000Z' },
+        },
+      },
+    );
+
+    const [zone] = parseZones(collection(snapshot), 'lingonberry');
+
+    expect(zone?.updatedAt).toBe('2026-08-03T04:00:00.000Z');
+  });
+
+  describe('a feature as GET /zones serves it', () => {
+    // The served list scores one species per request: top-level fields and no `scores` map.
+    const served = (properties: Record<string, unknown> = {}) =>
+      feature({}, { scores: undefined, stub: undefined, forest_type: undefined, ...properties });
+
+    it('carries the asked species as the zone’s only score', () => {
+      const [zone] = parseZones(collection(served()), 'bilberry');
+
+      expect(zone?.scores).toEqual({
+        bilberry: { score: 53, confidence: 'medium', ripeness: 'past' },
+      });
+      expect(zone && zoneSpecies(zone, 'bilberry')).toEqual(['bilberry']);
+    });
+
+    it('drops a feature scored for a different species than the one asked about', () => {
+      expect(parseZones(collection(served({ species: 'lingonberry' })), 'bilberry')).toEqual([]);
+    });
   });
 
   it('drops a score it cannot read rather than painting a band for it', () => {

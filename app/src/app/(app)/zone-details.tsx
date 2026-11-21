@@ -2,11 +2,13 @@ import { router, useCanGoBack, useLocalSearchParams } from 'expo-router';
 
 import { appEnvironment } from '@/config/env';
 import {
+  appZoneInsightSource,
+  appZoneSource,
   CommunityMapPrototype,
-  PILOT_ZONE_SPECIES,
-  ZoneDetailsScreen,
   communityMapReading,
   isSpecies,
+  PILOT_ZONE_SPECIES,
+  ZoneDetailsScreen,
 } from '@/features/discover';
 /**
  * Screen 07 · Core picker · Zone details (Figma node `5:23032`).
@@ -46,6 +48,8 @@ export default function ZoneDetailsRoute() {
 
   return (
     <ZoneDetailsScreen
+      insightSource={appZoneInsightSource}
+      zoneSource={appZoneSource}
       onBack={canGoBack ? () => router.back() : undefined}
       onNavigate={() => router.push('/route-to-zone')}
       onSeeReports={() => router.push('/zone-reports')}

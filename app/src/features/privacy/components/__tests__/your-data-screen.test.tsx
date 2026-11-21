@@ -4,10 +4,12 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import { recordPrivacyConsent } from '@/services/privacy-consent';
 import { enqueueReport } from '@/services/report-queue';
 import { saveZone } from '@/services/saved-zones';
+import { addToVisitOutbox } from '@/services/visit-outbox';
 import { sessionPort } from '@/services/session';
 
 import { EXPORT_FORMAT } from '../../domain/export-document';
 import { YourDataScreen } from '../your-data-screen';
+import { installFakeAuthServer } from '@/services/session/testing';
 
 /**
  * The screen the export path is used from — the copy PROJECT.md's open question 23 names as owed,
@@ -27,6 +29,7 @@ const READ_FAILED =
 const SHARE = 'Share a copy';
 
 beforeEach(async () => {
+  installFakeAuthServer();
   await AsyncStorage.clear();
   // The session lives in the process rather than in the storage the tests clear (ADR-028), so every
   // test starts by letting go of whatever the last one was holding.
@@ -45,12 +48,37 @@ async function seedEveryRecord() {
     yieldRating: 4,
     zoneId: 'Z14',
   });
-  await sessionPort.signIn({
+  await sessionPort.register({
     displayName: 'Aino Korhonen',
     email: 'aino@example.fi',
     password: 'berries1234',
+    lang: 'en',
+    consents: {},
   });
 }
+
+// Before the main block: its last test leaves the shared store hanging on purpose.
+describe('YourDataScreen, with finished visits waiting to send (ADR-066)', () => {
+  const WAITING = {
+    clientId: '4cd7a7d4-e6da-4d4c-bdbf-d0997c5ac60d',
+    zoneId: 'cc0e7929-de9f-516a-9049-7a25a1a6d092',
+    startedAt: '2026-08-03T09:00:00.000Z',
+    endedAt: '2026-08-03T09:45:00.000Z',
+  };
+
+  it('lists the record and carries each entry in the copy', async () => {
+    await addToVisitOutbox(WAITING);
+    const onShare = jest.fn(async () => 'shared' as const);
+
+    await render(<YourDataScreen onShare={onShare} />);
+    expect(await screen.findByText('Finished visits waiting to send')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByTestId('your-data-share'));
+
+    await waitFor(() => expect(onShare).toHaveBeenCalled());
+    const [document] = onShare.mock.calls[0] as unknown as [string];
+    expect(JSON.parse(document).waitingVisits).toEqual([WAITING]);
+  });
+});
 
 describe('YourDataScreen', () => {
   it('renders its own words', async () => {
@@ -201,5 +229,51 @@ describe('YourDataScreen', () => {
     expect(
       screen.queryByText('This phone holds nothing of yours yet, so the copy would be empty.'),
     ).not.toBeOnTheScreen();
+  });
+});
+
+/**
+ * The account service's own copy (ADR-065, the plan's phase 5): `POST /me/export` holds what the
+ * service keeps about the account, which is more than this phone holds. The screen hands it to
+ * the same share sheet as the device's copy.
+ */
+describe('YourDataScreen, with the account service', () => {
+  const EXPORT = '{\n  "profile": {}\n}';
+
+  it('hands the service’s copy to the share sheet under its own title', async () => {
+    const onShare = jest.fn(async () => 'shared' as const);
+    const exportData = jest.fn(async () => EXPORT);
+
+    await render(<YourDataScreen accountApi={{ exportData }} onShare={onShare} />);
+    expect(await screen.findByText('The account service’s copy')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByTestId('your-data-service-share'));
+
+    await waitFor(() => expect(onShare).toHaveBeenCalledWith(EXPORT, 'Picky account service data'));
+    expect(await screen.findByTestId('your-data-service-outcome')).toHaveTextContent(
+      'The copy was handed to the share sheet.',
+    );
+  });
+
+  it('says so when the service could not hand its copy over, and opens no sheet', async () => {
+    const onShare = jest.fn(async () => 'shared' as const);
+
+    await render(
+      <YourDataScreen
+        accountApi={{ exportData: async () => Promise.reject(new Error('offline')) }}
+        onShare={onShare}
+      />,
+    );
+    await fireEvent.press(await screen.findByTestId('your-data-service-share'));
+
+    expect(
+      await screen.findByText('The account service could not hand over its copy. Try again.'),
+    ).toBeOnTheScreen();
+    expect(onShare).not.toHaveBeenCalled();
+  });
+
+  it('draws no service copy without the account service', async () => {
+    await render(<YourDataScreen onShare={async () => 'shared'} />);
+
+    expect(screen.queryByTestId('your-data-service-share')).not.toBeOnTheScreen();
   });
 });

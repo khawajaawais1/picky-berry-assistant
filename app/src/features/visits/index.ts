@@ -54,3 +54,26 @@ export {
   type VisitTrackerState,
   type ZonePresenceSample,
 } from './domain/visit-lifecycle';
+
+// The team API's visits (ADR-065, the API integration plan's phase 4).
+export {
+  parseVisitPage,
+  parseVisitRecord,
+  visitSubmission,
+  VISIT_REJECT_REASONS,
+  type VisitPage,
+  type VisitRecord,
+  type VisitRejectReason,
+  type VisitSubmission,
+} from './domain/visit-submission';
+export {
+  createVisitsApi,
+  VISIT_PAGE_SIZE,
+  VisitsReadError,
+  type SubmitOutcome,
+  type VisitsApi,
+} from './services/visits-api';
+export { appVisitsApi } from './services/app-visits-api';
+export { useVisitSync, type UseVisitSyncOptions } from './hooks/use-visit-sync';
+export { VisitTracker, type VisitTrackerProps } from './components/visit-tracker';
+export { AppVisitTracking } from './components/app-visit-tracking';

@@ -16,7 +16,7 @@
  * them: who the user is, what they agreed to, what they saved, and what is waiting. It is asserted
  * in this module's test rather than left to the screen.
  */
-export type HeldRecord = 'account' | 'consent' | 'plan' | 'queue';
+export type HeldRecord = 'account' | 'consent' | 'plan' | 'queue' | 'outbox';
 
 export type StoredRecordState = {
   /** Whether a consent decision has been recorded — in either direction (ADR-020). */
@@ -25,6 +25,8 @@ export type StoredRecordState = {
   planCount: number | undefined;
   /** How many reports the queue holds; the record exists when there is at least one (ADR-005). */
   queueCount: number | undefined;
+  /** How many finished visits wait to be sent; the record exists when there is one (ADR-066). */
+  outboxCount: number | undefined;
   /** Whether the app is holding a session — which is itself the account record (ADR-028). */
   signedIn: boolean | undefined;
 };
@@ -43,6 +45,7 @@ export function heldRecords(state: StoredRecordState): HeldRecord[] {
   if (state.consentDecided === true) held.push('consent');
   if (state.planCount !== undefined && state.planCount > 0) held.push('plan');
   if (state.queueCount !== undefined && state.queueCount > 0) held.push('queue');
+  if (state.outboxCount !== undefined && state.outboxCount > 0) held.push('outbox');
 
   return held;
 }

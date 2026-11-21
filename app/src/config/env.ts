@@ -16,6 +16,7 @@ export const PUBLIC_ENV_VARS = {
   apiBaseUrl: 'EXPO_PUBLIC_API_BASE_URL',
   appEnvironment: 'EXPO_PUBLIC_APP_ENV',
   firebaseApiKey: 'EXPO_PUBLIC_FIREBASE_API_KEY',
+  zoneSource: 'EXPO_PUBLIC_ZONE_SOURCE',
 } as const;
 
 export type PublicEnvSource = Partial<Record<string, string | undefined>>;
@@ -155,6 +156,7 @@ function declaredPublicEnv(): PublicEnvSource {
     [PUBLIC_ENV_VARS.apiBaseUrl]: process.env.EXPO_PUBLIC_API_BASE_URL,
     [PUBLIC_ENV_VARS.appEnvironment]: process.env.EXPO_PUBLIC_APP_ENV,
     [PUBLIC_ENV_VARS.firebaseApiKey]: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+    [PUBLIC_ENV_VARS.zoneSource]: process.env.EXPO_PUBLIC_ZONE_SOURCE,
   };
 }
 
@@ -189,6 +191,20 @@ export function appEnvironment(source: PublicEnvSource = declaredPublicEnv()): A
   const result = parseEnvironment(source[PUBLIC_ENV_VARS.appEnvironment]);
 
   return 'environment' in result ? result.environment : 'production';
+}
+
+export type ZoneSourceKind = 'api' | 'stub';
+
+/**
+ * Where the map's zones come from: the team API (ADR-065), unless a non-production build asks
+ * for the bundled stub by name with `EXPO_PUBLIC_ZONE_SOURCE=stub`. The layout harness does,
+ * because it opens every screen on a fresh load with no session, and `/zones` needs one.
+ * A production build always reads the API, and an unrecognised value reads the API too.
+ */
+export function zoneSourceKind(source: PublicEnvSource = declaredPublicEnv()): ZoneSourceKind {
+  const asked = source[PUBLIC_ENV_VARS.zoneSource]?.trim();
+
+  return asked === 'stub' && appEnvironment(source) !== 'production' ? 'stub' : 'api';
 }
 
 /**

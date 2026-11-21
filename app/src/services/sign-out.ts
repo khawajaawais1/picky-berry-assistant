@@ -2,6 +2,7 @@ import { clearPrivacyConsent } from './privacy-consent';
 import { clearReportQueue } from './report-queue';
 import { clearSavedZones } from './saved-zones';
 import { sessionPort } from './session';
+import { clearVisitOutbox } from './visit-outbox';
 
 /**
  * Signing out: what this device holds of the picker's is deleted, and then the session is dropped.
@@ -14,7 +15,7 @@ import { sessionPort } from './session';
  *
  * The records it deletes are the ones their own modules documented this surface as their caller
  * for: the picker's plan (`clearSavedZones`), the reports still waiting to sync
- * (`clearReportQueue`) and the consent they gave (`clearPrivacyConsent`). Nothing else on the
+ * (`clearReportQueue`), the finished visits waiting to be sent (`clearVisitOutbox`, ADR-066) and the consent they gave (`clearPrivacyConsent`). Nothing else on the
  * device is the picker's, and nothing is deleted that the app did not write.
  *
  * What signing out deliberately does **not** do is decide how the app knows a session: the shell
@@ -26,6 +27,7 @@ export async function signOut(): Promise<void> {
   await clearSavedZones();
   await clearReportQueue();
   await clearPrivacyConsent();
+  await clearVisitOutbox();
   // Last, so that a failure above leaves the session — and therefore the screen that shows who
   // is signed in — exactly as it was.
   await sessionPort.signOut();

@@ -122,7 +122,7 @@ describe('screens on a Finnish device', () => {
     expect(screen.getByText('Sähköpostiosoite')).toBeOnTheScreen();
     expect(screen.getByText('Nimesi')).toBeOnTheScreen();
     expect(screen.getByText('Salasana')).toBeOnTheScreen();
-    expect(screen.getByText('Vähintään 8 merkkiä, sisältää numeron.')).toBeOnTheScreen();
+    expect(screen.getByText('Vähintään 10 merkkiä, sisältää numeron.')).toBeOnTheScreen();
     expect(screen.getByText('Lue käyttöehdot ja tietosuoja')).toBeOnTheScreen();
     expect(screen.getByText('Luo tili')).toBeOnTheScreen();
     expect(screen.getByText('Tietosi pysyvät sinun')).toBeOnTheScreen();

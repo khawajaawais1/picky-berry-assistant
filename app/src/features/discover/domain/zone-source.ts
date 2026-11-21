@@ -133,7 +133,7 @@ function asText(value: unknown): string | null {
 }
 
 /** A score the map can band: an integer 0–100, with a confidence and a ripeness it knows. */
-function asScore(value: unknown): ZoneScore | null {
+export function parseZoneScore(value: unknown): ZoneScore | null {
   if (!isRecord(value)) return null;
 
   const { confidence, ripeness, score } = value;
@@ -190,26 +190,43 @@ function asScores(properties: Record<string, unknown>): Partial<Record<Species, 
   // Only the app's own vocabulary survives: a species key the chips cannot name is not a
   // score this map can ask for.
   for (const species of SPECIES) {
-    const parsed = asScore(raw[species]);
+    const parsed = parseZoneScore(raw[species]);
     if (parsed) scores[species] = parsed;
   }
 
   return scores;
 }
 
+/**
+ * The name the data contract gives a zone with no OSM place (docs/data-contract.md: fallback
+ * “Zone 5CF1B”): the H3 cell's last five significant hex digits, upper-case. The API serves
+ * `name` as nullable (ADR-065), so the app names such a zone the same way rather than drop it.
+ */
+function fallbackName(h3: unknown): string | null {
+  if (typeof h3 !== 'string') return null;
+
+  const significant = h3.trim().replace(/f+$/i, '');
+  return significant.length < 5 ? null : `Zone ${significant.slice(-5).toUpperCase()}`;
+}
+
 function parseFeature(value: unknown, species: Species): Zone | null {
   if (!isRecord(value) || value.type !== 'Feature' || !isRecord(value.properties)) return null;
 
   const id = asText(value.id);
-  const name = asText(value.properties.name);
+  const name = asText(value.properties.name) ?? fallbackName(value.properties.h3);
   const ring = asRing(value.geometry);
   if (!id || !name || !ring) return null;
 
-  const scores = asScores(value.properties);
   // A payload that shipped `scores` is answered from `scores` alone: falling back to the
   // top-level score there would paint the file's default berry under another berry's name.
-  // The top-level score is the fallback only for a payload with no `scores` map at all.
-  const score = isRecord(value.properties.scores) ? scores[species] : asScore(value.properties);
+  // A payload with no `scores` map is `GET /zones` as served: one species per request, at the
+  // top level, and it must be the species asked about.
+  const served = !isRecord(value.properties.scores);
+  if (served && value.properties.species !== species) return null;
+
+  const topLevel = served ? parseZoneScore(value.properties) : null;
+  const scores = served ? (topLevel ? { [species]: topLevel } : {}) : asScores(value.properties);
+  const score = scores[species];
   if (!score) return null;
 
   return {
@@ -223,7 +240,13 @@ function parseFeature(value: unknown, species: Species): Zone | null {
     ring,
     // A timestamp the app cannot read is not a reason to lose the zone: without it the screen
     // simply makes no freshness claim (the line is omitted), which is the honest direction.
-    updatedAt: asInstant(value.properties.updated_at),
+    // `GET /zones/snapshot` carries the instant per species rather than at the top level, so the
+    // asked berry's own `updated_at` speaks for this answer when the top level has none.
+    updatedAt:
+      asInstant(value.properties.updated_at) ??
+      (isRecord(value.properties.scores) && isRecord(value.properties.scores[species])
+        ? asInstant(value.properties.scores[species].updated_at)
+        : null),
   };
 }
 

@@ -125,8 +125,9 @@ Accepted policy (owner decision, 2026-10-08):
   and the page a new password is set on are Firebase's too; the app holds no token from either.
 - Authentication tokens and personal data go into platform secure storage
   (iOS Keychain / Android Keystore) — never AsyncStorage, never plain files
-  (ADR-006). Note that `expo-secure-store` and a secure-storage wrapper are **not
-  installed yet**; they are required before the first auth or personal-data feature.
+  (ADR-006). `expo-secure-store` is installed and wrapped by
+  `src/services/session/secure-store.ts` (`WHEN_UNLOCKED_THIS_DEVICE_ONLY`), which holds the
+  team API's access and refresh tokens (ADR-065).
 - The authentication seam (`src/services/session/`) currently persists **nothing**: its
   session lives in memory for the length of the process, behind a `SessionStore` port whose
   second implementation is ADR-006's secure store (ADR-028). That is why no credential is stored

@@ -95,7 +95,7 @@ export const fi: Record<TranslationKey, string> = {
   'onboarding.createAccount.field.password': 'Salasana',
   'onboarding.createAccount.failed': 'Tilin luonti ei onnistunut. Yritä uudelleen.',
   'onboarding.createAccount.heading': 'Pieni esittely.',
-  'onboarding.createAccount.passwordHint': 'Vähintään 8 merkkiä, sisältää numeron.',
+  'onboarding.createAccount.passwordHint': 'Vähintään 10 merkkiä, sisältää numeron.',
   'onboarding.createAccount.privacy.body':
     'Tallennetut paikat ovat oletuksena yksityisiä. GPS-reittejäsi ei koskaan julkaista.',
   'onboarding.createAccount.privacy.title': 'Tietosi pysyvät sinun',
@@ -211,6 +211,16 @@ export const fi: Record<TranslationKey, string> = {
   'discover.details.forecastDisclaimer': 'Ennuste olosuhteista, ei taattu sato.',
   // Sanotaan ennen niitä osioita, joille ei ole lähdettä: lähdealueen oikean pisteen alla
   // lukija tietää, mihin sovelluksen oma tieto päättyy.
+  // What the zone service says about one zone and berry (ADR-065, the API plan's phase 3).
+  'discover.details.insight.title': 'Vyöhykepalvelusta',
+  'discover.details.insight.why': 'Miksi tämä pistemäärä',
+  'discover.details.insight.reports': '{count} raporttia tällä viikolla · arvosana {rating} / 5',
+  'discover.details.insight.reportsOne': '{count} raportti tällä viikolla · arvosana {rating} / 5',
+  'discover.details.insight.reportsCount': '{count} raporttia tällä viikolla',
+  'discover.details.insight.reportsCountOne': '{count} raportti tällä viikolla',
+  'discover.details.insight.history': 'Viimeiset {days} päivää: {low}–{high}',
+  'discover.details.insight.loading': 'Kysytään vyöhykepalvelulta…',
+  'discover.details.insight.unavailable': 'Vyöhykepalvelu ei vastannut.',
   'discover.details.sample':
     'Alla olevat näkymät, tuorein havainto, kävelyreitti ja niiden takana oleva raporttilista ovat suunnittelun oma malliesimerkki: sääpalvelua tai raporttivirtaa ei vielä ole.',
   'discover.details.outlook.title': 'Tämän päivän näkymät',
@@ -390,6 +400,16 @@ export const fi: Record<TranslationKey, string> = {
   // Screen 13. The sync centre's own heading counts the reports this phone is holding. “Raportti”
   // is the word screens 10 and 11 already use for one, and the singular and plural are separate
   // entries because the sentence is the language's.
+  // The zone service's offline snapshot (ADR-065, the API plan's phase 6).
+  'offline.snapshot.title': 'Pilottialue, kaikki marjat',
+  'offline.snapshot.body':
+    'Lataa pilottialueen vyöhykkeet kaikkien neljän marjan pisteineen, jotta kartta aukeaa ilman yhteyttä.',
+  'offline.snapshot.action': 'Lataa offline-käyttöön',
+  'offline.snapshot.done': '{count} vyöhykettä tallennettu offline-käyttöön.',
+  'offline.snapshot.doneOne': '{count} vyöhyke tallennettu offline-käyttöön.',
+  'offline.snapshot.updated': 'Päivitetty: {count} vyöhykettä muuttui.',
+  'offline.snapshot.updatedOne': 'Päivitetty: {count} vyöhyke muuttui.',
+  'offline.snapshot.failed': 'Vyöhykepalvelu ei vastannut. Mitään uutta ei tallennettu.',
   'offline.eyebrow': 'TILI / OFFLINE · SYNKRONOINTI · KAUSIDEMO',
   'offline.title': 'Valmiina ilman verkkoa',
   'offline.sample.note':
@@ -447,6 +467,14 @@ export const fi: Record<TranslationKey, string> = {
   'discover.season.row.title': 'Alue {zone} · {species}',
   'discover.season.row.queued': 'Jonossa',
   'discover.season.row.synced': 'Synkronoitu',
+  // The visits the team API recorded for this account (ADR-065, the API plan's phase 4).
+  'discover.season.recorded.title': 'Vyöhykepalvelun tallentamat',
+  'discover.season.recorded.row': '{zone} · {date} · {minutes} min',
+  'discover.season.recorded.rowShort': '{zone} · {date} · alle 1 min',
+  'discover.season.recorded.unknownZone': 'Vyöhyke, jota ei enää ole listattu',
+  'discover.season.recorded.empty': 'Palvelu ei ole vielä tallentanut käyntejä.',
+  'discover.season.recorded.loading': 'Kysytään vyöhykepalvelulta…',
+  'discover.season.recorded.failed': 'Vyöhykepalvelu ei vastannut.',
   'discover.season.note':
     'Sisältää jonossa olevan käyntisi. Satoasteet lasketaan vain käynneistä, joilla on kirjattu määrä.',
 
@@ -470,6 +498,7 @@ export const fi: Record<TranslationKey, string> = {
   'privacy.account.line': '{identifier} · {verified}',
   'privacy.account.readFailed': 'Tiliäsi ei voitu lukea.',
   'privacy.account.verifiedEmail': 'Sähköposti vahvistettu',
+  'privacy.account.unverifiedEmail': 'Sähköpostia ei ole vielä vahvistettu',
   'privacy.account.verifiedPhone': 'Puhelin vahvistettu',
   // “Käytä Pickyä” is the frame's “Use Picky as”; the chips are its answer in the essive, the case
   // a Finnish reader expects under a heading that asks what the app is used as.
@@ -514,37 +543,37 @@ export const fi: Record<TranslationKey, string> = {
   'privacy.accountSecurity.eyebrow': 'TILI / OFFLINE · TILI JA TURVALLISUUS',
   'privacy.accountSecurity.title': 'Tili ja turvallisuus',
   'privacy.accountSecurity.intro': 'Mitä sovellus tietää tilistäsi ja mikä pitää sen tallessa.',
-  'privacy.accountSecurity.none':
-    'Istuntoa ei ole käytössä. Istunto kestää tunnin siitä hetkestä, kun kirjaudut sisään.',
+  'privacy.accountSecurity.none': 'Istuntoa ei ole käytössä. Kirjaudu sisään aloittaaksesi.',
   'privacy.accountSecurity.reach.title': 'Sähköposti ja salasana ovat avain',
   'privacy.accountSecurity.reach.body':
-    'Sisäänkirjautuminen pyytää sähköpostin ja salasanan. Sovellus ei tallenna omaa salasanaa, eikä tilipalvelua ole vielä kytketty tarkistamaan sitä.',
+    'Sisäänkirjautuminen lähettää sähköpostin ja salasanan Pickyn tilipalveluun, joka tarkistaa ne. Sovellus ei tallenna omaa salasanaa.',
   'privacy.accountSecurity.session.title': 'Istunto',
   'privacy.accountSecurity.session.where.label': 'Missä se on',
-  'privacy.accountSecurity.session.where.value':
-    'Sovelluksen muistissa, niin kauan kuin sovellus on auki.',
+  'privacy.accountSecurity.session.where.value': 'Laitteen suojatussa tallennustilassa.',
   'privacy.accountSecurity.session.where.hint':
-    'Puhelimeen ei kirjoiteta vielä mitään: korvikkeen takana oleva varasto on muistissa, ja suojattu varasto tulee tilipalvelun mukana.',
+    'iPhonessa avainnipussa, Androidissa avainsäilössä, luettavissa vain laitteen ollessa auki. Selaimessa se pysyy välilehden muistissa.',
   'privacy.accountSecurity.session.lifetime.label': 'Kuinka kauan se kestää',
-  'privacy.accountSecurity.session.lifetime.value': 'Tunnin siitä hetkestä, kun kirjaudut sisään.',
+  'privacy.accountSecurity.session.lifetime.value': 'Uusitaan, kun käytät sovellusta.',
   'privacy.accountSecurity.session.lifetime.hint':
-    'Tunti on palveluntarjoajan oma tunnisteen voimassaoloaika, ei meidän valintamme.',
+    'Jokainen kirjautuminen on lyhytikäinen, ja tilipalvelu uusii sen, joten sinulta ei kysytä uudelleen.',
   'privacy.accountSecurity.session.ends.label': 'Mikä sen päättää',
-  'privacy.accountSecurity.session.ends.value': 'Uloskirjautuminen tai tunnin päättyminen.',
+  'privacy.accountSecurity.session.ends.value': 'Uloskirjautuminen tai palvelun päätös.',
   'privacy.accountSecurity.session.ends.hint':
-    'Vanhentunut istunto pudotetaan, kun sovellus lukee sen seuraavan kerran.',
-  'privacy.accountSecurity.session.remaining.label': 'Aikaa jäljellä',
-  'privacy.accountSecurity.session.remaining.value': '{minutes} min',
-  'privacy.accountSecurity.session.remaining.underMinute': 'Alle minuutti',
-  'privacy.accountSecurity.session.remaining.hint':
-    'Luetaan istunnon omasta päättymisajasta, kerran sekunnissa. Mikään täällä ei pidennä sitä — päättyneeseen istuntoon kirjaudutaan uudelleen.',
-  'privacy.accountSecurity.ended.title': 'Istunto on päättynyt',
-  'privacy.accountSecurity.ended.body':
-    'Sisäänkirjautumisen jälkeen alkanut tunti on kulunut, joten sovellus ei enää pidä tiliä.',
+    'Uloskirjautuminen ilmoittaa myös tilipalvelulle, joten istuntoa ei voi enää uusia.',
   'privacy.accountSecurity.absent.title': 'Ei vielä täällä',
   'privacy.accountSecurity.absent.service':
-    'Tilipalvelua ei ole kytketty, joten nimeäsi ja sähköpostiosoitettasi ei voi vielä muuttaa sovelluksessa eikä tiliä voi poistaa.',
+    'Nimeäsi ja sähköpostiosoitettasi ei voi vielä muuttaa sovelluksessa.',
   'privacy.accountSecurity.absent.devices': 'Laitelistaa ei ole, eikä toista istuntoa voi päättää.',
+  // Deleting the account at the service (ADR-065, the API plan's phase 5).
+  'privacy.accountSecurity.delete.title': 'Poista tili',
+  'privacy.accountSecurity.delete.body':
+    'Tämä poistaa tilin Pickyn tilipalvelusta ja anonymisoi sen käynnit ja raportit. Tätä ei voi perua. Vahvista syöttämällä salasanasi.',
+  'privacy.accountSecurity.delete.password': 'Salasana',
+  'privacy.accountSecurity.delete.action': 'Poista tili pysyvästi',
+  'privacy.accountSecurity.delete.refused': 'Salasana ei täsmännyt. Mitään ei poistettu.',
+  'privacy.accountSecurity.delete.unavailable': 'Tilipalvelu ei vastannut. Mitään ei poistettu.',
+  'privacy.accountSecurity.delete.deviceNotCleared':
+    'Tili poistettiin, mutta puhelin ei voinut tyhjentää tietojaan. Kirjaudu ulos ja yritä uudelleen.',
   'privacy.accountSecurity.signOut.note':
     'Uloskirjautuminen poistaa tältä puhelimelta käyntien seurannan suostumuksen, tallennetut paikat ja jonossa olevat raportit ja pudottaa sitten istunnon.',
 
@@ -579,6 +608,11 @@ export const fi: Record<TranslationKey, string> = {
     'Raportit, joita tämä puhelin pitää sisällään, ja niihin kirjoittamasi tiedot.',
   'privacy.termsPrivacy.record.queue.hint':
     'Luetteloissa synkronointikeskuksessa; uloskirjautuminen poistaa ne.',
+  'privacy.termsPrivacy.record.outbox.label': 'Lähettämistä odottavat käynnit',
+  'privacy.termsPrivacy.record.outbox.value':
+    'Kunkin päättyneen käynnin vyöhyke sekä alku ja loppu, kunnes vyöhykepalvelu on saanut ne.',
+  'privacy.termsPrivacy.record.outbox.hint':
+    'Lähetetään, kun sovellus on verkossa; uloskirjautuminen poistaa ne.',
   'privacy.termsPrivacy.rights.title': 'Oikeutesi ja missä ne ovat',
   'privacy.termsPrivacy.rights.see.label': 'Katsoa',
   'privacy.termsPrivacy.rights.see.value':
@@ -618,6 +652,13 @@ export const fi: Record<TranslationKey, string> = {
   'privacy.export.share.noteTitle': 'Minne kopio menee',
   'privacy.export.share.note':
     'Laitteen oma jakovalikko avautuu, ja sinä valitset, minne kopio menee. Sovellus ei lähetä mitään itse.',
+  // The account service's own copy (ADR-065, the API plan's phase 5).
+  'privacy.export.service.title': 'Tilipalvelun kopio',
+  'privacy.export.service.body':
+    'Pickyn tilipalvelu säilyttää profiilisi, suostumuksesi, käyntisi ja raporttisi. Tämä kopio tulee suoraan siltä.',
+  'privacy.export.service.label': 'Jaa palvelun kopio',
+  'privacy.export.service.sheetTitle': 'Pickyn tilipalvelun tiedot',
+  'privacy.export.service.failed': 'Tilipalvelu ei voinut luovuttaa kopiotaan. Yritä uudelleen.',
   'privacy.export.share.shared': 'Kopio luovutettiin jakovalikkoon.',
   'privacy.export.share.dismissed': 'Jakovalikko suljettiin valitsematta kohdetta.',
   'privacy.export.share.failed': 'Kopiota ei voitu luovuttaa.',

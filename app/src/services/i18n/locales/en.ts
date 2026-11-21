@@ -106,7 +106,7 @@ export const en = {
   'onboarding.createAccount.field.password': 'Password',
   'onboarding.createAccount.failed': 'Your account wasn’t created. Try again.',
   'onboarding.createAccount.heading': 'A little introduction.',
-  'onboarding.createAccount.passwordHint': 'At least 8 characters, with a number.',
+  'onboarding.createAccount.passwordHint': 'At least 10 characters, with a number.',
   'onboarding.createAccount.privacy.body':
     'Saved spots default to private. Your GPS trails are never public.',
   'onboarding.createAccount.privacy.title': 'Your data stays yours',
@@ -260,6 +260,16 @@ export const en = {
   // Said before the blocks no source supplies, so a picker reading a source zone's real score
   // knows where the outlook and the report stop being the app's own knowledge (the rule frame
   // 13's demo note follows).
+  // What the zone service says about one zone and berry (ADR-065, the API plan's phase 3).
+  'discover.details.insight.title': 'From the zone service',
+  'discover.details.insight.why': 'Why this score',
+  'discover.details.insight.reports': '{count} reports this week · rating {rating} / 5',
+  'discover.details.insight.reportsOne': '{count} report this week · rating {rating} / 5',
+  'discover.details.insight.reportsCount': '{count} reports this week',
+  'discover.details.insight.reportsCountOne': '{count} report this week',
+  'discover.details.insight.history': 'Last {days} days: {low}–{high}',
+  'discover.details.insight.loading': 'Asking the zone service…',
+  'discover.details.insight.unavailable': 'The zone service could not answer.',
   'discover.details.sample':
     'The outlook, the freshest report, the walk and the report list behind them are the design’s own sample: no weather source or report stream exists yet.',
   'discover.details.outlook.title': 'Today’s outlook',
@@ -468,6 +478,14 @@ export const en = {
   'discover.season.row.title': 'Zone {zone} · {species}',
   'discover.season.row.queued': 'Queued',
   'discover.season.row.synced': 'Synced',
+  // The visits the team API recorded for this account (ADR-065, the API plan's phase 4).
+  'discover.season.recorded.title': 'Recorded by the zone service',
+  'discover.season.recorded.row': '{zone} · {date} · {minutes} min',
+  'discover.season.recorded.rowShort': '{zone} · {date} · under 1 min',
+  'discover.season.recorded.unknownZone': 'A zone no longer listed',
+  'discover.season.recorded.empty': 'The service has recorded no visits yet.',
+  'discover.season.recorded.loading': 'Asking the zone service…',
+  'discover.season.recorded.failed': 'The zone service could not answer.',
   'discover.season.note':
     'Includes your queued visit. Harvest rates use only visits with a recorded weight.',
   // Screen 13 · Account and offline · Downloads. The app's sync centre is the report queue, so the
@@ -477,6 +495,16 @@ export const en = {
   // The frame's own journey label with the disclosure frame 06's map and frame 11's season screen
   // carry: since ADR-042 the screen draws the design's sample region, storage and actions, so it says
   // so on itself rather than only in a sentence further down.
+  // The zone service's offline snapshot (ADR-065, the API plan's phase 6).
+  'offline.snapshot.title': 'Pilot area, every berry',
+  'offline.snapshot.body':
+    'Download the pilot area’s zones with all four berries’ scores, so the map opens without a connection.',
+  'offline.snapshot.action': 'Download for offline use',
+  'offline.snapshot.done': '{count} zones saved for offline use.',
+  'offline.snapshot.doneOne': '{count} zone saved for offline use.',
+  'offline.snapshot.updated': 'Updated: {count} zones changed.',
+  'offline.snapshot.updatedOne': 'Updated: {count} zone changed.',
+  'offline.snapshot.failed': 'The zone service could not answer. Nothing new was saved.',
   'offline.eyebrow': 'ACCOUNT / OFFLINE · SYNC CENTRE · SEASON DEMO',
   'offline.title': 'Ready beyond the signal',
   // The downloaded region the frame draws, and everything that hangs off it: the design's own
@@ -554,6 +582,7 @@ export const en = {
   'privacy.account.line': '{identifier} · {verified}',
   'privacy.account.readFailed': 'Your account could not be read.',
   'privacy.account.verifiedEmail': 'Email verified',
+  'privacy.account.unverifiedEmail': 'Email not verified yet',
   'privacy.account.verifiedPhone': 'Phone verified',
   // Frame 14's “Use Picky as” card: the app's one real role, and the design's own note that
   // buying is not one of them (CONTEXT.md, **Buyer**).
@@ -610,43 +639,39 @@ export const en = {
   'privacy.accountSecurity.eyebrow': 'ACCOUNT / OFFLINE · ACCOUNT & SECURITY',
   'privacy.accountSecurity.title': 'Account & security',
   'privacy.accountSecurity.intro': 'What the app knows about your account, and what keeps it.',
-  'privacy.accountSecurity.none':
-    'No session is being held. One lasts an hour from the moment you sign in.',
+  'privacy.accountSecurity.none': 'No session is being held. Sign in to start one.',
   'privacy.accountSecurity.reach.title': 'Your email and password are the key',
   'privacy.accountSecurity.reach.body':
-    'Signing in asks for your email and password. The app keeps no password of its own, and no account service is connected to check one yet.',
+    'Signing in sends your email and password to the Picky account service, which checks them. The app keeps no password of its own.',
   'privacy.accountSecurity.session.title': 'The session',
   'privacy.accountSecurity.session.where.label': 'Where it is kept',
-  'privacy.accountSecurity.session.where.value': 'In this app’s memory, while the app is open.',
+  'privacy.accountSecurity.session.where.value': 'In this device’s secure storage.',
   'privacy.accountSecurity.session.where.hint':
-    'Nothing is written to this phone yet: the store behind the stand-in is memory, and the secure store arrives with the account service.',
+    'The keychain on iPhone, the keystore on Android, readable only while the device is unlocked. In a browser it stays in the tab’s memory.',
   'privacy.accountSecurity.session.lifetime.label': 'How long it lasts',
-  'privacy.accountSecurity.session.lifetime.value': 'An hour from the moment you sign in.',
+  'privacy.accountSecurity.session.lifetime.value': 'Renewed while you use the app.',
   'privacy.accountSecurity.session.lifetime.hint':
-    'The hour is the provider’s own token lifetime rather than a preference of ours.',
+    'Each sign-in is short-lived and the account service renews it, so you are not asked again.',
   'privacy.accountSecurity.session.ends.label': 'What ends it',
-  'privacy.accountSecurity.session.ends.value': 'Signing out, or the hour running out.',
+  'privacy.accountSecurity.session.ends.value': 'Signing out, or the service ends it.',
   'privacy.accountSecurity.session.ends.hint':
-    'A session that has run out is dropped the next time the app reads it.',
-  // The one reading on this screen that changes while it is open (ADR-041): the session's own
-  // expiry, floored at whole minutes so it never claims more time than there is. The hint says where
-  // the number comes from and what the app does *not* do with it — nothing extends a session yet.
-  'privacy.accountSecurity.session.remaining.label': 'Time left',
-  'privacy.accountSecurity.session.remaining.value': '{minutes} min',
-  'privacy.accountSecurity.session.remaining.underMinute': 'Less than a minute',
-  'privacy.accountSecurity.session.remaining.hint':
-    'Read from the session’s own expiry, once a second. Nothing here extends it — a session that ends is signed into again.',
-  // What the user meets when the hour runs out with the screen open. Drawn where the account row
-  // was, because the app is holding no account any more, and the sign-in screen's own title is the
-  // way back in.
-  'privacy.accountSecurity.ended.title': 'This session has ended',
-  'privacy.accountSecurity.ended.body':
-    'The hour that began when you signed in is up, so the app is holding no account.',
+    'Signing out tells the account service too, so the session cannot be renewed.',
   'privacy.accountSecurity.absent.title': 'Not here yet',
   'privacy.accountSecurity.absent.service':
-    'No account service is connected, so your name and your email address cannot be changed in the app and an account cannot be deleted.',
+    'Your name and email address cannot be changed in the app yet.',
   'privacy.accountSecurity.absent.devices':
     'There is no list of your devices and no second session to end.',
+  // Deleting the account at the service (ADR-065, the API plan's phase 5).
+  'privacy.accountSecurity.delete.title': 'Delete account',
+  'privacy.accountSecurity.delete.body':
+    'This deletes the account at the Picky account service and anonymises its visits and reports. It cannot be undone. Enter your password to confirm.',
+  'privacy.accountSecurity.delete.password': 'Password',
+  'privacy.accountSecurity.delete.action': 'Delete account permanently',
+  'privacy.accountSecurity.delete.refused': 'That password didn’t match. Nothing was deleted.',
+  'privacy.accountSecurity.delete.unavailable':
+    'The account service could not answer. Nothing was deleted.',
+  'privacy.accountSecurity.delete.deviceNotCleared':
+    'The account was deleted, but this phone could not clear its records. Sign out to try again.',
   'privacy.accountSecurity.signOut.note':
     'Signing out deletes the visit tracking consent, the saved spots and the waiting reports on this phone, and then drops the session.',
 
@@ -680,6 +705,11 @@ export const en = {
   'privacy.termsPrivacy.record.queue.value':
     'The visit reports this phone holds, with what you typed about each one.',
   'privacy.termsPrivacy.record.queue.hint': 'Listed in the sync centre; signing out deletes them.',
+  'privacy.termsPrivacy.record.outbox.label': 'Finished visits waiting to send',
+  'privacy.termsPrivacy.record.outbox.value':
+    'The zone and the start and end of each finished visit, until the zone service has it.',
+  'privacy.termsPrivacy.record.outbox.hint':
+    'Sent when the app is online; signing out deletes them.',
   'privacy.termsPrivacy.rights.title': 'Your rights, and where they are',
   'privacy.termsPrivacy.rights.see.label': 'See it',
   'privacy.termsPrivacy.rights.see.value':
@@ -726,6 +756,13 @@ export const en = {
   // The three things the platform can answer, and each one is said as itself: a copy handed to the
   // sheet is not a copy that arrived anywhere (iOS reports the share action even when the user backs
   // out of the sheet), and a platform that refused is not a share at all.
+  // The account service's own copy (ADR-065, the API plan's phase 5).
+  'privacy.export.service.title': 'The account service’s copy',
+  'privacy.export.service.body':
+    'The Picky account service keeps your profile, consents, visits and reports. This copy comes straight from it.',
+  'privacy.export.service.label': 'Share the service’s copy',
+  'privacy.export.service.sheetTitle': 'Picky account service data',
+  'privacy.export.service.failed': 'The account service could not hand over its copy. Try again.',
   'privacy.export.share.shared': 'The copy was handed to the share sheet.',
   'privacy.export.share.dismissed': 'The share sheet was closed without choosing.',
   'privacy.export.share.failed': 'The copy could not be handed over.',

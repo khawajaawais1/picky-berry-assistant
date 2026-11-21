@@ -303,9 +303,14 @@ const LEDGER: readonly LedgerEntry[] = [
     why: 'The two ways into the flow, both real routes.',
   },
   {
-    file: 'src/features/privacy/components/account-security-screen.tsx',
+    file: 'src/features/offline/components/offline-sync-screen.tsx',
     offers: { textAction: 1 },
-    why: 'The way back in is drawn when there is no session to carry on with; signing out is the shared `SignOutAction`, which confirms the deletion first (frontend review, 2026-10-25).',
+    why: 'Downloads the pilot area’s snapshot from the zone service (`GET /zones/snapshot`, ADR-065) into the zone cache the map reads offline; drawn only when the route supplies the service, and it states what it saved or that nothing new was saved.',
+  },
+  {
+    file: 'src/features/privacy/components/account-security-screen.tsx',
+    offers: { button: 1, formField: 1, textAction: 1 },
+    why: 'The way back in is drawn when there is no session to carry on with; signing out is the shared `SignOutAction`, which confirms the deletion first (frontend review, 2026-10-25). Deleting the account is a password field and a button, drawn only for a signed-in account when the route can delete it: the password is the confirmation, the button stays disabled until one is typed, and the server checks it (ADR-065).',
   },
   {
     file: 'src/features/privacy/components/privacy-settings-screen.tsx',
@@ -319,8 +324,8 @@ const LEDGER: readonly LedgerEntry[] = [
   },
   {
     file: 'src/features/privacy/components/your-data-screen.tsx',
-    offers: { textAction: 1 },
-    why: 'Share a copy opens the platform’s own sheet with the export document; the app sends nothing itself (ADR-040).',
+    offers: { textAction: 2 },
+    why: 'Share a copy opens the platform’s own sheet with the export document; the app sends nothing itself (ADR-040). The second asks the account service for its own copy (`POST /me/export`, ADR-065) and hands it to the same sheet, drawn only when the route supplies the service.',
   },
 ];
 

@@ -10,7 +10,7 @@ import { sessionPort } from '@/services/session';
  * so the app had no way in for anyone who already has an account. The design owner chose the
  * reading this route serves — one screen of the app's own before the app shell (ADR-034) — and
  * since 2026-10-24 the credential it collects is the account's own: **email + password**
- * (ADR-054, ADR-059), with no code screen behind it.
+ * (ADR-065), checked by the team API's account service.
  *
  * A route only wires a screen to a feature's public API: the address and password go to the
  * **session port** and, when it accepts them, the route lands the returning user in the app

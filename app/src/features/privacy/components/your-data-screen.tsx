@@ -9,6 +9,7 @@ import { spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { usePrivacyConsent } from '@/hooks/use-privacy-consent';
 import { useReportQueue } from '@/hooks/use-report-queue';
+import { useVisitOutbox } from '@/hooks/use-visit-outbox';
 import { useSavedZones } from '@/hooks/use-saved-zones';
 import { useSession } from '@/hooks/use-session';
 import { useTranslation, type TranslationKey } from '@/services/i18n';
@@ -16,6 +17,7 @@ import type { ShareOutcome } from '@/services/share-text';
 
 import { buildExportDocument, type ExportRecords } from '../domain/export-document';
 import type { HeldRecord } from '../domain/held-records';
+import type { AccountApi } from '../services/account-api';
 
 export type YourDataScreenProps = {
   onBack?: () => void;
@@ -30,6 +32,11 @@ export type YourDataScreenProps = {
    * and copy lives in the catalogue.
    */
   onShare?: (document: string, title: string) => Promise<ShareOutcome>;
+  /**
+   * The account service (ADR-065). With it and a share handler, the screen also offers the
+   * service's own copy (`POST /me/export`), which holds more than this phone does.
+   */
+  accountApi?: Pick<AccountApi, 'exportData'>;
 };
 
 /** What the platform did, plus the one thing the screen has to say of its own: that it refused. */
@@ -65,19 +72,22 @@ const OUTCOME_COPY: Record<ShareOutcome | 'failed', TranslationKey> = {
  * nothing is claimed, and when a read failed the screen says the copy may be missing something
  * rather than presenting a short list as the whole of what the phone holds.
  */
-export function YourDataScreen({ onBack, onShare }: YourDataScreenProps) {
+export function YourDataScreen({ accountApi, onBack, onShare }: YourDataScreenProps) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
   const { consent, error: consentError, loading: consentLoading } = usePrivacyConsent();
   const { error: queueError, loading: queueLoading, reports } = useReportQueue();
+  const { entries: waiting, error: outboxError, loading: outboxLoading } = useVisitOutbox();
   const { error: zonesError, loading: zonesLoading, zones } = useSavedZones();
   const { error: sessionError, loading: sessionLoading, session } = useSession();
   const [sharing, setSharing] = useState(false);
   const [outcome, setOutcome] = useState<ShareOutcome | 'failed' | null>(null);
 
-  const loading = consentLoading || queueLoading || sessionLoading || zonesLoading;
+  const loading = consentLoading || queueLoading || outboxLoading || sessionLoading || zonesLoading;
   // The same rule the notice follows: an unanswered read is neither “held” nor “nothing held”.
-  const readFailed = Boolean(consentError || queueError || sessionError || zonesError);
+  const readFailed = Boolean(
+    consentError || queueError || outboxError || sessionError || zonesError,
+  );
 
   // What the copy would carry, in the order the app collected the records — the same order
   // `heldRecords` answers in, named by the same record type, so the two screens cannot drift into
@@ -123,13 +133,28 @@ export function YourDataScreen({ onBack, onShare }: YourDataScreenProps) {
     });
   }
 
+  if (waiting.length > 0) {
+    rows.push({
+      label: 'privacy.termsPrivacy.record.outbox.label',
+      record: 'outbox',
+      value: String(waiting.length),
+    });
+  }
+
   const share = async () => {
     if (!onShare || sharing) return;
 
     setSharing(true);
     setOutcome(null);
 
-    const records: ExportRecords = { consent, readFailed, reports, session, zones };
+    const records: ExportRecords = {
+      consent,
+      readFailed,
+      reports,
+      session,
+      waitingVisits: waiting,
+      zones,
+    };
 
     try {
       setOutcome(
@@ -229,7 +254,76 @@ export function YourDataScreen({ onBack, onShare }: YourDataScreenProps) {
             ) : null}
           </>
         ) : null}
+        {accountApi && onShare ? <ServiceCopy accountApi={accountApi} onShare={onShare} /> : null}
       </View>
     </Screen>
+  );
+}
+
+/**
+ * The account service's own copy (ADR-065): asked for when pressed, handed to the same share
+ * sheet as the device's copy. A service that could not answer is said, and no sheet is opened.
+ */
+function ServiceCopy({
+  accountApi,
+  onShare,
+}: {
+  accountApi: Pick<AccountApi, 'exportData'>;
+  onShare: (document: string, title: string) => Promise<ShareOutcome>;
+}) {
+  const { t } = useTranslation();
+  const [working, setWorking] = useState(false);
+  const [outcome, setOutcome] = useState<ShareOutcome | 'failed' | 'unavailable' | null>(null);
+
+  const share = async () => {
+    if (working) return;
+    setWorking(true);
+    setOutcome(null);
+
+    try {
+      let document: string;
+      try {
+        document = await accountApi.exportData();
+      } catch {
+        setOutcome('unavailable');
+        return;
+      }
+      try {
+        setOutcome(await onShare(document, t('privacy.export.service.sheetTitle')));
+      } catch {
+        setOutcome('failed');
+      }
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  return (
+    <Card
+      style={{ gap: spacing.cardGap, padding: spacing.section }}
+      testID="your-data-service-card"
+    >
+      <AppText style={{ fontWeight: '600' }} variant="cardTitle">
+        {t('privacy.export.service.title')}
+      </AppText>
+      <AppText tone="muted" variant="bodySmall">
+        {t('privacy.export.service.body')}
+      </AppText>
+      <TextAction
+        align="center"
+        label={t('privacy.export.service.label')}
+        onPress={working ? undefined : () => void share()}
+        testID="your-data-service-share"
+      />
+      {outcome ? (
+        <AppText
+          testID="your-data-service-outcome"
+          tone={outcome === 'failed' || outcome === 'unavailable' ? 'danger' : 'muted'}
+          variant="caption"
+        >
+          {t(outcome === 'unavailable' ? 'privacy.export.service.failed' : OUTCOME_COPY[outcome])}
+        </AppText>
+      ) : null}
+    </Card>
   );
 }
