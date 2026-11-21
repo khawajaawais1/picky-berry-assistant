@@ -9,8 +9,8 @@ suite.
 
 | #   | Phase                    | Endpoints                                                                                          | Replaces                                                    | Status      |
 | --- | ------------------------ | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ----------- |
-| 0   | Transport                | (all)                                                                                              | nothing; new `src/services/api/`                            | In progress |
-| 1   | Auth and session         | `POST /auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`, `/auth/verify-email`        | stand-in session port, in-memory store → secure store      | In progress |
+| 0   | Transport                | (all)                                                                                              | nothing; new `src/services/api/`                            | Done        |
+| 1   | Auth and session         | `POST /auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`, `/auth/verify-email`        | stand-in session port, in-memory store → secure store      | Done        |
 | 2   | Zones                    | `GET /zones` (bbox + species), `/zones/near`                                                       | `testZoneSource` behind the `ZoneSource` port               | Next        |
 | 3   | Zone details             | `GET /zones/{id}`, `/zones/{id}/explanation`, `/zones/{id}/history`, `GET /species`                | screen 07's sample outlook and reports                      | Planned     |
 | 4   | Visits                   | `POST /visits` (idempotent `client_id`), `GET /visits`                                             | local-only visit lifecycle; outbox flush                    | Planned     |
@@ -24,5 +24,8 @@ suite.
    needs a display fallback for a null name.
 2. `GET /zones` requires `bbox`, but the `ZoneSource` port only takes `species`. Phase 2 widens
    `ZoneQuery` with the map's viewport.
-3. There is no password-reset endpoint (ADR-065 decision 4).
+3. There is no password-reset endpoint, so reset is unavailable in every build (ADR-065 decision 4).
+   The Firebase reset adapter (`firebase-password-reset.ts`, `EXPO_PUBLIC_FIREBASE_API_KEY`) is
+   now unused and can be removed.
 4. `/health` returns 404 under `/api/v1` on the deployed host.
+5. There are no versioned terms or privacy documents, so registration sends `consents: {}`.

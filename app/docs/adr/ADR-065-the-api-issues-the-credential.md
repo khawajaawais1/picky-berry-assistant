@@ -34,8 +34,10 @@ rather than wait for an idToken exchange.
    `requestPasswordReset`). An API adapter replaces the stand-in. Refresh happens inside the
    transport: a 401 on an authenticated call triggers one refresh and one retry, and a failed
    refresh ends the session.
-4. **Password reset has no API endpoint yet.** Until one exists, the ADR-062 request stays on its
-   current adapter, and this ADR claims no reset for API accounts.
+4. **Password reset is unavailable in every build** until the API has an endpoint for it. Firebase
+   holds none of these accounts, so the ADR-062 Firebase request would report success for a link
+   that can never arrive. `passwordResetAvailability()` answers `unavailable`, and the reset screen
+   draws its action disabled.
 5. **The transport is one module** (`src/services/api/`). It is the only code that calls `fetch`
    against the team API. It reads the base URL from `src/config/env.ts`, appends `/api/v1`, and
    returns explicit results (`ok: true | false`) rather than throwing. Every response body is

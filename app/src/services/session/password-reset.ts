@@ -1,5 +1,3 @@
-import { appEnvironment, firebaseApiKey, type PublicEnvSource } from '@/config/env';
-
 /**
  * The password-reset request's vocabulary, shared by the seam, the provider adapter and the
  * screen that asks for a link (ADR-062).
@@ -21,22 +19,18 @@ export type PasswordResetRequest = (email: string) => Promise<PasswordResetResul
 /**
  * What a build can honestly offer a person on the reset screen.
  *
- * - `live` — a Firebase project is configured, so a request can send a real email.
- * - `test` — no provider is configured outside production. The stand-in accepts the request so
- *   the journey can be walked, sends nothing, and the screen says so.
- * - `unavailable` — no provider is configured in a shipped build, so the action is not offered.
+ * - `live` — a provider can send a real reset email.
+ * - `test` — a test build walks the journey and sends nothing, and the screen says so.
+ * - `unavailable` — nothing can send a reset, so the action is not offered.
  */
 export type PasswordResetAvailability = 'live' | 'test' | 'unavailable';
 
 /**
- * Decides which of the three states this build is in. It is the route's answer, so the screen
- * itself never has to ask what environment it is in: the route either supplies a handler or does
- * not, and says whether the provider is live.
+ * The route's answer to "can this build offer a reset?". Accounts live in the team API
+ * (ADR-065), which has no reset endpoint yet, so every build answers `unavailable`. Firebase holds
+ * none of these accounts, so its key no longer makes a reset possible. When the API gains an
+ * endpoint, this answers `live` and the session port's `requestPasswordReset` calls it.
  */
-export function passwordResetAvailability(source?: PublicEnvSource): PasswordResetAvailability {
-  if (firebaseApiKey(source) !== null) {
-    return 'live';
-  }
-
-  return appEnvironment(source) === 'production' ? 'unavailable' : 'test';
+export function passwordResetAvailability(): PasswordResetAvailability {
+  return 'unavailable';
 }

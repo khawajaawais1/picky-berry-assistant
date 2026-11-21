@@ -1,31 +1,29 @@
-import { PUBLIC_ENV_VARS } from '@/config/env';
-
 import { passwordResetAvailability } from '../password-reset';
 
-const ENV = PUBLIC_ENV_VARS.appEnvironment;
-const KEY = PUBLIC_ENV_VARS.firebaseApiKey;
+afterEach(() => {
+  delete process.env.EXPO_PUBLIC_APP_ENV;
+  delete process.env.EXPO_PUBLIC_FIREBASE_API_KEY;
+});
 
 /**
- * The one question the route asks before it wires a reset screen: is a provider configured, and
- * if not, is this build allowed to walk the stand-in? The three answers are what decide whether
- * the action acts, and whether the confirmation may say an email was sent.
+ * The one question the route asks before it wires a reset screen. Accounts live in the team API
+ * (ADR-065), and the API has no reset endpoint yet, so no build can honestly offer a reset. A
+ * Firebase key no longer helps: Firebase holds none of these accounts, so a request there would
+ * report success for a link that can never arrive.
  */
 describe('passwordResetAvailability', () => {
-  it('is live when a Firebase project is configured in any environment', () => {
-    expect(passwordResetAvailability({ [ENV]: 'production', [KEY]: 'firebase-key' })).toBe('live');
-    expect(passwordResetAvailability({ [ENV]: 'development', [KEY]: 'firebase-key' })).toBe('live');
-  });
+  it.each(['development', 'preview', 'production'])(
+    'is unavailable in a %s build, because the account service has no reset yet',
+    (environment) => {
+      process.env.EXPO_PUBLIC_APP_ENV = environment;
 
-  it('is test outside production when no provider is configured', () => {
-    expect(passwordResetAvailability({ [ENV]: 'development' })).toBe('test');
-    expect(passwordResetAvailability({ [ENV]: 'preview' })).toBe('test');
-  });
+      expect(passwordResetAvailability()).toBe('unavailable');
+    },
+  );
 
-  it('is unavailable in a shipped build with no provider', () => {
-    expect(passwordResetAvailability({ [ENV]: 'production' })).toBe('unavailable');
-  });
+  it('stays unavailable when a Firebase key is configured, since Firebase holds no accounts', () => {
+    process.env.EXPO_PUBLIC_FIREBASE_API_KEY = 'firebase-key';
 
-  it('treats a malformed environment as the strictest one', () => {
-    expect(passwordResetAvailability({ [ENV]: 'staging' })).toBe('unavailable');
+    expect(passwordResetAvailability()).toBe('unavailable');
   });
 });
