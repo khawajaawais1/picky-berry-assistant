@@ -1,30 +1,45 @@
-import { INestApplication } from '@nestjs/common';
-import { SwaggerModule } from '@nestjs/swagger';
+import { Module } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import { Server } from 'node:http';
+import request from 'supertest';
 import { setupSwagger } from './swagger.setup';
 
-describe('setupSwagger', () => {
-  it('registers the merged OpenAPI contracts at /docs', () => {
-    const app = {} as INestApplication;
-    const setup = jest
-      .spyOn(SwaggerModule, 'setup')
-      .mockImplementation(() => undefined);
+@Module({})
+class TestModule {}
 
+describe('setupSwagger', () => {
+  it('serves CDN-backed Swagger UI and the merged OpenAPI document', async () => {
+    const app = await NestFactory.create(TestModule, { logger: false });
     try {
       setupSwagger(app);
+      await app.init();
+      const server = app.getHttpServer() as Server;
 
-      const call = setup.mock.calls[0];
-      expect(call?.[0]).toBe('docs');
-      expect(call?.[1]).toBe(app);
-      const contract = call?.[2];
-      if (typeof contract !== 'object' || contract === null) {
-        throw new Error('Swagger setup did not receive an OpenAPI object.');
-      }
-      expect(contract.paths).toHaveProperty('/auth/login');
-      expect(contract.paths).toHaveProperty('/visits');
-      expect(contract.paths).toHaveProperty('/zones');
-      expect(call?.[3]).toEqual({ useGlobalPrefix: false });
+      const docs = await request(server).get('/docs');
+      expect(docs.status).toBe(200);
+      expect(docs.text).toContain(
+        'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.19.0/swagger-ui-bundle.js',
+      );
+      expect(docs.headers['content-security-policy']).toContain(
+        'https://cdn.jsdelivr.net',
+      );
+
+      const initializer = await request(server).get('/docs-init.js');
+      expect(initializer.status).toBe(200);
+      expect(initializer.text).toContain(
+        "window.location.origin + '/docs-json'",
+      );
+
+      const spec = await request(server).get('/docs-json');
+      expect(spec.status).toBe(200);
+      expect(spec.text).toContain('"/auth/login"');
+      expect(spec.text).toContain('"/visits"');
+      expect(spec.text).toContain('"/zones"');
+      expect(spec.text).toContain(
+        'https://picky-berry-assistant.vercel.app/api/v1',
+      );
     } finally {
-      setup.mockRestore();
+      await app.close();
     }
   });
 });
