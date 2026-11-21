@@ -56,17 +56,6 @@ export {
 
 export { createInMemorySessionStore, type SessionStore } from './store';
 
-export { createSecureSessionStore, SESSION_STORE_KEY } from './secure-store';
-
-export {
-  createApiSessionPort,
-  parseAuthSession,
-  SessionUnreachableError,
-  type ApiSessionPort,
-  type Registration,
-  type RegistrationConsents,
-} from './api-port';
-
 export {
   createStandInSessionPort,
   sessionPort,
