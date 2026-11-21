@@ -64,7 +64,7 @@ picky-berry-assistant/
 | `data/` | ✅ Pipelines for 6.2 + 28 tests; 50 stub zones committed; the real backfill and bucket upload are not run |
 | `docker/` | 🟡 Postgres 17 + PostGIS + h3 image and dev compose defined; no CI build |
 | `ml/` | ✅ v1 models + `berry_ml` package + reference API, 24 tests — see [ml/API.md](ml/API.md) for wiring it into the backend |
-| `ontology/` | 🟡 v1 vocabulary + one SPARQL rule with a fixture-graph test (3 passing); nothing loads it yet ([`ontology/README.md`](ontology/README.md)) |
+| `ontology/` | 🟡 v1 vocabulary + two SPARQL rules, loaded and validated by the backend's `reasoning` module (37 backend + ontology tests); no job or `alerts` table yet ([`ontology/README.md`](ontology/README.md)) |
 | `backend/`, `deploy/` | ⬜ Planned layout in each README; no code in any of them yet |
 
 Sprint plan and first deliverables (due 3 Nov): [docs/sprints.md](docs/sprints.md).

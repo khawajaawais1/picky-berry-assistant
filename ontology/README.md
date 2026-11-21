@@ -4,12 +4,13 @@ The shared vocabulary (species, zones, visits, reports, ripeness) and the home o
 rules. Postgres stays the system of record; each reasoning run builds a small in-memory rdflib
 graph. Design: architecture doc §8.
 
-**Status (2026-11-21): v1 vocabulary exists and the backend reads it.** The graph files, the first
-rule and its tests are committed, and `backend/app/modules/reasoning/` loads a zone snapshot into
-the graph, runs the rule and serves the result at `GET /api/v1/alerts`. What is still missing is
-the data: no job builds a snapshot from Postgres and no `alerts` table stores the result, so an app
-with no alert source answers 503. Visit and Report are declared classes with no properties until
-6.3/6.4's tables land.
+**Status (2026-11-21): v1 vocabulary exists and the backend reads it.** The graph files, two rules
+and their tests are committed; `backend/app/modules/reasoning/` loads a zone snapshot into the
+graph, validates the rulebook at startup, runs each rule and serves alerts at
+`GET /api/v1/alerts`, the vocabulary at `GET /api/v1/species` and the JSON-LD context at
+`GET /api/v1/context.jsonld`. What is still missing is the data: no job builds a snapshot from
+Postgres and no `alerts` table stores the result, so an app with no alert source answers 503.
+Visit and Report are declared classes with no properties until 6.3/6.4's tables land.
 
 ## Layout
 ```
@@ -19,7 +20,8 @@ ontology/
   species.ttl        # per species: code, FI/EN names, latin, IRI, habitat suitability per class,
                      #   fertility multipliers 1–6, min_suitability
   rules/
-    ripe_nearby.rq   # one SPARQL rule per file: id, version, sentence template
+    ripe_nearby.rq   # ripe, and the habitat can support the species
+    ripe_soon.rq     # ripening, same floor — one SPARQL rule per file: id, version, sentences
   context.jsonld     # JSON-LD @context used by the API (F3 Linked Data)
   tests/             # fixture graph → expected alerts (pytest + rdflib)
     fixtures/zones.ttl
@@ -36,16 +38,21 @@ python3.11 -m venv .venv && .venv/bin/pip install -e ".[dev]"
 ## Reading it from the backend
 `backend/app/modules/reasoning/` is the only reader, and the request path never runs a rule:
 
-* `lifespan.py` — `ontology_lifespan` parses `bpa.ttl` + `species.ttl` once, at app startup, and
-  keeps the graph on `app.state.ontology_graph` for every run after it.
-* `graph.py` — `load_ontology()` parses the two Turtle files; `add_zone_rows()` maps one
-  run's zone × species rows (`zones` ⋈ `zone_scores_current` ⋈ `zone_species`) to
-  `bpa:Zone`/`bpa:SpeciesAssessment` triples, and refuses a species or ripeness the graph cannot
-  name before anything is written.
-* `service.py` — `alerts_from_rows()` copies the graph, runs the `.rq` and returns alerts whose
-  sentence is the rule's own header template, with the rule's id and version attached.
-* `router.py` — `GET /api/v1/alerts` serves what `app.state.alerts_source` holds. That is an
-  in-memory list today and the `alerts` table once the job exists; no request runs SPARQL.
+* `lifespan.py` — `ontology_lifespan` parses `bpa.ttl` + `species.ttl` once, at app startup, keeps
+  the graph on `app.state.ontology_graph` and validates every rule in `rules/` before serving.
+* `rules.py` — parses a rule's header, then at startup runs each query once to check it parses,
+  returns the alert row's columns, and uses only placeholders it selects. A typo fails the boot,
+  naming the file, instead of failing a run at 07:00.
+* `graph.py` — `add_zone_rows()` maps one run's zone × species rows
+  (`zones` ⋈ `zone_scores_current` ⋈ `zone_species`) to `bpa:Zone`/`bpa:SpeciesAssessment`
+  triples. An incomplete row (a zone outside ml/'s grid has no score) is skipped; an unknown
+  species or ripeness is refused before anything is written.
+* `service.py` — `alerts_from_rule()` copies the graph, runs the `.rq` and returns alerts whose
+  sentence is the rule's own header template, with the rule's id and version and whether the
+  species' ecology is `verified`.
+* `router.py` — `GET /api/v1/alerts` serves what `app.state.alerts_source` holds (an in-memory
+  list today, the `alerts` table once the job exists), `GET /api/v1/species` serves the species
+  vocabulary from the graph, and `GET /api/v1/context.jsonld` serves the committed context.
 
 `backend/tests/test_ontology_matches_config.py` is the drift guard: it compares every species,
 habitat value, fertility multiplier, `min_suitability` and `verified` flag against the two YAMLs.

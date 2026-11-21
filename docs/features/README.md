@@ -25,7 +25,7 @@ deep dive is still the gate before the service behind a screen is built.
 | 6.4 | Feedback (rating, amount, photo) | `feedback`, `media` | Feedback | Hassan · Salman, Sabih, Remon (YOLO) | 2 | — | 🟡 app feedback screen + device queue (no transport) · API ⬜ |
 | 6.5 | Validation and trust weighting | `trust` | — (shows in scores) | Hassan · Remon | 2 | — | ⬜ |
 | 6.6 | Yield prediction (phenology baseline → XGBoost) | `prediction`, `ingest` | Zone sheet (why) | Remon · Awais | 2–3 | — | ⬜ |
-| 6.7 | Reasoning and explainable push alerts | `reasoning` | Alerts inbox | Asmer · Sabih (FCM), Hassan | 3 | — | 🟡 app alerts screen (design sample) · API ⬜ |
+| 6.7 | Reasoning and explainable push alerts | `reasoning` | Alerts inbox | Asmer · Sabih (FCM), Hassan | 3 | — | 🟡 app alerts screen (design sample) · API 🟡 reasoning module (no job yet) |
 | 6.8 | Analytics (median stay time, trends) | `analytics` | My stats, admin page | Hassan · Sayeem | 3 | — | 🟡 app season screen (design sample) · API ⬜ |
 | 6.9 | Offline mode and privacy (GDPR) | `accounts`, all | Profile & privacy, offline area | Salman · Hassan | 3 | — | 🟡 app privacy/offline screens, device records only · API ⬜ |
 
