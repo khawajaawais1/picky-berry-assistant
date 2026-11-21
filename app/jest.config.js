@@ -22,7 +22,8 @@ module.exports = {
   },
   // `/e2e/` is a Playwright harness with its own runner (npm run test:layout); Jest
   // matches `*.spec.ts` by default and would try to run those specs without a browser.
-  testPathIgnorePatterns: ['/node_modules/', '/dist/', '/e2e/'],
+  // `/scripts/` holds plain-Node tooling tested with Node's own runner (npm run test:scripts).
+  testPathIgnorePatterns: ['/node_modules/', '/dist/', '/e2e/', '/scripts/'],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
