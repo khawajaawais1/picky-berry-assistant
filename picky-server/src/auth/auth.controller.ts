@@ -12,6 +12,10 @@ import { Public } from '../common/decorators/public.decorator';
 import { AuthUser } from './auth-user.interface';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import {
+  ConfirmPasswordResetDto,
+  RequestPasswordResetDto,
+} from './dto/password-reset.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { RegisterDto } from './dto/register.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
@@ -62,6 +66,27 @@ export class AuthController {
     @Req() request: AuthenticatedRequest,
   ): Promise<void> {
     await this.auth.logout(request.user.id, input);
+  }
+
+  /** Always 202 with no body: the answer cannot reveal whether an account exists. */
+  @Post('password-reset')
+  @Public()
+  @HttpCode(HttpStatus.ACCEPTED)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  async requestPasswordReset(
+    @Body() input: RequestPasswordResetDto,
+  ): Promise<void> {
+    await this.auth.requestPasswordReset(input);
+  }
+
+  @Post('password-reset/confirm')
+  @Public()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  async confirmPasswordReset(
+    @Body() input: ConfirmPasswordResetDto,
+  ): Promise<void> {
+    await this.auth.confirmPasswordReset(input);
   }
 
   @Post('verify-email')
