@@ -15,7 +15,6 @@ const GOOD: ConfigResult = {
   config: {
     environment: 'development',
     apiBaseUrl: 'https://api.example.test',
-    firebaseApiKey: null,
   },
 };
 const BAD: ConfigResult = {
@@ -98,6 +97,23 @@ describe('createAppSessionPort', () => {
 
     expect(storage.setItemAsync).not.toHaveBeenCalled();
     expect((await port.current())?.accountId).toBe('aino@example.fi');
+  });
+
+  it('asks the account service for a reset link (ADR-065 decision 4, amended)', async () => {
+    const fetchImpl = jest.fn<ReturnType<ApiFetch>, Parameters<ApiFetch>>(async () => ({
+      ok: true,
+      status: 202,
+      json: async () => null,
+    }));
+    const port = createAppSessionPort({
+      config: GOOD,
+      platform: 'ios',
+      fetchImpl,
+      secureStorage: secureStorage(),
+    });
+
+    expect(await port.requestPasswordReset('aino@example.fi')).toEqual({ ok: true });
+    expect(fetchImpl.mock.calls[0]![0]).toBe('https://api.example.test/api/v1/auth/password-reset');
   });
 
   it('answers unavailable, and sends nothing, when the configuration is unusable', async () => {

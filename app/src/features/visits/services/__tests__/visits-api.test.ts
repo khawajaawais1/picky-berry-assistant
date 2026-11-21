@@ -94,6 +94,9 @@ describe('createVisitsApi', () => {
       ['the network', 'offline'],
       ['a server error', { status: 503, body: {} }],
       ['an ended session', { status: 401, body: {} }],
+      ['a rate limit', { status: 429, body: {} }],
+      // A deploy without the route has not read the visit: it stays in the outbox, never dropped.
+      ['a deploy without the endpoint', { status: 404, body: {} }],
     ])('asks for a retry when %s fails the submit', async (_, answer) => {
       const { visits } = api(answer);
 

@@ -124,24 +124,22 @@ describe('createApiSessionPort', () => {
       expect(result.ok && result.session.displayName).toBeNull();
     });
 
-    it.each([401, 422, 429])(
-      'reads a %i as a refused credential and keeps nothing',
-      async (status) => {
-        const h = harness({
-          status,
-          body: { error: { code: 'X', message: 'x' }, request_id: 'q' },
-        });
+    it.each([401, 422])('reads a %i as a refused credential and keeps nothing', async (status) => {
+      const h = harness({
+        status,
+        body: { error: { code: 'X', message: 'x' }, request_id: 'q' },
+      });
 
-        const result = await h.port.signIn({ email: EMAIL, password: PASSWORD });
+      const result = await h.port.signIn({ email: EMAIL, password: PASSWORD });
 
-        expect(result).toEqual({ ok: false, reason: 'refused' });
-        expect(await h.store.read()).toBeNull();
-      },
-    );
+      expect(result).toEqual({ ok: false, reason: 'refused' });
+      expect(await h.store.read()).toBeNull();
+    });
 
     it.each<[string, Answer]>([
       ['a network failure', 'offline'],
       ['a server error', { status: 503 }],
+      ['a rate limit', { status: 429 }],
       ['a body that is not a session', { status: 200, body: { access_token: 'a' } }],
     ])('reads %s as unavailable and keeps nothing', async (_, answer) => {
       const h = harness(answer);
@@ -275,6 +273,25 @@ describe('createApiSessionPort', () => {
       expect(await h.port.current()).toBeNull();
       expect(await h.store.read()).toBeNull();
     });
+
+    it.each<[string, Answer]>([
+      ['rate-limited', { status: 429, body: {} }],
+      ['answered by a deploy without the endpoint', { status: 404, body: {} }],
+      ['failed by the server', { status: 503, body: {} }],
+    ])(
+      'keeps the session when the refresh is %s, because none of those is a refusal',
+      async (_, answer) => {
+        // Only the server saying no to this refresh token ends the session. A throttled refresh used
+        // to clear the store and sign the picker out (architecture review, 2026-11-21).
+        const h = harness({ status: 200, body: authSession() });
+        await h.port.signIn({ email: EMAIL, password: PASSWORD });
+        h.advance(900_000);
+        h.answer(answer);
+
+        await expect(h.port.current()).rejects.toThrow();
+        expect(await h.store.read()).toContain('refresh-1');
+      },
+    );
 
     it('rejects, and keeps the session, when the refresh cannot reach the server', async () => {
       // Offline is "the app could not find out", never "nobody is signed in" (use-session.ts).

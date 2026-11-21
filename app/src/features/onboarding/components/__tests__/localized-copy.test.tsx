@@ -88,12 +88,7 @@ describe('screens on a Finnish device', () => {
         'Jos osoitteella aino@example.fi on tili, seuraava vaihe on kirjautumispalvelun palautuslinkki tähän osoitteeseen. Sovellus ei koskaan tallenna salasanaasi.',
       ),
     ).toBeOnTheScreen();
-    expect(screen.getByText('Testiversio')).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        'Kirjautumispalvelua ei ole kytketty tähän versioon, joten palautussähköpostia ei lähetetä. Valmiissa sovelluksessa linkki menisi tähän osoitteeseen.',
-      ),
-    ).toBeOnTheScreen();
+    expect(screen.queryByText('Testiversio')).not.toBeOnTheScreen();
   });
 
   it('renders the live reset confirmation in Finnish when a provider is configured', async () => {

@@ -19,11 +19,10 @@ import { expect, test } from '@playwright/test';
  * community map's readings answer “which screen” as well as “which shape”.
  */
 test.describe('the production export', () => {
-  test('offers account creation and sign-in, and no reset, now the account service answers', async ({
+  test('offers account creation, sign-in and reset, now the account service answers', async ({
     page,
   }) => {
-    // ADR-065: a shipped build signs in and registers with the account service. It has no reset
-    // endpoint yet, so the reset action stays disabled.
+    // ADR-065: a shipped build signs in, registers and requests a reset with the account service.
     await page.goto('/create-account');
     await page.getByLabel('Your name').fill('Aino Korhonen');
     await page.getByLabel('Email address').fill('aino@example.fi');
@@ -43,7 +42,7 @@ test.describe('the production export', () => {
     await page.goto('/forgot-password');
     await page.getByRole('textbox', { name: 'Email address' }).fill('aino@example.fi');
 
-    await expect(page.getByRole('button', { name: 'Request reset link' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Request reset link' })).toBeEnabled();
     await expect(page).toHaveURL(/\/forgot-password$/);
   });
 

@@ -764,10 +764,10 @@ through in the browser journey, not by a fresh page load, because the request's 
 screen rather than in the store.
 
 **A delivery is claimed only when one is made.** The action says “Request reset link” rather than
-“Send me a link”. With `EXPO_PUBLIC_FIREBASE_API_KEY` configured, Firebase sends the email and the
-confirmation reads “Check your inbox.”, with the conditional “*if* an account uses the address, its
-reset link is on the way”. Without a provider, the confirmation says the request was accepted and
-a test-build note says no reset email is sent; a shipped build with no provider draws the action
+“Send me a link”. The request goes to the team API (ADR-065), whose mail is not delivered yet, so
+the confirmation says the request was accepted and claims no email. “Check your inbox.”, with the
+conditional “*if* an account uses the address, its reset link is on the way”, is kept for when the
+service sends real mail. A build that cannot reach the API draws the action
 disabled. The one failure line does not distinguish an unknown address from a failed request, so
 the screen cannot be used to learn which addresses have accounts. This is ADR-048's rule applied
 to reset rather than a second wording for it.

@@ -1,4 +1,4 @@
-import type { ApiClient, ApiFailure } from '@/services/api';
+import { failureVerdict, type ApiClient, type ApiFailure } from '@/services/api';
 
 /**
  * The account endpoints of the team API (ADR-065, the API integration plan's phase 5):
@@ -92,10 +92,10 @@ export function createAccountApi({ client }: { client: ApiClient }): AccountApi 
 
       if (result.ok) return { ok: true };
 
+      // A wrong password is a 401 the transport cannot renew, so here a lost session is the
+      // refusal too; a throttle or a missing route says nothing about the password.
       const { error } = result;
-      const refused =
-        error.kind === 'unauthenticated' ||
-        (error.kind === 'http' && error.status >= 400 && error.status < 500);
+      const refused = error.kind === 'unauthenticated' || failureVerdict(error) === 'refused';
       return { ok: false, reason: refused ? 'refused' : 'unavailable' };
     },
   };

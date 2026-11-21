@@ -90,13 +90,11 @@ It validates nothing: whether the account service accepts an identifier is the p
 
 `services/i18n/` is the first tenant of `services/`: it reads the device's languages
 and owns the copy (ADR-017). `services/session/` is the second: the authentication seam —
-one session port (`signIn`, `current`, `signOut`, `requestPasswordReset`) with a stand-in provider
-and an in-memory session store behind it until the account service exists (ADR-028), holding the
-account's identifier and the name it is shown under (ADR-029). The reset request is a port call,
-not a session: it passes an address to Firebase and keeps no token (ADR-062).
-`firebase-password-reset.ts` is that provider's adapter — Identity Toolkit's
-`accounts:sendOobCode`, enabled by `EXPO_PUBLIC_FIREBASE_API_KEY`; without a key the stand-in
-keeps the request walkable outside production. It is a service rather than
+one session port (`signIn`, `current`, `signOut`, `requestPasswordReset`, ADR-028) whose adapter
+is the team API's (`api-port.ts`, ADR-065), composed in `app-port.ts`: the API's access and
+refresh tokens in secure storage on a device (`secure-store.ts`, ADR-006) and in memory on the
+web export. The reset request is a port call, not a session: `api-password-reset.ts` passes an
+address to `POST /auth/password-reset` and keeps no token. It is a service rather than
 a feature because onboarding, the app shell and the profile all need it and none of them owns
 it. `services/location/` is the third: the position seam (ADR-045) — one port
 (`requestAvailability`, `watch`) with `expo-location` behind it, asking for the foreground
@@ -220,9 +218,8 @@ never a runtime secret store. That substitution is textual, and it only reaches 
 unset in the bundle (the runtime's `process.env` carries none of these names), which is how a
 production build once answered `development` and accepted the stand-in credential. Any new
 read belongs in `declaredPublicEnv`, in that literal shape, and `e2e/production-export.spec.ts`
-is where a production-only rule is checked. `EXPO_PUBLIC_FIREBASE_API_KEY` is the one public key
-with a third-party service: Firebase's client keys identify the project rather than authorising
-access, and the reset request is the only thing that reads it.
+is where a production-only rule is checked. The app carries no third-party key: the team API is
+the only service it calls (ADR-065).
 
 Two consequences of that substitution worth knowing before building the app twice:
 
@@ -319,12 +316,11 @@ server-side for every resource.
   trusted from the client.
 - MFA is expected for privileged accounts once roles exist (SECURITY.md §5).
 
-**Implemented today:** the session seam (`services/session/`) has a stand-in provider and an
-in-memory session; sign-in and account creation still wait for the account service. The reset
-request is the one path that reaches a real provider: `firebase-password-reset.ts` calls Identity
-Toolkit's `accounts:sendOobCode` when `EXPO_PUBLIC_FIREBASE_API_KEY` is configured, and keeps no
-address, link or token (ADR-062). No ID token is verified yet because the account service does not
-exist.
+**Implemented today (ADR-065):** sign-in, account creation, refresh, sign-out, deletion and the
+reset request all go to the team API. The API issues and verifies its own JWTs; the app holds the
+access and refresh tokens in secure storage, refreshes once on a 401, and keeps no password, reset
+link or token. The API's mail is console-only, so the reset screen claims an accepted request,
+never a sent email.
 
 ## 8. Offline architecture (planned, design accepted in ADR-005)
 
@@ -337,13 +333,8 @@ data, and media uploads must validate type/size before being persisted.
 
 ## 9. External services
 
-The team's stack names these providers, and one operation among them is integrated today:
-
-- **Firebase Authentication** — **integrated for the password-reset request only**:
-  `src/services/session/firebase-password-reset.ts` posts to Identity Toolkit's
-  `accounts:sendOobCode` when `EXPO_PUBLIC_FIREBASE_API_KEY` is configured, and the app keeps no
-  address, link or token. Sign-in, account creation and ID-token verification still wait for the
-  account service (ADR-054, ADR-062).
+The team API (`EXPO_PUBLIC_API_BASE_URL`, ADR-065) is the only service the app calls. The stack
+names one more provider, still planned:
 - **Firebase Cloud Messaging** — push delivery for 6.7 (planned; the app sends no token).
 - **Protomaps / OpenStreetMap** — the PMTiles basemap the project hosts (ADR-031).
 - **FMI** and **Sentinel-2 (Copernicus)** — weather and NDVI, consumed by `../data/`, never

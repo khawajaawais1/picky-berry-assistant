@@ -1,4 +1,9 @@
-import type { ApiClient, ApiResult, TokenProvider } from '@/services/api/api-client';
+import {
+  failureVerdict,
+  type ApiClient,
+  type ApiResult,
+  type TokenProvider,
+} from '@/services/api/api-client';
 
 import type { PasswordResetRequest } from './password-reset';
 import { parseSession, type Session } from './session';
@@ -123,11 +128,12 @@ function parseHeld(raw: string | null): Held | null {
 function refusal(result: ApiResult<unknown>): SignInResult {
   if (result.ok) throw new Error('a successful result is not a refusal');
 
-  const { error } = result;
-  const refused =
-    error.kind === 'http' && error.status >= 400 && error.status < 500 && error.status !== 408;
-
-  return { ok: false, reason: refused ? 'refused' : 'unavailable' };
+  // Only the server saying no is a refusal: a throttled or missing endpoint is not, so a rate-limited
+  // refresh keeps the session rather than signing the picker out.
+  return {
+    ok: false,
+    reason: failureVerdict(result.error) === 'refused' ? 'refused' : 'unavailable',
+  };
 }
 
 export function createApiSessionPort({

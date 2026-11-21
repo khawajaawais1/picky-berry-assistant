@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import { AppButton, AppText } from '@/components/atoms';
-import { Callout, FormField, StatusMessage, TextAction } from '@/components/molecules';
+import { FormField, StatusMessage, TextAction } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { layout } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -70,7 +70,7 @@ export function OnboardingForgotPasswordScreen({
   onBack,
   onRequestReset,
   onSignIn,
-  availability = 'test',
+  availability = 'accepted',
 }: OnboardingForgotPasswordScreenProps) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
@@ -150,17 +150,6 @@ export function OnboardingForgotPasswordScreen({
                 { email: shownEmail },
               )}
             </AppText>
-
-            {availability === 'test' ? (
-              <Callout
-                icon={<Feather color={colors.warning} name="info" size={20} />}
-                testID="forgot-password-test-note"
-                title={t('onboarding.forgotPassword.requested.test.title')}
-                tone="warning"
-              >
-                {t('onboarding.forgotPassword.requested.test.body')}
-              </Callout>
-            ) : null}
 
             <TextAction
               label={t('onboarding.forgotPassword.requested.another')}

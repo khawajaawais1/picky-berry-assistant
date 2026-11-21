@@ -12,7 +12,6 @@ const GOOD: ConfigResult = {
   config: {
     environment: 'development',
     apiBaseUrl: 'https://api.example.test',
-    firebaseApiKey: null,
   },
 };
 const BAD: ConfigResult = { ok: false, problems: [{ variable: 'X', reason: 'y' }] };

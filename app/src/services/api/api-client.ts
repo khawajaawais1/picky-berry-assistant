@@ -49,6 +49,36 @@ export type ApiFailure =
   /** The server said yes with a body the app cannot read. */
   | { kind: 'invalid-response'; status: number };
 
+/**
+ * What a failure means for the caller, decided here once so no adapter re-derives it from raw
+ * statuses (architecture review, 2026-11-21):
+ *
+ * - `retry`: the same request may succeed later, unchanged: offline, a timeout, a rate limit, a
+ *   server error, or no session yet.
+ * - `refused`: the server read this request and said no. Sending it again changes nothing.
+ * - `unavailable`: this build or this deploy cannot serve it at all: no configured API, a route
+ *   the deploy does not have, or a success body the app cannot read.
+ *
+ * An adapter keeps only what is special to its endpoint (a delete reads a lost session as a wrong
+ * password; a visit the server accepted but the app cannot read has still been recorded).
+ */
+export type FailureVerdict = 'retry' | 'refused' | 'unavailable';
+
+export function failureVerdict(failure: ApiFailure): FailureVerdict {
+  switch (failure.kind) {
+    case 'network':
+    case 'unauthenticated':
+      return 'retry';
+    case 'unconfigured':
+    case 'invalid-response':
+      return 'unavailable';
+    case 'http':
+      if (failure.status === 408 || failure.status === 429 || failure.status >= 500) return 'retry';
+      if (failure.status === 404 || failure.status === 405) return 'unavailable';
+      return 'refused';
+  }
+}
+
 export type ApiResult<T> = { ok: true; status: number; data: T } | { ok: false; error: ApiFailure };
 
 export type QueryValue = string | number | boolean | undefined;
@@ -66,6 +96,12 @@ export type ApiRequest<T> = {
    * no retry: the session port uses it for the logout of the token it already holds.
    */
   bearer?: string;
+  /**
+   * Whether the success answer carries a body. `false` for an endpoint that answers with none,
+   * such as a `202` from a void handler: the transport then reads nothing and hands `parse` `null`,
+   * as it does for every `204`. Defaults to `true`.
+   */
+  expectsBody?: boolean;
   /** Validates the success body (`null` for an empty one). Answers `null` when it cannot read it. */
   parse: (body: unknown) => T | null;
 };
@@ -199,7 +235,7 @@ async function settle<T>(
   }
 
   let body: unknown = null;
-  if (response.status !== 204) {
+  if (response.status !== 204 && request.expectsBody !== false) {
     const read = await readBody(response);
     if (!read.readable) {
       return { ok: false, error: { kind: 'invalid-response', status: response.status } };

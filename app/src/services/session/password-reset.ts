@@ -1,3 +1,5 @@
+import { loadConfig, type ConfigResult } from '@/config/env';
+
 /**
  * The password-reset request's vocabulary, shared by the seam, the provider adapter and the
  * screen that asks for a link (ADR-062).
@@ -19,18 +21,21 @@ export type PasswordResetRequest = (email: string) => Promise<PasswordResetResul
 /**
  * What a build can honestly offer a person on the reset screen.
  *
- * - `live` — a provider can send a real reset email.
- * - `test` — a test build walks the journey and sends nothing, and the screen says so.
- * - `unavailable` — nothing can send a reset, so the action is not offered.
+ * - `live` — the service sends the reset email, so the screen may say one is on its way.
+ * - `accepted` — the service takes the request but does not send mail yet, so the screen says
+ *   the request was accepted and claims no delivery (ADR-048's rule).
+ * - `unavailable` — nothing here can take a request, so the action is not offered.
  */
-export type PasswordResetAvailability = 'live' | 'test' | 'unavailable';
+export type PasswordResetAvailability = 'live' | 'accepted' | 'unavailable';
 
 /**
- * The route's answer to "can this build offer a reset?". Accounts live in the team API
- * (ADR-065), which has no reset endpoint yet, so every build answers `unavailable`. Firebase holds
- * none of these accounts, so its key no longer makes a reset possible. When the API gains an
- * endpoint, this answers `live` and the session port's `requestPasswordReset` calls it.
+ * The route's answer to "can this build offer a reset?" (ADR-065 decision 4, amended). The team
+ * API takes reset requests at `POST /auth/password-reset`, so a build that can reach it offers
+ * one. The API's mail is console-only, so the answer is `accepted`, not `live`, until the service
+ * sends real email.
  */
-export function passwordResetAvailability(): PasswordResetAvailability {
-  return 'unavailable';
+export function passwordResetAvailability(
+  config: ConfigResult = loadConfig(),
+): PasswordResetAvailability {
+  return config.ok ? 'accepted' : 'unavailable';
 }

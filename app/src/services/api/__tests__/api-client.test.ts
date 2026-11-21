@@ -1,4 +1,10 @@
-import { createApiClient, type ApiFetch, type TokenProvider } from '../api-client';
+import {
+  createApiClient,
+  failureVerdict,
+  type ApiFailure,
+  type ApiFetch,
+  type TokenProvider,
+} from '../api-client';
 
 /**
  * The transport to the team API (ADR-065 decision 5), held at the boundary where it meets
@@ -275,6 +281,24 @@ describe('createApiClient', () => {
       expect(result).toEqual({ ok: false, error: { kind: 'invalid-response', status: 200 } });
     });
 
+    it('reads no body for a request that expects none, whatever the success status', async () => {
+      const fetchImpl = fetchAnswering({ status: 202, unreadable: true });
+      const client = createApiClient({ baseUrl: BASE, fetchImpl });
+      const parse = jest.fn(() => true);
+
+      const result = await client.request({
+        method: 'POST',
+        path: '/auth/password-reset',
+        body: {},
+        auth: false,
+        expectsBody: false,
+        parse,
+      });
+
+      expect(result).toEqual({ ok: true, status: 202, data: true });
+      expect(parse).toHaveBeenCalledWith(null);
+    });
+
     it('parses an empty 204 without reading a body', async () => {
       const fetchImpl = fetchAnswering({ status: 204, unreadable: true });
       const client = createApiClient({ baseUrl: BASE, fetchImpl, tokens: tokens('a1') });
@@ -342,5 +366,47 @@ describe('createApiClient', () => {
 
       expect(result).toEqual({ ok: false, error: { kind: 'network' } });
     });
+  });
+});
+
+/**
+ * One rule for what a failure means, decided at the transport so the adapters stop re-deriving it
+ * from raw statuses (architecture review, 2026-11-21). The three answers:
+ *
+ * - `retry`: the same request may succeed later, unchanged (offline, throttled, the server down,
+ *   or no session yet).
+ * - `refused`: the server read this request and said no; sending it again changes nothing.
+ * - `unavailable`: this build or this deploy cannot serve the request at all.
+ */
+describe('failureVerdict', () => {
+  const http = (status: number): ApiFailure => ({
+    kind: 'http',
+    status,
+    code: null,
+    requestId: null,
+  });
+
+  it.each<[string, ApiFailure]>([
+    ['the network', { kind: 'network' }],
+    ['no session', { kind: 'unauthenticated' }],
+    ['a timeout (408)', http(408)],
+    ['a rate limit (429)', http(429)],
+    ['a server error (500)', http(500)],
+    ['a gateway (503)', http(503)],
+  ])('answers retry for %s', (_, failure) => {
+    expect(failureVerdict(failure)).toBe('retry');
+  });
+
+  it.each([400, 401, 403, 409, 410, 422])('answers refused for a %i', (status) => {
+    expect(failureVerdict(http(status))).toBe('refused');
+  });
+
+  it.each<[string, ApiFailure]>([
+    ['an unconfigured build', { kind: 'unconfigured' }],
+    ['an unreadable success', { kind: 'invalid-response', status: 200 }],
+    ['a missing endpoint (404)', http(404)],
+    ['a method the deploy does not serve (405)', http(405)],
+  ])('answers unavailable for %s', (_, failure) => {
+    expect(failureVerdict(failure)).toBe('unavailable');
   });
 });

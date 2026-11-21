@@ -153,15 +153,21 @@ decides whether a credential is valid. A code was the design's credential and is
 sign-in is deferred, so a code survives only as that branch's word.
 _Avoid_: secret, login, hash (the app holds none), code (not v1's credential)
 
+**Refusal**:
+The server reading a request and saying no to it, so that sending it again changes nothing. It is
+one of the three verdicts the API transport gives a failure (`failureVerdict`), beside **retry**
+(the same request may succeed later: offline, throttled, the server down) and **unavailable**
+(this build or deploy cannot serve it). Only a refusal of the refresh token ends a **Session**; a
+throttled or failing refresh keeps it.
+_Avoid_: error, rejection (a promise word), failure (the wider set: every refusal is a failure, not
+the reverse)
+
 **Stand-in**:
 An implementation that answers for a service that does not exist yet, accepted for exactly as
 long as that is true: a lifetime copied from the provider's own token, nothing persisted, and
-**nothing accepted in a production build**. There is one left — ADR-028's session provider, whose
-stand-in accepts any non-empty password outside production and verifies nothing (ADR-059). Its
-reset half is a stand-in only when no Firebase key is configured; with `EXPO_PUBLIC_FIREBASE_API_KEY`
-the reset request is Firebase's own adapter and sends the provider's email (ADR-062). It is
-deleted, not disabled, when the account service lands; the code stand-in went with screen 04 on
-2026-10-24.
+**nothing accepted in a production build**. None is left in the account flow: the session port's
+stand-in was deleted on 2026-11-21, when the team API's account service answered (ADR-065), and the
+reset request goes to that API too. The code stand-in went with screen 04 on 2026-10-24.
 _Avoid_: mock, fake, stub, dummy, demo data (the **Marketplace demo** and **Season summary** are
 the design's own values — a different thing with a different word)
 
