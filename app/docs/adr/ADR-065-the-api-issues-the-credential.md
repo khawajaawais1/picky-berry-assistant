@@ -38,6 +38,12 @@ rather than wait for an idToken exchange.
    holds none of these accounts, so the ADR-062 Firebase request would report success for a link
    that can never arrive. `passwordResetAvailability()` answers `unavailable`, and the reset screen
    draws its action disabled.
+   **Amended 2026-11-21:** the API now has `POST /auth/password-reset` (picky-server, PR #24).
+   The reset request goes there through the session port, and `passwordResetAvailability()`
+   answers `accepted` in any build that can reach the API. The API's mail is console-only, so the
+   screen says the request was accepted and claims no email; `live` is kept for when the service
+   sends real mail. The Firebase adapter and `EXPO_PUBLIC_FIREBASE_API_KEY` are removed, which
+   supersedes [ADR-062](ADR-062-password-reset-belongs-to-the-provider.md)'s Firebase provider.
 5. **The transport is one module** (`src/services/api/`). It is the only code that calls `fetch`
    against the team API. It reads the base URL from `src/config/env.ts`, appends `/api/v1`, and
    returns explicit results (`ok: true | false`) rather than throwing. Every response body is

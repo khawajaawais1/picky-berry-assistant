@@ -202,12 +202,13 @@ screen the design never drew is measured there — the sign-in screen, frame 14'
 the copy those records are taken on and the saved plan the design's own row opens — each in both
 languages and at the largest text size.
 
-**The Firebase password-reset request (ADR-062) is covered at three levels:** the provider adapter
-(`src/services/session/__tests__/firebase-password-reset.test.ts`: endpoint, body, refusals and the
-no-key null), the availability rule (`src/services/session/__tests__/password-reset.test.ts`), and
+**The password-reset request (ADR-065) is covered at four levels:** the API adapter
+(`src/services/session/__tests__/api-password-reset.test.ts`: endpoint, body, refusals, and a 404
+read as unavailable), the availability rule (`src/services/session/__tests__/password-reset.test.ts`),
 the app-drawn screen (`src/features/onboarding/components/__tests__/forgot-password-screen.test.tsx`:
-copy, stand-in notice, live confirmation and failure). The production export's disabled action is
-checked by `e2e/production-export.spec.ts`.
+copy, the accepted confirmation that claims no email, live confirmation and failure), and the built
+journey (`e2e/accessibility.spec.ts`, against the harness's fake account service). The production
+export's enabled action is checked by `e2e/production-export.spec.ts`.
 
 **The watch budget's field instrument (ADR-063) is covered at two levels plus its gate:** the
 accumulator and its summary (`src/features/field-test/domain/__tests__/field-measurement.test.ts`:

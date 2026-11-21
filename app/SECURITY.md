@@ -116,13 +116,10 @@ Accepted policy (owner decision, 2026-10-08):
 - Only public identifiers — never a server credential, private API key or signing
   material — may live in the client. Anything shipped in the app is observable by
   an attacker.
-- The one third-party key in the bundle is **Firebase's Web API key**
-  (`EXPO_PUBLIC_FIREBASE_API_KEY`), used only for the password-reset request (ADR-062). It
-  identifies the Firebase project rather than authorising access, so it belongs in
-  `EXPO_PUBLIC_*` — and it must be restricted by the project's API-key rules, because an
-  unrestricted key is a quota and abuse problem even though it is not a secret. No service
-  account, admin credential or private key ever reaches the client. The reset email's template
-  and the page a new password is set on are Firebase's too; the app holds no token from either.
+- The bundle carries **no third-party key**. The team API is the only service the app calls
+  (ADR-065), and its base URL is public configuration. No service account, admin credential or
+  private key ever reaches the client. Password reset goes to the API's
+  `POST /auth/password-reset`; the app holds no reset link or token.
 - Authentication tokens and personal data go into platform secure storage
   (iOS Keychain / Android Keystore) — never AsyncStorage, never plain files
   (ADR-006). `expo-secure-store` is installed and wrapped by
