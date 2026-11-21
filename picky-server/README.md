@@ -37,14 +37,26 @@ refuses to start in production when this bypass is enabled. Set
 currently allows requests from any browser origin; this does not replace API
 authentication.
 
-Account and visit tables are added by migrations `0004` and `0005`. After
+Account and visit tables are added by migrations `0004` and `0005`; `0006` lets the
+email-token table hold password-reset tokens. After
 applying them locally, set `DEV_PICKER_PASSWORD` in `.env` to a local password
 (10-128 characters), then run `npm run seed:users` to create/update the
 development bypass account and picker row. Sign in as `picker@example.com`
 using that configured password; reseeding updates the picker's password.
 Promote an existing account with `npm run make-admin -- user@example.com`.
-Password reset and external mail delivery are not included. Console mail mode
-deliberately does not log verification tokens, links, or email addresses.
+### Password reset
+
+`POST /api/v1/auth/password-reset` takes an email address and always answers `202` with no body,
+so it cannot reveal which addresses have accounts. For an account it retires earlier unused reset
+links and creates a new one: 32 random bytes, stored only as a SHA-256 hash, valid for one hour,
+usable once. `POST /api/v1/auth/password-reset/confirm` takes that token and a new password
+(10-128 characters), sets the password and revokes every refresh token, so each device signs in
+again. Both are throttled. This follows the
+[OWASP Forgot Password Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html).
+
+The link points at `APP_PUBLIC_URL/reset-password?token=…`. External mail delivery is still not
+included: console mail mode (`MAIL_MODE=console`) records that a verification or reset message
+was requested and deliberately does not log tokens, links or email addresses.
 
 ## Validation
 

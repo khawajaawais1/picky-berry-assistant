@@ -51,6 +51,19 @@ describe('AppController (e2e)', () => {
       .expect({ status: 'ok', db: 'ok' });
   });
 
+  it('serves the password reset routes publicly, validating their bodies', async () => {
+    const server = app.getHttpServer();
+
+    await request(server)
+      .post('/api/v1/auth/password-reset')
+      .send({ email: 'not-an-email' })
+      .expect(422);
+    await request(server)
+      .post('/api/v1/auth/password-reset/confirm')
+      .send({ token: 'abc', password: 'short' })
+      .expect(422);
+  });
+
   it('protects API routes without a bearer token', () => {
     return request(app.getHttpServer()).get('/api/v1/species').expect(401);
   });
