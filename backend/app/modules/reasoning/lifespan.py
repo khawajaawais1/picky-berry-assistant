@@ -27,6 +27,8 @@ def load_ontology_into(app: FastAPI, ontology_dir: Path | str | None = None) -> 
 
     app.state.ontology_graph = graph
     app.state.reasoning_rules = rules
+    # Where the committed files are, for the routes that serve them as they are.
+    app.state.ontology_dir = directory
     return graph
 
 
