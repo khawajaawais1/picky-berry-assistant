@@ -16,6 +16,14 @@ recorded in [docs/adr/](docs/adr/).
 
 - A reset request the service accepted (`202` with no body) no longer reads as failed: the
   transport skips the body for requests that declare `expectsBody: false`.
+- A rate-limited, missing or failing `/auth/refresh` no longer signs the picker out: only the server
+  refusing the refresh token ends the session. The transport now answers one verdict per failure
+  (`failureVerdict`: retry, refused or unavailable), and the session, reset, account-delete and
+  visits adapters read it instead of their own status rules.
+- A throttled account delete no longer says the password didn't match, and a throttled sign-in or
+  reset request reads as unavailable rather than refused.
+- A finished visit stays in the outbox when the deploy has no `/visits` route (404), instead of
+  being dropped as refused.
 - `TESTING.md` no longer claims Playwright is pinned to an exact 1.63.0: it is a caret range, and
   `package.json` is where the version is read.
 

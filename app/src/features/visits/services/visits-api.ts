@@ -1,4 +1,4 @@
-import type { ApiClient, ApiFailure } from '@/services/api';
+import { failureVerdict, type ApiClient, type ApiFailure } from '@/services/api';
 
 import type { Visit } from '../domain/visit-lifecycle';
 import {
@@ -44,9 +44,13 @@ export type VisitsApi = {
 /** The newest page is what screen 11 shows; older pages are not drawn yet. */
 export const VISIT_PAGE_SIZE = 20;
 
+/**
+ * Whether the visit stays in the outbox. Only a refusal drops it, and an unreadable success, which
+ * the server has recorded. Everything else keeps it: a deploy without the route, or a build with
+ * no API, has not read the visit, and dropping it would lose the picker's record.
+ */
 function retryable(failure: ApiFailure): boolean {
-  if (failure.kind !== 'http') return failure.kind !== 'invalid-response';
-  return failure.status >= 500 || failure.status === 408 || failure.status === 429;
+  return failure.kind !== 'invalid-response' && failureVerdict(failure) !== 'refused';
 }
 
 export function createVisitsApi({ client }: { client: ApiClient }): VisitsApi {

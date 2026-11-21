@@ -104,6 +104,19 @@ describe('createAccountApi', () => {
       });
     });
 
+    it.each([429, 404, 503])(
+      'answers unavailable for a %i, which says nothing about the password',
+      async (status) => {
+        // A throttled delete used to read as “That password didn’t match.”
+        const { account } = api({ status, body: { error: { code: 'X', message: 'x' } } });
+
+        expect(await account.deleteAccount('correct horse battery')).toEqual({
+          ok: false,
+          reason: 'unavailable',
+        });
+      },
+    );
+
     it('answers unavailable when the server cannot be reached', async () => {
       const { account } = api('offline');
 

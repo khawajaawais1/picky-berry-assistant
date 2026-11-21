@@ -1,4 +1,4 @@
-import type { ApiClient } from '@/services/api/api-client';
+import { failureVerdict, type ApiClient } from '@/services/api/api-client';
 
 import type { PasswordResetRequest } from './password-reset';
 
@@ -36,8 +36,9 @@ export function createApiPasswordResetRequest({
 
     if (result.ok) return { ok: true };
 
-    const { error } = result;
-    const refused = error.kind === 'http' && (error.status === 422 || error.status === 429);
-    return { ok: false, reason: refused ? 'refused' : 'unavailable' };
+    return {
+      ok: false,
+      reason: failureVerdict(result.error) === 'refused' ? 'refused' : 'unavailable',
+    };
   };
 }

@@ -153,6 +153,15 @@ decides whether a credential is valid. A code was the design's credential and is
 sign-in is deferred, so a code survives only as that branch's word.
 _Avoid_: secret, login, hash (the app holds none), code (not v1's credential)
 
+**Refusal**:
+The server reading a request and saying no to it, so that sending it again changes nothing. It is
+one of the three verdicts the API transport gives a failure (`failureVerdict`), beside **retry**
+(the same request may succeed later: offline, throttled, the server down) and **unavailable**
+(this build or deploy cannot serve it). Only a refusal of the refresh token ends a **Session**; a
+throttled or failing refresh keeps it.
+_Avoid_: error, rejection (a promise word), failure (the wider set: every refusal is a failure, not
+the reverse)
+
 **Stand-in**:
 An implementation that answers for a service that does not exist yet, accepted for exactly as
 long as that is true: a lifetime copied from the provider's own token, nothing persisted, and

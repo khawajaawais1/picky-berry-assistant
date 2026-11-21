@@ -56,7 +56,7 @@ describe('createApiPasswordResetRequest', () => {
     });
   });
 
-  it.each([422, 429])('answers refused for a %i', async (status) => {
+  it.each([400, 422])('answers refused for a %i', async (status) => {
     const { request } = requestAnswering({ status, body: { error: { code: 'X', message: 'x' } } });
 
     expect(await request('aino@example.fi')).toEqual({ ok: false, reason: 'refused' });
@@ -66,6 +66,7 @@ describe('createApiPasswordResetRequest', () => {
     ['the network', 'offline'],
     ['a server error', { status: 503 }],
     ['a service without the endpoint yet', { status: 404 }],
+    ['a rate limit', { status: 429 }],
   ])('answers unavailable when %s fails it', async (_, answer) => {
     expect(await requestAnswering(answer).request('aino@example.fi')).toEqual({
       ok: false,
