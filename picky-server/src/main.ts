@@ -1,16 +1,13 @@
 import { RequestMethod, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { SwaggerModule, OpenAPIObject } from '@nestjs/swagger';
 import { Logger } from 'nestjs-pino';
 import compression from 'compression';
 import helmet from 'helmet';
 import { randomUUID } from 'node:crypto';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { load } from 'js-yaml';
 import { Express, NextFunction, Request, Response } from 'express';
 import { AppModule } from './app.module';
 import { ApiExceptionFilter } from './common/filters/api-exception.filter';
+import { setupSwagger } from './openapi/swagger.setup';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
@@ -47,55 +44,13 @@ async function bootstrap(): Promise<void> {
       errorHttpStatusCode: 422,
     }),
   );
-  const swaggerEnabled = process.env.NODE_ENV !== 'production';
-  if (swaggerEnabled) {
-    const openApiDirectory = resolve(process.cwd(), 'docs', 'openapi');
-    const [zones, auth, visits] = ['zones.yaml', 'auth.yaml', 'visits.yaml'].map(
-      (fileName) =>
-        load(readFileSync(resolve(openApiDirectory, fileName), 'utf8')) as
-          | OpenAPIObject
-          | undefined,
-    );
-    if (!zones || !auth || !visits) {
-      throw new Error('Unable to load OpenAPI contracts for Swagger UI.');
-    }
-    const contract: OpenAPIObject = {
-      ...zones,
-      paths: {
-        ...zones.paths,
-        ...auth.paths,
-        ...visits.paths,
-      },
-      components: {
-        ...zones.components,
-        ...auth.components,
-        ...visits.components,
-        securitySchemes: {
-          ...zones.components?.securitySchemes,
-          ...auth.components?.securitySchemes,
-          ...visits.components?.securitySchemes,
-        },
-        responses: {
-          ...zones.components?.responses,
-          ...auth.components?.responses,
-          ...visits.components?.responses,
-        },
-        schemas: {
-          ...zones.components?.schemas,
-          ...auth.components?.schemas,
-          ...visits.components?.schemas,
-        },
-      },
-    };
-    SwaggerModule.setup('docs', app, contract, { useGlobalPrefix: false });
-  }
+  setupSwagger(app);
+
   await app.listen(Number(process.env.PORT ?? 3000));
   const port = new URL(await app.getUrl()).port;
   const localUrl = `http://localhost:${port}`;
   logger.log(`API listening at ${localUrl}`);
-  if (swaggerEnabled) {
-    logger.log(`Swagger docs available at ${localUrl}/docs`);
-  }
+  logger.log(`Swagger docs available at ${localUrl}/docs`);
 }
 
 void bootstrap();
