@@ -2,6 +2,8 @@ import {
   EMPTY_CREATE_ACCOUNT_FORM,
   isSubmittable,
   type CreateAccountForm,
+  CONSENT_NOTICE_VERSION,
+  registrationConsents,
 } from '../create-account-form';
 
 /**
@@ -73,5 +75,21 @@ describe('isSubmittable', () => {
 
   it('requires consent', () => {
     expect(isSubmittable({ ...complete, consent: false })).toBe(false);
+  });
+});
+
+describe('registrationConsents', () => {
+  it('names the version of what the consent row agreed to, both of which the API requires', () => {
+    // `POST /auth/register` refuses a registration without both versions (422 CONSENT_REQUIRED),
+    // which is what “Your account wasn’t created” was, every time (ADR-068).
+    const consents = registrationConsents();
+
+    expect(consents.terms_version).toBe(CONSENT_NOTICE_VERSION);
+    expect(consents.privacy_policy_version).toBe(CONSENT_NOTICE_VERSION);
+    expect(CONSENT_NOTICE_VERSION.trim()).not.toBe('');
+  });
+
+  it('claims no background location, which the app never reads (ADR-056)', () => {
+    expect(registrationConsents()).not.toHaveProperty('background_location');
   });
 });

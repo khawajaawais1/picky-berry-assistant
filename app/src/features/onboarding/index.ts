@@ -11,8 +11,10 @@
  * detail, so routes import only from here.
  */
 export {
+  CONSENT_NOTICE_VERSION,
   EMPTY_CREATE_ACCOUNT_FORM,
   isSubmittable,
+  registrationConsents,
   type CreateAccountForm,
 } from './domain/create-account-form';
 

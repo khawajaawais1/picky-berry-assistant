@@ -25,6 +25,9 @@ recorded in [docs/adr/](docs/adr/).
 
 ### Fixed
 
+- Creating an account no longer always fails with "Your account wasn't created". The API requires
+  terms and privacy-policy versions (`422 CONSENT_REQUIRED`), and the app sent none. It now sends
+  the version of the device notice the consent row opens (ADR-068).
 - A reset request the service accepted (`202` with no body) no longer reads as failed: the
   transport skips the body for requests that declare `expectsBody: false`.
 - A rate-limited, missing or failing `/auth/refresh` no longer signs the picker out: only the server

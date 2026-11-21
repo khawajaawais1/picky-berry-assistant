@@ -5,6 +5,7 @@ import {
   OnboardingCreateAccountScreen,
   SignInPrototype,
   isSignInVariantKey,
+  registrationConsents,
 } from '@/features/onboarding';
 import { useTranslation } from '@/services/i18n';
 import { sessionPort } from '@/services/session';
@@ -49,10 +50,10 @@ export default function CreateAccountRoute() {
       onReadTerms={() => router.push('/terms-privacy')}
       onSignIn={() => router.push('/sign-in')}
       onSubmit={async ({ email, password, name }) => {
-        // The account's language is the one the device reads the app in. There is no versioned
-        // terms document yet, so no consent version is claimed (ADR-065, the plan's gap list).
+        // The account's language is the one the device reads the app in. The consents name the
+        // version of the notice the consent row's link opens, which the API requires (ADR-068).
         const result = await sessionPort.register({
-          consents: {},
+          consents: registrationConsents(),
           displayName: name,
           email,
           lang: locale,

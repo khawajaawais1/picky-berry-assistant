@@ -28,7 +28,7 @@ suite.
    adapter and its key are removed.
 4. Corrected: `/health` was never broken. The served OpenAPI document gives it a per-path `/`
    server, which this plan first missed. #24 also serves it at `/api/v1/health` for uniformity.
-5. There are no versioned terms or privacy documents, so registration sends `consents: {}`.
+5. Resolved by [ADR-068](../adr/ADR-068-registration-records-the-notice-version.md): the API refuses empty consents (`422 CONSENT_REQUIRED`), so registration records the device notice's version (`device-notice-2026-11-21`) as both versions until real terms exist.
 6. Resolved by [ADR-066](../adr/ADR-066-the-tracker-is-mounted-over-the-zone-service.md): the app
    shell mounts the visit tracker over the zone service's zones, and finalized visits post to
    `POST /visits`. Open and unsent visits do not survive the process ending.
