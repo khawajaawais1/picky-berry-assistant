@@ -3,8 +3,8 @@
 # feature:  6.7 — reasoning and explainable push alerts (sprint 3)
 # owner:    Asmer
 #
-# sentence: Ripe {nameEn} in zone {zoneNumber}{ near {placeName}} — yield score {yieldScore},
-#           {confidence} confidence.
+# sentence:             Ripe {nameEn} in zone {zoneNumber} near {placeName} — yield score {yieldScore}, {confidence} confidence.
+# sentenceWithoutPlace: Ripe {nameEn} in zone {zoneNumber} — yield score {yieldScore}, {confidence} confidence.
 #
 # inputs:   bpa.ttl + species.ttl, plus one reasoning run's zone snapshot:
 #             ?zone      a bpa:Zone, with bpa:zoneNumber and optionally bpa:placeName;
