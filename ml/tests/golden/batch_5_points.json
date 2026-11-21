@@ -1,7 +1,7 @@
 {
   "case": "batch_5_points",
   "description": "Five zone centroids in one call. z4 is 25 km north of Jyvaskyla (inside the 60 x 60 km grid only), z5 is Helsinki (outside: coverage none, scores null).",
-  "grid_version": "zone-grid-jkl-v1",
+  "grid_version": "zone-grid-jkl60-v2",
   "rules_version": "zone-score-rules-v2",
   "steps": [
     {
@@ -44,7 +44,7 @@
       },
       "response": {
         "date": "2026-08-01",
-        "model_version": "zone-grid-jkl-v1",
+        "model_version": "zone-grid-jkl60-v2",
         "rules_version": "zone-score-rules-v2",
         "results": [
           {
@@ -53,15 +53,15 @@
             "lat": 62.2595,
             "lon": 25.688,
             "coverage": "grid",
-            "cells": 7,
-            "forest_share": 0.656,
+            "cells": 8,
+            "forest_share": 0.625,
             "scores": {
               "bilberry": {
-                "score": 33,
+                "score": 31,
                 "confidence": "medium",
                 "ripeness": "ripe",
                 "explanation": {
-                  "model_version": "zone-grid-jkl-v1",
+                  "model_version": "zone-grid-jkl60-v2",
                   "rules_version": "zone-score-rules-v2",
                   "reasons": [
                     "in_ripe_window",
@@ -70,11 +70,11 @@
                   ],
                   "inputs": {
                     "site_class": "moderate",
-                    "site_potential": 0.416,
+                    "site_potential": 0.394,
                     "window_start": "2026-07-10",
                     "window_end": "2026-08-29",
                     "year_index": 1.0,
-                    "forest_share": 0.656,
+                    "forest_share": 0.625,
                     "reports_used": 0,
                     "evidence_weight": 0.0
                   }
@@ -85,7 +85,7 @@
                 "confidence": "low",
                 "ripeness": "unripe",
                 "explanation": {
-                  "model_version": "zone-grid-jkl-v1",
+                  "model_version": "zone-grid-jkl60-v2",
                   "rules_version": "zone-score-rules-v2",
                   "reasons": [
                     "before_window",
@@ -94,11 +94,11 @@
                   ],
                   "inputs": {
                     "site_class": "moderate",
-                    "site_potential": 0.363,
+                    "site_potential": 0.345,
                     "window_start": "2026-08-14",
                     "window_end": "2026-10-08",
                     "year_index": 1.0,
-                    "forest_share": 0.656,
+                    "forest_share": 0.625,
                     "reports_used": 0,
                     "evidence_weight": 0.0
                   }
@@ -109,7 +109,7 @@
                 "confidence": "medium",
                 "ripeness": "ripe",
                 "explanation": {
-                  "model_version": "zone-grid-jkl-v1",
+                  "model_version": "zone-grid-jkl60-v2",
                   "rules_version": "zone-score-rules-v2",
                   "reasons": [
                     "in_ripe_window",
@@ -118,22 +118,22 @@
                   ],
                   "inputs": {
                     "site_class": "poor",
-                    "site_potential": 0.013,
+                    "site_potential": 0.012,
                     "window_start": "2026-07-05",
                     "window_end": "2026-08-04",
                     "year_index": 1.0,
-                    "forest_share": 0.656,
+                    "forest_share": 0.625,
                     "reports_used": 0,
                     "evidence_weight": 0.0
                   }
                 }
               },
               "crowberry": {
-                "score": 14,
+                "score": 13,
                 "confidence": "low",
                 "ripeness": "ripe",
                 "explanation": {
-                  "model_version": "zone-grid-jkl-v1",
+                  "model_version": "zone-grid-jkl60-v2",
                   "rules_version": "zone-score-rules-v2",
                   "reasons": [
                     "in_ripe_window",
@@ -143,11 +143,11 @@
                   ],
                   "inputs": {
                     "site_class": "poor",
-                    "site_potential": 0.173,
+                    "site_potential": 0.164,
                     "window_start": "2026-07-20",
                     "window_end": "2026-09-18",
                     "year_index": 1.0,
-                    "forest_share": 0.656,
+                    "forest_share": 0.625,
                     "reports_used": 0,
                     "evidence_weight": 0.0
                   }
@@ -162,14 +162,14 @@
             "lon": 25.67,
             "coverage": "grid",
             "cells": 7,
-            "forest_share": 0.215,
+            "forest_share": 0.218,
             "scores": {
               "bilberry": {
                 "score": 7,
                 "confidence": "low",
                 "ripeness": "ripe",
                 "explanation": {
-                  "model_version": "zone-grid-jkl-v1",
+                  "model_version": "zone-grid-jkl60-v2",
                   "rules_version": "zone-score-rules-v2",
                   "reasons": [
                     "in_ripe_window",
@@ -183,7 +183,7 @@
                     "window_start": "2026-07-09",
                     "window_end": "2026-08-28",
                     "year_index": 1.0,
-                    "forest_share": 0.215,
+                    "forest_share": 0.218,
                     "reports_used": 0,
                     "evidence_weight": 0.0
                   }
@@ -194,7 +194,7 @@
                 "confidence": "low",
                 "ripeness": "unripe",
                 "explanation": {
-                  "model_version": "zone-grid-jkl-v1",
+                  "model_version": "zone-grid-jkl60-v2",
                   "rules_version": "zone-score-rules-v2",
                   "reasons": [
                     "before_window",
@@ -204,11 +204,11 @@
                   ],
                   "inputs": {
                     "site_class": "poor",
-                    "site_potential": 0.08,
+                    "site_potential": 0.079,
                     "window_start": "2026-08-13",
                     "window_end": "2026-10-07",
                     "year_index": 1.0,
-                    "forest_share": 0.215,
+                    "forest_share": 0.218,
                     "reports_used": 0,
                     "evidence_weight": 0.0
                   }
@@ -219,7 +219,7 @@
                 "confidence": "low",
                 "ripeness": "ripe",
                 "explanation": {
-                  "model_version": "zone-grid-jkl-v1",
+                  "model_version": "zone-grid-jkl60-v2",
                   "rules_version": "zone-score-rules-v2",
                   "reasons": [
                     "in_ripe_window",
@@ -229,11 +229,11 @@
                   ],
                   "inputs": {
                     "site_class": "poor",
-                    "site_potential": 0.014,
+                    "site_potential": 0.012,
                     "window_start": "2026-07-04",
                     "window_end": "2026-08-03",
                     "year_index": 1.0,
-                    "forest_share": 0.215,
+                    "forest_share": 0.218,
                     "reports_used": 0,
                     "evidence_weight": 0.0
                   }
@@ -244,7 +244,7 @@
                 "confidence": "low",
                 "ripeness": "ripe",
                 "explanation": {
-                  "model_version": "zone-grid-jkl-v1",
+                  "model_version": "zone-grid-jkl60-v2",
                   "rules_version": "zone-score-rules-v2",
                   "reasons": [
                     "in_ripe_window",
@@ -254,11 +254,11 @@
                   ],
                   "inputs": {
                     "site_class": "poor",
-                    "site_potential": 0.038,
+                    "site_potential": 0.037,
                     "window_start": "2026-07-19",
                     "window_end": "2026-09-17",
                     "year_index": 1.0,
-                    "forest_share": 0.215,
+                    "forest_share": 0.218,
                     "reports_used": 0,
                     "evidence_weight": 0.0
                   }
@@ -280,16 +280,16 @@
                 "confidence": "medium",
                 "ripeness": "ripe",
                 "explanation": {
-                  "model_version": "zone-grid-jkl-v1",
+                  "model_version": "zone-grid-jkl60-v2",
                   "rules_version": "zone-score-rules-v2",
                   "reasons": [
                     "in_ripe_window",
-                    "good_site",
+                    "moderate_site",
                     "no_reports_baseline"
                   ],
                   "inputs": {
-                    "site_class": "good",
-                    "site_potential": 0.6,
+                    "site_class": "moderate",
+                    "site_potential": 0.597,
                     "window_start": "2026-07-10",
                     "window_end": "2026-08-29",
                     "year_index": 1.0,
@@ -304,7 +304,7 @@
                 "confidence": "low",
                 "ripeness": "unripe",
                 "explanation": {
-                  "model_version": "zone-grid-jkl-v1",
+                  "model_version": "zone-grid-jkl60-v2",
                   "rules_version": "zone-score-rules-v2",
                   "reasons": [
                     "before_window",
@@ -313,7 +313,7 @@
                   ],
                   "inputs": {
                     "site_class": "poor",
-                    "site_potential": 0.273,
+                    "site_potential": 0.282,
                     "window_start": "2026-08-14",
                     "window_end": "2026-10-08",
                     "year_index": 1.0,
@@ -324,11 +324,11 @@
                 }
               },
               "cloudberry": {
-                "score": 7,
+                "score": 6,
                 "confidence": "medium",
                 "ripeness": "ripe",
                 "explanation": {
-                  "model_version": "zone-grid-jkl-v1",
+                  "model_version": "zone-grid-jkl60-v2",
                   "rules_version": "zone-score-rules-v2",
                   "reasons": [
                     "in_ripe_window",
@@ -337,7 +337,7 @@
                   ],
                   "inputs": {
                     "site_class": "poor",
-                    "site_potential": 0.082,
+                    "site_potential": 0.075,
                     "window_start": "2026-07-05",
                     "window_end": "2026-08-04",
                     "year_index": 1.0,
@@ -352,7 +352,7 @@
                 "confidence": "low",
                 "ripeness": "ripe",
                 "explanation": {
-                  "model_version": "zone-grid-jkl-v1",
+                  "model_version": "zone-grid-jkl60-v2",
                   "rules_version": "zone-score-rules-v2",
                   "reasons": [
                     "in_ripe_window",
@@ -362,7 +362,7 @@
                   ],
                   "inputs": {
                     "site_class": "poor",
-                    "site_potential": 0.163,
+                    "site_potential": 0.162,
                     "window_start": "2026-07-20",
                     "window_end": "2026-09-18",
                     "year_index": 1.0,
@@ -379,10 +379,108 @@
             "h3": "8811268a6dfffff",
             "lat": 62.47,
             "lon": 25.75,
-            "coverage": "none",
-            "cells": 0,
-            "forest_share": null,
-            "scores": null
+            "coverage": "grid",
+            "cells": 8,
+            "forest_share": 0.988,
+            "scores": {
+              "bilberry": {
+                "score": 56,
+                "confidence": "medium",
+                "ripeness": "ripe",
+                "explanation": {
+                  "model_version": "zone-grid-jkl60-v2",
+                  "rules_version": "zone-score-rules-v2",
+                  "reasons": [
+                    "in_ripe_window",
+                    "good_site",
+                    "no_reports_baseline"
+                  ],
+                  "inputs": {
+                    "site_class": "good",
+                    "site_potential": 0.701,
+                    "window_start": "2026-07-10",
+                    "window_end": "2026-08-29",
+                    "year_index": 1.0,
+                    "forest_share": 0.988,
+                    "reports_used": 0,
+                    "evidence_weight": 0.0
+                  }
+                }
+              },
+              "lingonberry": {
+                "score": 0,
+                "confidence": "low",
+                "ripeness": "unripe",
+                "explanation": {
+                  "model_version": "zone-grid-jkl60-v2",
+                  "rules_version": "zone-score-rules-v2",
+                  "reasons": [
+                    "before_window",
+                    "moderate_site",
+                    "no_reports_baseline"
+                  ],
+                  "inputs": {
+                    "site_class": "moderate",
+                    "site_potential": 0.378,
+                    "window_start": "2026-08-14",
+                    "window_end": "2026-10-08",
+                    "year_index": 1.0,
+                    "forest_share": 0.988,
+                    "reports_used": 0,
+                    "evidence_weight": 0.0
+                  }
+                }
+              },
+              "cloudberry": {
+                "score": 1,
+                "confidence": "medium",
+                "ripeness": "ripe",
+                "explanation": {
+                  "model_version": "zone-grid-jkl60-v2",
+                  "rules_version": "zone-score-rules-v2",
+                  "reasons": [
+                    "in_ripe_window",
+                    "poor_site",
+                    "no_reports_baseline"
+                  ],
+                  "inputs": {
+                    "site_class": "poor",
+                    "site_potential": 0.011,
+                    "window_start": "2026-07-05",
+                    "window_end": "2026-08-04",
+                    "year_index": 1.0,
+                    "forest_share": 0.988,
+                    "reports_used": 0,
+                    "evidence_weight": 0.0
+                  }
+                }
+              },
+              "crowberry": {
+                "score": 14,
+                "confidence": "low",
+                "ripeness": "ripe",
+                "explanation": {
+                  "model_version": "zone-grid-jkl60-v2",
+                  "rules_version": "zone-score-rules-v2",
+                  "reasons": [
+                    "in_ripe_window",
+                    "poor_site",
+                    "no_reports_baseline",
+                    "low_confidence_species"
+                  ],
+                  "inputs": {
+                    "site_class": "poor",
+                    "site_potential": 0.176,
+                    "window_start": "2026-07-20",
+                    "window_end": "2026-09-18",
+                    "year_index": 1.0,
+                    "forest_share": 0.988,
+                    "reports_used": 0,
+                    "evidence_weight": 0.0
+                  }
+                }
+              }
+            }
           },
           {
             "id": "z5",

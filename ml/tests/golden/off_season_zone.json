@@ -1,7 +1,7 @@
 {
   "case": "off_season_zone",
   "description": "Bilberry in mid-January: score 0, ripeness unripe, reason off_season.",
-  "grid_version": "zone-grid-jkl-v1",
+  "grid_version": "zone-grid-jkl60-v2",
   "rules_version": "zone-score-rules-v2",
   "species": "bilberry",
   "steps": [
@@ -21,7 +21,7 @@
       },
       "response": {
         "date": "2026-01-15",
-        "model_version": "zone-grid-jkl-v1",
+        "model_version": "zone-grid-jkl60-v2",
         "rules_version": "zone-score-rules-v2",
         "results": [
           {
@@ -38,16 +38,16 @@
                 "confidence": "low",
                 "ripeness": "unripe",
                 "explanation": {
-                  "model_version": "zone-grid-jkl-v1",
+                  "model_version": "zone-grid-jkl60-v2",
                   "rules_version": "zone-score-rules-v2",
                   "reasons": [
                     "off_season",
-                    "good_site",
+                    "moderate_site",
                     "no_reports_baseline"
                   ],
                   "inputs": {
-                    "site_class": "good",
-                    "site_potential": 0.6,
+                    "site_class": "moderate",
+                    "site_potential": 0.597,
                     "window_start": "2026-07-10",
                     "window_end": "2026-08-29",
                     "year_index": 1.0,
@@ -62,7 +62,7 @@
                 "confidence": "low",
                 "ripeness": "unripe",
                 "explanation": {
-                  "model_version": "zone-grid-jkl-v1",
+                  "model_version": "zone-grid-jkl60-v2",
                   "rules_version": "zone-score-rules-v2",
                   "reasons": [
                     "off_season",
@@ -71,7 +71,7 @@
                   ],
                   "inputs": {
                     "site_class": "poor",
-                    "site_potential": 0.273,
+                    "site_potential": 0.282,
                     "window_start": "2026-08-14",
                     "window_end": "2026-10-08",
                     "year_index": 1.0,
@@ -86,7 +86,7 @@
                 "confidence": "low",
                 "ripeness": "unripe",
                 "explanation": {
-                  "model_version": "zone-grid-jkl-v1",
+                  "model_version": "zone-grid-jkl60-v2",
                   "rules_version": "zone-score-rules-v2",
                   "reasons": [
                     "off_season",
@@ -95,7 +95,7 @@
                   ],
                   "inputs": {
                     "site_class": "poor",
-                    "site_potential": 0.082,
+                    "site_potential": 0.075,
                     "window_start": "2026-07-05",
                     "window_end": "2026-08-04",
                     "year_index": 1.0,
@@ -110,7 +110,7 @@
                 "confidence": "low",
                 "ripeness": "unripe",
                 "explanation": {
-                  "model_version": "zone-grid-jkl-v1",
+                  "model_version": "zone-grid-jkl60-v2",
                   "rules_version": "zone-score-rules-v2",
                   "reasons": [
                     "off_season",
@@ -120,7 +120,7 @@
                   ],
                   "inputs": {
                     "site_class": "poor",
-                    "site_potential": 0.163,
+                    "site_potential": 0.162,
                     "window_start": "2026-07-20",
                     "window_end": "2026-09-18",
                     "year_index": 1.0,
@@ -142,16 +142,16 @@
         "map_score": 0,
         "map_confidence": "low",
         "map_explanation": {
-          "model_version": "zone-grid-jkl-v1",
+          "model_version": "zone-grid-jkl60-v2",
           "rules_version": "zone-score-rules-v2",
           "reasons": [
             "off_season",
-            "good_site",
+            "moderate_site",
             "no_reports_baseline"
           ],
           "inputs": {
-            "site_class": "good",
-            "site_potential": 0.6,
+            "site_class": "moderate",
+            "site_potential": 0.597,
             "window_start": "2026-07-10",
             "window_end": "2026-08-29",
             "year_index": 1.0,
@@ -171,16 +171,16 @@
         "evidence_weight": 0.0,
         "reports_used": 0,
         "explanation": {
-          "model_version": "zone-grid-jkl-v1",
+          "model_version": "zone-grid-jkl60-v2",
           "rules_version": "zone-score-rules-v2",
           "reasons": [
             "off_season",
-            "good_site",
+            "moderate_site",
             "no_reports_baseline"
           ],
           "inputs": {
-            "site_class": "good",
-            "site_potential": 0.6,
+            "site_class": "moderate",
+            "site_potential": 0.597,
             "window_start": "2026-07-10",
             "window_end": "2026-08-29",
             "year_index": 1.0,

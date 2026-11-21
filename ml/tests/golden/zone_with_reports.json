@@ -1,7 +1,7 @@
 {
   "case": "zone_with_reports",
   "description": "Ripe bilberry zone with two reports: a visit-backed photo report today and a rating-only report from 3 days ago without a visit.",
-  "grid_version": "zone-grid-jkl-v1",
+  "grid_version": "zone-grid-jkl60-v2",
   "rules_version": "zone-score-rules-v2",
   "species": "bilberry",
   "steps": [
@@ -21,7 +21,7 @@
       },
       "response": {
         "date": "2026-07-25",
-        "model_version": "zone-grid-jkl-v1",
+        "model_version": "zone-grid-jkl60-v2",
         "rules_version": "zone-score-rules-v2",
         "results": [
           {
@@ -30,15 +30,15 @@
             "lat": 62.2595,
             "lon": 25.688,
             "coverage": "grid",
-            "cells": 7,
-            "forest_share": 0.656,
+            "cells": 8,
+            "forest_share": 0.625,
             "scores": {
               "bilberry": {
-                "score": 33,
+                "score": 31,
                 "confidence": "medium",
                 "ripeness": "ripe",
                 "explanation": {
-                  "model_version": "zone-grid-jkl-v1",
+                  "model_version": "zone-grid-jkl60-v2",
                   "rules_version": "zone-score-rules-v2",
                   "reasons": [
                     "in_ripe_window",
@@ -47,11 +47,11 @@
                   ],
                   "inputs": {
                     "site_class": "moderate",
-                    "site_potential": 0.416,
+                    "site_potential": 0.394,
                     "window_start": "2026-07-10",
                     "window_end": "2026-08-29",
                     "year_index": 1.0,
-                    "forest_share": 0.656,
+                    "forest_share": 0.625,
                     "reports_used": 0,
                     "evidence_weight": 0.0
                   }
@@ -62,7 +62,7 @@
                 "confidence": "low",
                 "ripeness": "unripe",
                 "explanation": {
-                  "model_version": "zone-grid-jkl-v1",
+                  "model_version": "zone-grid-jkl60-v2",
                   "rules_version": "zone-score-rules-v2",
                   "reasons": [
                     "before_window",
@@ -71,11 +71,11 @@
                   ],
                   "inputs": {
                     "site_class": "moderate",
-                    "site_potential": 0.363,
+                    "site_potential": 0.345,
                     "window_start": "2026-08-14",
                     "window_end": "2026-10-08",
                     "year_index": 1.0,
-                    "forest_share": 0.656,
+                    "forest_share": 0.625,
                     "reports_used": 0,
                     "evidence_weight": 0.0
                   }
@@ -86,7 +86,7 @@
                 "confidence": "medium",
                 "ripeness": "ripe",
                 "explanation": {
-                  "model_version": "zone-grid-jkl-v1",
+                  "model_version": "zone-grid-jkl60-v2",
                   "rules_version": "zone-score-rules-v2",
                   "reasons": [
                     "in_ripe_window",
@@ -95,22 +95,22 @@
                   ],
                   "inputs": {
                     "site_class": "poor",
-                    "site_potential": 0.013,
+                    "site_potential": 0.012,
                     "window_start": "2026-07-05",
                     "window_end": "2026-08-04",
                     "year_index": 1.0,
-                    "forest_share": 0.656,
+                    "forest_share": 0.625,
                     "reports_used": 0,
                     "evidence_weight": 0.0
                   }
                 }
               },
               "crowberry": {
-                "score": 14,
+                "score": 13,
                 "confidence": "low",
                 "ripeness": "ripe",
                 "explanation": {
-                  "model_version": "zone-grid-jkl-v1",
+                  "model_version": "zone-grid-jkl60-v2",
                   "rules_version": "zone-score-rules-v2",
                   "reasons": [
                     "in_ripe_window",
@@ -120,11 +120,11 @@
                   ],
                   "inputs": {
                     "site_class": "poor",
-                    "site_potential": 0.173,
+                    "site_potential": 0.164,
                     "window_start": "2026-07-20",
                     "window_end": "2026-09-18",
                     "year_index": 1.0,
-                    "forest_share": 0.656,
+                    "forest_share": 0.625,
                     "reports_used": 0,
                     "evidence_weight": 0.0
                   }
@@ -139,10 +139,10 @@
       "endpoint": "POST /api/v1/ml/score-updates",
       "function": "update_zone_score",
       "request": {
-        "map_score": 33,
+        "map_score": 31,
         "map_confidence": "medium",
         "map_explanation": {
-          "model_version": "zone-grid-jkl-v1",
+          "model_version": "zone-grid-jkl60-v2",
           "rules_version": "zone-score-rules-v2",
           "reasons": [
             "in_ripe_window",
@@ -151,11 +151,11 @@
           ],
           "inputs": {
             "site_class": "moderate",
-            "site_potential": 0.416,
+            "site_potential": 0.394,
             "window_start": "2026-07-10",
             "window_end": "2026-08-29",
             "year_index": 1.0,
-            "forest_share": 0.656,
+            "forest_share": 0.625,
             "reports_used": 0,
             "evidence_weight": 0.0
           }
@@ -179,14 +179,14 @@
         "now": "2026-07-25T12:00:00Z"
       },
       "response": {
-        "score": 54,
+        "score": 53,
         "confidence": "medium",
-        "s_model": 33,
+        "s_model": 31,
         "s_feedback": 74.8,
         "evidence_weight": 0.98,
         "reports_used": 2,
         "explanation": {
-          "model_version": "zone-grid-jkl-v1",
+          "model_version": "zone-grid-jkl60-v2",
           "rules_version": "zone-score-rules-v2",
           "reasons": [
             "in_ripe_window",
@@ -196,11 +196,11 @@
           ],
           "inputs": {
             "site_class": "moderate",
-            "site_potential": 0.416,
+            "site_potential": 0.394,
             "window_start": "2026-07-10",
             "window_end": "2026-08-29",
             "year_index": 1.0,
-            "forest_share": 0.656,
+            "forest_share": 0.625,
             "reports_used": 2,
             "evidence_weight": 0.98
           }
