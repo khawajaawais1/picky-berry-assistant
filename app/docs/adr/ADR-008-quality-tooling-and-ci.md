@@ -1,6 +1,7 @@
 # ADR-008 — Quality tooling: ESLint, Prettier, Jest gates in CI; hooks deferred
 
-- **Status:** Accepted (item 5 amended by ADR-023: `npm run verify` now runs the formatting check too)
+- **Status:** Accepted (item 5 amended by ADR-023: `npm run verify` now runs the formatting check too;
+  amended 2026-11-21 by ADR-069: a release workflow publishes, after running this gate)
 - **Date:** 2026-10-08
 - **Deciders:** Engineering (bootstrap specification §5, §35 step 5)
 
@@ -65,3 +66,10 @@ regressions reach review repeatedly.
 ## Related
 
 - TESTING.md, CONTRIBUTING.md, .github/workflows/mobile-ci.yml, ADR-004
+
+## Amendment — 2026-11-21 (ADR-069)
+
+CI is no longer verification only. `release.yml` builds and publishes the app from a version tag,
+and calls `mobile.yml` (now also a `workflow_call` workflow) first, so a release passes the same
+gate as a pull request. `mobile.yml` itself still never deploys or publishes. `npm run verify`
+also runs the release scripts' tests (`npm run test:scripts`, Node's own test runner).
