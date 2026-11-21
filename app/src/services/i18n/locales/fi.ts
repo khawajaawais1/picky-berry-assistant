@@ -156,6 +156,7 @@ export const fi: Record<TranslationKey, string> = {
   // data; the place and lake names are Finnish already, because the frame's map is set in
   // Jyväskylä.
   'discover.eyebrow': 'POIMINTA · KAUSIDEMO / 28.8.',
+  'discover.eyebrow.live': 'POIMINTA',
   'discover.title': 'Löydä lähialueet',
   'discover.map.label': 'Kartta lähellä olevista marja-alueista',
   'discover.map.place': 'Laajavuori',
@@ -164,6 +165,11 @@ export const fi: Record<TranslationKey, string> = {
   'discover.map.scale': '━━  200 m   ·   Kausidemo',
   'discover.map.count': '{count} aluetta · testiaineisto',
   'discover.map.countOne': '{count} alue · testiaineisto',
+  'discover.map.place.live': 'Jyväskylä',
+  'discover.map.count.live': '{count} aluetta',
+  'discover.map.countOne.live': '{count} alue',
+  'discover.map.recentre': 'Keskitä kartta alueisiin',
+  'discover.map.attribution': '© OpenStreetMapin tekijät',
   'discover.map.updated': 'Päivitetty {date}',
   'discover.map.loading': 'Ladataan alueita…',
   'discover.map.unavailable': 'Alueita ei voitu lukea',
@@ -188,6 +194,7 @@ export const fi: Record<TranslationKey, string> = {
   'discover.card.confidence': 'Varma tieto',
   'discover.card.status': 'Poimimaton · Kypsä · Havainto päivitetty 38 min sitten',
   'discover.card.source': 'Koealue · testiaineisto',
+  'discover.card.source.live': 'Koealue',
   'discover.ripeness.unripe': 'Ei vielä kypsä',
   'discover.ripeness.ripening': 'Kypsymässä nyt',
   'discover.ripeness.ripe': 'Kypsä nyt',
@@ -217,6 +224,7 @@ export const fi: Record<TranslationKey, string> = {
   // the zone port, the blocks below them are the design's sample, and the whole screen is the
   // sample when no zone id is given.
   'discover.details.eyebrow': 'POIMINTA · ALUEEN TIEDOT · KAUSIDEMO',
+  'discover.details.eyebrow.live': 'POIMINTA · ALUEEN TIEDOT',
   // The title before a zone is known: loading, a failed read, or an id the source does not know.
   'discover.details.pendingTitle': 'Alueen tiedot',
   'discover.details.unknown':

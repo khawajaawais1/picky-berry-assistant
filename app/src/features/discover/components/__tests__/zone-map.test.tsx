@@ -103,21 +103,24 @@ describe('ZoneMap', () => {
     );
   });
 
-  it('turns every gesture off, because the frame’s recentre control does not exist', async () => {
+  it('pans and zooms, keeps north up, and offers the frame’s recentre control', async () => {
     await render(<ZoneMap status="ready" zones={[zone()]} />);
 
     const drawing = screen.getByTestId('zone-map-drawing').props;
-    for (const gesture of [
-      'dragPan',
-      'touchZoom',
-      'doubleTapZoom',
-      'doubleTapHoldZoom',
-      'touchRotate',
-      'touchPitch',
-    ]) {
-      expect(drawing[gesture]).toBe(false);
+    for (const gesture of ['dragPan', 'touchZoom', 'doubleTapZoom']) {
+      expect(drawing[gesture]).not.toBe(false);
     }
-    expect(screen.queryAllByRole('button')).toHaveLength(0);
+    expect(drawing.touchRotate).toBe(false);
+    expect(drawing.touchPitch).toBe(false);
+    expect(screen.getByRole('button', { name: 'Recentre the map on the zones' })).toBeOnTheScreen();
+  });
+
+  it('drops the test-data disclosure over a live answer', async () => {
+    await render(<ZoneMap demo={false} status="ready" zones={[zone(), zone({ id: 'b' })]} />);
+
+    expect(screen.getByText('Jyväskylä')).toBeOnTheScreen();
+    expect(screen.getByText('2 zones')).toBeOnTheScreen();
+    expect(screen.queryByText(/test data/)).not.toBeOnTheScreen();
   });
 
   it('draws without a tile host, so the map needs no network', async () => {

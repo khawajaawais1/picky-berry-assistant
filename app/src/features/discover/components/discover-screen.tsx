@@ -104,6 +104,8 @@ export function DiscoverScreen({
   // — a single zone carries one score per berry, not one for a set of them.
   const scoreSpecies = species[0] ?? PILOT_ZONE_SPECIES;
   const { retry, status, updatedAt, zones } = useZones(zoneSource, scoreSpecies);
+  // Only the bundled stand-in carries the demo disclosure; the zone service's answer is live.
+  const demo = zoneSource.demo === true;
 
   // The field's own value is the picker's, immediately: a controlled input that lags is a
   // broken input. The **filter** is allowed to follow on a lower-priority render, because it
@@ -136,7 +138,7 @@ export function DiscoverScreen({
   return (
     <Screen
       edges={['top']}
-      eyebrow={t('discover.eyebrow')}
+      eyebrow={t(demo ? 'discover.eyebrow' : 'discover.eyebrow.live')}
       headerAccessory={<Feather color={colors.success} name="feather" size={22} />}
       onBack={onBack}
       title={t('discover.title')}
@@ -166,7 +168,7 @@ export function DiscoverScreen({
         {view === 'map' ? (
           <>
             <View className="w-full gap-tight">
-              <ZoneMap onRetry={retry} status={status} zones={matches} />
+              <ZoneMap demo={demo} onRetry={retry} status={status} zones={matches} />
               {updatedAt && matches.length > 0 ? (
                 <AppText testID="discover-updated" tone="muted" variant="metadata">
                   {interpolate(t('discover.map.updated'), {
@@ -178,6 +180,7 @@ export function DiscoverScreen({
             <ZoneScoreLegend />
             {cardZone ? (
               <ZoneCard
+                demo={demo}
                 onOpen={onOpenZone ? () => onOpenZone(cardZone, scoreSpecies) : undefined}
                 species={scoreSpecies}
                 zone={cardZone}

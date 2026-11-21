@@ -473,7 +473,40 @@ describe('ZoneDetailsScreen over the zone source', () => {
 
     // The count belongs to the demo week, not to the zone the source answered for.
     expect(screen.queryByText('11 reports this week')).not.toBeOnTheScreen();
-    // The blocks with no source are still the design’s sample, and the screen says so.
+  });
+
+  it('draws none of the design’s sample over a live zone, and no demo disclosure', async () => {
+    await render(
+      <ZoneDetailsScreen
+        onNavigate={jest.fn()}
+        species="lingonberry"
+        zoneId="zone-a"
+        zoneSource={sourceOf(SOURCE_ZONES)}
+      />,
+      { wrapper: QueryProvider },
+    );
+    await screen.findByText('Laajavuori 1');
+
+    expect(screen.getByText('CORE PICKER · ZONE INSIGHT')).toBeOnTheScreen();
+    expect(screen.queryByTestId('zone-details-sample-note')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Today’s outlook')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Fresh from pickers')).not.toBeOnTheScreen();
+    // The walk is the design's demo route, so a live zone offers no walk to it.
+    expect(screen.queryByTestId('zone-details-navigate')).not.toBeOnTheScreen();
+  });
+
+  it('keeps the design’s sample, and says so, over the bundled stand-in', async () => {
+    await render(
+      <ZoneDetailsScreen
+        species="lingonberry"
+        zoneId="zone-a"
+        zoneSource={{ ...sourceOf(SOURCE_ZONES), demo: true }}
+      />,
+      { wrapper: QueryProvider },
+    );
+    await screen.findByText('Laajavuori 1');
+
+    expect(screen.getByText('CORE PICKER · ZONE INSIGHT · SEASON DEMO')).toBeOnTheScreen();
     expect(screen.getByTestId('zone-details-sample-note')).toHaveTextContent(SAMPLE_NOTE);
     expect(screen.getByText('Today’s outlook')).toBeOnTheScreen();
     expect(screen.getByText('Fresh from pickers')).toBeOnTheScreen();

@@ -3,6 +3,7 @@ import {
   appEnvironment,
   isLoopbackHost,
   loadConfig,
+  mapStyleUrl,
   parseApiBaseUrl,
   parseEnvironment,
   zoneSourceKind,
@@ -12,6 +13,7 @@ const {
   apiBaseUrl: API_URL_VAR,
   appEnvironment: APP_ENV_VAR,
   zoneSource: ZONE_SOURCE_VAR,
+  mapStyleUrl: MAP_STYLE_VAR,
 } = PUBLIC_ENV_VARS;
 
 describe('isLoopbackHost', () => {
@@ -226,5 +228,36 @@ describe('loadConfig', () => {
     if (!result.ok) throw new Error('expected configuration to be valid');
     expect(Object.keys(result.config)).toEqual(['environment', 'apiBaseUrl']);
     expect(JSON.stringify(result.config)).not.toContain('super-secret');
+  });
+});
+
+describe('mapStyleUrl', () => {
+  it('reads no basemap when unset or blank', () => {
+    expect(mapStyleUrl({})).toBeNull();
+    expect(mapStyleUrl({ [MAP_STYLE_VAR]: '  ' })).toBeNull();
+  });
+
+  it('keeps an https style URL, with a provider key in its query', () => {
+    const url = 'https://tiles.example.eu/styles/dark/style.json?key=public123';
+
+    expect(mapStyleUrl({ [MAP_STYLE_VAR]: ` ${url} ` })).toBe(url);
+  });
+
+  it('refuses clear-text http except loopback in development', () => {
+    expect(mapStyleUrl({ [MAP_STYLE_VAR]: 'http://tiles.example.eu/style.json' })).toBeNull();
+    expect(mapStyleUrl({ [MAP_STYLE_VAR]: 'http://localhost:8080/style.json' })).toBe(
+      'http://localhost:8080/style.json',
+    );
+    expect(
+      mapStyleUrl({
+        [MAP_STYLE_VAR]: 'http://localhost:8080/style.json',
+        [APP_ENV_VAR]: 'production',
+      }),
+    ).toBeNull();
+  });
+
+  it('refuses a URL that is not one, or embeds credentials', () => {
+    expect(mapStyleUrl({ [MAP_STYLE_VAR]: 'style.json' })).toBeNull();
+    expect(mapStyleUrl({ [MAP_STYLE_VAR]: 'https://user:pw@tiles.example.eu/s.json' })).toBeNull();
   });
 });

@@ -14,6 +14,8 @@ import { SPECIES_LABEL_KEY } from './species-copy';
 import { CONFIDENCE_LABEL_KEY, RIPENESS_LABEL_KEY } from './zone-source-copy';
 
 export type ZoneCardProps = {
+  /** Whether the zone is the bundled stand-in; only then does the caption say “test data”. */
+  demo?: boolean;
   /** The zone the screen is about: the first one the two controls left. */
   zone: Zone;
   /** The berry whose score the card is reading, i.e. the one the chips asked the source for. */
@@ -47,7 +49,7 @@ export type ZoneCardProps = {
  * card hands it the zone and the berry whose score it is showing instead of opening another
  * zone's figures.
  */
-export function ZoneCard({ onOpen, species, zone }: ZoneCardProps) {
+export function ZoneCard({ demo = true, onOpen, species, zone }: ZoneCardProps) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
 
@@ -64,7 +66,7 @@ export function ZoneCard({ onOpen, species, zone }: ZoneCardProps) {
             })}
           </AppText>
           <AppText tone="muted" variant="caption">
-            {t('discover.card.source')}
+            {t(demo ? 'discover.card.source' : 'discover.card.source.live')}
           </AppText>
         </View>
         {onOpen ? (

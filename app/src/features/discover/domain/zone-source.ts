@@ -107,6 +107,12 @@ export const PILOT_ZONE_SPECIES: Species = 'bilberry';
  */
 export interface ZoneSource {
   list(query: ZoneQuery): Promise<readonly Zone[]>;
+  /**
+   * True when the zones are the bundled stand-in rather than the zone service's answer. The
+   * screens print their "test data" / "SEASON DEMO" disclosure only then: a live answer is not
+   * a demo and must not be labelled as one. Absent means live.
+   */
+  readonly demo?: boolean;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

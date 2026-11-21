@@ -97,9 +97,9 @@ async function openList() {
 describe('DiscoverScreen', () => {
   it('renders the frame’s header and its blocks', async () => {
     await renderScreen();
-    await screen.findByText('3 zones · test data');
+    await screen.findByText('3 zones');
 
-    expect(screen.getByText('CORE PICKER · SEASON DEMO / 28 AUG')).toBeOnTheScreen();
+    expect(screen.getByText('CORE PICKER')).toBeOnTheScreen();
     expect(screen.getByText('Discover nearby')).toBeOnTheScreen();
     expect(screen.getByTestId('zone-search-field')).toBeOnTheScreen();
     expect(screen.getByTestId('species-chips')).toBeOnTheScreen();
@@ -114,9 +114,26 @@ describe('DiscoverScreen', () => {
     expect(screen.getByTestId('map-list-toggle')).toBeOnTheScreen();
   });
 
+  it('says the zones are test data only when the source is the bundled stand-in', async () => {
+    await render(<DiscoverScreen zoneSource={{ ...sourceOf(ZONES), demo: true }} />, {
+      wrapper: QueryProvider,
+    });
+    await screen.findByText('3 zones · test data');
+
+    expect(screen.getByText('CORE PICKER · SEASON DEMO / 28 AUG')).toBeOnTheScreen();
+    expect(screen.getByText('Pilot area · test data')).toBeOnTheScreen();
+  });
+
+  it('carries no demo disclosure over the zone service’s live answer', async () => {
+    await renderScreen();
+    await screen.findByText('3 zones');
+
+    expect(screen.queryByText(/test data|SEASON DEMO/)).not.toBeOnTheScreen();
+  });
+
   it('prints the oldest score timestamp under the map', async () => {
     await renderScreen();
-    await screen.findByText('3 zones · test data');
+    await screen.findByText('3 zones');
 
     // The payload's own instant, not the read's: the zones were scored on 3 August.
     expect(screen.getByTestId('discover-updated')).toHaveTextContent('Last updated 3 August 2026');
@@ -126,14 +143,14 @@ describe('DiscoverScreen', () => {
     const undated = ZONES.map((candidate) => ({ ...candidate, updatedAt: null }));
 
     await render(<DiscoverScreen zoneSource={sourceOf(undated)} />, { wrapper: QueryProvider });
-    await screen.findByText('3 zones · test data');
+    await screen.findByText('3 zones');
 
     expect(screen.queryByTestId('discover-updated')).not.toBeOnTheScreen();
   });
 
   it('names the five yield bands the map paints', async () => {
     await renderScreen();
-    await screen.findByText('3 zones · test data');
+    await screen.findByText('3 zones');
 
     expect(screen.getByText('Yield score')).toBeOnTheScreen();
     expect(screen.getByText('Faded zones have low confidence')).toBeOnTheScreen();
@@ -148,7 +165,7 @@ describe('DiscoverScreen', () => {
 
   it('paints each legend swatch in the band’s own fill and outline', async () => {
     await renderScreen();
-    await screen.findByText('3 zones · test data');
+    await screen.findByText('3 zones');
 
     // The pairing that makes the legend readable rather than decorative: the swatch and the
     // polygon come from one token pair, so they cannot show different colours.
@@ -166,10 +183,10 @@ describe('DiscoverScreen', () => {
 
   it('draws the card from the source’s first zone, not the design’s sample', async () => {
     await renderScreen();
-    await screen.findByText('3 zones · test data');
+    await screen.findByText('3 zones');
 
     expect(screen.getByText('Laajavuori 1 · Bilberry')).toBeOnTheScreen();
-    expect(screen.getByText('Pilot area · test data')).toBeOnTheScreen();
+    expect(screen.getByText('Pilot area')).toBeOnTheScreen();
     expect(screen.getByText('53 / 100 yield')).toBeOnTheScreen();
     expect(screen.getByText('Medium confidence')).toBeOnTheScreen();
     expect(screen.getByText('Season over')).toBeOnTheScreen();
@@ -190,14 +207,14 @@ describe('DiscoverScreen', () => {
 
   it('searches a zone by name and says what the search left, on the map and in the list', async () => {
     await renderScreen();
-    await screen.findByText('3 zones · test data');
+    await screen.findByText('3 zones');
 
     await fireEvent.changeText(screen.getByLabelText('Search a place or zone'), 'Kilimajärvi');
 
     expect(screen.getByText('1 zone matches')).toBeOnTheScreen();
     // The map's count is the same answer, which is the point: the map no longer shows the
     // whole pilot area while the count line describes a subset.
-    expect(screen.getByText('1 zone · test data')).toBeOnTheScreen();
+    expect(screen.getByText('1 zone')).toBeOnTheScreen();
     expect(screen.getByText('Kilimajärvi 1 · Bilberry')).toBeOnTheScreen();
 
     await openList();
@@ -209,19 +226,19 @@ describe('DiscoverScreen', () => {
 
   it('reads a name in part, so a typed prefix still finds the zone', async () => {
     await renderScreen();
-    await screen.findByText('3 zones · test data');
+    await screen.findByText('3 zones');
 
     await fireEvent.changeText(screen.getByLabelText('Search a place or zone'), 'Laajavuori 1');
 
     // “Laajavuori 1” names zone 1 and is contained in zone 12; both are places the picker
     // named, and hiding the second would be the filter guessing at intent.
     expect(screen.getByText('2 zones match')).toBeOnTheScreen();
-    expect(screen.getByText('2 zones · test data')).toBeOnTheScreen();
+    expect(screen.getByText('2 zones')).toBeOnTheScreen();
   });
 
   it('says so when the search names a place that is not here, and keeps the legend', async () => {
     await renderScreen();
-    await screen.findByText('3 zones · test data');
+    await screen.findByText('3 zones');
 
     await fireEvent.changeText(screen.getByLabelText('Search a place or zone'), 'Kilimajärvi 2');
 
@@ -263,7 +280,7 @@ describe('DiscoverScreen', () => {
 
   it('leaves nothing when the chosen berry has no zones, and says why', async () => {
     await renderScreen();
-    await screen.findByText('3 zones · test data');
+    await screen.findByText('3 zones');
 
     await fireEvent.press(screen.getByRole('button', { name: 'Crowberry' }));
 
@@ -273,7 +290,7 @@ describe('DiscoverScreen', () => {
 
   it('lists the same zones, with the score the chips chose and the season’s word', async () => {
     await renderScreen();
-    await screen.findByText('3 zones · test data');
+    await screen.findByText('3 zones');
 
     await openList();
 
@@ -313,7 +330,7 @@ describe('DiscoverScreen', () => {
 
     await fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
 
-    expect(await screen.findByText('3 zones · test data')).toBeOnTheScreen();
+    expect(await screen.findByText('3 zones')).toBeOnTheScreen();
     expect(flaky.list).toHaveBeenCalledTimes(2);
   });
 
@@ -336,7 +353,7 @@ describe('DiscoverScreen', () => {
   it('opens the zone the card is reading, under the berry whose score it prints', async () => {
     const onOpenZone = jest.fn();
     await renderScreen({ onOpenZone });
-    await screen.findByText('3 zones · test data');
+    await screen.findByText('3 zones');
 
     await fireEvent.press(screen.getByRole('button', { name: 'Open zone Laajavuori 1 details' }));
 
@@ -356,7 +373,7 @@ describe('DiscoverScreen', () => {
 
   it('leaves the card a reading where the route supplies no destination', async () => {
     await renderScreen();
-    await screen.findByText('3 zones · test data');
+    await screen.findByText('3 zones');
 
     // A card that claimed a role without anywhere to go would be the control AGENTS.md §11.2
     // refuses; the list rows are still readings even when the card opens a zone.
@@ -373,7 +390,7 @@ describe('DiscoverScreen', () => {
 
   it('switches back to the map the frame’s toggle names', async () => {
     await renderScreen();
-    await screen.findByText('3 zones · test data');
+    await screen.findByText('3 zones');
 
     expect(screen.getByText('Map selected')).toBeOnTheScreen();
     await openList();
@@ -389,7 +406,7 @@ describe('DiscoverScreen', () => {
   it('offers the offline centre where the frame draws its download glyph', async () => {
     const onOpenDownloads = jest.fn();
     const { rerender } = await renderScreen({ onOpenDownloads });
-    await screen.findByText('3 zones · test data');
+    await screen.findByText('3 zones');
 
     await fireEvent.press(screen.getByRole('button', { name: 'Offline maps and downloads' }));
     expect(onOpenDownloads).toHaveBeenCalledTimes(1);
@@ -405,7 +422,7 @@ describe('DiscoverScreen', () => {
   it('offers the frame’s back control only when there is somewhere to go back to', async () => {
     const onBack = jest.fn();
     const { rerender } = await renderScreen({ onBack });
-    await screen.findByText('3 zones · test data');
+    await screen.findByText('3 zones');
 
     expect(screen.getByRole('button', { name: 'Back' })).toBeOnTheScreen();
 

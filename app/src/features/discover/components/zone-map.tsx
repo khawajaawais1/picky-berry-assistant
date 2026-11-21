@@ -11,6 +11,8 @@ import type { Zone } from '../domain/zone-source';
 import { ZoneMapCanvas } from './zone-map-canvas';
 
 export type ZoneMapProps = {
+  /** Whether the zones are the bundled stand-in; only then does the label say “test data”. */
+  demo?: boolean;
   /** The height the screen gives it: the design's 300 on frame 06. */
   height?: number;
   /**
@@ -45,7 +47,13 @@ export type ZoneMapProps = {
  *   carries a text alternative naming what it shows; the zone-by-zone reading is the list
  *   the screen's toggle opens.
  */
-export function ZoneMap({ height = layout.mapHeight, onRetry, status, zones }: ZoneMapProps) {
+export function ZoneMap({
+  demo = true,
+  height = layout.mapHeight,
+  onRetry,
+  status,
+  zones,
+}: ZoneMapProps) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
 
@@ -103,11 +111,13 @@ export function ZoneMap({ height = layout.mapHeight, onRetry, status, zones }: Z
           }}
         >
           <AppText tone="success" variant="mapLabel">
-            {t('discover.map.place')}
+            {t(demo ? 'discover.map.place' : 'discover.map.place.live')}
           </AppText>
           <AppText tone="muted" variant="mapAnnotation">
             {interpolate(
-              zones.length === 1 ? t('discover.map.countOne') : t('discover.map.count'),
+              demo
+                ? t(zones.length === 1 ? 'discover.map.countOne' : 'discover.map.count')
+                : t(zones.length === 1 ? 'discover.map.countOne.live' : 'discover.map.count.live'),
               { count: String(zones.length) },
             )}
           </AppText>

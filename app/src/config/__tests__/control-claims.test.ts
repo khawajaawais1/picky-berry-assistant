@@ -239,8 +239,8 @@ const LEDGER: readonly LedgerEntry[] = [
   },
   {
     file: 'src/features/discover/components/zone-map-canvas.native.tsx',
-    offers: { role: 1 },
-    why: 'The MapLibre map claims `image` — the text alternative WCAG 1.1.1 asks of the screen’s primary presentation of the zones (known issue 35, corrected) — and nothing on it acts: every gesture is off, because the frame’s recentre button does not exist yet.',
+    offers: { pressable: 1, role: 2 },
+    why: 'The MapLibre map claims `image` — the text alternative WCAG 1.1.1 asks of the screen’s primary presentation of the zones (known issue 35, corrected). It pans and zooms, so it draws the frame’s recentre button, which fits the camera back to the zones the picker can otherwise lose.',
   },
   {
     file: 'src/features/discover/components/zone-map-canvas.web.tsx',
