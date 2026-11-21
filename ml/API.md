@@ -162,6 +162,32 @@ synchronous `POST /api/v1/photos/analyze` (multipart field `photo`, ≤ 15 MB) t
 
 `{"status":"ok","models":{"detector":"berry-yolo11n-v1","zoneGrid":"zone-grid-jkl-v1","yield":"yield-baseline-v1","scoreRules":"zone-score-rules-v1"}}`
 
+### 4.6 `GET /api/v1/ml/score?lat=&lon=&date=` — score for one spot · features 6.2, 6.6
+
+The same model as 4.1, for a single point (what `demo_pipeline.py` does). Live in the reference service.
+
+```python
+from berry_ml import ZoneGrid, YieldModel
+res = ZoneGrid().score_point(lat, lon, date=day,
+                             year_index=YieldModel().year_index("Lansi-Suomi", species))
+# res is None  -> 404 problem+json "Outside the model area" (grid = 40 x 40 km around Jyväskylä)
+# else         -> {species: ZoneScore}; ZoneScore.to_payload() = {score, confidence, ripeness}
+```
+
+| | Field | Type |
+|---|---|---|
+| In (query) | `lat` | number −90…90, required |
+| | `lon` | number −180…180, required |
+| | `date` | string `YYYY-MM-DD`, default today |
+| Out (200 JSON) | `lat`, `lon` | number |
+| | `date` | string `YYYY-MM-DD` |
+| | `scores` | object, species → `{score: integer 0–100, confidence: low\|medium\|high, ripeness: unripe\|ripening\|ripe\|past}` (all 4) |
+| | `forestShare` | number 0–1 |
+| | `modelVersion` | string |
+| Errors | 404 outside the grid · 422 bad `lat`/`lon`/`date` · 401 missing `X-API-Key` | problem+json |
+
+Example: `lat=62.30, lon=25.60, date=2026-07-25` → bilberry 52 (ripe), cloudberry 3, crowberry 11, lingonberry 0 (unripe).
+
 ## 5. Jobs
 
 | Job | When | Code | Writes |
