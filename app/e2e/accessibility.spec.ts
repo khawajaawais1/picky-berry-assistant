@@ -1,7 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
 import { controlsOn, readInFlight, readPage, routesOfTheApp } from './a11y-tree';
-import { makePlatformStorageAsynchronous } from './platform-storage';
 import {
   PROTOTYPE_READINGS,
   readingsOffTheirPrototype,
@@ -106,45 +105,18 @@ test.describe('the consent controls in the built web app', () => {
  * only ever there in a browser. Screen 03's email/phone pair was the other reader and retired with
  * the phone flow (ADR-059).
  */
-test.describe('the chip rows in the built web app', () => {
-  test('states which answer is chosen in the picker’s rating rows', async ({ page }) => {
+test.describe('the visit screens that read the tracker', () => {
+  test('draw the report’s empty state when no visit has ended', async ({ page }) => {
     await page.goto('/post-visit-feedback');
 
-    const bilberry = page.getByRole('radio', { name: 'Bilberry' });
-    await expect(bilberry).toHaveAttribute('aria-checked', 'false');
-    await expect(page.getByRole('radio', { name: 'Lingonberry' })).toHaveAttribute(
-      'aria-checked',
-      'true',
-    );
-
-    await bilberry.click();
-
-    await expect(bilberry).toHaveAttribute('aria-checked', 'true');
-    await expect(page.getByRole('radio', { name: 'Lingonberry' })).toHaveAttribute(
-      'aria-checked',
-      'false',
-    );
-
-    // The frame's five-cell yield rating is the same radio group and was the one this half was
-    // missing: its chosen cell carried `accessibilityState` alone, so on this target the answer
-    // was the cell's fill colour and nothing a screen reader was told. Found by the walk over
-    // every screen below; kept as a named case because a person should be able to read the defect
-    // rather than infer it from a count.
-    const good = page.getByRole('radio', { name: 'Good' });
-    await expect(good).toHaveAttribute('aria-checked', 'true');
-    await expect(page.getByRole('radio', { name: 'Lots' })).toHaveAttribute(
-      'aria-checked',
-      'false',
-    );
-
-    await page.getByRole('radio', { name: 'Lots' }).click();
-
-    await expect(page.getByRole('radio', { name: 'Lots' })).toHaveAttribute('aria-checked', 'true');
-    await expect(good).toHaveAttribute('aria-checked', 'false');
-
-    // Both rows answered, which is the state the screen is actually filled in when the picker saves
-    // it — and the state whose group states a screen reader has to be able to read back.
-    await expectTreeReadable(page, '/post-visit-feedback, with both answers chosen');
+    // The route has no tracked visit in this fresh page, so the screen says so instead of drawing
+    // the design's sample window. The populated form's choices are covered by its component test,
+    // which can hand the screen a finalized visit; here the browser holds the honest empty state.
+    await expect(page.getByTestId('report-empty')).toBeVisible();
+    await expect(page.getByText('No visit to report')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Save report offline' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Skip report for now' })).toHaveCount(0);
+    await expectTreeReadable(page, '/post-visit-feedback, with no ended visit');
   });
 
   test('states the visit history’s period, and what the choice does to the list', async ({
@@ -486,87 +458,52 @@ test.describe('the marketplace in the built web app', () => {
 });
 
 /**
- * The visit and its report, end to end in the built app: the walk opens the visit, the timer
- * runs and holds, the visit ends in the quick report, and the report is really written to the
- * device's queue — which is the one thing frame 10's own copy promises (“Your visit and report
- * stay on this phone”).
+ * The visit screens in a built web export. A fresh page has no permission, no position watch and
+ * no zone list, so it cannot make a tracked visit: what these journeys can hold is the honest
+ * empty state screen 09 reaches from the walk, and the queue screen 13 reads. The populated visit
+ * and report are held by their component and domain tests, which can hand them a tracked visit.
  *
- * The reading is checked through its accessible name rather than its pixels: it is one reading
- * for assistive technology even though it is painted in parts, and that contract is only visible
- * in a real accessibility tree. On the web target the queue is `localStorage`, which is where
- * `AsyncStorage` puts a device's store — the same place the consent record is asserted above.
+ * On the web target the queue is `localStorage`, which is where `AsyncStorage` puts a device's
+ * store — the same place the consent record is asserted above.
  */
 test.describe('the visit flow in the built web app', () => {
-  test('opens the visit from the walk, holds its clock, and saves the report it ends in', async ({
-    page,
-  }) => {
+  test('opens the walk’s visit screen with no visit invented', async ({ page }) => {
     await page.goto('/route-to-zone');
     await page.getByRole('button', { name: 'Start walking' }).click();
 
     await expect(page).toHaveURL(/\/active-visit$/);
-    await expect(page.getByText('Picking in Zone 14')).toBeVisible();
+    await expect(page.getByText('No visit is running')).toBeVisible();
+    await expect(page.getByTestId('visit-empty')).toBeVisible();
 
-    const reading = page.getByTestId('visit-timer');
-    await expect(reading).toHaveAttribute('aria-label', /^\d{2}:\d{2}:\d{2}$/);
-
-    // The visit as the walk's own route does not draw it: running, with the timer live and the
-    // screen's one action offering to hold it.
-    await expectTreeReadable(page, '/active-visit, opened from the walk');
-
-    // Pausing holds the reading: the same label after two seconds of a stopped clock.
-    await page.getByRole('button', { name: 'Pause visit' }).click();
-    const held = await reading.getAttribute('aria-label');
-    await page.waitForTimeout(2_000);
-    await expect(reading).toHaveAttribute('aria-label', held ?? '');
-    await expect(page.getByRole('button', { name: 'Resume visit' })).toBeVisible();
-
-    // Paused is a different screen to a screen reader than running is — the action swapped its name
-    // and the clock stopped — so it is read as its own state.
-    await expectTreeReadable(page, '/active-visit, while the visit is paused');
-
-    await page.getByRole('button', { name: 'End visit' }).click();
-    await expect(page).toHaveURL(/\/post-visit-feedback$/);
-    await expect(page.getByText('How was the picking?')).toBeVisible();
-
-    await expectTreeReadable(page, '/post-visit-feedback, reached by ending the visit');
-
-    // The picker's own answers, then the frame's save action.
-    await page.getByRole('radio', { name: 'Bilberry' }).click();
-    await page.getByRole('radio', { name: 'Lots' }).click();
-    await page.getByRole('button', { name: 'Save report offline' }).click();
-
-    await expect(page).toHaveURL(/\/visits$/);
-    const queued: unknown = JSON.parse(
-      (await page.evaluate((key) => localStorage.getItem(key), QUEUE_KEY)) ?? '[]',
-    );
-
-    expect(queued).toHaveLength(1);
-    expect(queued).toMatchObject([
-      { minutes: 52, speciesId: 'bilberry', yieldRating: 5, zoneId: 'Z14' },
-    ]);
-
-    // The half that makes the queue a record rather than a promise: the screen the save leads
-    // to is the picker's own history, and the report they just made is the top of it. This is
-    // the copy AGENTS.md §11.1 asks every stored field to be able to answer for.
-    const newest = page.getByTestId('season-history-0');
-    await expect(newest).toContainText('Zone 14 · Bilberry');
-    // The visit's own 52 minutes, and no harvest: the amount field was left empty, and a row
-    // does not invent one.
-    await expect(newest).toContainText(/\d+ \w+ · 52 min/);
-    await expect(newest).toContainText('Queued');
-
-    // The history with the report the user just made in it — the one state of this screen that no
-    // freshly loaded export has, and the one the save action leads to.
-    await expectTreeReadable(page, '/visits, after saving the report');
+    // No timer and no end action without a visit: the screen draws only what the tracker knows.
+    await expect(page.getByTestId('visit-timer')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'End visit' })).toHaveCount(0);
+    await expectTreeReadable(page, '/active-visit, with no tracked visit');
   });
 
-  test('shows the same report waiting in the sync centre, reached the way the app reaches it', async ({
+  test('shows a report waiting in the sync centre, reached the way the app reaches it', async ({
     page,
   }) => {
-    // The report is made the way the app makes one, so the screen below reads a real queue.
-    await page.goto('/post-visit-feedback');
-    await page.getByRole('button', { name: 'Save report offline' }).click();
-    await expect(page).toHaveURL(/\/visits$/);
+    // The report is written the way the device's store holds one. Frame 10's own save path is
+    // covered by its component test; this journey is about screen 13 reading the queue.
+    await page.goto('/visits');
+    await page.evaluate(
+      (key) =>
+        localStorage.setItem(
+          key,
+          JSON.stringify([
+            {
+              amountText: '',
+              minutes: 52,
+              recordedAt: '2026-08-28T10:55:00.000Z',
+              speciesId: 'lingonberry',
+              yieldRating: 4,
+              zoneId: 'Z14',
+            },
+          ]),
+        ),
+      QUEUE_KEY,
+    );
 
     // In through the app's own door: frame 14's “Offline maps & sync” row, whose value is the
     // queue's own count.
@@ -593,18 +530,6 @@ test.describe('the visit flow in the built web app', () => {
       ),
     ).toBeVisible();
     await expect(page.getByRole('button', { name: 'Retry sync' })).toHaveCount(0);
-  });
-
-  test('writes nothing when the picker skips the report', async ({ page }) => {
-    await page.goto('/post-visit-feedback');
-    await page.getByRole('button', { name: 'Skip report for now' }).click();
-
-    await expect(page).toHaveURL(/\/discover$/);
-    expect(await page.evaluate((key) => localStorage.getItem(key), QUEUE_KEY)).toBeNull();
-
-    // Skipping is a press too, and where it lands is the screen the app opens on: read here rather
-    // than assumed to be the walk's own /discover.
-    await expectTreeReadable(page, '/discover, after skipping the report');
   });
 });
 
@@ -681,6 +606,51 @@ test.describe('resetting a password, in the built web app', () => {
 
     await page.getByRole('button', { name: 'Sign in' }).click();
     await expect(page).toHaveURL(/\/sign-in$/);
+  });
+
+  test('opens the emailed link, saves a new password, and refuses the spent link', async ({
+    page,
+  }) => {
+    await fakeAccountService(page);
+    await page.goto('/reset-password?token=harness-reset-token');
+
+    await expect(page.getByText('Choose a new password.')).toBeVisible();
+    await page.getByRole('textbox', { name: 'New password', exact: true }).fill('berries1234');
+    await page
+      .getByRole('textbox', { name: 'Confirm new password', exact: true })
+      .fill('berries1234');
+    await page.getByRole('button', { name: 'Save new password' }).click();
+
+    // The service's `204` is a changed password, not a session: the way on is signing in again.
+    await expect(page.getByText('Password updated.')).toBeVisible();
+    await expectTreeReadable(page, '/reset-password, after saving the new password');
+
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    await expect(page).toHaveURL(/\/sign-in$/);
+
+    // The same token is single-use. Opening the link again draws the form — the app cannot know
+    // the token is spent without asking — and the service's refusal replaces it with the invalid
+    // state and a new-link action, rather than leaving a form that can only fail.
+    await page.goto('/reset-password?token=harness-reset-token');
+    await page.getByRole('textbox', { name: 'New password', exact: true }).fill('berries1234');
+    await page
+      .getByRole('textbox', { name: 'Confirm new password', exact: true })
+      .fill('berries1234');
+    await page.getByRole('button', { name: 'Save new password' }).click();
+
+    await expect(page.getByText('This reset link can’t be used.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Request a new link' })).toBeVisible();
+    await expectTreeReadable(page, '/reset-password, with a spent link');
+
+    await page.getByRole('button', { name: 'Request a new link' }).click();
+    await expect(page).toHaveURL(/\/forgot-password$/);
+  });
+
+  test('opens a link with no token as unusable, and offers the request again', async ({ page }) => {
+    await page.goto('/reset-password');
+
+    await expect(page.getByText('This reset link can’t be used.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Request a new link' })).toBeVisible();
   });
 });
 
@@ -914,9 +884,10 @@ test.describe('the discover map in the built web app', () => {
    * computes to `generic`, where Chromium ignores `aria-label`), and before the fix these three
    * routes each read as a bare `- img` — no name, nothing for a screen reader but the word
    * “image”. The rule that holds it in general is the walk's (`e2e/a11y-tree.ts`): an image in the
-   * tree with no accessible name is a finding.
+   * tree with no accessible name is a finding. Screen 09 no longer draws a map, so the two routes
+   * below are the app's two maps.
    */
-  for (const route of ['/discover', '/route-to-zone', '/active-visit']) {
+  for (const route of ['/discover', '/route-to-zone']) {
     test(`${route} draws the map as a named image, with its own words beside it`, async ({
       page,
     }) => {
@@ -927,7 +898,7 @@ test.describe('the discover map in the built web app', () => {
       // Asked for only once the tree says something: Chromium can answer with an **empty**
       // accessibility tree for a drawing that has just been painted, and an empty snapshot reads
       // exactly like a map with no name — the one thing this case exists to judge (found on a
-      // cold CI runner, 2026-10-21, where two of these three routes came back empty while the
+      // cold CI runner, 2026-10-21, where one of these two routes came back empty while the
       // same routes passed on a warm one). Bounded, and the tree of this element alone: a map that
       // never names itself stays empty and fails the assertions below.
       let snapshot = '';
@@ -1123,25 +1094,36 @@ test.describe('the accessibility tree of every built screen', () => {
  * A screen read **while an action on it is working** — the half of the contract that a settled
  * reading cannot reach, because settling is exactly what waits it out.
  *
- * Screen 10's “Save report offline” is the app's only action with a busy state (`AppButton`'s
- * `busy`): while the write runs, the label is replaced by a spinner, the action declares itself
- * unavailable, and the flow moves on once the report is on the phone. Reading that frame is what
- * `readInFlight` exists for.
+ * The reset page's “Save new password” is a busy action (`AppButton`'s `busy`): its completion
+ * call is the work, the label is replaced by a spinner while it waits, and the action declares
+ * itself unavailable. The harness's fake account service is held open here so that frame exists
+ * long enough to read. Reading it is what `readInFlight` exists for.
  *
- * Why the work has to be slowed first: on the web target `AsyncStorage` resolves its promise
- * synchronously, so the in-flight state lasts a microtask and never reaches the DOM at all — while
- * on a device it lasts as long as the write does. `platform-storage.ts` gives the page the timing
- * a device has, and its header carries the measurement behind that sentence.
+ * This is the browser half of the contract; `AppButton`'s own test holds the native state. The
+ * populated report screen cannot supply it in a fresh export, because a fresh page has no tracked
+ * visit and therefore no save action.
  */
 test.describe('a screen read while an action is working', () => {
   test('still exposes the action, its name and its state, and then finishes the work', async ({
     page,
   }) => {
-    await makePlatformStorageAsynchronous(page);
-    await page.goto('/post-visit-feedback');
+    await fakeAccountService(page);
+    await page.goto('/reset-password?token=harness-reset-token');
+    await page.getByRole('textbox', { name: 'New password', exact: true }).fill('berries1234');
+    await page
+      .getByRole('textbox', { name: 'Confirm new password', exact: true })
+      .fill('berries1234');
 
-    const action = page.getByTestId('report-save');
-    await action.waitFor();
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await page.route('**/api/v1/auth/password-reset/confirm', async (route) => {
+      await held;
+      await route.fallback();
+    });
+
+    const action = page.getByTestId('reset-password-action');
     await action.click();
 
     // Seen before it is read: a reading is a point in time, and this one has to be taken inside the
@@ -1149,11 +1131,11 @@ test.describe('a screen read while an action is working', () => {
     // one flag no snapshot carries, which is why the walk reads it from the page.
     await expect(action).toHaveAttribute('aria-busy', 'true');
 
-    const reading = await readInFlight(page, '/post-visit-feedback');
+    const reading = await readInFlight(page, '/reset-password, saving the new password');
 
     // The floor, first: a reading that caught nothing would pass every rule below it.
     expect(reading.controls.filter((control) => control.declares['aria-busy'] === true)).toEqual([
-      expect.objectContaining({ name: 'Save report offline', role: 'button' }),
+      expect.objectContaining({ name: 'Save new password', role: 'button' }),
     ]);
 
     // Nothing is wrong with the frame the press left behind: the action keeps its role, its name
@@ -1162,20 +1144,18 @@ test.describe('a screen read while an action is working', () => {
     expect(reading.findings).toEqual([]);
     expect(reading.nodes).toContainEqual({
       flags: ['disabled'],
-      name: 'Save report offline',
+      name: 'Save new password',
       role: 'button',
     });
     expect(
       reading.nodes.filter((node) => node.role === 'progressbar' || node.role === 'img'),
     ).toEqual([]);
 
-    // And the work finishes — the report is on the phone's queue and the flow moved on — so what was
-    // read above was an in-flight state and not a screen that stalled with its spinner up.
-    await expect(page).toHaveURL(/\/visits$/);
+    // And the work finishes, so what was read above was an in-flight state and not a screen that
+    // stalled with its spinner up.
+    release();
+    await expect(page.getByText('Password updated.')).toBeVisible();
     expect(await page.locator('[aria-busy="true"]').count()).toBe(0);
-    expect(
-      JSON.parse((await page.evaluate((key) => localStorage.getItem(key), QUEUE_KEY)) ?? '[]'),
-    ).toMatchObject([{ zoneId: 'Z14' }]);
   });
 });
 

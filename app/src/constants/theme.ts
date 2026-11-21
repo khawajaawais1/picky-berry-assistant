@@ -342,11 +342,6 @@ export const layout = {
    */
   routeMapHeight: 322,
   /**
-   * Frame 09's map (342x210, node 5:23204) — the same drawing as frame 06's, at 0.7 of its
-   * height, because the active visit is about the timer below it rather than about the map.
-   */
-  visitMapHeight: 210,
-  /**
    * The height of one cell of frame 10's yield rating (63x72, node `5:23290`). A floor rather
    * than a fixed box: the number above its meaning has to be able to grow with the system text
    * size (ADR-019), and the row fills the content column with `flex-1` cells.

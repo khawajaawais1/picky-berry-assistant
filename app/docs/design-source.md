@@ -74,8 +74,8 @@ screen without a reachable route is not implemented.
 | 06  | Core picker · Discover map | **partial** — the header, the frame's search field and species chips (the field narrows by zone name and the chips choose the score layer; the map draws exactly the zones left and a line says how many), MapLibre over the pilot stub on the device and the same rings as an SVG on the web export, the five-band score legend, the zone card reading the source's first zone (its score, confidence and season) **which opens screen 07** with the zone's id and berry, the frame's map/list toggle with the source's rows behind it, and its download glyph (which opens screen 13); its recentre control is not built, because every map gesture is off until a control exists, and the real basemap ([ADR-031](adr/ADR-031-a-real-basemap-osm-derived-tiles-we-host.md)) is what it waits on beside a position source ([ADR-044](adr/ADR-044-the-partial-frames-remaining-parts.md)); its core navigation is the app shell (ADR-022) | `5:22942` | `src/app/(app)/discover.tsx` → `features/discover` |
 | 07  | Core picker · Zone details | **partial** — the header, the season photograph, the species row the zone is reported for, the yield card, the outlook, the freshest report, the frame's own **bookmark**, which writes and removes the picker's saved-zone record on this device (ADR-024), the “Navigate” action that opens screen 08, and **“See all 11”**, which opens the report list this phone holds for the zone (app-drawn, [ADR-044](adr/ADR-044-the-partial-frames-remaining-parts.md) — see the app-drawn inventory below). Since 2026-10-24 the screen **reads the same `ZoneSource` as screen 06** when its card hands over a zone id and berry ([ADR-058](adr/ADR-058-screen-07-reads-the-zone-source.md)): name, scored species, score, confidence and season are that zone's; the design's week of reports is not printed beside them, and the zone's own `updated_at` is printed under the yield card in the map line's words (omitted when the payload has none). The outlook, freshest report, walk and report list have no source and stay the design's sample, said by one sentence before them; without a zone id the whole screen is the sample. Its third species chip (“More”) is not drawn, because a single zone's screen has no species to narrow, and other pickers' reports are not on the list the link opens: nothing returns one, and the screen says so | `5:23032` | `src/app/(app)/zone-details.tsx` → `features/discover` |
 | 08  | Core picker · Route to zone | **implemented** — the header, the offline note, the frame's own map with its walking route, the distance and arrival card, the next turn, “Start walking” (which opens screen 09) and “Cancel route”; its core navigation is the app shell (ADR-022), and the offline note is the frame's claim about a tile cache this app does not have | `5:23106` | `src/app/(app)/route-to-zone.tsx` → `features/discover` |
-| 09  | Core picker · Active visit | **partial** — the header, the arrival note, the same map at 210 px, the live timer with its pause, the frame's privacy line, “End visit” (which opens screen 10) and the supporting line; the frame's recentre control is not drawn, for the reason frame 06's is not — position source and a map that carries geography ([ADR-044](adr/ADR-044-the-partial-frames-remaining-parts.md), [ADR-031](adr/ADR-031-a-real-basemap-osm-derived-tiles-we-host.md)); its core navigation is the app shell (ADR-022) | `5:23185` | `src/app/(app)/active-visit.tsx` → `features/discover` |
-| 10  | Core picker · Post-visit feedback | **partial** — the header, the exit summary, the heading, the two species chips the frame names, its third chip (“More”), which reveals the rest of the app's species vocabulary, the five-cell yield rating, the harvest field, the offline note, “Save report offline” (which writes the device's report queue) and “Skip report for now”; the frame's “Add a berry photo” row is not built (the owner deferred evidence media) | `5:23259` | `src/app/(app)/post-visit-feedback.tsx` → `features/discover` |
+| 09  | Core picker · Active visit | **partial** — the header, the arrival note, the live timer and privacy line, “End visit” (which ends the app's tracked visit and opens screen 10) and the supporting line, all read from the mounted tracker; its empty and “arriving” states say what the tracker knows rather than drawing the design's sample. The frame's map at 210 px and its pause action are not drawn: there is no map geometry on this screen, and the tracker cannot pause a visit it judges from presence ([ADR-044](adr/ADR-044-the-partial-frames-remaining-parts.md), [ADR-031](adr/ADR-031-a-real-basemap-osm-derived-tiles-we-host.md)); its core navigation is the app shell (ADR-022) | `5:23185` | `src/app/(app)/active-visit.tsx` → `features/discover` |
+| 10  | Core picker · Post-visit feedback | **partial** — the header, the exit summary, the heading, the two species chips the frame names, its third chip (“More”), which reveals the rest of the app's species vocabulary, the five-cell yield rating, the harvest field, the offline note, “Save report offline” (which writes the device's report queue) and “Skip report for now”; the summary and duration are the finalized tracked visit that opened the screen, and a page with no such visit draws an empty state instead of the design's sample. The frame's “Add a berry photo” row is not built (the owner deferred evidence media) | `5:23259` | `src/app/(app)/post-visit-feedback.tsx` → `features/discover` |
 | 11  | Core picker · Visits and analytics | **partial** — the header (with the design's own words plus a “SEASON DEMO” disclosure), the two period chips as one real choice filtering the visit history, the lines under the heading that state the period and its count, the month's summary card, the harvest chart and the history itself, whose rows are the picker's own queued reports above the design's three sample visits; the summary and chart are still the design's sample month, and its core navigation is the app shell (ADR-022) | `5:23343` | `src/app/(app)/visits.tsx` → `features/discover` |
 | 12  | Core picker · Alerts and forecast | **partial** — the header, the alert with its score and confidence chips, the three reasons it gives, the alert-preferences card drawn as the design's own sample (its switch a figure, its rows readings) and the frame's own note about what a forecast is; its “View Zone 18” action is not built, because the app's demo composition has no Zone 18 — the action needs a zone source, or a zone the design never drew ([ADR-044](adr/ADR-044-the-partial-frames-remaining-parts.md)). **Since 2026-11-21** the preferences card is the account's own wherever the service is connected: a real push switch, the account's radius and species, and quiet hours read as not offered ([ADR-067](adr/ADR-067-the-account-holds-its-preferences-and-push-registration.md)) | `5:23439` | `src/app/(app)/alerts.tsx` → `features/discover` |
 | 13  | Account and offline · Downloads | **complete as a drawing** — the header (with the frame's own words plus the season-demo disclosure its sample region now needs); the frame's **offline status message**, drawn only when the device reports no reachable connection (ADR-025); the card that lists what is still waiting on the phone, which is the report queue screen 10 writes read back in the frame's own words; and the frame's **downloaded region, cached tiles and forecast, storage meter, “Retry sync”, “Manage downloaded regions” and last-sync line**, drawn as the **design's own sample and labelled as such** (the eyebrow's disclosure and a sentence above the block, ADR-042): nothing is downloaded, so the figures live in one `DEMO_*` module, the meter's fill is computed from the two figures it prints, and neither action claims a role. What is not *real* is recorded as such: no tile cache, no forecast download and no storage measurement exist (ADR-031, PROJECT.md known issue 30) | `5:23530` | `src/app/(app)/downloads.tsx` → `features/offline` |
@@ -476,28 +476,28 @@ header also carries the “SEASON DEMO” disclosure frame 06's map makes.
 ### Screen 09, as extracted
 
 Frame 09 (node `5:23185`) is the visit itself: the arrival note the design leads with, the same
-map as frames 06 and 08 at 210 px (the third height, 0.7 of the first), a card carrying the time
-in the zone, the frame's own promise that the track stays private, and its two actions.
+map as frames 06 and 08 at 210 px (the third height, 0.7 of the first; the app no longer draws
+it), a card carrying the time in the zone, the frame's own promise that the track stays private,
+and its two actions.
 
-**The timer is the first thing in this app that is genuinely alive.** It starts at the frame's own
-reading — 42 minutes 17 seconds, node `5:23226` — and counts up for real, and **“Pause visit”**
-holds it: resuming restarts the clock from the reading it held, so a paused stretch is not counted
-as time in the zone (the visit policy counts dwell, not wall clock). The clock is
-`hooks/use-elapsed-ms.ts`, a hook rather than a screen's own interval because three things have to
-be right at once — a reading at the first paint, a tick per second, and a reading that holds while
-paused — and the screen passes it an *instant*, not a duration, so a resume is just a new instant.
+**The timer is the first thing in this app that is genuinely alive, and it now belongs to the
+tracked visit.** Since 2026-11-21 screen 09 reads the mounted tracker: the zone, the arrival instant
+and the live elapsed reading all come from the visit the app is actually making, and empty and
+“arriving” states say what the tracker knows. The frame's own 42:17 was the demo seed and is
+retired, and **“Pause visit” is not drawn**, because the tracker judges presence and has no paused
+state. The clock is still `hooks/use-elapsed-ms.ts`, passed an *instant* rather than a duration.
 
-Values measured on node `5:23185` that are now tokens: the map's 342x210
-(`layout.visitMapHeight`), the card's 20 px inset (`spacing.cardInset`) with its three lines 6 px
-apart (the design's 6 px step, `spacing.setting`), the status label at 12/16.8 semibold
+Values measured on node `5:23185` that are now tokens: the card's 20 px inset
+(`spacing.cardInset`) with its three lines 6 px apart (the design's 6 px step, `spacing.setting`),
+the status label at 12/16.8 semibold
 (`typography.statusLabel`) and the reading at 52/62.9 semibold (`typography.timer`). The arrival
 note is the existing `Callout`, and the frame's 14 px and 12 px figures had two panels 342 px
 apart, with the departure 10:55 and the duration 52 min (frame 10's own summary of the same walk).
 
-Two things the measurement changed, both recorded in PROJECT.md: the frame's **two action labels
-are shortened in Finnish** (“Keskeytä käynti” and “Lopeta käynti” each wrapped to two lines in the
-103 px label box the frame draws — now “Keskeytä” and “Lopeta”), and **the reading is painted in
-parts** so that the largest system text size has something to reflow: the frame's 52 px numeral is
+The measurement changed the frame's **End action label in Finnish** (“Lopeta käynti” wrapped to two
+lines in the 103 px label box the frame draws — now “Lopeta”); the pause label went with the
+action. **The reading is painted in parts** so that the largest system text size has something to
+reflow: the frame's 52 px numeral is
 222 px wide, and 200 % of it is 440 px in a 302 px card, so the reading breaks into hours and two
 colon-led pairs that wrap onto a second line rather than being clipped or capped. Assistive
 technology still hears one reading (`accessibilityRole="text"` with the whole value as its name).
@@ -767,15 +767,15 @@ the lines it needs in the wider language and measures it in both languages at th
 refused press must not be silent (AGENTS.md §2.3), and since 2026-10-24 it draws the recovery
 action that opens the app-drawn reset request ([ADR-062](adr/ADR-062-password-reset-belongs-to-the-provider.md)).
 
-### The password-reset request — app-drawn, no node
+### The password-reset journey — app-drawn, no node
 
 Frames 01 and 03 draw a sign-in link and stop; no frame, and no app-drawn screen before 2026-10-24,
-drew anything behind a forgotten password. The owner asked for the journey, and
-[ADR-062](adr/ADR-062-password-reset-belongs-to-the-provider.md) records the split: the app draws
-**the request** (`/forgot-password`) and its confirmation, while the sign-in provider sends the
-reset email, hosts the page where a new password is set, and owns the token. There is therefore
-**no new-password field and no token in the app** — the way on after the provider's page is
-`/sign-in`.
+drew anything behind a forgotten password. The owner asked for the journey. The team API now owns
+the reset ([ADR-065](adr/ADR-065-the-api-issues-the-credential.md), amending
+[ADR-062](adr/ADR-062-password-reset-belongs-to-the-provider.md)), and the app draws both halves:
+**the request** (`/forgot-password`) and **the page the emailed link opens**
+(`/reset-password?token=…`). The service mints a one-hour, single-use token and mails a link to
+that page; the page collects the new password and its confirmation and posts them once.
 
 The screen keeps the sign-in screen's framing because it stands beside it: the same 76 px key
 tile, the onboarding header and back control, the design's 54 px field and action, and a text
@@ -786,13 +786,21 @@ through in the browser journey, not by a fresh page load, because the request's 
 screen rather than in the store.
 
 **A delivery is claimed only when one is made.** The action says “Request reset link” rather than
-“Send me a link”. The request goes to the team API (ADR-065), whose mail is not delivered yet, so
-the confirmation says the request was accepted and claims no email. “Check your inbox.”, with the
+“Send me a link”. The request goes to the team API (ADR-065), whose mail is console-only, so the
+confirmation says the request was accepted and claims no email. “Check your inbox.”, with the
 conditional “*if* an account uses the address, its reset link is on the way”, is kept for when the
-service sends real mail. A build that cannot reach the API draws the action
-disabled. The one failure line does not distinguish an unknown address from a failed request, so
-the screen cannot be used to learn which addresses have accounts. This is ADR-048's rule applied
-to reset rather than a second wording for it.
+service sends real mail. A build that cannot reach the API draws the action disabled. The one
+failure line does not distinguish an unknown address from a failed request, so the screen cannot be
+used to learn which addresses have accounts. This is ADR-048's rule applied to reset rather than a
+second wording for it.
+
+**The link's page holds its token only while it is open.** `/reset-password` reads `?token=` from
+the route and keeps it in memory for the one completion call; the app writes it to no storage, log
+or catalogue (the link's own URL is the browser's, not the app's). A missing, expired or spent token draws the
+invalid state with a way to request another link; a `204` clears the form and draws the success
+state with the way back to sign-in; a service that cannot be reached keeps the form so the press can
+be tried again. The form applies the account screen's own password rule before it sends anything,
+and never claims that a new password was saved when the service refused it.
 
 ### The screen behind frame 14's “Saved spots” row — app-drawn, no node
 
@@ -881,7 +889,7 @@ wraps where the design shows a single line.
 | 06 · Discover map | clean | one defect found and fixed: at 200 % the three legend states no longer fitted the 342 px column in Finnish (“Poimimaton”, “Äskettäin poimittu”, “Kypsymässä”) and the row was cut off horizontally — it wraps now, as screen 11's period chips do |
 | 07 · Zone details | clean | one defect found and fixed: the scoring note (“Pisteisiin vaikuttavat tuoreus, luotettavuus ja lähihavaintojen yhtäpitävyys.”) ran to two lines where the frame draws one (342×17) — shortened to “…ja lähihavainnot.” |
 | 08 · Route to zone | clean | one defect found and fixed: the turn guidance (“Käänny oikealle 180 m kuluttua · määränpää Laajavuori”) ran to two lines where the frame draws one (264×18) — the word “määränpää” went, and the place name now closes the line |
-| 09 · Active visit | one defect found and fixed | the two action labels (“Keskeytä käynti”, “Lopeta käynti”) each wrapped to two lines in the frame's 103 px label box — shortened to “Keskeytä” and “Lopeta”; and at 200 % the reading needed 440 px in a 302 px card, so it is painted in parts and reflows |
+| 09 · Active visit | one defect found and fixed | the frame's action label (“Lopeta käynti”) wrapped to two lines in its 103 px box — shortened to “Lopeta”; and at 200 % the reading needed 440 px in a 302 px card, so it is painted in parts and reflows |
 | 10 · Post-visit feedback | one defect found and fixed | the Finnish rating word “Kohtalaisesti” was clipped by the frame's own 63 px cell at the design's 11 px — the cells now size to their words and the row wraps |
 | 11 · Visits and analytics | clean | one defect found and fixed: at 200 % the two period chips (“Elokuu 2026”, “Kaikki käynnit”) were cut off horizontally in their row — the row wraps now, as screen 10's rating row does |
 | 12 · Alerts and forecast | clean | one defect found and fixed: the alert's context line (“Alue 18 · Laajavuori · Tuorein havainto 60 min sitten”) ran to two lines where the frame draws one (306×18) — the Finnish now states the reading alone (“… · 60 min sitten”) |

@@ -419,4 +419,25 @@ describe('createApiSessionPort', () => {
       });
     });
   });
+
+  describe('completePasswordReset', () => {
+    it('hands the token and password to the completion provider when one is given', async () => {
+      const passwordResetComplete = jest.fn(async () => ({ ok: true }) as const);
+      const port = createApiSessionPort({
+        client: createApiClient({ baseUrl: BASE, fetchImpl: jest.fn() }),
+        store: createInMemorySessionStore(),
+        passwordResetComplete,
+      });
+
+      expect(await port.completePasswordReset(' a-token ', 'berries1234')).toEqual({ ok: true });
+      expect(passwordResetComplete).toHaveBeenCalledWith(' a-token ', 'berries1234');
+    });
+
+    it('is unavailable when the API adapter has no completion endpoint', async () => {
+      expect(await harness().port.completePasswordReset('a-token', 'berries1234')).toEqual({
+        ok: false,
+        reason: 'unavailable',
+      });
+    });
+  });
 });

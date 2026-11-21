@@ -1,6 +1,9 @@
 import { createApiClient, type ApiFetch } from '@/services/api/api-client';
 
-import { createApiPasswordResetRequest } from '../api-password-reset';
+import {
+  createApiPasswordResetCompletion,
+  createApiPasswordResetRequest,
+} from '../api-password-reset';
 
 /**
  * The reset request through the team API (`POST /auth/password-reset`, ADR-065 decision 4
@@ -78,6 +81,81 @@ describe('createApiPasswordResetRequest', () => {
     const { fetchImpl, request } = requestAnswering({ status: 202 });
 
     await expect(request('  ')).rejects.toThrow(RangeError);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+});
+
+describe('createApiPasswordResetCompletion', () => {
+  function completionAnswering(answer: { status: number; body?: unknown } | 'offline') {
+    const fetchImpl = jest.fn<ReturnType<ApiFetch>, Parameters<ApiFetch>>(async () => {
+      if (answer === 'offline') throw new TypeError('Network request failed');
+      return { ok: answer.status < 300, status: answer.status, json: async () => answer.body };
+    });
+    const complete = createApiPasswordResetCompletion({
+      client: createApiClient({ baseUrl: BASE, fetchImpl }),
+    });
+    return { complete, fetchImpl };
+  }
+
+  it('posts the trimmed token and the new password without a credential', async () => {
+    const { complete, fetchImpl } = completionAnswering({ status: 204 });
+
+    await complete('  a-reset-token  ', 'berries1234');
+
+    const [url, init] = fetchImpl.mock.calls[0]!;
+    expect(url).toBe(`${BASE}/api/v1/auth/password-reset/confirm`);
+    expect(init.method).toBe('POST');
+    expect(init.headers).not.toHaveProperty('Authorization');
+    expect(JSON.parse(init.body!)).toEqual({
+      token: 'a-reset-token',
+      password: 'berries1234',
+    });
+  });
+
+  it('answers ok for the service’s bodyless 204', async () => {
+    const fetchImpl = jest.fn<ReturnType<ApiFetch>, Parameters<ApiFetch>>(async () => ({
+      ok: true,
+      status: 204,
+      json: async () => {
+        throw new SyntaxError('Unexpected end of JSON input');
+      },
+    }));
+    const complete = createApiPasswordResetCompletion({
+      client: createApiClient({ baseUrl: BASE, fetchImpl }),
+    });
+
+    expect(await complete('a-reset-token', 'berries1234')).toEqual({ ok: true });
+  });
+
+  it.each([400, 422])('answers refused for a %i', async (status) => {
+    const { complete } = completionAnswering({
+      status,
+      body: { error: { code: 'INVALID_RESET_TOKEN', message: 'x' } },
+    });
+
+    expect(await complete('spent-token', 'berries1234')).toEqual({
+      ok: false,
+      reason: 'refused',
+    });
+  });
+
+  it.each<[string, { status: number } | 'offline']>([
+    ['the network', 'offline'],
+    ['a server error', { status: 503 }],
+    ['a deploy without the endpoint', { status: 404 }],
+    ['a rate limit', { status: 429 }],
+  ])('answers unavailable when %s fails it', async (_, answer) => {
+    expect(await completionAnswering(answer).complete('a-reset-token', 'berries1234')).toEqual({
+      ok: false,
+      reason: 'unavailable',
+    });
+  });
+
+  it('refuses to spend a link that carried no token or no password', async () => {
+    const { complete, fetchImpl } = completionAnswering({ status: 204 });
+
+    await expect(complete('  ', 'berries1234')).rejects.toThrow(RangeError);
+    await expect(complete('a-reset-token', '')).rejects.toThrow(RangeError);
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 });

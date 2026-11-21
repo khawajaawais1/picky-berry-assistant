@@ -2,6 +2,7 @@ import { DEFAULT_VISIT_POLICY, type VisitPolicy } from '../visit-policy';
 import {
   applyPresence,
   createVisitTrackerState,
+  endVisit,
   finalizeExpired,
   type Visit,
   type VisitEvent,
@@ -393,5 +394,49 @@ describe('finalizeExpired', () => {
 
     expect(twice.events).toEqual([]);
     expect(twice.state.visits[0]!.finalizedAt).toBe(once.state.visits[0]!.finalizedAt);
+  });
+});
+
+describe('endVisit', () => {
+  function openVisitState(deps: VisitTrackerDeps = DAY_DEPENDENCIES) {
+    let state = createVisitTrackerState();
+    state = applyPresence(state, inside('zone-a', T0), policy, deps).state;
+    return applyPresence(state, inside('zone-a', T0 + 6 * MINUTE), policy, deps).state;
+  }
+
+  it('closes the open segment at the moment the picker ended it', () => {
+    const state = openVisitState();
+    const endedAt = T0 + 42 * MINUTE;
+
+    const result = endVisit(state, state.visits[0]!.id, endedAt);
+
+    expect(eventTypes(result.events)).toEqual(['segment-closed', 'visit-finalized']);
+    expect(result.visit).toMatchObject({ endedManually: true, finalizedAt: endedAt });
+    expect(result.visit!.segments).toEqual([{ enteredAt: T0, exitedAt: endedAt }]);
+    expect(result.state.visits[0]!.finalizedAt).toBe(endedAt);
+  });
+
+  it('leaves an already finalized visit untouched', () => {
+    const state = openVisitState();
+    const once = endVisit(state, state.visits[0]!.id, T0 + 42 * MINUTE);
+    const twice = endVisit(once.state, state.visits[0]!.id, T0 + 90 * MINUTE);
+
+    expect(twice.events).toEqual([]);
+    expect(twice.visit).toBeNull();
+    expect(twice.state).toBe(once.state);
+  });
+
+  it('ends only the visit it names', () => {
+    const deps = depsWithIds(['visit-a', 'visit-b']);
+    let state = openVisitState(deps);
+    state = applyPresence(state, inside('zone-b', T0 + 7 * MINUTE), policy, deps).state;
+    state = applyPresence(state, inside('zone-b', T0 + 13 * MINUTE), policy, deps).state;
+    const [first, second] = state.visits;
+
+    const result = endVisit(state, first!.id, T0 + 14 * MINUTE);
+
+    expect(result.state.visits[0]!.finalizedAt).toBe(T0 + 14 * MINUTE);
+    expect(result.state.visits[1]!.finalizedAt).toBeNull();
+    expect(second!.finalizedAt).toBeNull();
   });
 });

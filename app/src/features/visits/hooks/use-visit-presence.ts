@@ -8,6 +8,7 @@ import { presenceSamplesFor } from '../domain/position-presence';
 import { DEFAULT_VISIT_POLICY, type VisitPolicy } from '../domain/visit-policy';
 import {
   applyPresence,
+  endVisit,
   finalizeExpired,
   createVisitTrackerState,
   type CandidateEntry,
@@ -78,6 +79,11 @@ export type VisitPresenceState = {
    * filters by distance alone, so a picker who stood still after walking out sends no fix.
    */
   finalizeNow: (at: number) => void;
+  /**
+   * Ends the running visit at the picker's request, closing its open segment at `at`. Returns the
+   * finalized visit, or null when there is nothing to end.
+   */
+  endVisitNow: (at: number) => Visit | null;
 };
 
 export function useVisitPresence({
@@ -87,7 +93,9 @@ export function useVisitPresence({
   source,
   zones,
 }: UseVisitPresenceOptions): VisitPresenceState {
-  const [snapshot, setSnapshot] = useState<Omit<VisitPresenceState, 'status' | 'finalizeNow'>>({
+  const [snapshot, setSnapshot] = useState<
+    Omit<VisitPresenceState, 'status' | 'finalizeNow' | 'endVisitNow'>
+  >({
     candidate: null,
     events: [],
     visits: [],
@@ -106,10 +114,24 @@ export function useVisitPresence({
     state: VisitTrackerState;
     zone: ZonePolygon | null;
   }>({ events: [], state: createVisitTrackerState(), zone: null });
+  /**
+   * The zone whose visit the picker ended by hand, while the picker is still inside it.
+   *
+   * Without this, the next fix would start a candidate immediately and reopen the visit once the
+   * dwell passed again — the screen would say “ended” and then begin the same visit on its own.
+   * Any fix outside that zone clears the marker, so leaving and coming back is a new visit.
+   */
+  const endedZone = useRef<string | null>(null);
 
   const handleFix = (next: PositionFix): void => {
     const held = tracker.current;
     const zone = findContainingZone(next, zones, resolve);
+
+    if (endedZone.current !== null) {
+      if (zone?.id === endedZone.current) return;
+      endedZone.current = null;
+    }
+
     const samples = presenceSamplesFor(held.zone?.id ?? null, zone?.id ?? null, next.at);
 
     let state = held.state;
@@ -151,10 +173,31 @@ export function useVisitPresence({
     });
   };
 
+  const endVisitNow = (at: number): Visit | null => {
+    const held = tracker.current;
+    const active = [...held.state.visits].reverse().find((visit) => visit.finalizedAt === null);
+    if (active === undefined) return null;
+
+    const ended = endVisit(held.state, active.id, at);
+    if (ended.visit === null) return null;
+
+    endedZone.current = active.zoneId;
+    const events = [...held.events, ...ended.events];
+    tracker.current = { ...held, events, state: ended.state };
+    setSnapshot({
+      candidate: ended.state.candidate,
+      events,
+      visits: ended.state.visits,
+      zone: held.zone,
+    });
+    return ended.visit;
+  };
+
   const { status } = useDevicePosition({ onFix: handleFix, source });
 
   return {
     ...snapshot,
+    endVisitNow,
     finalizeNow,
     status,
     // A zone the app is no longer watching is not where the picker is now.

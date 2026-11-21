@@ -1,6 +1,8 @@
 import { router } from 'expo-router';
+import { useState } from 'react';
 
 import { PostVisitFeedbackScreen } from '@/features/discover';
+import { clearLastFinalized, useVisitSession, type VisitSessionVisit } from '@/features/visits';
 import { enqueueReport } from '@/services/report-queue';
 
 /**
@@ -12,18 +14,38 @@ import { enqueueReport } from '@/services/report-queue';
  * lists what was saved and where the picker can see that it did not go anywhere but this phone.
  * Skipping the report leads back to the map, since there is nothing new to look at.
  *
- * `onSave` rejects when the write failed, and the screen shows that instead of claiming the
- * report was kept — so nothing navigates on a failed write.
+ * The visit is the one the tracker finalized when screen 09's “End visit” was pressed or when the
+ * picker left and the grace window passed, read from the session store. Once its report is saved,
+ * skipped or left with the back control, the reading is cleared so a later visit to this route
+ * cannot save the same visit twice.
+ *
+ * `onSave` rejects when the write failed, and the screen shows that instead of claiming the report
+ * was kept — so nothing navigates on a failed write.
  */
 export default function PostVisitFeedbackRoute() {
+  const { lastFinalized } = useVisitSession();
+  // Keep the visit on screen while the route leaves: clearing the store after a save or skip
+  // must not flash the empty state before the next route draws. The mount-time reading is the
+  // fallback for the frame after the store is cleared.
+  const [visitAtMount] = useState<VisitSessionVisit | null>(lastFinalized);
+  const visit = lastFinalized ?? visitAtMount;
+
   return (
     <PostVisitFeedbackScreen
-      onBack={() => router.replace('/discover')}
+      onBack={() => {
+        clearLastFinalized();
+        router.replace('/discover');
+      }}
       onSave={async (report) => {
         await enqueueReport(report);
+        clearLastFinalized();
         router.replace('/visits');
       }}
-      onSkip={() => router.replace('/discover')}
+      onSkip={() => {
+        clearLastFinalized();
+        router.replace('/discover');
+      }}
+      visit={visit}
     />
   );
 }

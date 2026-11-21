@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import {
   appZoneSource,
   PILOT_ZONE_SPECIES,
@@ -23,6 +25,7 @@ export function AppVisitTracking() {
 
 function ServiceVisitTracking({ api }: { api: VisitsApi }) {
   const { zones } = useZones(appZoneSource, PILOT_ZONE_SPECIES);
+  const zoneNames = useMemo(() => new Map(zones.map((zone) => [zone.id, zone.name])), [zones]);
 
-  return <VisitTracker api={api} zones={zoneTrackingPolygons(zones)} />;
+  return <VisitTracker api={api} zoneNames={zoneNames} zones={zoneTrackingPolygons(zones)} />;
 }

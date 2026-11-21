@@ -75,5 +75,13 @@ export {
 } from './services/visits-api';
 export { appVisitsApi } from './services/app-visits-api';
 export { useVisitSync, type UseVisitSyncOptions } from './hooks/use-visit-sync';
+export {
+  clearLastFinalized,
+  endTrackedVisit,
+  useVisitSession,
+  type VisitSessionCandidate,
+  type VisitSessionSnapshot,
+  type VisitSessionVisit,
+} from './hooks/use-visit-session';
 export { VisitTracker, type VisitTrackerProps } from './components/visit-tracker';
 export { AppVisitTracking } from './components/app-visit-tracking';

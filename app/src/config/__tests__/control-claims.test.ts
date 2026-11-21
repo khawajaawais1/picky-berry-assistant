@@ -149,8 +149,8 @@ const LEDGER: readonly LedgerEntry[] = [
   },
   {
     file: 'src/features/discover/components/active-visit-screen.tsx',
-    offers: { button: 2, role: 2 },
-    why: 'Pause and End visit act on the demo visit the screen discloses (demo row A5); the elapsed reading is `role="text"`, so it claims nothing it cannot count.',
+    offers: { button: 1, role: 1 },
+    why: 'End visit finalizes the tracked visit through the route’s store; it is drawn only while a visit is running. The elapsed reading is `role="text"`, so it claims nothing it cannot count, and the design’s Pause action is not drawn because the tracker cannot pause a visit it is judging from presence.',
   },
   {
     file: 'src/features/discover/components/map-list-toggle.tsx',
@@ -301,6 +301,11 @@ const LEDGER: readonly LedgerEntry[] = [
     file: 'src/features/onboarding/components/forgot-password-screen.tsx',
     offers: { button: 1, formField: 1, textAction: 3 },
     why: 'The address is handed to the account seam’s reset request, “Start over” returns to the form, and the way to sign in is drawn in both states (one at a time, counted twice in source); the action goes inert where nothing can answer it, and the confirmation says no email was sent outside production (ADR-062).',
+  },
+  {
+    file: 'src/features/onboarding/components/reset-password-screen.tsx',
+    offers: { button: 3, formField: 2, textAction: 2 },
+    why: 'The new password and its confirmation are handed to the session seam’s completion, which spends the emailed link’s token; the success state opens sign-in, the invalid state requests another link, and the form’s sign-in action is available in both editable states (ADR-062, ADR-065).',
   },
   {
     file: 'src/features/onboarding/components/sign-in-screen.tsx',

@@ -10,7 +10,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
  * The four questions AGENTS.md §11 asks of every stored field:
  *
  * - **Who may read it** — this app, on this device, until the visit is sent. It holds the zone and
- *   the start and end of a finished visit, never a position fix.
+ *   the start and end of a finished visit, and whether the picker ended it by hand — never a
+ *   position fix.
  * - **How the user gets a copy** — the notice at `/terms-privacy` lists it while it holds any, and
  *   the copy at `/your-data` carries each entry.
  * - **How it is corrected** — it is not: the entry is what the tracker saw, and the server judges it.
@@ -25,6 +26,8 @@ export type OutboxVisit = {
   zoneId: string;
   startedAt: string;
   endedAt: string;
+  /** True when the picker ended the visit by hand; absent in entries written before 2026-11-21. */
+  manual?: boolean;
 };
 
 const INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
@@ -40,12 +43,12 @@ function isInstant(value: unknown): value is string {
 function parseEntry(value: unknown): OutboxVisit | null {
   if (typeof value !== 'object' || value === null) return null;
 
-  const { clientId, endedAt, startedAt, zoneId } = value as Record<string, unknown>;
+  const { clientId, endedAt, manual, startedAt, zoneId } = value as Record<string, unknown>;
   if (!isText(clientId) || !isText(zoneId) || !isInstant(startedAt) || !isInstant(endedAt)) {
     return null;
   }
 
-  return { clientId, zoneId, startedAt, endedAt };
+  return { clientId, zoneId, startedAt, endedAt, ...(manual === true ? { manual: true } : {}) };
 }
 
 /** The waiting visits, oldest first. Anything unreadable reads as nothing, never as a visit. */

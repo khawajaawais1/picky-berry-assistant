@@ -1,20 +1,26 @@
 import { Feather } from '@/components/atoms/app-icon';
-import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { AppButton, AppText } from '@/components/atoms';
 import { Callout, Card } from '@/components/molecules';
 import { Screen } from '@/components/templates';
-import { layout, spacing } from '@/constants/theme';
+import { spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { interpolate, useTranslation } from '@/services/i18n';
 
-import { DEMO_ACTIVE_VISIT, formatElapsed } from '../domain/active-visit';
-import { CARD_ZONE_STATE, DEMO_ZONES } from '../domain/zone';
+import {
+  formatClockTime,
+  formatElapsed,
+  type CandidateSnapshot,
+  type VisitSnapshot,
+} from '../domain/active-visit';
 import { useElapsedMs } from '../hooks/use-elapsed-ms';
-import { DesignZoneMap } from './design-zone-map';
 
 export type ActiveVisitScreenProps = {
+  /** The visit the tracker is running, or null when there is none. */
+  visit?: VisitSnapshot | null;
+  /** An entry that has not yet earned the visit policy's dwell minimum. */
+  candidate?: CandidateSnapshot | null;
   onBack?: () => void;
   /**
    * Closes the visit and opens the quick report (screen 10). Supplied by the route; without it
@@ -27,43 +33,89 @@ export type ActiveVisitScreenProps = {
 /**
  * Screen 09 · Core picker · Active visit (Figma node `5:23185`).
  *
- * The visit while it is running: the frame's arrival note, the same map frame 06 draws — at
- * 210 px, its third height — a card carrying the elapsed time, the frame's own promise that the
- * track is private, and its two actions.
+ * The visit while it is running, drawn from the app's own tracker: the zone the picker is in, the
+ * clock time the visit began, the live elapsed time, the frame's promise that the track is private,
+ * and its “End visit” action. When the tracker has seen the picker enter a zone but the visit
+ * policy's dwell has not elapsed, the screen draws that shorter, honest state instead; when it has
+ * seen neither, it says so rather than drawing the design's sample.
  *
- * The timer is the one thing here that is genuinely alive: it starts at the frame's own reading
- * (42 minutes 17 seconds, node `5:23226`) and counts up for real, and “Pause visit” holds it —
- * resuming restarts the clock from the reading it held, so a pause is not counted as time in the
- * zone. Everything else is the design's sample, because nothing tracks anything yet: the zone is
- * `DEMO_ZONES`' own, the arrival time is the timer's start read back as a wall clock, and the
- * tracking the note describes is the frame's claim about a feature that does not exist
- * (PROJECT.md records it as a demo, like the season demo on frame 06). Its note says the timing
- * runs **while the app is open**: the frame's own line promised the background, which this app
- * does not do (ADR-045) and which is the owner's decision rather than a string's (ADR-047).
+ * Two things the frame draws are deliberately absent: its **map** (the demo composition's geometry,
+ * not the tracked zone) and its **“Pause visit”** action (the tracker has no pause semantics — a
+ * visit is presence, and the frame's action would claim a control the domain cannot honour).
  */
-export function ActiveVisitScreen({ onBack, onEnd }: ActiveVisitScreenProps) {
+export function ActiveVisitScreen({
+  candidate = null,
+  onBack,
+  onEnd,
+  visit = null,
+}: ActiveVisitScreenProps) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
-  const zone = DEMO_ZONES.find((candidate) => candidate.state === CARD_ZONE_STATE);
 
-  // The demo visit began the frame's 42:17 ago, and runs from there.
-  const [startedAtMs, setStartedAtMs] = useState(() => Date.now() - DEMO_ACTIVE_VISIT.elapsedMs);
-  const [heldMs, setHeldMs] = useState<number | null>(null);
-  const liveMs = useElapsedMs(startedAtMs, heldMs === null);
-  const paused = heldMs !== null;
-  const elapsedMs = heldMs ?? liveMs;
+  if (visit === null && candidate === null) {
+    return (
+      <Screen
+        edges={['top']}
+        eyebrow={t('discover.visit.empty.eyebrow')}
+        onBack={onBack}
+        title={t('discover.visit.empty.title')}
+      >
+        <View className="w-full gap-section">
+          <Callout
+            icon={<Feather color={colors.textMuted} name="map-pin" size={20} />}
+            testID="visit-empty"
+            title={t('discover.visit.empty.callout')}
+          >
+            {t('discover.visit.empty.body')}
+          </Callout>
+          <AppText tone="muted" variant="bodySmall">
+            {t('discover.visit.empty.hint')}
+          </AppText>
+        </View>
+      </Screen>
+    );
+  }
 
-  function togglePause() {
-    if (heldMs === null) {
-      setHeldMs(liveMs);
+  if (visit === null) {
+    // The first branch has already handled “neither”, so this is unreachable; it is written out
+    // because it is also what tells the compiler the candidate below is not null.
+    if (candidate === null) return null;
 
-      return;
-    }
+    return (
+      <Screen
+        edges={['top']}
+        eyebrow={t('discover.visit.candidate.eyebrow')}
+        onBack={onBack}
+        title={interpolate(t('discover.visit.candidate.title'), { zone: candidate.zoneName })}
+      >
+        <View className="w-full gap-section">
+          <Callout
+            icon={<Feather color={colors.success} name="map-pin" size={20} />}
+            testID="visit-candidate-note"
+            title={t('discover.visit.candidate.arrived.title')}
+          >
+            {interpolate(t('discover.visit.candidate.arrived.body'), {
+              time: formatClockTime(candidate.enteredAt),
+            })}
+          </Callout>
 
-    // Resuming is a new start instant that many milliseconds ago: the pause itself is not
-    // counted as time in the zone.
-    setStartedAtMs(Date.now() - heldMs);
-    setHeldMs(null);
+          <CandidateTimer enteredAt={candidate.enteredAt} />
+
+          <View className="w-full flex-row items-center gap-gap">
+            <Feather color={colors.success} name="lock" size={22} />
+            <View className="flex-1">
+              <AppText tone="muted" variant="caption">
+                {t('discover.visit.privacy')}
+              </AppText>
+            </View>
+          </View>
+
+          <AppText tone="muted" variant="bodySmall">
+            {t('discover.visit.candidate.supporting')}
+          </AppText>
+        </View>
+      </Screen>
+    );
   }
 
   return (
@@ -71,7 +123,7 @@ export function ActiveVisitScreen({ onBack, onEnd }: ActiveVisitScreenProps) {
       edges={['top']}
       eyebrow={t('discover.visit.eyebrow')}
       onBack={onBack}
-      title={interpolate(t('discover.visit.title'), { zone: zone?.number ?? '' })}
+      title={interpolate(t('discover.visit.title'), { zone: visit.zoneName })}
     >
       <View className="w-full gap-section">
         <Callout
@@ -79,16 +131,16 @@ export function ActiveVisitScreen({ onBack, onEnd }: ActiveVisitScreenProps) {
           testID="visit-arrival-note"
           title={t('discover.visit.arrived.title')}
         >
-          {interpolate(t('discover.visit.arrived.body'), { time: DEMO_ACTIVE_VISIT.arrival })}
+          {interpolate(t('discover.visit.arrived.body'), {
+            time: formatClockTime(visit.openedAt),
+          })}
         </Callout>
-
-        <DesignZoneMap height={layout.visitMapHeight} />
 
         <Card style={styles.card} testID="visit-timer-card">
           <AppText style={styles.centred} tone="success" variant="statusLabel">
             {t('discover.visit.status')}
           </AppText>
-          <VisitReading elapsedMs={elapsedMs} />
+          <VisitTimer openedAt={visit.openedAt} />
           <AppText style={styles.centred} tone="muted" variant="caption">
             {t('discover.visit.timerHint')}
           </AppText>
@@ -103,27 +155,14 @@ export function ActiveVisitScreen({ onBack, onEnd }: ActiveVisitScreenProps) {
           </View>
         </View>
 
-        <View className="w-full flex-row gap-gap">
-          <View className="flex-1">
-            <AppButton
-              icon={<Feather color={colors.accent} name={paused ? 'play' : 'pause'} size={20} />}
-              label={t(paused ? 'discover.visit.resume' : 'discover.visit.pause')}
-              onPress={togglePause}
-              testID="visit-pause"
-              variant="secondary"
-            />
-          </View>
-          {onEnd ? (
-            <View className="flex-1">
-              <AppButton
-                icon={<Feather color={colors.onAccent} name="square" size={20} />}
-                label={t('discover.visit.end')}
-                onPress={onEnd}
-                testID="visit-end"
-              />
-            </View>
-          ) : null}
-        </View>
+        {onEnd ? (
+          <AppButton
+            icon={<Feather color={colors.onAccent} name="square" size={20} />}
+            label={t('discover.visit.end')}
+            onPress={onEnd}
+            testID="visit-end"
+          />
+        ) : null}
 
         <AppText tone="muted" variant="bodySmall">
           {t('discover.visit.supporting')}
@@ -133,16 +172,36 @@ export function ActiveVisitScreen({ onBack, onEnd }: ActiveVisitScreenProps) {
   );
 }
 
+function VisitTimer({ openedAt }: { openedAt: number }) {
+  return <VisitReading elapsedMs={useElapsedMs(openedAt)} />;
+}
+
+function CandidateTimer({ enteredAt }: { enteredAt: number }) {
+  const { t } = useTranslation();
+
+  return (
+    <Card style={styles.card} testID="visit-timer-card">
+      <AppText style={styles.centred} tone="muted" variant="statusLabel">
+        {t('discover.visit.candidate.status')}
+      </AppText>
+      <VisitReading elapsedMs={useElapsedMs(enteredAt)} />
+      <AppText style={styles.centred} tone="muted" variant="caption">
+        {t('discover.visit.candidate.timerHint')}
+      </AppText>
+    </Card>
+  );
+}
+
 /**
  * The elapsed reading, painted as three parts — the hours, then a colon with the minutes, then
  * a colon with the seconds — in a row that may wrap.
  *
- * It is one reading, and assistive technology is told exactly that (`accessibilityRole="text"`
- * with the whole reading as its name). It is three text nodes for the largest system text size:
- * the frame's 52 px numeral is 222 px wide, and 200 % of it is 440 px — wider than the 302 px the
- * card can hold on one line. Painted in parts, the reading reflows onto two lines at that size
- * (00:42 on the first, :17 on the second) instead of being clipped or capped below the size the
- * user asked for, which is what ADR-019 asks of any control whose content has to grow.
+ * It is one reading, and assistive technology is told exactly that (the text role, with
+ * the whole reading as its name). It is three text nodes for the largest system text size: the
+ * frame's 52 px numeral is 222 px wide, and 200 % of it is 440 px — wider than the 302 px the card
+ * can hold on one line. Painted in parts, the reading reflows onto two lines at that size (00:42 on
+ * the first, :17 on the second) instead of being clipped or capped below the size the user asked
+ * for, which is what ADR-019 asks of any control whose content has to grow.
  */
 function VisitReading({ elapsedMs }: { elapsedMs: number }) {
   const [hours, minutes, seconds] = formatElapsed(elapsedMs).split(':');
@@ -162,10 +221,10 @@ function VisitReading({ elapsedMs }: { elapsedMs: number }) {
 }
 
 const styles = StyleSheet.create({
-  // The card's lines are centred by their own `textAlign` rather than by the card's
-  // `alignItems`: a centred column gives each line its content's width, so a long label — “ACTIVE
-  // · LINGONBERRY” at twice the system text size — would widen its box past the card instead of
-  // wrapping inside it, which is exactly what the layout harness caught.
+  // The card's lines are centred by their own `textAlign` rather than by the card's `alignItems`:
+  // a centred column gives each line its content's width, so a long label — “ARRIVING · VISIT NOT STARTED”
+  // at twice the system text size — would widen its box past the card instead of wrapping inside
+  // it, which is exactly what the layout harness caught.
   centred: {
     textAlign: 'center',
   },

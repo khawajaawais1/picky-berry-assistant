@@ -58,3 +58,7 @@ playwright-report/
 
 # typescript
 *.tsbuildinfo
+
+# Firebase client config: kept out of git and handed to EAS as a file variable (GOOGLE_SERVICES_JSON).
+google-services.json
+GoogleService-Info.plist

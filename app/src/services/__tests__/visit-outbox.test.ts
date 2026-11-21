@@ -21,6 +21,11 @@ const VISIT: OutboxVisit = {
   endedAt: '2026-08-03T09:45:00.000Z',
 };
 const OTHER: OutboxVisit = { ...VISIT, clientId: '5cd7a7d4-e6da-4d4c-bdbf-d0997c5ac60d' };
+const MANUAL: OutboxVisit = {
+  ...OTHER,
+  clientId: '6cd7a7d4-e6da-4d4c-bdbf-d0997c5ac60d',
+  manual: true,
+};
 
 beforeEach(async () => {
   await AsyncStorage.clear();
@@ -36,6 +41,12 @@ describe('the visit outbox', () => {
     await addToVisitOutbox(OTHER);
 
     expect(await readVisitOutbox()).toEqual([VISIT, OTHER]);
+  });
+
+  it('keeps whether the picker ended the visit by hand', async () => {
+    await addToVisitOutbox(MANUAL);
+
+    expect(await readVisitOutbox()).toEqual([MANUAL]);
   });
 
   it('keeps a visit once however often it is added', async () => {

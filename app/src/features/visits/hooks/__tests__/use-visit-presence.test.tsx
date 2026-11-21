@@ -197,6 +197,34 @@ describe('useVisitPresence', () => {
     expect(view.result.current.visits[0]?.finalizedAt).not.toBeNull();
   });
 
+  it('ends a running visit at the picker’s command without reopening it inside the zone', async () => {
+    const { device, view } = await mount();
+
+    await deliver(device, fix(Z14.ring[0]!, START));
+    await deliver(device, fix(Z14.ring[0]!, START + MINUTE));
+
+    let ended = null;
+    await act(async () => {
+      ended = view.result.current.endVisitNow(START + 30 * MINUTE);
+    });
+
+    expect(ended).toMatchObject({
+      finalizedAt: START + 30 * MINUTE,
+      segments: [{ enteredAt: START, exitedAt: START + 30 * MINUTE }],
+    });
+    expect(view.result.current.visits[0]?.finalizedAt).toBe(START + 30 * MINUTE);
+
+    // The picker is still standing in the zone. The next fix may not start the visit again.
+    await deliver(device, fix(Z14.ring[0]!, START + 31 * MINUTE));
+    expect(view.result.current.candidate).toBeNull();
+    expect(view.result.current.visits).toHaveLength(1);
+
+    // Walking out clears the guard, so a later entry is a genuinely new visit.
+    await deliver(device, fix(NOWHERE, START + 32 * MINUTE));
+    await deliver(device, fix(Z14.ring[0]!, START + 33 * MINUTE));
+    expect(view.result.current.candidate).toMatchObject({ zoneId: 'Z14' });
+  });
+
   it('resumes the same visit when the picker comes back inside the grace window', async () => {
     const { device, view } = await mount();
 

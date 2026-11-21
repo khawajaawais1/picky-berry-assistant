@@ -56,6 +56,7 @@ export type { Credential, SessionPort, SignInRefusal, SignInResult } from './por
 export {
   passwordResetAvailability,
   type PasswordResetAvailability,
+  type PasswordResetCompletion,
   type PasswordResetRefusal,
   type PasswordResetRequest,
   type PasswordResetResult,

@@ -13,6 +13,7 @@ const ROUTES = [
   '/sign-in',
   '/create-account',
   '/forgot-password',
+  '/reset-password',
   '/location-consent',
   '/discover',
   '/zone-details',

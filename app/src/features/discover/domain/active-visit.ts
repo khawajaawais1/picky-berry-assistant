@@ -1,24 +1,23 @@
-import { DEMO_ZONE_DETAILS } from './zone-details';
-
 /**
- * What frame 09 (Core picker · Active visit, node `5:23185`) knows while a visit is running:
- * how long the picker has been in the zone and the clock reading they arrived at.
- *
- * Nothing here tracks anything. There is no position source and no visit store, so the
- * figures are the design's own sample, exactly as the zone's score and the route's minutes
- * are; when the visits domain has readings of its own, these functions are what the screen
- * will call with them.
+ * The readings screens 09 and 10 print for a tracked visit, and the two shapes the tracker's
+ * store publishes to them. Nothing here tracks anything: the values come from the visits feature.
  */
 
-export const DEMO_ACTIVE_VISIT = {
-  /** The zone frames 06–08 tell their story about, and the one frame 09's title names. */
-  zoneId: DEMO_ZONE_DETAILS.zoneId,
-  /** The frame's own reading (node `5:23226`, “00:42:17”): a visit 42 minutes 17 seconds old. */
-  elapsedMs: 42 * 60_000 + 17_000,
-  /** The frame's own arrival time (node `5:23203`). A fixed demo value, so the static page and
-   *  the phone say the same thing; a computed wall clock would differ by the build time. */
-  arrival: '10:03',
-} as const;
+/** A tracked visit as the two visit screens read it. */
+export type VisitSnapshot = {
+  visitId: string;
+  zoneId: string;
+  zoneName: string;
+  openedAt: number;
+  endedAt: number | null;
+};
+
+/** An entry that has not yet met the visit policy's dwell minimum. */
+export type CandidateSnapshot = {
+  zoneId: string;
+  zoneName: string;
+  enteredAt: number;
+};
 
 const pad2 = (value: number) => String(value).padStart(2, '0');
 

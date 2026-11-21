@@ -5,7 +5,7 @@ import {
   type TokenProvider,
 } from '@/services/api/api-client';
 
-import type { PasswordResetRequest } from './password-reset';
+import type { PasswordResetCompletion, PasswordResetRequest } from './password-reset';
 import { parseSession, type Session } from './session';
 import type { Credential, SessionPort, SignInResult } from './port';
 import type { SessionStore } from './store';
@@ -52,8 +52,10 @@ export type ApiSessionPortOptions = {
   client: ApiClient;
   store: SessionStore;
   now?: () => Date;
-  /** A reset provider, when one exists. The API has none (ADR-065 decision 4). */
+  /** The reset request's provider, when one is composed. */
   passwordReset?: PasswordResetRequest;
+  /** The other half of a reset: spending the emailed link's token on a new password. */
+  passwordResetComplete?: PasswordResetCompletion;
 };
 
 type Held = { session: Session; accessToken: string; refreshToken: string };
@@ -141,6 +143,7 @@ export function createApiSessionPort({
   store,
   now = () => new Date(),
   passwordReset,
+  passwordResetComplete,
 }: ApiSessionPortOptions): ApiSessionPort {
   let refreshing: Promise<Held | null> | null = null;
 
@@ -277,6 +280,12 @@ export function createApiSessionPort({
       }
 
       return passwordReset ? passwordReset(email.trim()) : { ok: false, reason: 'unavailable' };
+    },
+
+    async completePasswordReset(token, password) {
+      return passwordResetComplete
+        ? passwordResetComplete(token, password)
+        : { ok: false, reason: 'unavailable' };
     },
 
     tokens: {

@@ -47,6 +47,7 @@ function toEntry(payload: VisitSubmission): OutboxVisit {
     zoneId: payload.zone_id,
     startedAt: payload.started_at,
     endedAt: payload.ended_at,
+    manual: payload.manual,
   };
 }
 
@@ -56,7 +57,7 @@ function toPayload(entry: OutboxVisit): VisitSubmission {
     zone_id: entry.zoneId,
     started_at: entry.startedAt,
     ended_at: entry.endedAt,
-    manual: false,
+    manual: entry.manual === true,
   };
 }
 

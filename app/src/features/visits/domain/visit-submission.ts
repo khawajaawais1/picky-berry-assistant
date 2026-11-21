@@ -58,7 +58,7 @@ export function visitSubmission(visit: Visit): VisitSubmission | null {
     zone_id: visit.zoneId,
     started_at: new Date(visit.openedAt).toISOString(),
     ended_at: new Date(endedAt).toISOString(),
-    manual: false,
+    manual: visit.endedManually === true,
   };
 }
 

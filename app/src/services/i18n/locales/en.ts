@@ -75,24 +75,44 @@ export const en = {
   'onboarding.signIn.supporting': 'Enter the email and password you signed up with.',
   'onboarding.signIn.title': 'Sign in',
 
-  // The password-reset journey the design never drew (ADR-062, answering ADR-034 §1.5). Its
-  // framing is the sign-in screen's, and its words are this repository's. **No string claims a
-  // delivery**: the sign-in service owns the link, no service is connected, and the test-build
-  // note says no email is sent — the rule ADR-048 set for the retired code screen.
+  // The password-reset journey the design never drew (ADR-062, answering ADR-034 §1.5; ADR-065
+  // moves it to the team API). Its framing is the sign-in screen's, and its words are this
+  // repository's. **No string claims a delivery**: the request is accepted, and the conditional
+  // sentences say what the link does without saying that one was sent.
   'onboarding.forgotPassword.action': 'Request reset link',
   'onboarding.forgotPassword.eyebrow': 'ONBOARDING · PASSWORD RESET',
   'onboarding.forgotPassword.failed': 'The reset link couldn’t be requested. Try again.',
   'onboarding.forgotPassword.heading': 'Forgot your password?',
   'onboarding.forgotPassword.requested.another': 'Use a different address',
   'onboarding.forgotPassword.requested.body':
-    'If an account uses {email}, the sign-in service’s reset link is the next step for that address. The app never stores your password.',
+    'If an account uses {email}, its reset link opens a page where you can choose a new password.',
   'onboarding.forgotPassword.requested.heading': 'Reset request accepted.',
   'onboarding.forgotPassword.requested.live.body':
-    'If an account uses {email}, the sign-in service’s reset link is on its way to that address. The app never stores your password.',
+    'If an account uses {email}, its reset link is on its way. Open it to choose a new password.',
   'onboarding.forgotPassword.requested.live.heading': 'Check your inbox.',
   'onboarding.forgotPassword.supporting':
-    'Enter the email your account uses. Reset links belong to the sign-in service; the app never stores your password.',
+    'Enter the email your account uses. The reset link opens a page where you choose a new password; the app never stores your password.',
   'onboarding.forgotPassword.title': 'Reset password',
+
+  // The page an emailed link opens. It is the other half of the journey above: the token is held
+  // only while the screen is open, and the password is sent once and never stored.
+  'onboarding.resetPassword.action': 'Save new password',
+  'onboarding.resetPassword.confirmPassword': 'Confirm new password',
+  'onboarding.resetPassword.eyebrow': 'ONBOARDING · NEW PASSWORD',
+  'onboarding.resetPassword.heading': 'Choose a new password.',
+  'onboarding.resetPassword.invalid.action': 'Request a new link',
+  'onboarding.resetPassword.invalid.body':
+    'It may have expired or already been used. Request a new link to choose a password.',
+  'onboarding.resetPassword.invalid.heading': 'This reset link can’t be used.',
+  'onboarding.resetPassword.mismatch': 'The passwords don’t match.',
+  'onboarding.resetPassword.newPassword': 'New password',
+  'onboarding.resetPassword.success.body': 'Sign in with your new password.',
+  'onboarding.resetPassword.success.heading': 'Password updated.',
+  'onboarding.resetPassword.supporting':
+    'Use at least 10 characters, including a number. This link can be used once.',
+  'onboarding.resetPassword.title': 'Reset password',
+  'onboarding.resetPassword.unavailable':
+    'Picky couldn’t reach the account service. Check your connection and try again.',
 
   'onboarding.createAccount.action': 'Create account',
   'onboarding.createAccount.consent':
@@ -347,33 +367,48 @@ export const en = {
   // Screen 07's action again, now that it has somewhere to go (screen 09 exists).
   'discover.route.start': 'Start walking',
 
-  // Screen 09 · Core picker · Active visit. The timer is a value (`formatElapsed`), as is the
-  // arrival time the status message names; the species in the status label is the design's own
-  // demo sentence, like the zone card's, and becomes a value of its own with a zone source.
-  // The visit being timed is that same demo, so the eyebrow names it.
-  'discover.visit.eyebrow': 'CORE PICKER · VISIT IN PROGRESS · SEASON DEMO',
+  // Screen 09 · Core picker · Active visit. The timer is a value (`formatElapsed`), as are the
+  // zone and arrival time the status message names. The screen reads the app's tracker, so no
+  // string carries the design's demo disclosure any more.
+  'discover.visit.empty.eyebrow': 'CORE PICKER · ACTIVE VISIT',
+  'discover.visit.empty.title': 'No visit is running',
+  'discover.visit.empty.callout': 'Visit tracking',
+  'discover.visit.empty.body': 'A visit starts when you stay in a berry zone with the app open.',
+  'discover.visit.empty.hint': 'Open the map to find a zone.',
+  'discover.visit.eyebrow': 'CORE PICKER · VISIT IN PROGRESS',
   'discover.visit.title': 'Picking in Zone {zone}',
-  'discover.visit.arrived.title': 'Arrival detected automatically',
+  'discover.visit.candidate.eyebrow': 'CORE PICKER · ARRIVING',
+  'discover.visit.candidate.title': 'Arriving in {zone}',
+  'discover.visit.candidate.arrived.title': 'Arrival noted',
+  'discover.visit.candidate.arrived.body':
+    'You entered the zone at {time}. The visit starts once you have stayed a little longer.',
+  'discover.visit.candidate.status': 'ARRIVING · VISIT NOT STARTED',
+  'discover.visit.candidate.timerHint': 'Time in zone · no signal needed',
+  'discover.visit.candidate.supporting':
+    'The visit becomes active after the tracker has seen you stay in the zone.',
+  'discover.visit.arrived.title': 'Arrival noted',
   'discover.visit.arrived.body':
     'You entered the zone at {time}. Timing runs while the app is open.',
-  'discover.visit.status': 'ACTIVE · LINGONBERRY',
+  'discover.visit.status': 'ACTIVE VISIT',
   'discover.visit.timerHint': 'Time in zone · no signal needed',
   'discover.visit.privacy':
     'Only you can see your track. Others see zone status, never your exact GPS trail.',
-  'discover.visit.pause': 'Pause visit',
-  'discover.visit.resume': 'Resume visit',
   'discover.visit.end': 'End visit',
   'discover.visit.supporting':
-    'Leaving the mapped area ends the visit automatically and prompts your quick report.',
+    'The tracker notices when you leave and ends the visit after a short grace window.',
 
   // Screen 10 · Core picker · Post-visit feedback. The visit's own window and the harvest are
-  // values; the species names and the five rating words are the design's own copy. The visit
-  // the summary describes is the design's sample (its window, and its 28 Aug), so the eyebrow
-  // names the demo; what the picker answers below it is their own and is saved on the device.
-  'report.eyebrow': 'CORE PICKER · QUICK REPORT · SEASON DEMO',
+  // values; the species names and the five rating words are the design's own copy. The visit is
+  // the one the tracker just finalized, so the eyebrow carries no demo disclosure.
+  'report.empty.eyebrow': 'CORE PICKER · QUICK REPORT',
+  'report.empty.title': 'How was the picking?',
+  'report.empty.callout': 'No visit to report',
+  'report.empty.body': 'A report starts when a tracked visit ends.',
+  'report.empty.hint': 'Open the map to find a zone.',
+  'report.eyebrow': 'CORE PICKER · QUICK REPORT',
   'report.title': 'How was the picking?',
-  'report.exit.title': 'Exit detected · visit complete',
-  'report.exit.body': 'Zone {zone} · 28 Aug · {arrival}–{departure} · {minutes} min',
+  'report.exit.title': 'Visit complete',
+  'report.exit.body': 'Zone {zone} · {arrival}–{departure} · {minutes} min',
   'report.heading': 'A small report. A fresher map.',
   'report.supporting': 'Rate the berries you found, not just the amount you brought home.',
   'report.species.label': 'Species of this report',

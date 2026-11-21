@@ -231,6 +231,25 @@ const SCREENS: readonly Screen[] = [
     ],
   },
   {
+    // The page the emailed link opens. The harness loads it with a token so the form is what is
+    // measured; the invalid state has its own browser case in `e2e/accessibility.spec.ts`.
+    name: '01d · Onboarding · New password',
+    path: '/reset-password?token=harness-reset-token',
+    anchor: 'onboarding.resetPassword.eyebrow',
+    copy: [
+      { what: 'the eyebrow', key: 'onboarding.resetPassword.eyebrow' },
+      { what: 'the screen title', key: 'onboarding.resetPassword.title' },
+      { what: 'the heading', key: 'onboarding.resetPassword.heading' },
+      // The app-drawn line takes two lines in both languages (342×40), like the sign-in screen's.
+      { what: 'the supporting line', key: 'onboarding.resetPassword.supporting', maxLines: 2 },
+      { what: 'the password label', key: 'onboarding.resetPassword.newPassword' },
+      { what: 'the password rule', key: 'onboarding.createAccount.passwordHint' },
+      { what: 'the confirmation label', key: 'onboarding.resetPassword.confirmPassword' },
+      { what: 'the primary action label', key: 'onboarding.resetPassword.action' },
+      { what: 'the sign-in action', key: 'onboarding.signIn.action' },
+    ],
+  },
+  {
     name: '03 · Onboarding · Create account',
     path: '/create-account',
     anchor: 'onboarding.createAccount.eyebrow',
@@ -530,65 +549,33 @@ const SCREENS: readonly Screen[] = [
     ],
   },
   {
+    // The layout harness mounts the stub build with no visits service, so no tracker publishes a
+    // visit and this route draws its own “no visit” state. The populated reading and report are
+    // covered by their component tests, which can hand the screens a tracked visit.
     name: '09 · Core picker · Active visit',
     path: '/active-visit',
     shell: true,
-    anchor: 'discover.visit.eyebrow',
+    anchor: 'discover.visit.empty.eyebrow',
     copy: [
-      { what: 'the eyebrow', key: 'discover.visit.eyebrow' },
-      { what: 'the screen title', key: 'discover.visit.title', values: { zone: '14' } },
-      { what: 'the arrival note title', key: 'discover.visit.arrived.title' },
-      // The timer's reading and the arrival time in the note's body are the device's own clock,
-      // so they cannot be written here; the large-text pass still holds them, because every
-      // string on every screen is checked for being clipped or spilling out of its box.
-      { what: 'the status label', key: 'discover.visit.status' },
-      { what: 'the timer hint', key: 'discover.visit.timerHint' },
-      // The frame lays the privacy line out over two lines (308x36, node 5:23230).
-      { what: 'the privacy line', key: 'discover.visit.privacy', maxLines: 2 },
-      { what: 'the pause action', key: 'discover.visit.pause' },
-      { what: 'the end action', key: 'discover.visit.end' },
-      // The frame lays the supporting line out over two lines (342x40, node 5:23238).
-      { what: 'the supporting line', key: 'discover.visit.supporting', maxLines: 2 },
-      // `discover.visit.resume` is deliberately absent: it is what the pause action turns into,
-      // so no freshly rendered screen shows it and it has no line of the frame to hold it to.
+      { what: 'the eyebrow', key: 'discover.visit.empty.eyebrow' },
+      { what: 'the screen title', key: 'discover.visit.empty.title' },
+      { what: 'the callout title', key: 'discover.visit.empty.callout' },
+      { what: 'the callout body', key: 'discover.visit.empty.body', maxLines: 2 },
+      { what: 'the hint', key: 'discover.visit.empty.hint' },
     ],
   },
   {
+    // The same stub build, so screen 10 draws the state it shows when nothing has ended.
     name: '10 · Core picker · Post-visit feedback',
     path: '/post-visit-feedback',
     shell: true,
-    anchor: 'report.eyebrow',
+    anchor: 'report.empty.eyebrow',
     copy: [
-      { what: 'the eyebrow', key: 'report.eyebrow' },
-      { what: 'the screen title', key: 'report.title' },
-      { what: 'the exit note title', key: 'report.exit.title' },
-      // The frame prints the visit's own summary on one line (282x18, node 5:23277).
-      {
-        what: 'the exit note body',
-        key: 'report.exit.body',
-        values: { arrival: '10:03', departure: '10:55', minutes: '52', zone: '14' },
-      },
-      // The frame lays the heading out over two lines (342x78, node 5:23278).
-      { what: 'the heading', key: 'report.heading', maxLines: 2 },
-      // The frame lays the supporting line out over two lines (342x40, node 5:23279).
-      { what: 'the supporting line', key: 'report.supporting', maxLines: 2 },
-      { what: 'the first species chip', key: 'report.species.lingonberry' },
-      { what: 'the second species chip', key: 'report.species.bilberry' },
-      { what: 'the rating question', key: 'report.plentiful' },
-      // The frame draws one word per cell, and its own “Fair” is a word that fits one line in a
-      // 63 px cell. The Finnish for it (“Kohtalaisesti”) does not, and the cell is a floor it
-      // grows from, so the words are held to the two lines a narrow cell can need (ADR-019).
-      { what: 'the first rating word', key: 'report.rating.none', maxLines: 2 },
-      { what: 'the third rating word', key: 'report.rating.fair', maxLines: 2 },
-      { what: 'the fifth rating word', key: 'report.rating.lots', maxLines: 2 },
-      { what: 'the amount label', key: 'report.amount.label' },
-      { what: 'the offline note title', key: 'report.offline.title' },
-      // The frame lays the offline note's body out over two lines (282x36, node 5:23319).
-      { what: 'the offline note body', key: 'report.offline.body', maxLines: 2 },
-      { what: 'the save action', key: 'report.save' },
-      { what: 'the skip action', key: 'report.skip' },
-      // `report.saveFailed` is deliberately absent: the design has no failure state, so it has
-      // no line count to hold it to; the unit test is where it is asserted.
+      { what: 'the eyebrow', key: 'report.empty.eyebrow' },
+      { what: 'the screen title', key: 'report.empty.title' },
+      { what: 'the callout title', key: 'report.empty.callout' },
+      { what: 'the callout body', key: 'report.empty.body', maxLines: 2 },
+      { what: 'the hint', key: 'report.empty.hint' },
     ],
   },
   {

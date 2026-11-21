@@ -80,6 +80,15 @@ describe('usePushAlerts', () => {
     expect(result.current.status).toBe('unsupported');
   });
 
+  it('reads a permission the platform cannot answer as no push', async () => {
+    const push = fakePushPort();
+    push.permission.mockRejectedValueOnce(new Error('the platform refused'));
+
+    const { result } = await renderHook(() => usePushAlerts({ push, register: jest.fn() }));
+
+    await waitFor(() => expect(result.current.status).toBe('unsupported'));
+  });
+
   it('says when this phone could not be registered', async () => {
     const push = fakePushPort({ permission: 'undetermined', token: null });
     const { result } = await renderHook(() => usePushAlerts({ push, register: jest.fn() }));
@@ -116,6 +125,17 @@ describe('usePushRegistration', () => {
   it('registers this phone for a signed-in account whose alerts are allowed', async () => {
     const push = fakePushPort({ permission: 'granted' });
     const register = jest.fn(async () => ({ ok: true }));
+
+    await renderHook(() => usePushRegistration({ push, register, accountId: 'aino@example.fi' }));
+
+    await waitFor(() => expect(register).toHaveBeenCalledTimes(1));
+  });
+
+  it('swallows a registration that rejects: the next start tries again', async () => {
+    const push = fakePushPort({ permission: 'granted' });
+    const register = jest.fn(async () => {
+      throw new Error('offline');
+    });
 
     await renderHook(() => usePushRegistration({ push, register, accountId: 'aino@example.fi' }));
 
