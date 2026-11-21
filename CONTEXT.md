@@ -89,10 +89,11 @@ Rules that keep it simple and cheap (≈ €485/yr): one VM in the EU, one backe
 no Kubernetes, no Redis/Celery, modules talk only through each other's `service.py`.
 Summary: [docs/architecture.md](docs/architecture.md).
 
-**What exists today:** the app and the `data/` package. Everything above the app in that picture —
-the API, job runner, bucket, knowledge graph and models — is planned, and the app's own line is
-ahead of itself too: it has MapLibre and a foreground location watch, but no geofences, SQLite
-outbox or FCM. [docs/architecture.md](docs/architecture.md) keeps the layer-by-layer status.
+**What exists today:** the app, the `data/` package, the `ml/` package and the ontology's v1
+vocabulary (files in `ontology/`, with no reader yet). Everything above the app in that picture —
+the API, job runner, bucket and the reasoning that runs the rules — is planned, and the app's own
+line is ahead of itself too: it has MapLibre and a foreground location watch, but no geofences,
+SQLite outbox or FCM. [docs/architecture.md](docs/architecture.md) keeps the layer-by-layer status.
 
 ## 5. Daily data → score → alert loop
 

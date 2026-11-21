@@ -1,0 +1,213 @@
+# bpa.ttl — the Picky berry ontology: classes and properties (ontology v1, feature 6.2 / 6.7 / F3).
+#
+# This file is the vocabulary only: species facts are in species.ttl, alert rules in rules/.
+# Postgres stays the system of record; each reasoning run builds a small in-memory rdflib
+# graph from these files plus the run's zone snapshot (docs/architecture.md §8).
+#
+# The IRI base is the placeholders in data/config/species.yaml, kept as agreed with D6. It
+# changes only with the species vocabulary, never per deployment.
+#
+# Known gap (CONTEXT.md §9): phenology thresholds (floweringGDD, ripeGDD) have no sourced
+# values yet, so v1 declares no such property. Ripeness windows live in ml/berry_ml/zones.py
+# (RIPENING) and move here once Asmer signs them off; duplicating them now would create a
+# second source of truth.
+
+@prefix bpa:     <https://picky.example/onto#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+
+<https://picky.example/onto> a owl:Ontology ;
+    dcterms:title "Picky berry ontology (BPA) — v1"@en ;
+    dcterms:description "Species, zones, visits, reports, ripeness stages and habitat suitability for the Berry Picker Assistant."@en ;
+    dcterms:source "data/config/species.yaml", "data/config/zone_species_rules.yaml" ;
+    owl:versionInfo "1.0.0" ;
+    rdfs:comment "Vocabulary for features 6.2 (live site map) and 6.7 (reasoning and explainable alerts); the same IRIs let the API emit JSON-LD for F3."@en .
+
+# --- classes -------------------------------------------------------------
+
+bpa:Species a owl:Class ;
+    rdfs:label "Species"@en ;
+    rdfs:comment "One of the four pilot berries. Instances are the codes the API, app and data/ share (D6)."@en .
+
+bpa:Zone a owl:Class ;
+    rdfs:label "Zone"@en ;
+    rdfs:comment "One H3 res-8 hexagon of forest or mire — the unit everything is scored on."@en .
+
+bpa:SpeciesAssessment a owl:Class ;
+    rdfs:label "Species assessment"@en ;
+    rdfs:comment "What one reasoning run knows about one species in one zone: yield score, confidence, ripeness and suitability. Backed by ml/'s zone_scores and data/'s zone_species rows."@en .
+
+bpa:RipenessStage a owl:Class ;
+    rdfs:label "Ripeness stage"@en ;
+    rdfs:comment "The app's own vocabulary (unripe | ripening | ripe | past), so an alert and a zone card cannot disagree."@en .
+
+bpa:HabitatClass a owl:Class ;
+    rdfs:label "Habitat class"@en ;
+    rdfs:comment "The classes data/'s zone builder assigns: mire, or forest by main tree species (zone_species_rules.yaml)."@en .
+
+bpa:HabitatSuitability a owl:Class ;
+    rdfs:label "Habitat suitability"@en ;
+    rdfs:comment "0–1 fit of one species in one habitat class. Reified so each value carries its species and class."@en .
+
+bpa:FertilityMultiplier a owl:Class ;
+    rdfs:label "Fertility multiplier"@en ;
+    rdfs:comment "Optional MS-NFI site-class (1 herb-rich … 6 barren) adjustment applied to a species' habitat mean."@en .
+
+bpa:Visit a owl:Class ;
+    rdfs:label "Visit"@en ;
+    rdfs:comment "A detected picking visit (6.3). Declared for v1 with no properties: they wait for the visits table."@en .
+
+bpa:Report a owl:Class ;
+    rdfs:label "Report"@en ;
+    rdfs:comment "A picker's feedback (6.4). Declared for v1 with no properties: they wait for the reports table."@en .
+
+# --- ripeness stages (the app's vocabulary, in its order) ----------------
+
+bpa:Unripe a bpa:RipenessStage, owl:NamedIndividual ;
+    rdfs:label "unripe"@en .
+
+bpa:Ripening a bpa:RipenessStage, owl:NamedIndividual ;
+    rdfs:label "ripening"@en .
+
+bpa:Ripe a bpa:RipenessStage, owl:NamedIndividual ;
+    rdfs:label "ripe"@en .
+
+bpa:Past a bpa:RipenessStage, owl:NamedIndividual ;
+    rdfs:label "past"@en .
+
+# --- habitat classes (the keys of zone_species_rules.yaml) ---------------
+
+bpa:mire a bpa:HabitatClass, owl:NamedIndividual ;
+    rdfs:label "mire"@en ;
+    rdfs:comment "OSM wetland — bog, fen, marsh. Wooded bogs count as mire: cloudberry land."@en .
+
+bpa:forest_spruce a bpa:HabitatClass, owl:NamedIndividual ;
+    rdfs:label "spruce forest"@en ;
+    rdfs:comment "Luke MS-NFI main tree species spruce."@en .
+
+bpa:forest_pine a bpa:HabitatClass, owl:NamedIndividual ;
+    rdfs:label "pine forest"@en ;
+    rdfs:comment "Luke MS-NFI main tree species pine."@en .
+
+bpa:forest_mixed a bpa:HabitatClass, owl:NamedIndividual ;
+    rdfs:label "mixed forest"@en ;
+    rdfs:comment "Luke MS-NFI mixed stands."@en .
+
+bpa:forest_broadleaf a bpa:HabitatClass, owl:NamedIndividual ;
+    rdfs:label "broadleaf forest"@en ;
+    rdfs:comment "Luke MS-NFI main tree species broadleaf."@en .
+
+bpa:forest_unknown a bpa:HabitatClass, owl:NamedIndividual ;
+    rdfs:label "forest, tree species unknown"@en ;
+    rdfs:comment "OSM forest with no MS-NFI tree-species source — the default in the pilot today."@en .
+
+# --- object properties ---------------------------------------------------
+
+bpa:hasAssessment a owl:ObjectProperty ;
+    rdfs:label "has assessment"@en ;
+    rdfs:domain bpa:Zone ;
+    rdfs:range bpa:SpeciesAssessment .
+
+bpa:species a owl:ObjectProperty ;
+    rdfs:label "species"@en ;
+    rdfs:range bpa:Species ;
+    rdfs:comment "The species an assessment, habitat suitability or fertility multiplier is about."@en .
+
+bpa:ripenessStage a owl:ObjectProperty ;
+    rdfs:label "ripeness stage"@en ;
+    rdfs:domain bpa:SpeciesAssessment ;
+    rdfs:range bpa:RipenessStage .
+
+bpa:habitatClass a owl:ObjectProperty ;
+    rdfs:label "habitat class"@en ;
+    rdfs:domain bpa:HabitatSuitability ;
+    rdfs:range bpa:HabitatClass .
+
+# --- datatype properties -------------------------------------------------
+
+bpa:speciesCode a owl:DatatypeProperty ;
+    rdfs:label "species code"@en ;
+    rdfs:domain bpa:Species ;
+    rdfs:range xsd:string ;
+    rdfs:comment "bilberry | lingonberry | cloudberry | crowberry — the API and app keys."@en .
+
+bpa:latinName a owl:DatatypeProperty ;
+    rdfs:label "latin name"@en ;
+    rdfs:domain bpa:Species ;
+    rdfs:range xsd:string .
+
+bpa:nameFi a owl:DatatypeProperty ;
+    rdfs:label "Finnish name"@en ;
+    rdfs:domain bpa:Species ;
+    rdfs:range xsd:string .
+
+bpa:nameEn a owl:DatatypeProperty ;
+    rdfs:label "English name"@en ;
+    rdfs:domain bpa:Species ;
+    rdfs:range xsd:string .
+
+bpa:verified a owl:DatatypeProperty ;
+    rdfs:label "verified"@en ;
+    rdfs:comment "false while the facts come from an unsourced stub, as zone_species_rules.yaml's own `verified:` flag says."@en ;
+    rdfs:range xsd:boolean .
+
+bpa:minHabitatSuitability a owl:DatatypeProperty ;
+    rdfs:label "minimum habitat suitability"@en ;
+    rdfs:domain bpa:Species ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Below this a zone cannot support the species; zone_species_rules.yaml's min_suitability."@en .
+
+bpa:habitatSuitability a owl:DatatypeProperty ;
+    rdfs:label "habitat suitability"@en ;
+    rdfs:domain bpa:HabitatSuitability ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "0–1 fit of the species in that habitat class."@en .
+
+bpa:suitability a owl:DatatypeProperty ;
+    rdfs:label "suitability"@en ;
+    rdfs:domain bpa:HabitatSuitability ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Same 0–1 value as bpa:habitatSuitability, on the reified node the rules query."@en .
+
+bpa:fertilitySiteClass a owl:DatatypeProperty ;
+    rdfs:label "fertility site class"@en ;
+    rdfs:domain bpa:FertilityMultiplier ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "MS-NFI site class, 1 = herb-rich … 6 = barren rock."@en .
+
+bpa:fertilityMultiplier a owl:DatatypeProperty ;
+    rdfs:label "fertility multiplier"@en ;
+    rdfs:domain bpa:FertilityMultiplier ;
+    rdfs:range xsd:decimal .
+
+bpa:zoneNumber a owl:DatatypeProperty ;
+    rdfs:label "zone number"@en ;
+    rdfs:domain bpa:Zone ;
+    rdfs:range xsd:string ;
+    rdfs:comment "The number the app shows on a zone card (frame 07)."@en .
+
+bpa:placeName a owl:DatatypeProperty ;
+    rdfs:label "place name"@en ;
+    rdfs:domain bpa:Zone ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Nearest named place, when one is known."@en .
+
+bpa:zoneSuitability a owl:DatatypeProperty ;
+    rdfs:label "zone suitability"@en ;
+    rdfs:domain bpa:SpeciesAssessment ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Area-weighted habitat fit of the species in this zone — data/'s zone_species.suitability."@en .
+
+bpa:yieldScore a owl:DatatypeProperty ;
+    rdfs:label "yield score"@en ;
+    rdfs:domain bpa:SpeciesAssessment ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "0–100 forecast, not a picker's answer (ADR-064)."@en .
+
+bpa:confidence a owl:DatatypeProperty ;
+    rdfs:label "confidence"@en ;
+    rdfs:domain bpa:SpeciesAssessment ;
+    rdfs:range xsd:string ;
+    rdfs:comment "high | medium | low — the app's own three words."@en .

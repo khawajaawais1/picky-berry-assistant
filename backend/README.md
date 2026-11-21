@@ -4,10 +4,10 @@ One Python package, one Docker image, ten modules. Each module owns its tables a
 `service.py`; other modules call that service, never its tables. Design: architecture doc §5,
 summary in [../docs/architecture.md](../docs/architecture.md).
 
-**Status (2026-10-24): nothing here runs yet.** The folder holds this README and
-`app/modules/ingest/README.md`; there is no `main.py`, module package, Alembic migration, test or
-Python dependency file, and [../docs/architecture.md](../docs/architecture.md) is the status of
-record for each module.
+**Status (2026-11-21): no API yet.** The folder holds this README, `pyproject.toml` (rdflib
+pinned, pytest pointed at the ontology's fixture tests) and `app/modules/ingest/README.md`;
+there is no `main.py`, module package, Alembic migration or API test, and
+[../docs/architecture.md](../docs/architecture.md) is the status of record for each module.
 
 ## Planned layout (architecture doc §5)
 

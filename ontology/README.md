@@ -4,25 +4,58 @@ The shared vocabulary (species, zones, visits, reports, ripeness) and the home o
 rules. Postgres stays the system of record; each reasoning run builds a small in-memory rdflib
 graph. Design: architecture doc §8.
 
-**Status (2026-10-24): nothing here exists yet.** There are no `.ttl` files, `.rq` rules, JSON-LD
-context or rdflib code — only this plan. The species list and zone-species rules the ontology would
-formalise live as YAML in `../data/config/`, marked unverified. [../docs/architecture.md](../docs/architecture.md)
-is the status of record.
+**Status (2026-11-21): v1 vocabulary exists, nothing runs it yet.** The graph files, the first
+rule and its test are committed. What is still missing is the reader: `backend/app/modules/reasoning/`
+does not exist, so no score is ever loaded into a graph and no alert is produced. Visit and
+Report are declared classes with no properties until 6.3/6.4's tables land.
 
-## Suggested layout
+## Layout
 ```
 ontology/
-  bpa.ttl            # OWL classes + properties (bpa:Species, bpa:Zone, bpa:Visit, bpa:Report, bpa:RipenessStage …)
-  species.ttl        # facts per species: season window, floweringGDD, ripeGDD, habitat, Wikidata IRI, sources
+  bpa.ttl            # OWL classes + properties (bpa:Species, bpa:Zone, bpa:SpeciesAssessment,
+                     #   bpa:RipenessStage, bpa:HabitatClass, bpa:Visit, bpa:Report …)
+  species.ttl        # per species: code, FI/EN names, latin, IRI, habitat suitability per class,
+                     #   fertility multipliers 1–6, min_suitability
   rules/
     ripe_nearby.rq   # one SPARQL rule per file: id, version, sentence template
   context.jsonld     # JSON-LD @context used by the API (F3 Linked Data)
-  tests/             # fixture graphs → expected alerts
+  tests/             # fixture graph → expected alerts (pytest + rdflib)
+    fixtures/zones.ttl
+    test_ripe_nearby.py
 ```
+
+## Running the tests
+```bash
+cd ../backend
+python3.11 -m venv .venv && .venv/bin/pip install -e ".[dev]"
+.venv/bin/pytest            # backend/pyproject.toml collects ../ontology/tests
+```
+
+## Adding a rule
+One `.rq` per rule, with the header block `ripe_nearby.rq` uses (id, version, feature, owner,
+sentence template, inputs, output). Add the zone rows it needs to `tests/fixtures/zones.ttl` and
+a test that covers both what it must return and the row it must **not** fire on — for this rule,
+a ripe species in a zone under its habitat minimum.
+
+## Where the facts come from
+Everything in `species.ttl` is copied from the committed configs, not sourced afresh:
+
+* `../data/config/species.yaml` — species codes, Latin and FI/EN names, placeholder IRIs (D6).
+* `../data/config/zone_species_rules.yaml` — habitat suitability, fertility multipliers,
+  `min_suitability: 0.30`, and `verified: false`, which the graph carries as `bpa:verified false`.
+
+Changing a value in either YAML means changing `species.ttl` in the same PR; the ontology does
+not read the YAML at runtime.
+
+## Open
+* **Phenology thresholds** (`floweringGDD`, `ripeGDD`) have no sourced values (CONTEXT.md §9),
+  so v1 declares no such property. Ripeness windows stay in `ml/berry_ml/zones.py` (`RIPENING`)
+  until they are signed off; copying them here now would create a second source of truth.
+* **Wikidata IRIs and per-species sources** are not in `species.yaml` yet, so deliberately absent.
+* **`Visit` / `Report` properties** wait for their tables.
+* **Species IRIs** are the YAML's `picky.example` placeholders; they change only with D6.
 
 ## Shared with other folders
 * Species codes + names + IRIs (D6) — stub in `../data/config/species.yaml`; agree with Hassan in week 1.
 * Phenology thresholds (D12) feed ripeness in 6.2 — mark `verified=false` until sourced.
 * Habitat suitability rules (D11) — review `../data/config/zone_species_rules.yaml` with Awais.
-
-By 3 Nov: ontology v1 (species, zone, visit, report) + 3 rules as `.rq` files.
