@@ -54,11 +54,9 @@ usable once. `POST /api/v1/auth/password-reset/confirm` takes that token and a n
 again. Both are throttled. This follows the
 [OWASP Forgot Password Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html).
 
-The link points at `APP_PUBLIC_URL/reset-password?token=…`. `APP_PUBLIC_URL` is the **app's**
-public origin (Expo web's `http://localhost:8081` in development), not the API's own port; the
-default follows that. External mail delivery is still not included: console mail mode
-(`MAIL_MODE=console`) records that a verification or reset message was requested and deliberately
-does not log tokens, links or email addresses.
+The link points at `APP_PUBLIC_URL/reset-password?token=…`. External mail delivery is still not
+included: console mail mode (`MAIL_MODE=console`) records that a verification or reset message
+was requested and deliberately does not log tokens, links or email addresses.
 
 ## Validation
 

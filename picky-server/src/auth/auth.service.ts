@@ -159,7 +159,7 @@ export class AuthService {
 
     const baseUrl = this.config.get<string>(
       'APP_PUBLIC_URL',
-      'http://localhost:8081',
+      'http://localhost:3000',
     );
     const verificationUrl = new URL('/verify-email', baseUrl);
     verificationUrl.searchParams.set('token', verificationToken);
@@ -336,7 +336,7 @@ export class AuthService {
     if (account && resetToken) {
       const baseUrl = this.config.get<string>(
         'APP_PUBLIC_URL',
-        'http://localhost:8081',
+        'http://localhost:3000',
       );
       const resetUrl = new URL('/reset-password', baseUrl);
       resetUrl.searchParams.set('token', resetToken);
@@ -380,9 +380,8 @@ export class AuthService {
         passwordHash,
       ]);
       await client.query(
-        `UPDATE email_tokens SET used_at = now()
-         WHERE user_id = $1 AND purpose = 'reset_password' AND used_at IS NULL`,
-        [row.user_id],
+        'UPDATE email_tokens SET used_at = now() WHERE id = $1',
+        [row.id],
       );
       await client.query(
         `UPDATE refresh_tokens SET revoked_at = now()

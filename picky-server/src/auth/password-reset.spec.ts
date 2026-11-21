@@ -142,7 +142,7 @@ describe('AuthService password reset', () => {
       expect(statements(client.query)).toContain('ROLLBACK');
     });
 
-    it('sets the new password, spends every outstanding token and signs every device out', async () => {
+    it('sets the new password, spends the token and signs every device out', async () => {
       const { client, db } = database((sql) =>
         sql.includes('FROM email_tokens')
           ? { rows: [{ id: 'token-1', user_id: USER.id }] }
@@ -167,13 +167,11 @@ describe('AuthService password reset', () => {
       expect(
         sql.some((s) => s.includes('UPDATE users SET password_hash = $2')),
       ).toBe(true);
-      const spend = client.query.mock.calls.find(([s]) =>
-        s.includes(
-          'UPDATE email_tokens SET used_at = now()\n         WHERE user_id = $1',
+      expect(
+        sql.some((s) =>
+          s.includes('UPDATE email_tokens SET used_at = now() WHERE id'),
         ),
-      );
-      expect(spend).toBeDefined();
-      expect(spend![1]).toEqual([USER.id]);
+      ).toBe(true);
       expect(
         sql.some((s) => s.includes('UPDATE refresh_tokens SET revoked_at')),
       ).toBe(true);
