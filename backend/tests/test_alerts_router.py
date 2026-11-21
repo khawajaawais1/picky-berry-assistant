@@ -7,12 +7,12 @@ returns what is on `app.state.alerts_source`, which is an in-memory list today a
 
 from pathlib import Path
 
-from app.modules.reasoning.router import router
-from app.modules.reasoning.service import Alert, alerts_from_rows
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.modules.reasoning.graph import load_ontology
+from app.modules.reasoning.router import router
+from app.modules.reasoning.service import Alert, alerts_from_rows
 
 
 def client_for(alerts: list[Alert] | None) -> TestClient:
