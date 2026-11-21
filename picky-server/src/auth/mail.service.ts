@@ -22,4 +22,17 @@ export class MailService {
       'Email verification requested; message content withheld.',
     );
   }
+
+  /** The reset link is a credential: like the verification link, it is never logged. */
+  sendPasswordReset(userId: string, email: string, link: string): void {
+    if (this.config.get<string>('MAIL_MODE') !== 'console') {
+      throw new Error('Unsupported mail delivery mode.');
+    }
+    void email;
+    void link;
+    this.logger.info(
+      { user_id: userId },
+      'Password reset requested; message content withheld.',
+    );
+  }
 }

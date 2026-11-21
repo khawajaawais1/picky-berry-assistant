@@ -1,14 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { DB_SERVICE } from '../src/db/db.constants';
 import { Pool } from 'pg';
-import { randomUUID } from 'node:crypto';
-import { NextFunction, Request, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
-import { ApiExceptionFilter } from '../src/common/filters/api-exception.filter';
+import { configureApp } from '../src/configure-app';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
@@ -32,27 +30,8 @@ describe('AppController (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
-    app.setGlobalPrefix('api/v1', {
-      exclude: [{ path: 'health', method: 0 }],
-    });
-    app.use((req: Request, res: Response, next: NextFunction) => {
-      const requestId =
-        req.header('x-request-id') ??
-        (req as Request & { id?: string }).id ??
-        res.getHeader('x-request-id') ??
-        randomUUID();
-      res.setHeader('x-request-id', requestId);
-      next();
-    });
-    app.useGlobalFilters(app.get(ApiExceptionFilter));
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-        errorHttpStatusCode: 422,
-      }),
-    );
+    // The same configuration `main.ts` applies, so the routes tested are the routes served.
+    configureApp(app);
     await app.init();
   });
 
@@ -63,6 +42,26 @@ describe('AppController (e2e)', () => {
       .expect(200)
       .expect({ status: 'ok', db: 'ok' })
       .expect('x-request-id', 'e2e-health-check');
+  });
+
+  it('/api/v1/health (GET), where the OpenAPI document lists it', () => {
+    return request(app.getHttpServer())
+      .get('/api/v1/health')
+      .expect(200)
+      .expect({ status: 'ok', db: 'ok' });
+  });
+
+  it('serves the password reset routes publicly, validating their bodies', async () => {
+    const server = app.getHttpServer();
+
+    await request(server)
+      .post('/api/v1/auth/password-reset')
+      .send({ email: 'not-an-email' })
+      .expect(422);
+    await request(server)
+      .post('/api/v1/auth/password-reset/confirm')
+      .send({ token: 'abc', password: 'short' })
+      .expect(422);
   });
 
   it('protects API routes without a bearer token', () => {

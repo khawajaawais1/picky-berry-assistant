@@ -15,10 +15,11 @@ security:
   - bearerAuth: []
 paths:
   /health:
-    servers:
-      - url: /
     get:
       summary: Check API and database health
+      description: >-
+        Served at `/api/v1/health` like every other route. `/health` at the root answers the
+        same, for platform probes that expect it.
       operationId: getHealth
       security: []
       responses:
