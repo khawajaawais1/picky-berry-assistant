@@ -59,8 +59,7 @@ npm run db:check-a2
 `db:check-a2` and `db:types` require an accessible database. The health endpoint
 is `GET /health`; authenticated API routes use the `/api/v1` prefix.
 Swagger UI is available at `GET /docs` in all environments and renders the
-checked-in OpenAPI contracts. `vercel.json` includes those contracts in the
-deployed function; set the Vercel project root to `picky-server`.
+checked-in OpenAPI contracts. The Vercel project root should be `picky-server`.
 
 The k6 map load test is in `perf/zones.k6.js`. Set `API_BASE_URL`, `API_TOKEN`,
 `SPECIES_CODE`, `CENTER_LAT`, and `CENTER_LNG` from the configured pilot
