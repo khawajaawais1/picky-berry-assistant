@@ -8,6 +8,7 @@ import { presenceSamplesFor } from '../domain/position-presence';
 import { DEFAULT_VISIT_POLICY, type VisitPolicy } from '../domain/visit-policy';
 import {
   applyPresence,
+  finalizeExpired,
   createVisitTrackerState,
   type CandidateEntry,
   type Visit,
@@ -113,6 +114,12 @@ export function useVisitPresence({
       state = applied.state;
       events.push(...applied.events);
     }
+
+    // No ticker closes a visit (ADR-063): the fix is the time evidence. A visit whose grace window
+    // has passed by this fix's instant can no longer resume, so it is finalized here (ADR-066).
+    const finalized = finalizeExpired(state, next.at, policy);
+    state = finalized.state;
+    events.push(...finalized.events);
 
     const changed =
       state !== held.state || events.length !== held.events.length || zone !== held.zone;

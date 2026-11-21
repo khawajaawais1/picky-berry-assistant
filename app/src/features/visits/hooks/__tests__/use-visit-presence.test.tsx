@@ -163,6 +163,24 @@ describe('useVisitPresence', () => {
     ]);
   });
 
+  it('finalizes a visit when a later fix shows its grace window has passed', async () => {
+    // ADR-066: no ticker (ADR-063). The time evidence a visit needs to finalize arrives with the
+    // next fix, so a visit the picker walked out of becomes final, and sendable, on that fix.
+    const { device, view } = await mount();
+
+    await deliver(device, fix(Z14.ring[0]!, START));
+    await deliver(device, fix(Z14.ring[0]!, START + MINUTE));
+    await deliver(device, fix(NOWHERE, START + 2 * MINUTE));
+    await deliver(device, fix(NOWHERE, START + 2 * MINUTE + POLICY.graceMs + MINUTE));
+
+    expect(view.result.current.visits[0]?.finalizedAt).not.toBeNull();
+    expect(view.result.current.events.map((event) => event.type)).toEqual([
+      'visit-opened',
+      'segment-closed',
+      'visit-finalized',
+    ]);
+  });
+
   it('resumes the same visit when the picker comes back inside the grace window', async () => {
     const { device, view } = await mount();
 

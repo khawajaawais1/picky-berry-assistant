@@ -28,10 +28,9 @@ suite.
    now unused and can be removed.
 4. `/health` returns 404 under `/api/v1` on the deployed host.
 5. There are no versioned terms or privacy documents, so registration sends `consents: {}`.
-6. **Owner decision needed:** `POST /visits` is built (`createVisitsApi`, `useVisitSync`), but the
-   presence tracker (`useVisitPresence`) is not mounted anywhere (ADR-046), and mounting it means
-   watching location app-wide (ADR-047). Until that is decided, no visit is posted; screen 11 lists
-   what `GET /visits` holds.
+6. Resolved by [ADR-066](../adr/ADR-066-the-tracker-is-mounted-over-the-zone-service.md): the app
+   shell mounts the visit tracker over the zone service's zones, and finalized visits post to
+   `POST /visits`. Open and unsent visits do not survive the process ending.
 7. **Not built in phase 5, each for a stated reason:** `PATCH /me` (nickname, alert radius,
    species interest, language) and `PATCH /me/privacy` (privacy level) have no control in any
    frame, so drawing one is a design decision. `background_location` stays false (ADR-056).
