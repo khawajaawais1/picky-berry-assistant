@@ -8,6 +8,7 @@ import { saveZone } from '@/services/saved-zones';
 import { sessionPort } from '@/services/session';
 
 import { PrivacySettingsScreen } from '../privacy-settings-screen';
+import { installFakeAuthServer } from '@/services/session/testing';
 
 /**
  * Content and metrics come from Figma frame `14 · Account and offline · Profile and privacy`
@@ -30,10 +31,12 @@ const SIGN_OUT_FAILED = 'Signing out did not finish. Some records may still be h
  * and the address it was created with (ADR-029).
  */
 async function signedIn(email = 'aino@example.fi') {
-  await sessionPort.signIn({
+  await sessionPort.register({
     displayName: 'Aino Korhonen',
     email,
     password: 'berries1234',
+    lang: 'en',
+    consents: {},
   });
 }
 
@@ -43,6 +46,7 @@ function switchValue(): unknown {
 }
 
 beforeEach(async () => {
+  installFakeAuthServer();
   await AsyncStorage.clear();
   // The session lives in the process rather than in the storage the tests clear (ADR-028), so
   // every test starts by leaving whatever the last one was holding.

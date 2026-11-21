@@ -1,49 +1,31 @@
 /**
  * The authentication seam (`src/services/session/`): acquire a session, ask for the one being
- * held, drop it, and ask the provider for a password reset — with a stand-in for the account
- * service and a real Firebase adapter for the reset when a project key is configured.
+ * held, drop it, and ask for a password reset. The adapter is the team API's (ADR-065): the API
+ * checks the password and issues the tokens, `api-port.ts` keeps and rotates them, and
+ * `app-port.ts` composes the one port the app uses.
  *
  * Read [ADR-028](../../../docs/adr/ADR-028-an-authentication-seam-behind-a-port.md) for why the
- * seam is a port, [ADR-054](../../../docs/adr/ADR-054-the-account-belongs-to-the-api.md) for the
- * provider and account it will hold, and
- * [ADR-059](../../../docs/adr/ADR-059-email-password-replaces-the-code-screen.md) for the re-cut that
- * retired screen 04's stand-in code. Read this file for what the app is allowed to claim.
+ * seam is a port, [ADR-065](../../../docs/adr/ADR-065-the-api-issues-the-credential.md) for the
+ * provider, and [ADR-006](../../../docs/adr/ADR-006-secure-credential-storage.md) for where the
+ * tokens live.
  *
  * **What is stored, and the four questions AGENTS.md §11 asks of every stored field.** The field
- * is one session: the account it is about and the window it is good for.
+ * is one session: the account's address and nickname, the access token's window, and the
+ * access and refresh tokens.
  *
- * - **Who may read it** — this app, on this device, for as long as the process runs. It is held
- *   in memory and written nowhere: not to AsyncStorage, not to a file, not to a log. The stand-in
- *   has no server to send it to, and there will be no session at all in a production build. When
- *   ADR-006's secure adapter lands, this answer becomes “platform secure storage, unlocked device
- *   only”, and the store port is the one place that changes.
- * - **How the user gets a copy** — the signed-in state itself is the copy: `current()` is what
- *   every screen would read, and there is no export because there is no account surface yet
- *   (PROJECT.md, known issue 23). A session carries no content beyond the account's name and two
- *   timestamps.
- * - **How it is corrected** — signing in again replaces it (`signIn`), and signing out removes it
- *   (`signOut`).
- * - **How it is deleted** — `signOut()`, and the process ending, which is the whole of the
- *   in-memory lifetime. Nothing survives a reload to delete later.
+ * - **Who may read it** — this app, on this device. On iOS and Android it is in platform secure
+ *   storage (`WHEN_UNLOCKED_THIS_DEVICE_ONLY`). On the web export it is in memory for the tab's
+ *   lifetime. It is never written to AsyncStorage, a file, a log or a URL.
+ * - **How the user gets a copy** — the account itself is the API's record (`GET /me`, and the
+ *   export at `POST /me/export`).
+ * - **How it is corrected** — signing in again replaces it, and a refresh rotates it.
+ * - **How it is deleted** — `signOut()`, which revokes the refresh token at the API and clears
+ *   the store, and a refused refresh, which clears the store.
  *
- * **The password is not stored here either.** It is handed to the provider adapter in the
- * sign-in call and goes no further: not into the session, the store, a log or this module's
- * state (ADR-054 decision 2; SECURITY.md). Today the stand-in accepts it and verifies nothing.
+ * **The password is not stored.** It is in the login or register request body and nowhere else.
  *
- * **A reset request is not a stored field.** `requestPasswordReset` carries the address to the
- * provider adapter and asks for the provider's reset link; no token, link or new password comes
- * back to the app, and the address is not written to the store or kept after the call (ADR-054,
- * ADR-062). With `EXPO_PUBLIC_FIREBASE_API_KEY` set, Firebase sends the email; without it, the
- * stand-in sends nothing, which the screen that calls it says out loud.
- *
- * The **lawful basis** for holding it — and for the address that names the account — is the
- * owner's decision and is still open (PROJECT.md, question 15), owed for every field the app
- * keeps. It is recorded here rather than assumed: this module holds personal data (an address)
- * from the moment it is handed one.
- *
- * **The one thing this seam does not decide.** How long a session lasts is the provider's answer
- * and, until the account service exists, a stand-in value (`SESSION_LIFETIME_MS`). It is an open
- * question in PROJECT.md, not a fact about the app.
+ * The **lawful basis** for holding it is the owner's decision and is still open (PROJECT.md,
+ * question 15).
  */
 export {
   SESSION_LIFETIME_MS,
@@ -67,15 +49,9 @@ export {
   type RegistrationConsents,
 } from './api-port';
 
-export {
-  createStandInSessionPort,
-  sessionPort,
-  type Credential,
-  type SessionPort,
-  type SignInRefusal,
-  type SignInResult,
-  type StandInSessionPortOptions,
-} from './stand-in-port';
+export { createAppSessionPort, sessionPort, type AppSessionPortOptions } from './app-port';
+
+export type { Credential, SessionPort, SignInRefusal, SignInResult } from './port';
 
 export {
   passwordResetAvailability,

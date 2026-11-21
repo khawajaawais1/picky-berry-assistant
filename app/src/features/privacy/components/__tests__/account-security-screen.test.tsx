@@ -1,8 +1,9 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
-import { SESSION_LIFETIME_MS, sessionPort } from '@/services/session';
+import { sessionPort } from '@/services/session';
 
 import { AccountSecurityScreen } from '../account-security-screen';
+import { installFakeAuthServer } from '@/services/session/testing';
 
 /**
  * The screen frame 14's “Account & security” row opens (node 5:23677). **The design never drew it**
@@ -18,6 +19,7 @@ const SIGN_OUT_FAILED = 'Signing out did not finish. Some records may still be h
 const SIGN_OUT = 'Sign out';
 
 beforeEach(async () => {
+  installFakeAuthServer();
   await sessionPort.signOut();
 });
 
@@ -42,16 +44,18 @@ describe('AccountSecurityScreen', () => {
     expect(screen.getByText('Your email and password are the key')).toBeOnTheScreen();
     expect(
       screen.getByText(
-        'Signing in asks for your email and password. The app keeps no password of its own, and no account service is connected to check one yet.',
+        'Signing in sends your email and password to the Picky account service, which checks them. The app keeps no password of its own.',
       ),
     ).toBeOnTheScreen();
   });
 
   it('names the account the app is holding', async () => {
-    await sessionPort.signIn({
+    await sessionPort.register({
       displayName: 'Aino Korhonen',
       email: 'aino@example.fi',
       password: 'berries1234',
+      lang: 'en',
+      consents: {},
     });
 
     await render(<AccountSecurityScreen />);
@@ -66,11 +70,7 @@ describe('AccountSecurityScreen', () => {
     await render(<AccountSecurityScreen />);
 
     await waitFor(() =>
-      expect(
-        screen.getByText(
-          'No session is being held. One lasts an hour from the moment you sign in.',
-        ),
-      ).toBeOnTheScreen(),
+      expect(screen.getByText('No session is being held. Sign in to start one.')).toBeOnTheScreen(),
     );
     expect(screen.queryByTestId('account-security-row')).not.toBeOnTheScreen();
   });
@@ -90,21 +90,26 @@ describe('AccountSecurityScreen', () => {
 
     expect(screen.getByText('The session')).toBeOnTheScreen();
     expect(screen.getByText('Where it is kept')).toBeOnTheScreen();
-    expect(screen.getByText('In this app’s memory, while the app is open.')).toBeOnTheScreen();
+    expect(screen.getByText('In this device’s secure storage.')).toBeOnTheScreen();
     expect(screen.getByText('How long it lasts')).toBeOnTheScreen();
-    expect(screen.getByText('An hour from the moment you sign in.')).toBeOnTheScreen();
+    expect(screen.getByText('Renewed while you use the app.')).toBeOnTheScreen();
     expect(screen.getByText('What ends it')).toBeOnTheScreen();
-    expect(screen.getByText('Signing out, or the hour running out.')).toBeOnTheScreen();
+    expect(screen.getByText('Signing out, or the account service ending it.')).toBeOnTheScreen();
   });
 
-  it('states the hour the session is good for where the app keeps it', async () => {
-    // The copy above says “an hour”, and this is the number it is quoting: if the stand-in's
-    // lifetime ever changes, this line of copy has to change with it rather than quietly lie
-    // (ADR-013's provider issues an hour; the constant is the stand-in's, not a preference).
+  it('draws no countdown, because the account service renews the session (ADR-065)', async () => {
+    await sessionPort.register({
+      displayName: 'Aino Korhonen',
+      email: 'aino@example.fi',
+      password: 'berries1234',
+      lang: 'en',
+      consents: {},
+    });
+
     await render(<AccountSecurityScreen />);
 
-    expect(SESSION_LIFETIME_MS).toBe(60 * 60 * 1000);
-    expect(screen.getByText('An hour from the moment you sign in.')).toBeOnTheScreen();
+    expect(await screen.findByTestId('account-security-row')).toBeOnTheScreen();
+    expect(screen.queryByText('Time left')).not.toBeOnTheScreen();
   });
 
   it('names what is not there, rather than leaving the gaps to be guessed', async () => {
@@ -113,7 +118,7 @@ describe('AccountSecurityScreen', () => {
     expect(screen.getByText('Not here yet')).toBeOnTheScreen();
     expect(
       screen.getByText(
-        'No account service is connected, so your name and your email address cannot be changed in the app and an account cannot be deleted.',
+        'Your name and email address cannot be changed in the app yet, and the account cannot be deleted from here yet.',
       ),
     ).toBeOnTheScreen();
     expect(
@@ -199,110 +204,17 @@ describe('AccountSecurityScreen', () => {
 });
 
 /**
- * The one thing on this screen that changes while it is open: the session's own hour (ADR-041).
- *
- * It is held to what a live reading must be — the time the session really has left, floored at whole
- * minutes so it never claims more than there is — and to what the app must do when the hour is up:
- * stop drawing the account it no longer holds, say why, and offer the way back in (PROJECT.md's known
- * issue 25 was that nothing observed an expiry at all).
+ * The way back in. A session ends when the user signs out or the account service refuses to
+ * renew it. Either way `current()` answers nobody, and the screen says so and offers sign-in.
  */
-describe('AccountSecurityScreen, as the session’s hour runs out', () => {
-  /** The moment the stand-in mints a session at, under the fake clock below. */
-  const START = new Date('2026-10-11T09:00:00.000Z');
-
-  beforeEach(() => {
-    jest.useFakeTimers();
-    jest.setSystemTime(START);
-  });
-
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
-  /**
-   * Moves the clock to `moment` and lets the next tick pass, so the screen re-reads at
-   * `moment + 15s` — which is what makes it look again. A jump on its own would leave the interval
-   * pending; a second-by-second walk would fire thousands of ticks for an hour of clock. The screen
-   * ticks every fifteen seconds because its reading is in whole minutes.
-   */
-  async function moveTo(moment: Date) {
-    await act(async () => {
-      jest.setSystemTime(moment);
-      jest.advanceTimersByTime(15_000);
-    });
-  }
-
-  async function signInAtStart() {
-    await sessionPort.signIn({
-      displayName: 'Aino Korhonen',
-      email: 'aino@example.fi',
-      password: 'berries1234',
-    });
-  }
-
-  it('reads the time the session has left, and follows it down', async () => {
-    await signInAtStart();
-
-    await render(<AccountSecurityScreen />);
-
-    // Minted a moment ago, so the whole hour is left: `remainingMilliseconds` and `SESSION_LIFETIME_MS`
-    // are the same rule, and this is the screen reading it rather than repeating it.
-    expect(await screen.findByText('Time left')).toBeOnTheScreen();
-    expect(screen.getByText(`${SESSION_LIFETIME_MS / 60_000} min`)).toBeOnTheScreen();
-
-    // 45 seconds left is not “1 min”: the reading is floored, so it never claims time that is gone.
-    await moveTo(new Date(START.getTime() + SESSION_LIFETIME_MS - 45_000));
-    expect(screen.getByText('Less than a minute')).toBeOnTheScreen();
-  });
-
-  it('holds the account until the hour is actually up', async () => {
-    await signInAtStart();
-
-    await render(<AccountSecurityScreen />);
-    await screen.findByText('Time left');
-
-    // The tick lands fifteen seconds after the moment it is given, so this reads the last second
-    // before expiry:
-    await moveTo(new Date(START.getTime() + SESSION_LIFETIME_MS - 16_000));
-    expect(screen.getByTestId('account-security-row')).toBeOnTheScreen();
-    expect(screen.queryByText('This session has ended')).not.toBeOnTheScreen();
-  });
-
-  it('stops drawing the account, says why, and offers the way back in when the hour is up', async () => {
-    await signInAtStart();
-    const onSignIn = jest.fn();
-
-    await render(<AccountSecurityScreen onSignIn={onSignIn} />);
-    await screen.findByText('Time left');
-
-    // The instant of expiry counts as expired (the session rule's own choice), so the state changes
-    // on the tick that reaches it rather than a second later.
-    await moveTo(new Date(START.getTime() + SESSION_LIFETIME_MS));
-
-    expect(await screen.findByText('This session has ended')).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        'The hour that began when you signed in is up, so the app is holding no account.',
-      ),
-    ).toBeOnTheScreen();
-    // The account row and the countdown are gone: the app is holding nobody, and a row naming a
-    // person would be the claim this screen exists to avoid.
-    expect(screen.queryByTestId('account-security-row')).not.toBeOnTheScreen();
-    expect(screen.queryByText('Time left')).not.toBeOnTheScreen();
-
-    await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
-    expect(onSignIn).toHaveBeenCalledTimes(1);
-  });
-
+describe('AccountSecurityScreen, with no session', () => {
   it('offers the same way in when the app is holding no session at all', async () => {
     const onSignIn = jest.fn();
 
     await render(<AccountSecurityScreen onSignIn={onSignIn} />);
 
     expect(
-      await screen.findByText(
-        'No session is being held. One lasts an hour from the moment you sign in.',
-      ),
+      await screen.findByText('No session is being held. Sign in to start one.'),
     ).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
@@ -312,9 +224,7 @@ describe('AccountSecurityScreen, as the session’s hour runs out', () => {
   it('draws no way in when it has nowhere to send the user', async () => {
     await render(<AccountSecurityScreen />);
 
-    await screen.findByText(
-      'No session is being held. One lasts an hour from the moment you sign in.',
-    );
+    await screen.findByText('No session is being held. Sign in to start one.');
 
     // A control that cannot act claims no role (AGENTS.md §11.2), and the sentence above it still
     // says what the state is.

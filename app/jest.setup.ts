@@ -34,6 +34,29 @@ jest.mock('react-native-safe-area-context', () => {
 // not said”, which is what a screen must neither turn into a claim nor draw anything for; a test
 // that cares about the connection replaces this hook with its own answer (see
 // `features/offline/components/__tests__/offline-sync-screen.test.tsx`).
+// The app's session port is composed from `EXPO_PUBLIC_API_BASE_URL` (ADR-065). Tests get a host
+// on the reserved `.invalid` TLD, which can never resolve: a test that sends a real request fails
+// instead of reaching a server. Tests that need a session fake `fetch`
+// (`src/services/session/testing.ts`).
+process.env.EXPO_PUBLIC_API_BASE_URL ??= 'https://picky-api.invalid';
+
+// `expo-secure-store` is a native module no test environment has, and jest-expo's stub keeps
+// nothing, so a stored session would vanish between write and read. This is a faithful
+// in-memory keychain: per test file, cleared by `deleteItemAsync`, `null` when nothing is held.
+jest.mock('expo-secure-store', () => {
+  const held = new Map<string, string>();
+  return {
+    WHEN_UNLOCKED_THIS_DEVICE_ONLY: 6,
+    getItemAsync: async (key: string) => held.get(key) ?? null,
+    setItemAsync: async (key: string, value: string) => {
+      held.set(key, value);
+    },
+    deleteItemAsync: async (key: string) => {
+      held.delete(key);
+    },
+  };
+});
+
 jest.mock('expo-network', () => ({
   addNetworkStateListener: jest.fn(() => ({ remove: jest.fn() })),
   useNetworkState: () => ({}),

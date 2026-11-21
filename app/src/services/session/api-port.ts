@@ -2,7 +2,7 @@ import type { ApiClient, ApiResult, TokenProvider } from '@/services/api/api-cli
 
 import type { PasswordResetRequest } from './password-reset';
 import { parseSession, type Session } from './session';
-import type { Credential, SessionPort, SignInResult } from './stand-in-port';
+import type { Credential, SessionPort, SignInResult } from './port';
 import type { SessionStore } from './store';
 
 /**

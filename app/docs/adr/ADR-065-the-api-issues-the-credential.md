@@ -4,7 +4,9 @@
 - **Date:** 2026-11-21
 - **Deciders:** Project owner, on 2026-11-21, choosing to integrate against the backend as built.
 - **Supersedes:** [ADR-054](ADR-054-the-account-belongs-to-the-api.md) decisions 2, 3 and 6, and
-  the Firebase half of decision 7. Decision 1 still holds: the account is the API's record.
+  the Firebase half of decision 7. Decision 1 still holds: the account is the API's record. Also
+  supersedes [ADR-041](ADR-041-a-session-that-can-run-out-says-so.md)'s countdown: a renewed
+  session has no hour to count down.
 - **Related:** [ADR-006](ADR-006-secure-credential-storage.md) (secure storage),
   [ADR-028](ADR-028-an-authentication-seam-behind-a-port.md) (the session port),
   [ADR-062](ADR-062-password-reset-belongs-to-the-provider.md) (password reset).
@@ -52,3 +54,6 @@ rather than wait for an idToken exchange.
   are the backend team's to own. The client's job is not to widen it.
 - Registration happens in one system, so ADR-054 decision 4's recovery path is no longer needed.
 - Deletion is `DELETE /me` alone.
+- The stand-in session port is deleted (ADR-054 decision 8). The account-security screen states
+  where the session is kept (secure storage, or the tab's memory on the web) and that it is
+  renewed, and draws no countdown.
