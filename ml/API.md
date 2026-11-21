@@ -92,7 +92,7 @@ Python: `year_index` is a number or `{species: number}` (the service passes `Yie
 | `results[].scores` | `null` when outside, else object species → `{score: integer 0–100, confidence: string, ripeness: string, explanation: Explanation}` (all 4 species) |
 
 Errors: `422` empty `points`, more than 5,000, or bad lat/lon/date.
-Performance (3,500 points, 60 × 60 km-sized grid of 54,756 cells, 1 CPU): **3.4 s, 144 MB peak** (load 0.1 s).
+Performance (3,500 points on the v2 grid, 54,756 cells): **4.2 s, 144 MB peak Python memory, 274 MB process RSS** (grid load 0.07 s).
 Re-run with `python scripts/benchmark_score_points.py`.
 
 ### 2.4 Score one spot: `ZoneGrid().score_point(lat, lon, date=None, year_index=1.0)` · `GET /api/v1/ml/score`
