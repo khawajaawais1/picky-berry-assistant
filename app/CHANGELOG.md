@@ -7,6 +7,8 @@ recorded in [docs/adr/](docs/adr/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-21
+
 ### Added
 
 - A release pipeline (`.github/workflows/release.yml`): a `vX.Y.Z` tag on `main` runs the mobile
