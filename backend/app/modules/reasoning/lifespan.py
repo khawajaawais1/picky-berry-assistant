@@ -15,13 +15,18 @@ from pathlib import Path
 from fastapi import FastAPI
 from rdflib import Graph
 
-from app.modules.reasoning.graph import load_ontology
+from app.modules.reasoning.graph import DEFAULT_ONTOLOGY_DIR, load_ontology
+from app.modules.reasoning.rules import load_rules
 
 
 def load_ontology_into(app: FastAPI, ontology_dir: Path | str | None = None) -> Graph:
-    """Parse the ontology and keep it on the app. Startup calls this once."""
-    graph = load_ontology() if ontology_dir is None else load_ontology(ontology_dir)
+    """Parse the ontology, validate the rulebook, keep both on the app. Called once."""
+    directory = DEFAULT_ONTOLOGY_DIR if ontology_dir is None else Path(ontology_dir)
+    graph = load_ontology(directory)
+    rules = load_rules(graph, directory / "rules")
+
     app.state.ontology_graph = graph
+    app.state.reasoning_rules = rules
     return graph
 
 

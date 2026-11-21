@@ -36,6 +36,9 @@ def test_startup_parses_the_ontology_once_and_the_app_reuses_it(monkeypatch) -> 
         codes = {str(code) for code in graph.objects(None, BPA.speciesCode)}
         assert codes == {"bilberry", "lingonberry", "cloudberry", "crowberry"}
 
+        # The rulebook is validated at the same moment.
+        assert {rule.rule_id for rule in app.state.reasoning_rules} >= {"ripe_nearby"}
+
         # Two requests later the app still holds the graph startup parsed.
         client.get("/api/v1/alerts")
         client.get("/api/v1/alerts")

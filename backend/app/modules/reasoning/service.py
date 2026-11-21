@@ -10,7 +10,6 @@ what lets the same parsed graph serve every run in a process.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -18,9 +17,7 @@ from pathlib import Path
 from rdflib import RDFS, Graph
 
 from app.modules.reasoning.graph import ZONE, add_zone_rows
-
-# A rule's header is its leading `# key: value` comment block (README.md, "Adding a rule").
-_HEADER = re.compile(r"^#\s*(?P<key>[A-Za-z]+):\s*(?P<value>.+?)\s*$")
+from app.modules.reasoning.rules import Rule, placeholders
 
 
 @dataclass(frozen=True)
@@ -64,26 +61,22 @@ class Alert:
         }
 
 
-def rule_header(rule_text: str) -> dict[str, str]:
-    """The rule's `# key: value` header, first occurrence of each key winning."""
-    header: dict[str, str] = {}
-    for line in rule_text.splitlines():
-        if not line.startswith("#"):
-            continue
-        match = _HEADER.match(line)
-        if match:
-            header.setdefault(match["key"], match["value"])
-    return header
-
-
 def alerts_from_rows(
     base: Graph,
     rows: Iterable[Mapping[str, object]],
     rule_path: Path | str,
 ) -> list[Alert]:
+    """One reasoning run for one rule file: `alerts_from_rule` with the file parsed first."""
+    return alerts_from_rule(base, rows, Rule.from_path(rule_path))
+
+
+def alerts_from_rule(
+    base: Graph,
+    rows: Iterable[Mapping[str, object]],
+    rule: Rule,
+) -> list[Alert]:
     """One reasoning run: a copy of the ontology, this run's rows, the rule's own query."""
-    text = Path(rule_path).read_text(encoding="utf-8")
-    header = rule_header(text)
+    text = rule.query
 
     graph = Graph()
     for triple in base:
@@ -93,19 +86,17 @@ def alerts_from_rows(
     alerts: list[Alert] = []
     for result in graph.query(text):
         place = None if result.placeName is None else str(result.placeName)
-        template = header["sentenceWithoutPlace"] if place is None else header["sentence"]
+        template = rule.sentence_without_place if place is None else rule.sentence
+        # Every `{placeholder}` is filled from the row's own variables, so a rule that selects
+        # more than the alert needs still renders whichever names its template uses.
         values = {
-            "nameEn": str(result.nameEn),
-            "zoneNumber": str(result.zoneNumber),
-            "placeName": "" if place is None else place,
-            "yieldScore": str(int(result.yieldScore)),
-            "confidence": str(result.confidence),
+            field: _render(getattr(result, field, None)) for field in placeholders(template)
         }
         zone_iri = str(result.zone)
         alerts.append(
             Alert(
-                rule_id=header["id"],
-                rule_version=header["version"],
+                rule_id=rule.rule_id,
+                rule_version=rule.version,
                 # An alert points at the zone's stable id, the one the app already has.
                 zone_id=zone_iri.removeprefix(str(ZONE)),
                 zone_iri=zone_iri,
@@ -125,3 +116,12 @@ def alerts_from_rows(
         )
 
     return alerts
+
+
+def _render(value: object) -> str:
+    """A row's value as template text: unbound is empty, an integer score loses its decimal."""
+    if value is None:
+        return ""
+    if isinstance(value, (int, float)):
+        return str(int(value))
+    return str(value)
