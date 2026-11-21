@@ -1,11 +1,14 @@
 import { Feather } from '@/components/atoms/app-icon';
 import { useNetworkState } from 'expo-network';
+import { useQueryClient } from '@tanstack/react-query';
+import { useRef, useState } from 'react';
 import { View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
-import { Callout, StatusMessage } from '@/components/molecules';
+import { Callout, Card, StatusMessage, TextAction } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { radii, spacing } from '@/constants/theme';
+import { applyZoneSnapshot, type ZoneSnapshot, type ZoneSnapshotSource } from '@/features/discover';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useReportQueue } from '@/hooks/use-report-queue';
 import { formatShortDate, interpolate, useTranslation, type TranslationKey } from '@/services/i18n';
@@ -17,6 +20,12 @@ import { queuedReportRows, waitingLabelKey, type QueuedReportRow } from '../doma
 
 export type OfflineSyncScreenProps = {
   onBack?: () => void;
+  /**
+   * The zone service's offline snapshot (ADR-065, the plan's phase 6). With it, the screen offers
+   * to download the pilot area with every berry's score into the zone cache. Without it, no
+   * download is offered.
+   */
+  snapshotSource?: ZoneSnapshotSource;
 };
 
 /**
@@ -117,7 +126,7 @@ function DownloadAction({ label, tone }: { label: string; tone: 'primary' | 'sec
   );
 }
 
-export function OfflineSyncScreen({ onBack }: OfflineSyncScreenProps) {
+export function OfflineSyncScreen({ onBack, snapshotSource }: OfflineSyncScreenProps) {
   const { colors } = useAppTheme();
   const { locale, t } = useTranslation();
   const { error, loading, reports } = useReportQueue();
@@ -294,6 +303,8 @@ export function OfflineSyncScreen({ onBack }: OfflineSyncScreenProps) {
             </StatusMessage>
           ) : null}
         </View>
+
+        {snapshotSource ? <SnapshotDownload source={snapshotSource} /> : null}
       </View>
     </Screen>
   );
@@ -349,5 +360,83 @@ function QueuedReport({ row, index }: { row: QueuedReportRow; index: number }) {
         </AppText>
       </View>
     </View>
+  );
+}
+
+/** How many distinct zones a snapshot holds, across every berry. */
+function snapshotZoneCount(snapshot: ZoneSnapshot): number {
+  return new Set(Object.values(snapshot.zones).flatMap((zones) => zones.map((zone) => zone.id)))
+    .size;
+}
+
+type SnapshotState =
+  | { status: 'idle' | 'downloading' | 'failed' }
+  | { status: 'saved'; count: number; incremental: boolean };
+
+/**
+ * Downloads the pilot area into the zone cache (ADR-065, the plan's phase 6). The first download
+ * in a run is full; a later one asks only for what changed since the last, and is merged in. A
+ * failed download leaves the cache as it was and says so.
+ */
+function SnapshotDownload({ source }: { source: ZoneSnapshotSource }) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const last = useRef<string | undefined>(undefined);
+  const [state, setState] = useState<SnapshotState>({ status: 'idle' });
+
+  const download = async () => {
+    if (state.status === 'downloading') return;
+    setState({ status: 'downloading' });
+
+    try {
+      const snapshot = await source.download(last.current);
+      applyZoneSnapshot(queryClient, snapshot);
+      last.current = snapshot.generatedAt;
+      setState({
+        status: 'saved',
+        count: snapshotZoneCount(snapshot),
+        incremental: snapshot.incremental,
+      });
+    } catch {
+      setState({ status: 'failed' });
+    }
+  };
+
+  const savedKey: TranslationKey | null =
+    state.status !== 'saved'
+      ? null
+      : state.incremental
+        ? state.count === 1
+          ? 'offline.snapshot.updatedOne'
+          : 'offline.snapshot.updated'
+        : state.count === 1
+          ? 'offline.snapshot.doneOne'
+          : 'offline.snapshot.done';
+
+  return (
+    <Card style={{ gap: spacing.cardGap, padding: spacing.section }} testID="offline-snapshot">
+      <AppText style={{ fontWeight: '600' }} variant="cardTitle">
+        {t('offline.snapshot.title')}
+      </AppText>
+      <AppText tone="muted" variant="bodySmall">
+        {t('offline.snapshot.body')}
+      </AppText>
+      <TextAction
+        align="center"
+        label={t('offline.snapshot.action')}
+        onPress={state.status === 'downloading' ? undefined : () => void download()}
+        testID="offline-snapshot-download"
+      />
+      {savedKey && state.status === 'saved' ? (
+        <AppText testID="offline-snapshot-outcome" tone="muted" variant="caption">
+          {interpolate(t(savedKey), { count: String(state.count) })}
+        </AppText>
+      ) : null}
+      {state.status === 'failed' ? (
+        <StatusMessage testID="offline-snapshot-outcome" tone="danger" variant="caption">
+          {t('offline.snapshot.failed')}
+        </StatusMessage>
+      ) : null}
+    </Card>
   );
 }

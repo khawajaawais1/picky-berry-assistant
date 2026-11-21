@@ -175,6 +175,24 @@ describe('parseZones', () => {
     );
   });
 
+  it('reads a snapshot feature’s freshness from the asked berry’s own score', () => {
+    // `GET /zones/snapshot` carries `updated_at` per species, not at the top level.
+    const snapshot = feature(
+      {},
+      {
+        updated_at: undefined,
+        scores: {
+          bilberry: { ...scores.bilberry, updated_at: '2026-08-02T04:00:00.000Z' },
+          lingonberry: { ...scores.lingonberry, updated_at: '2026-08-03T04:00:00.000Z' },
+        },
+      },
+    );
+
+    const [zone] = parseZones(collection(snapshot), 'lingonberry');
+
+    expect(zone?.updatedAt).toBe('2026-08-03T04:00:00.000Z');
+  });
+
   describe('a feature as GET /zones serves it', () => {
     // The served list scores one species per request: top-level fields and no `scores` map.
     const served = (properties: Record<string, unknown> = {}) =>

@@ -6,6 +6,7 @@ import type { ZoneSource } from '../domain/zone-source';
 import { createApiZoneInsightSource } from './api-zone-insight-source';
 import { createApiZoneSource } from './api-zone-source';
 import { testZoneSource } from './test-zone-source';
+import { createZoneSnapshotSource, type ZoneSnapshotSource } from './zone-snapshot';
 
 /**
  * The zone source the app's routes hand their screens: the team API's `GET /zones` (ADR-065).
@@ -23,3 +24,8 @@ export const appZoneSource: ZoneSource = readsStub
 export const appZoneInsightSource: ZoneInsightSource | undefined = readsStub
   ? undefined
   : createApiZoneInsightSource({ client: apiClient });
+
+/** The offline snapshot for frame 13, or none when the build reads the stub. */
+export const appZoneSnapshotSource: ZoneSnapshotSource | undefined = readsStub
+  ? undefined
+  : createZoneSnapshotSource({ client: apiClient });

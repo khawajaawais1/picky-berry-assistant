@@ -240,7 +240,13 @@ function parseFeature(value: unknown, species: Species): Zone | null {
     ring,
     // A timestamp the app cannot read is not a reason to lose the zone: without it the screen
     // simply makes no freshness claim (the line is omitted), which is the honest direction.
-    updatedAt: asInstant(value.properties.updated_at),
+    // `GET /zones/snapshot` carries the instant per species rather than at the top level, so the
+    // asked berry's own `updated_at` speaks for this answer when the top level has none.
+    updatedAt:
+      asInstant(value.properties.updated_at) ??
+      (isRecord(value.properties.scores) && isRecord(value.properties.scores[species])
+        ? asInstant(value.properties.scores[species].updated_at)
+        : null),
   };
 }
 

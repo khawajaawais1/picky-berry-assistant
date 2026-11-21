@@ -400,6 +400,16 @@ export const fi: Record<TranslationKey, string> = {
   // Screen 13. The sync centre's own heading counts the reports this phone is holding. “Raportti”
   // is the word screens 10 and 11 already use for one, and the singular and plural are separate
   // entries because the sentence is the language's.
+  // The zone service's offline snapshot (ADR-065, the API plan's phase 6).
+  'offline.snapshot.title': 'Pilottialue, kaikki marjat',
+  'offline.snapshot.body':
+    'Lataa pilottialueen vyöhykkeet kaikkien neljän marjan pisteineen, jotta kartta aukeaa ilman yhteyttä.',
+  'offline.snapshot.action': 'Lataa offline-käyttöön',
+  'offline.snapshot.done': '{count} vyöhykettä tallennettu offline-käyttöön.',
+  'offline.snapshot.doneOne': '{count} vyöhyke tallennettu offline-käyttöön.',
+  'offline.snapshot.updated': 'Päivitetty: {count} vyöhykettä muuttui.',
+  'offline.snapshot.updatedOne': 'Päivitetty: {count} vyöhyke muuttui.',
+  'offline.snapshot.failed': 'Vyöhykepalvelu ei vastannut. Mitään uutta ei tallennettu.',
   'offline.eyebrow': 'TILI / OFFLINE · SYNKRONOINTI · KAUSIDEMO',
   'offline.title': 'Valmiina ilman verkkoa',
   'offline.sample.note':

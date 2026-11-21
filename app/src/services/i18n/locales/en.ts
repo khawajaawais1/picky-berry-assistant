@@ -495,6 +495,16 @@ export const en = {
   // The frame's own journey label with the disclosure frame 06's map and frame 11's season screen
   // carry: since ADR-042 the screen draws the design's sample region, storage and actions, so it says
   // so on itself rather than only in a sentence further down.
+  // The zone service's offline snapshot (ADR-065, the API plan's phase 6).
+  'offline.snapshot.title': 'Pilot area, every berry',
+  'offline.snapshot.body':
+    'Download the pilot area’s zones with all four berries’ scores, so the map opens without a connection.',
+  'offline.snapshot.action': 'Download for offline use',
+  'offline.snapshot.done': '{count} zones saved for offline use.',
+  'offline.snapshot.doneOne': '{count} zone saved for offline use.',
+  'offline.snapshot.updated': 'Updated: {count} zones changed.',
+  'offline.snapshot.updatedOne': 'Updated: {count} zone changed.',
+  'offline.snapshot.failed': 'The zone service could not answer. Nothing new was saved.',
   'offline.eyebrow': 'ACCOUNT / OFFLINE · SYNC CENTRE · SEASON DEMO',
   'offline.title': 'Ready beyond the signal',
   // The downloaded region the frame draws, and everything that hangs off it: the design's own

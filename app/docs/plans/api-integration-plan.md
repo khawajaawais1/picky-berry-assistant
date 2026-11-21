@@ -15,7 +15,7 @@ suite.
 | 3   | Zone details             | `GET /zones/{id}`, `/zones/{id}/explanation`, `/zones/{id}/history`, `GET /species`                | screen 07's sample outlook and reports                      | Done        |
 | 4   | Visits                   | `POST /visits` (idempotent `client_id`), `GET /visits`                                             | local-only visit lifecycle; outbox flush                    | Done        |
 | 5   | Account and privacy      | `GET/PATCH/DELETE /me`, `PATCH /me/privacy`, `POST /me/export`, `POST /me/devices`                 | privacy screens' local state, your-data export              | Done        |
-| 6   | Offline                  | `GET /zones/snapshot` (full and incremental)                                                       | downloads screen's stand-in                                 | Planned     |
+| 6   | Offline                  | `GET /zones/snapshot` (full and incremental)                                                       | downloads screen's stand-in                                 | Done        |
 
 ## Known contract gaps to raise with the backend team
 
