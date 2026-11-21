@@ -47,3 +47,21 @@ def test_score_update():
     body = {"mapScore": 55, "mapConfidence": "medium", "now": "2026-07-25T12:00:00Z", "reports": [report]}
     r = client.post("/api/v1/ml/score-updates", json=body)
     assert r.status_code == 200 and r.json()["score"] == 82
+
+
+def test_point_score_from_coordinates():
+    r = client.get("/api/v1/ml/score", params={"lat": 62.30, "lon": 25.60, "date": "2026-07-25"})
+    assert r.status_code == 200
+    body = r.json()
+    assert set(body["scores"]) == {"bilberry", "lingonberry", "cloudberry", "crowberry"}
+    assert body["scores"]["bilberry"]["score"] == 52 and body["scores"]["bilberry"]["ripeness"] == "ripe"
+    assert body["date"] == "2026-07-25" and 0 <= body["forestShare"] <= 1
+
+
+def test_point_outside_grid_is_404_problem_json():
+    r = client.get("/api/v1/ml/score", params={"lat": 60.17, "lon": 24.94})  # Helsinki
+    assert r.status_code == 404 and r.headers["content-type"].startswith("application/problem+json")
+
+
+def test_point_bad_latitude_is_422():
+    assert client.get("/api/v1/ml/score", params={"lat": 95, "lon": 25.6}).status_code == 422
