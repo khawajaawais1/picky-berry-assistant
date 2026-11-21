@@ -9,8 +9,9 @@ the database. It is also a stand-alone service the app team can point at for the
     uvicorn service.app:app --reload --port 8100
     open http://localhost:8100/docs
 
-Not production-ready on its own: there is **no authentication** here (the backend adds the
-Bearer-token dependency from api-contract.md §3) and no rate limiting.
+Every route needs the ``X-API-Key`` header when ``ML_API_KEY`` is set (it is on Render).
+JSON is snake_case everywhere; ``date`` values are Europe/Helsinki calendar dates (default: today
+in Finland); timestamps are UTC ISO-8601. The exact contract is ml/API.md.
 """
 from __future__ import annotations
 
@@ -27,7 +28,6 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, ConfigDict, Field
-from pydantic.alias_generators import to_camel
 
 from berry_ml import (
     DETECTOR_VERSION,
@@ -39,6 +39,8 @@ from berry_ml import (
     Report,
     YieldModel,
     ZoneGrid,
+    today_helsinki,
+    update_trust,
     update_zone_score,
 )
 
@@ -47,6 +49,8 @@ PILOT_ZONES = REPO / "data" / "test_zones.geojson"
 MAX_UPLOAD_BYTES = 15 * 1024 * 1024
 Species = Literal["bilberry", "lingonberry", "cloudberry", "crowberry"]
 Confidence = Literal["low", "medium", "high"]
+SPECIES_LIST = ("bilberry", "lingonberry", "cloudberry", "crowberry")
+MAX_POINTS = 5000
 
 _API_KEY = os.environ.get("ML_API_KEY", "")
 _key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
@@ -83,23 +87,49 @@ def problem(status: int, title: str, detail: str = "", type_: str = "about:blank
     return JSONResponse(body, status_code=status, media_type="application/problem+json")
 
 
-# ---------- schemas (camelCase on the wire) ----------
-class Camel(BaseModel):
-    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+# ---------- schemas (snake_case on the wire, like picky-server) ----------
+class Strict(BaseModel):
+    model_config = ConfigDict(extra="forbid")
 
 
-class ReportIn(Camel):
+class ReportIn(Strict):
     created_at: dt.datetime
     rating: int | None = Field(None, ge=1, le=5)
     photo_count: int | None = Field(None, ge=0)
     reporter_trust: float = Field(0.5, ge=0, le=1)
+    visit_backed: bool = False
 
 
-class ScoreUpdateIn(Camel):
+class ScoreUpdateIn(Strict):
     map_score: int = Field(ge=0, le=100)
     map_confidence: Confidence = "medium"
+    map_explanation: dict | None = None
     reports: list[ReportIn] = []
     now: dt.datetime | None = None
+
+
+class PointIn(Strict):
+    id: str
+    h3: str | None = None
+    lat: float = Field(ge=-90, le=90)
+    lon: float = Field(ge=-180, le=180)
+
+
+class ZoneScoresIn(Strict):
+    date: dt.date | None = None
+    points: list[PointIn] = Field(min_length=1, max_length=MAX_POINTS)
+
+
+class TrustUpdateIn(Strict):
+    trust: float = Field(ge=0, le=1)
+    rating: int | None = Field(None, ge=1, le=5)
+    photo_count: int | None = Field(None, ge=0)
+    species: Species
+    zone_consensus: float | None = Field(None, ge=1, le=5)
+
+
+def year_indexes() -> dict[str, float]:
+    return {sp: yield_model().year_index("Lansi-Suomi", sp) for sp in SPECIES_LIST}
 
 
 router = APIRouter(prefix="/api/v1/ml", tags=["ml"], dependencies=[Depends(require_key)])
@@ -107,8 +137,8 @@ router = APIRouter(prefix="/api/v1/ml", tags=["ml"], dependencies=[Depends(requi
 
 @router.get("/health")
 def health():
-    return {"status": "ok", "models": {"detector": DETECTOR_VERSION, "zoneGrid": ZONE_GRID_VERSION,
-                                       "yield": YIELD_VERSION, "scoreRules": SCORE_RULES_VERSION}}
+    return {"status": "ok", "models": {"detector": DETECTOR_VERSION, "zone_grid": ZONE_GRID_VERSION,
+                                       "yield": YIELD_VERSION, "score_rules": SCORE_RULES_VERSION}}
 
 
 @router.post("/detections")
@@ -136,7 +166,7 @@ def zones(species: Species = "bilberry", date: dt.date | None = None):
     for f in fc["features"]:
         f["properties"]["species"] = species
     yi = yield_model().year_index("Lansi-Suomi", species)
-    return JSONResponse(grid().score_zones(fc, date=date or dt.date.today(), year_index=yi),
+    return JSONResponse(grid().score_zones(fc, date=date or today_helsinki(), year_index=yi),
                         media_type="application/geo+json")
 
 
@@ -144,33 +174,44 @@ def zones(species: Species = "bilberry", date: dt.date | None = None):
 def point_score(lat: float = Query(..., ge=-90, le=90, description="Latitude, WGS84 decimal degrees"),
                 lon: float = Query(..., ge=-180, le=180, description="Longitude, WGS84 decimal degrees"),
                 date: dt.date | None = None):
-    """One spot -> berry score for all 4 species (the same model as /zones, for a single point)."""
-    day = date or dt.date.today()
-    scores = {}
-    forest_share = None
-    for sp in ("bilberry", "lingonberry", "cloudberry", "crowberry"):
-        res = grid().score_point(lat, lon, date=day, year_index=yield_model().year_index("Lansi-Suomi", sp))
-        if res is None:
-            return problem(404, "Outside the model area",
-                           "The forest grid covers 40 x 40 km around Jyvaskyla; this point is outside it.")
-        z = res[sp]
-        scores[sp] = z.to_payload()
-        forest_share = z.forest_share
-    return {"lat": lat, "lon": lon, "date": day.isoformat(), "scores": scores,
-            "forestShare": forest_share, "modelVersion": ZONE_GRID_VERSION}
+    """One spot -> berry score for all 4 species, each with its explanation."""
+    day = date or today_helsinki()
+    res = grid().score_point(lat, lon, date=day, year_index=year_indexes())
+    if res is None:
+        return problem(404, "Outside the model area", "This point is outside the forest grid around Jyvaskyla.")
+    first = next(iter(res.values()))
+    return {"lat": lat, "lon": lon, "date": day.isoformat(), "coverage": "grid",
+            "forest_share": first.forest_share,
+            "scores": {sp: z.to_payload(explanation=True) for sp, z in res.items()},
+            "model_version": ZONE_GRID_VERSION}
+
+
+@router.post("/zone-scores")
+def zone_scores(body: ZoneScoresIn):
+    """Batch: the backend's own zones (one centroid each) -> scores for all species + explanation.
+    Points outside the grid come back with coverage "none" and scores null."""
+    day = body.date or today_helsinki()
+    pts = [p.model_dump() for p in body.points]
+    return {"date": day.isoformat(), "model_version": ZONE_GRID_VERSION, "rules_version": SCORE_RULES_VERSION,
+            "results": grid().score_points(pts, date=day, year_index=year_indexes())}
 
 
 @router.post("/score-updates")
 def score_update(body: ScoreUpdateIn):
-    """Internal: map score + recent reports for ONE zone and species -> new score.
-    The backend calls berry_ml.update_zone_score directly after storing a report; this endpoint
-    only exists so the rule can be tried from /docs."""
-    reports = [Report(r.created_at, r.rating, r.photo_count, r.reporter_trust) for r in body.reports]
+    """Map score + recent reports for ONE zone and species -> new score with its explanation."""
+    reports = [Report(r.created_at, r.rating, r.photo_count, r.reporter_trust, r.visit_backed) for r in body.reports]
     now = body.now or dt.datetime.now(dt.UTC)
-    return update_zone_score(body.map_score, body.map_confidence, reports, now)
+    return update_zone_score(body.map_score, body.map_confidence, reports, now, body.map_explanation)
 
 
-app = FastAPI(title="Berry Picker Assistant - ML reference service", version="1.0.0")
+@router.post("/trust-updates")
+def trust_update(body: TrustUpdateIn):
+    """One report -> the reporter's new trust (rule in ml/API.md)."""
+    return {"trust": update_trust(body.trust, body.rating, body.photo_count, body.species, body.zone_consensus),
+            "rules_version": SCORE_RULES_VERSION}
+
+
+app = FastAPI(title="Berry Picker Assistant - ML reference service", version="2.0.0")
 
 
 @app.exception_handler(RequestValidationError)
