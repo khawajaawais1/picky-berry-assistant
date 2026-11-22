@@ -89,11 +89,19 @@ console. The web client lives in [`../admin`](../admin/README.md).
 
 ```powershell
 npm test
+npm run test:e2e
 npm run build
 npm run lint
 npm run openapi:lint
 npm run db:check-a2
 ```
+
+`npm run test:e2e` starts a throwaway PostGIS container, applies the test baseline and every
+API migration, and covers the admin authorization matrix, moderation reads, session revocation
+and job retry failures. On Apple Silicon it uses `imresamu/postgis:17-3.5`; x86 uses
+`postgis/postgis:17-3.5`. Set `POSTGIS_TEST_IMAGE` to pin another compatible image. The test
+baseline uses text H3 values because the PostGIS image does not ship h3-pg. Docker must be
+running; the suite never uses the developer's local database.
 
 `db:check-a2` and `db:types` require an accessible database. Every route is served under
 the `/api/v1` prefix, health included (`GET /api/v1/health`); `GET /health` answers the same at
