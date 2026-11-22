@@ -196,6 +196,57 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/Validation' }
+  /admin/users/{id}:
+    get:
+      operationId: getAdminUser
+      tags: [admin]
+      summary: One account with active sessions, activity and audit
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Account detail
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Validation' }
+  /admin/users/{id}/revoke-sessions:
+    post:
+      operationId: revokeAdminUserSessions
+      tags: [admin]
+      summary: Revoke every active refresh token for an account
+      description: Requires a reason. The reason and revoked count are written to audit_log; existing access tokens expire within 15 minutes.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string, minLength: 3, maxLength: 500 }
+      responses:
+        '200':
+          description: Number of revoked refresh tokens
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user_id, revoked_count]
+                properties:
+                  user_id: { type: string, format: uuid }
+                  revoked_count: { type: integer, minimum: 0 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Validation' }
   /admin/users/{id}/role:
     patch:
       operationId: updateAdminUserRole

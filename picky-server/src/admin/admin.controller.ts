@@ -24,6 +24,7 @@ import { JobsQueryDto } from './dto/jobs-query.dto';
 import { PaginationDto } from './dto/pagination.dto';
 import { RecomputeDto } from './dto/recompute.dto';
 import { ReportsQueryDto } from './dto/reports-query.dto';
+import { RevokeSessionsDto } from './dto/revoke-sessions.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { UsersQueryDto } from './dto/users-query.dto';
 import { ZonesQueryDto } from './dto/zones-query.dto';
@@ -96,6 +97,33 @@ export class AdminController {
   @Header('Cache-Control', 'no-store')
   listUsers(@Query() query: UsersQueryDto): Promise<Record<string, unknown>> {
     return this.admin.listUsers(query);
+  }
+
+  @Get('users/:id')
+  @Header('Cache-Control', 'no-store')
+  getUser(
+    @Param('id', new ParseUUIDPipe({ errorHttpStatusCode: 422 }))
+    userId: string,
+  ): Promise<Record<string, unknown>> {
+    return this.admin.getUser(userId);
+  }
+
+  @Post('users/:id/revoke-sessions')
+  @HttpCode(HttpStatus.OK)
+  @Header('Cache-Control', 'no-store')
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
+  revokeSessions(
+    @Param('id', new ParseUUIDPipe({ errorHttpStatusCode: 422 }))
+    userId: string,
+    @Body() body: RevokeSessionsDto,
+    @Req() request: AdminRequest,
+  ): Promise<Record<string, unknown>> {
+    return this.admin.revokeSessions(
+      userId,
+      body.reason,
+      request.user.id,
+      requestIdOf(request),
+    );
   }
 
   @Patch('users/:id/role')

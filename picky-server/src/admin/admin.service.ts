@@ -189,6 +189,40 @@ interface UserRow extends QueryResultRow {
   last_sign_in: Date | null;
 }
 
+interface UserDetailRow extends UserRow {
+  background_location: boolean;
+  alert_radius_km: number;
+  species_interest: string[];
+}
+
+interface UserSessionRow extends QueryResultRow {
+  id: string;
+  created_at: Date;
+  expires_at: Date;
+  user_agent: string | null;
+}
+
+interface UserReportRow extends QueryResultRow {
+  id: string;
+  zone_id: string;
+  zone_name: string | null;
+  zone_h3: string;
+  species: string;
+  rating: number;
+  created_at: Date;
+}
+
+interface UserVisitRow extends QueryResultRow {
+  id: string;
+  zone_id: string | null;
+  zone_name: string | null;
+  zone_h3: string | null;
+  status: string;
+  manual: boolean;
+  started_at: Date;
+  duration_s: number;
+}
+
 interface AuditRow extends QueryResultRow {
   id: string;
   actor_id: string | null;
@@ -745,6 +779,149 @@ export class AdminService {
       page_size: query.page_size,
       total: total.rows[0].total,
     };
+  }
+
+  async getUser(userId: string): Promise<Record<string, unknown>> {
+    const userResult = await this.database.pool.query<UserDetailRow>(
+      `SELECT u.id, u.email, u.nickname, u.role, u.lang, u.privacy_level,
+              u.background_location, u.alert_radius_km, u.species_interest,
+              u.email_verified_at, u.created_at,
+              COALESCE(t.trust, 0.5)::float8 AS trust,
+              (SELECT count(*) FROM reports r WHERE r.user_id = u.id)::int AS reports_total,
+              (SELECT count(*) FROM visits v WHERE v.user_id = u.id)::int AS visits_total,
+              (SELECT max(rt.created_at) FROM refresh_tokens rt
+                WHERE rt.user_id = u.id) AS last_sign_in
+       FROM users u
+       LEFT JOIN user_trust t ON t.user_id = u.id
+       WHERE u.id = $1 AND u.deleted_at IS NULL`,
+      [userId],
+    );
+    const user = userResult.rows[0];
+    if (!user) throw new NotFoundException('Account not found.');
+
+    const [sessions, reports, visits, audit] = await Promise.all([
+      this.database.pool.query<UserSessionRow>(
+        `SELECT id, created_at, expires_at, user_agent
+         FROM refresh_tokens
+         WHERE user_id = $1 AND revoked_at IS NULL AND expires_at > now()
+         ORDER BY created_at DESC LIMIT 20`,
+        [userId],
+      ),
+      this.database.pool.query<UserReportRow>(
+        `SELECT r.id, r.zone_id, z.name AS zone_name, z.h3 AS zone_h3,
+                r.species, r.rating, r.created_at
+         FROM reports r JOIN zones z ON z.id = r.zone_id
+         WHERE r.user_id = $1
+         ORDER BY r.created_at DESC LIMIT 20`,
+        [userId],
+      ),
+      this.database.pool.query<UserVisitRow>(
+        `SELECT v.id, v.zone_id, z.name AS zone_name, z.h3 AS zone_h3,
+                v.status, v.manual, v.started_at, v.duration_s
+         FROM visits v LEFT JOIN zones z ON z.id = v.zone_id
+         WHERE v.user_id = $1
+         ORDER BY v.started_at DESC LIMIT 20`,
+        [userId],
+      ),
+      this.database.pool.query<AuditRow>(
+        `SELECT a.id, a.actor_id, u.email AS actor_email, a.action,
+                a.target_type, a.target_id, a.detail, a.request_id, a.created_at
+         FROM audit_log a LEFT JOIN users u ON u.id = a.actor_id
+         WHERE a.target_type = 'user' AND a.target_id = $1
+         ORDER BY a.created_at DESC LIMIT 20`,
+        [userId],
+      ),
+    ]);
+
+    return {
+      id: user.id,
+      email: user.email,
+      nickname: user.nickname,
+      role: user.role,
+      lang: user.lang,
+      privacy_level: user.privacy_level,
+      background_location: Boolean(user.background_location),
+      alert_radius_km: Number(user.alert_radius_km),
+      species_interest: user.species_interest ?? [],
+      email_verified_at: asIso(user.email_verified_at),
+      created_at: asIso(user.created_at),
+      trust: Number(user.trust),
+      reports_total: Number(user.reports_total),
+      visits_total: Number(user.visits_total),
+      last_sign_in: asIso(user.last_sign_in),
+      sessions: sessions.rows.map((session) => ({
+        id: session.id,
+        created_at: asIso(session.created_at),
+        expires_at: asIso(session.expires_at),
+        user_agent: session.user_agent,
+      })),
+      reports: reports.rows.map((report) => ({
+        id: report.id,
+        zone_id: report.zone_id,
+        zone_name: report.zone_name,
+        zone_h3: report.zone_h3,
+        species: report.species,
+        rating: Number(report.rating),
+        created_at: asIso(report.created_at),
+      })),
+      visits: visits.rows.map((visit) => ({
+        id: visit.id,
+        zone_id: visit.zone_id,
+        zone_name: visit.zone_name,
+        zone_h3: visit.zone_h3,
+        status: visit.status,
+        manual: Boolean(visit.manual),
+        started_at: asIso(visit.started_at),
+        duration_s: Number(visit.duration_s),
+      })),
+      audit: audit.rows.map((row) => this.mapAuditRow(row)),
+    };
+  }
+
+  async revokeSessions(
+    userId: string,
+    reasonInput: string,
+    actorId: string,
+    requestId: string,
+  ): Promise<Record<string, unknown>> {
+    const reason = reasonInput.trim();
+    if (reason.length < 3) {
+      throw new UnprocessableEntityException('A reason is required.');
+    }
+    const client = await this.database.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const found = await client.query<{ id: string; email: string }>(
+        `SELECT id, email FROM users
+         WHERE id = $1 AND deleted_at IS NULL FOR UPDATE`,
+        [userId],
+      );
+      const user = found.rows[0];
+      if (!user) throw new NotFoundException('Account not found.');
+      const revoked = await client.query<{ id: string }>(
+        `UPDATE refresh_tokens SET revoked_at = now()
+         WHERE user_id = $1 AND revoked_at IS NULL AND expires_at > now()
+         RETURNING id`,
+        [userId],
+      );
+      const revokedCount = revoked.rows.length;
+      await this.recordAudit(
+        client,
+        actorId,
+        'user.sessions_revoke',
+        'user',
+        userId,
+        { email: user.email, revoked_count: revokedCount, reason },
+        requestId,
+      );
+      await client.query('COMMIT');
+      return { user_id: userId, revoked_count: revokedCount };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   async updateUserRole(

@@ -120,6 +120,7 @@ describe('AppController (e2e)', () => {
     '/api/v1/admin/jobs',
     '/api/v1/admin/reports',
     '/api/v1/admin/users',
+    '/api/v1/admin/users/00000000-0000-4000-8000-000000000001',
     '/api/v1/admin/analytics',
     '/api/v1/admin/audit',
   ];
@@ -155,6 +156,13 @@ describe('AppController (e2e)', () => {
       .patch('/api/v1/admin/users/00000000-0000-4000-8000-000000000001/role')
       .set('Authorization', `Bearer ${token}`)
       .send({ role: 'admin' })
+      .expect(403);
+    await request(server)
+      .post(
+        '/api/v1/admin/users/00000000-0000-4000-8000-000000000001/revoke-sessions',
+      )
+      .set('Authorization', `Bearer ${token}`)
+      .send({ reason: 'not allowed' })
       .expect(403);
     await request(server)
       .post('/api/v1/admin/scores/recompute')
