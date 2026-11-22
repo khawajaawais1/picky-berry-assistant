@@ -305,7 +305,7 @@ export function OperationsPage() {
               <Link className="button button-ghost" to="/jobs?status=queued">
                 Queued jobs
               </Link>
-              <Link className="button button-ghost" to="/reports">
+              <Link className="button button-ghost" to="/moderation">
                 Moderation triage
               </Link>
               <Link className="button button-ghost" to="/audit">

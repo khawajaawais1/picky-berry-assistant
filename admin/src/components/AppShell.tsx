@@ -111,7 +111,7 @@ const NAV = [
     items: [
       { to: '/zones', label: 'Zones', icon: 'zones' as const },
       { to: '/jobs', label: 'Queue', icon: 'jobs' as const },
-      { to: '/reports', label: 'Reports', icon: 'reports' as const },
+      { to: '/moderation', label: 'Moderation', icon: 'reports' as const },
       { to: '/users', label: 'Accounts', icon: 'users' as const },
     ],
   },
@@ -155,10 +155,10 @@ function pageMeta(pathname: string): { title: string; description: string } {
       description: 'What the pipeline has queued, finished or failed.',
     };
   }
-  if (pathname === '/reports') {
+  if (pathname === '/moderation') {
     return {
-      title: 'Reports',
-      description: 'Picker reports with their reporter trust.',
+      title: 'Moderation',
+      description: 'Triage field reports without inventing a verdict.',
     };
   }
   if (pathname.startsWith('/users/')) {

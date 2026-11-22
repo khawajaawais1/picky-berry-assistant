@@ -5,10 +5,10 @@ import { AnalyticsPage } from './pages/AnalyticsPage';
 import { AuditPage } from './pages/AuditPage';
 import { FeatureLabPage } from './pages/FeatureLabPage';
 import { JobsPage } from './pages/JobsPage';
+import { ModerationPage } from './pages/ModerationPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { OperationsPage } from './pages/OperationsPage';
 import { OverviewPage } from './pages/OverviewPage';
-import { ReportsPage } from './pages/ReportsPage';
 import { SignInPage } from './pages/SignInPage';
 import { UserDetailPage } from './pages/UserDetailPage';
 import { UsersPage } from './pages/UsersPage';
@@ -26,7 +26,8 @@ export function App() {
           <Route path="zones" element={<ZonesPage />} />
           <Route path="zones/:id" element={<ZoneDetailPage />} />
           <Route path="jobs" element={<JobsPage />} />
-          <Route path="reports" element={<ReportsPage />} />
+          <Route path="moderation" element={<ModerationPage />} />
+          <Route path="reports" element={<Navigate to="/moderation" replace />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="users/:id" element={<UserDetailPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
