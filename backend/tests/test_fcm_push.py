@@ -1,10 +1,7 @@
-"""Unit tests for FCM push delivery (Layer 5).
+"""Unit tests for FCM push delivery (Layers 5+6).
 
-firebase_admin and SQLAlchemy are not installed in the CI dev environment.
-Tests inject a mock firebase_admin into sys.modules before each call that
-exercises push_alerts — the lazy `from firebase_admin import messaging`
-inside the function resolves against sys.modules at call time, so no reload
-is needed.
+firebase_admin, SQLAlchemy, and throttle DB calls are all mocked so the CI
+dev environment (no psycopg2, no firebase-admin) can run these tests.
 """
 from __future__ import annotations
 
@@ -54,18 +51,31 @@ def _messaging_mock(success: int = 1, failure: int = 0, exc: Exception | None = 
     if exc:
         mod.send_multicast.side_effect = exc
     else:
-        mod.send_multicast.return_value = MagicMock(success_count=success, failure_count=failure)
+        # responses list is needed for per-token logging
+        responses = [MagicMock(success=(i < success)) for i in range(success + failure)]
+        mod.send_multicast.return_value = MagicMock(
+            success_count=success, failure_count=failure, responses=responses
+        )
     return mod
 
 
 def _firebase_mocks(messaging: MagicMock | None = None) -> dict:
     messaging = messaging or _messaging_mock()
     firebase_mod = MagicMock()
-    firebase_mod.messaging = messaging  # `from firebase_admin import messaging` reads this attribute
+    firebase_mod.messaging = messaging
     return {
         "firebase_admin": firebase_mod,
         "firebase_admin.messaging": messaging,
     }
+
+
+# Layer-6 throttle patches always needed when alerts pass score threshold
+_NO_THROTTLE = [
+    patch("app.modules.push.throttle.is_quiet_hours", return_value=False),
+    patch("app.modules.push.throttle.user_alert_count_today", return_value=0),
+    patch("app.modules.push.throttle.zone_cooldown_active", return_value=False),
+    patch("app.modules.push.throttle.log_push"),
+]
 
 
 class TestPushAlerts:
@@ -74,14 +84,18 @@ class TestPushAlerts:
         assert result == {"sent": 0, "failed": 0, "skipped": 0}
 
     @patch("app.modules.push.fcm._fetch_devices_for_species", return_value=[])
-    def test_no_devices_counts_as_skipped(self, _mock):
-        with patch.dict("sys.modules", _firebase_mocks()):
-            result = push_alerts("postgresql://test", [_alert()], fcm_app=None)
+    @patch("app.modules.push.throttle.is_quiet_hours", return_value=False)
+    def test_no_devices_counts_as_skipped(self, _quiet, _mock):
+        result = push_alerts("postgresql://test", [_alert()], fcm_app=None)
         assert result == {"sent": 0, "failed": 0, "skipped": 1}
 
     @patch("app.modules.push.fcm._fetch_devices_for_species",
            return_value=[{"user_id": "u1", "fcm_token": "tok1"}])
-    def test_success_counted(self, _mock):
+    @patch("app.modules.push.throttle.is_quiet_hours", return_value=False)
+    @patch("app.modules.push.throttle.user_alert_count_today", return_value=0)
+    @patch("app.modules.push.throttle.zone_cooldown_active", return_value=False)
+    @patch("app.modules.push.throttle.log_push")
+    def test_success_counted(self, _log, _cd, _rate, _quiet, _dev):
         with patch.dict("sys.modules", _firebase_mocks(_messaging_mock(success=1, failure=0))):
             result = push_alerts("postgresql://test", [_alert()], fcm_app=None)
         assert result["sent"] == 1
@@ -89,7 +103,11 @@ class TestPushAlerts:
 
     @patch("app.modules.push.fcm._fetch_devices_for_species",
            return_value=[{"user_id": "u1", "fcm_token": "tok1"}])
-    def test_fcm_partial_failure_counted(self, _mock):
+    @patch("app.modules.push.throttle.is_quiet_hours", return_value=False)
+    @patch("app.modules.push.throttle.user_alert_count_today", return_value=0)
+    @patch("app.modules.push.throttle.zone_cooldown_active", return_value=False)
+    @patch("app.modules.push.throttle.log_push")
+    def test_fcm_partial_failure_counted(self, _log, _cd, _rate, _quiet, _dev):
         with patch.dict("sys.modules", _firebase_mocks(_messaging_mock(success=0, failure=1))):
             result = push_alerts("postgresql://test", [_alert()], fcm_app=None)
         assert result["failed"] == 1
@@ -97,22 +115,30 @@ class TestPushAlerts:
 
     @patch("app.modules.push.fcm._fetch_devices_for_species",
            return_value=[{"user_id": "u1", "fcm_token": "tok1"}])
-    def test_send_exception_counts_all_tokens_as_failed(self, _mock):
+    @patch("app.modules.push.throttle.is_quiet_hours", return_value=False)
+    @patch("app.modules.push.throttle.user_alert_count_today", return_value=0)
+    @patch("app.modules.push.throttle.zone_cooldown_active", return_value=False)
+    @patch("app.modules.push.throttle.log_push")
+    def test_send_exception_counts_all_tokens_as_failed(self, _log, _cd, _rate, _quiet, _dev):
         exc_msg = _messaging_mock(exc=RuntimeError("network error"))
         with patch.dict("sys.modules", _firebase_mocks(exc_msg)):
             result = push_alerts("postgresql://test", [_alert()], fcm_app=None)
         assert result["failed"] == 1
 
     @patch("app.modules.push.fcm._fetch_devices_for_species", return_value=[])
-    def test_one_db_query_per_species(self, mock_fetch):
-        with patch.dict("sys.modules", _firebase_mocks()):
-            alerts = [_alert("bilberry"), _alert("bilberry"), _alert("lingonberry")]
-            push_alerts("postgresql://test", alerts, fcm_app=None)
+    @patch("app.modules.push.throttle.is_quiet_hours", return_value=False)
+    def test_one_db_query_per_species(self, _quiet, mock_fetch):
+        alerts = [_alert("bilberry"), _alert("bilberry"), _alert("lingonberry")]
+        push_alerts("postgresql://test", alerts, fcm_app=None)
         assert mock_fetch.call_count == 2  # bilberry once, lingonberry once
 
     @patch("app.modules.push.fcm._fetch_devices_for_species",
            return_value=[{"user_id": "u1", "fcm_token": "tok1"}, {"user_id": "u2", "fcm_token": "tok2"}])
-    def test_all_tokens_in_one_multicast(self, _mock):
+    @patch("app.modules.push.throttle.is_quiet_hours", return_value=False)
+    @patch("app.modules.push.throttle.user_alert_count_today", return_value=0)
+    @patch("app.modules.push.throttle.zone_cooldown_active", return_value=False)
+    @patch("app.modules.push.throttle.log_push")
+    def test_all_tokens_in_one_multicast(self, _log, _cd, _rate, _quiet, _dev):
         messaging = _messaging_mock(success=2, failure=0)
         with patch.dict("sys.modules", _firebase_mocks(messaging)):
             result = push_alerts("postgresql://test", [_alert()], fcm_app=None)
