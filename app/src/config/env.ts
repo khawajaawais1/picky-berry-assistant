@@ -16,6 +16,7 @@ export const PUBLIC_ENV_VARS = {
   apiBaseUrl: 'EXPO_PUBLIC_API_BASE_URL',
   appEnvironment: 'EXPO_PUBLIC_APP_ENV',
   zoneSource: 'EXPO_PUBLIC_ZONE_SOURCE',
+  reasoningApiBaseUrl: 'EXPO_PUBLIC_REASONING_API_BASE_URL',
 } as const;
 
 export type PublicEnvSource = Partial<Record<string, string | undefined>>;
@@ -169,6 +170,7 @@ function declaredPublicEnv(): PublicEnvSource {
     [PUBLIC_ENV_VARS.apiBaseUrl]: process.env.EXPO_PUBLIC_API_BASE_URL,
     [PUBLIC_ENV_VARS.appEnvironment]: process.env.EXPO_PUBLIC_APP_ENV,
     [PUBLIC_ENV_VARS.zoneSource]: process.env.EXPO_PUBLIC_ZONE_SOURCE,
+    [PUBLIC_ENV_VARS.reasoningApiBaseUrl]: process.env.EXPO_PUBLIC_REASONING_API_BASE_URL,
   };
 }
 
@@ -204,6 +206,26 @@ export function zoneSourceKind(source: PublicEnvSource = declaredPublicEnv()): Z
   const asked = source[PUBLIC_ENV_VARS.zoneSource]?.trim();
 
   return asked === 'stub' && appEnvironment(source) !== 'production' ? 'stub' : 'api';
+}
+
+/** The reasoning backend (feature 6.7) a build reads its alerts from when none is configured. */
+export const DEFAULT_REASONING_API_BASE_URL = 'https://picky-backend-cd0u.onrender.com';
+
+/**
+ * The origin of the reasoning backend that serves `GET /api/v1/alerts` (feature 6.7) — a service
+ * of its own, apart from the team API. `EXPO_PUBLIC_REASONING_API_BASE_URL` overrides the deployed
+ * default and is held to the same rules as the API's URL; a value that fails them is `null`, and
+ * the app then reads no alerts rather than sending them to an address it could not check.
+ */
+export function reasoningApiBaseUrl(source: PublicEnvSource = declaredPublicEnv()): string | null {
+  const raw = source[PUBLIC_ENV_VARS.reasoningApiBaseUrl]?.trim() || DEFAULT_REASONING_API_BASE_URL;
+  const development = appEnvironment(source) === 'development';
+  const result = parseApiBaseUrl(raw, {
+    allowInsecureLoopback: development,
+    allowInsecureLocalNetwork: development,
+  });
+
+  return result.ok ? result.url : null;
 }
 
 /**

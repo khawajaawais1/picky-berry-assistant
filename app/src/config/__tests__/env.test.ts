@@ -6,6 +6,7 @@ import {
   loadConfig,
   parseApiBaseUrl,
   parseEnvironment,
+  reasoningApiBaseUrl,
   resolveDevelopmentApiBaseUrl,
   zoneSourceKind,
 } from '../env';
@@ -275,5 +276,33 @@ describe('resolveDevelopmentApiBaseUrl', () => {
     expect(resolveDevelopmentApiBaseUrl(preview, { platform: 'android' })).toBe(preview);
     const remote = { ...local, apiBaseUrl: 'https://api.example.com' };
     expect(resolveDevelopmentApiBaseUrl(remote, { platform: 'android' })).toBe(remote);
+  });
+});
+
+describe('reasoningApiBaseUrl', () => {
+  const VAR = PUBLIC_ENV_VARS.reasoningApiBaseUrl;
+
+  it('reads the deployed reasoning backend when none is configured', () => {
+    expect(reasoningApiBaseUrl({})).toBe('https://picky-backend-cd0u.onrender.com');
+    expect(reasoningApiBaseUrl({ [VAR]: '  ' })).toBe('https://picky-backend-cd0u.onrender.com');
+  });
+
+  it('takes a configured origin, normalised', () => {
+    expect(reasoningApiBaseUrl({ [VAR]: 'https://reasoning.example.com/' })).toBe(
+      'https://reasoning.example.com',
+    );
+  });
+
+  it('allows a clear-text local backend in development only', () => {
+    const local = { [VAR]: 'http://localhost:8000' };
+    expect(reasoningApiBaseUrl({ ...local, [APP_ENV_VAR]: 'development' })).toBe(
+      'http://localhost:8000',
+    );
+    expect(reasoningApiBaseUrl({ ...local, [APP_ENV_VAR]: 'production' })).toBeNull();
+  });
+
+  it('refuses an address it cannot check', () => {
+    expect(reasoningApiBaseUrl({ [VAR]: 'https://user:pw@example.com' })).toBeNull();
+    expect(reasoningApiBaseUrl({ [VAR]: 'ftp://example.com' })).toBeNull();
   });
 });
