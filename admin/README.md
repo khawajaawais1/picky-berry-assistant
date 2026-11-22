@@ -21,12 +21,12 @@ API contract: [`../picky-server/docs/openapi/admin.yaml`](../picky-server/docs/o
 | Accounts | search accounts, see trust and activity, change a role (audited), open an account |
 | Account detail | identity, trust, active sessions, reports, visits and audit; revoke sessions with a reason |
 | Feature lab | send any API request with the admin token, presets, recompute/retry actions |
-| Audit log | search every privileged mutation by actor, action, target or request id; inspect before/after detail |
+| Audit log | search every privileged mutation or refusal by actor, action, target, request id or outcome; inspect reason and before/after evidence |
 
 ## Requirements
 
 - Node.js 24 (the repository's CI version)
-- A running `picky-server` with a database migrated to `0007_admin_audit.sql`
+- A running `picky-server` with a database migrated to `0008_audit_integrity.sql`
 - An account whose role is `admin`
 
 ## Local setup
@@ -91,7 +91,10 @@ ever compiled into it.
 - **PII.** Emails and nicknames appear only on admin screens. No GPS track exists server-side
   (ADR-010), and none is shown here.
 - **Audit.** Recompute, job retry, role changes and session revocation write `audit_log` in the
-  same transaction; the audit screen exposes the request id and recorded detail.
+  same transaction, with reason, before/after state and outcome. The audit screen exposes the
+  request id and evidence, and filters by actor, action, outcome and request id. Rejected
+  `403`/`409` privileged attempts are recorded by the API; the database trigger makes audit rows
+  append-only.
 - **Read-only by design.** Report verdicts and trust edits belong to features 6.5 and 6.3; the
   panel labels them as unavailable rather than inventing a rule.
 

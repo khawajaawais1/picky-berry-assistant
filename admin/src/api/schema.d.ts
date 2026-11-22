@@ -389,6 +389,17 @@ export interface components {
                 [key: string]: unknown;
             };
             request_id?: string | null;
+            reason?: string | null;
+            before_data?: {
+                [key: string]: unknown;
+            } | null;
+            after_data?: {
+                [key: string]: unknown;
+            } | null;
+            /** @enum {string} */
+            outcome?: "success" | "failure";
+            ip?: string | null;
+            user_agent?: string | null;
             /** Format: date-time */
             created_at?: string;
         };
@@ -794,6 +805,7 @@ export interface operations {
                 "application/json": {
                     /** @enum {string} */
                     role: "picker" | "buyer" | "admin";
+                    reason: string;
                 };
             };
         };
@@ -856,6 +868,13 @@ export interface operations {
                 target_type?: string;
                 /** @description Only entries created in the last N days */
                 days?: number;
+                /** @description Actor email contains */
+                actor?: string;
+                /** @description Action contains */
+                action?: string;
+                /** @description Request id contains */
+                request_id?: string;
+                outcome?: "success" | "failure";
                 page?: components["parameters"]["Page"];
                 page_size?: components["parameters"]["PageSize"];
             };

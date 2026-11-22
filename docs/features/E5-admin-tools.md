@@ -51,9 +51,10 @@ The panel answers three questions:
 | E5.6 | Recompute (all / one zone / one species) enqueues exactly one job per dedupe key | Existing behaviour + audit row |
 | E5.7 | A finished job can be retried; a queued/running job cannot | API test of the conflict path; audit row |
 | E5.8 | An admin can change another account's role, and cannot remove their own admin role | API test of the conflict path; audit row |
-| E5.9 | Every mutation writes `audit_log` with actor, action, target, detail and request id | Query after each action |
+| E5.9 | Every privileged mutation writes actor, action, target, request id, before/after and outcome, with a reason where required | Query after each action |
 | E5.10 | The panel builds, typechecks and has no console errors on the main routes | `npm run build`, manual smoke |
 | E5.11 | No privileged token or personal data is placed in `localStorage` | Code review; session storage is tab-scoped |
+| E5.12 | Refused `403`/`409` privileged attempts are recorded, and audit rows reject `UPDATE`/`DELETE` | API integration test; SQL trigger test |
 
 **Not in this feature:** zone geometry authoring, moderation verdicts on reports (6.5 owns the
 validation rules), trust-score editing (ADR-009 requires a versioned, auditable rule that does not
@@ -69,7 +70,7 @@ surface ships in English; FI/EN remains the field app's contract).
 | D2 | Zones, `zone_scores_current`, `zone_scores` | Awais / Hassan | Zone screens | `seed-dev-scores` | ✅ built |
 | D3 | `jobs` table and `JobsService.enqueue` | Hassan | Queue, recompute, retry | none needed | ✅ built |
 | D4 | `reports` / `visits` tables | Hassan | Activity reads | seed scores; insert report/visit rows for local checks | ✅ tables, ⬜ report API |
-| D5 | `audit_log` | Hassan / Salman | Audit trail | migration `0007` in this branch | ✅ this branch |
+| D5 | `audit_log` | Hassan / Salman | Audit trail | migrations `0007`, `0008` in this branch | ✅ this branch |
 | D6 | Live API origin + CORS for the admin origin | Sabih / Hassan | Deployed panel | local Vite proxy | ✅ `CORS_ORIGINS` allow-list |
 | D7 | Zone validation/moderation rules (6.5) | Hassan | Report verdicts, trust edits | read-only views now | ⬜ |
 
@@ -117,7 +118,7 @@ standard error envelope. Pagination is `page` (1-based) and `page_size` (default
 | `POST /admin/users/{id}/revoke-sessions` | revoke active refresh tokens (body `{ "reason": "…" }`), audited |
 | `PATCH /admin/users/{id}/role` | changed role (body `{ "role": "picker" \| "buyer" \| "admin" }`) |
 | `GET /admin/analytics?days=7\|30\|90` | daily series, species coverage, score distribution, top zones |
-| `GET /admin/audit?q=&target_type=&days=&page=&page_size=` | paged audit entries with actor email and investigation filters |
+| `GET /admin/audit?q=&target_type=&days=&actor=&action=&request_id=&outcome=&page=&page_size=` | paged audit entries with actor email, reason, outcome and before/after evidence |
 | `POST /admin/scores/recompute` | existing: `202` with `job_id`, `deduplicated` |
 
 Example — `GET /admin/overview`:
@@ -147,8 +148,9 @@ and is merged into Swagger UI at `/docs`.
 
 ## 5. Data model
 
-One new table, added by `picky-server/migrations/0007_admin_audit.sql`. Nothing existing is
-altered, so the ingest, scoring and app paths are untouched.
+The audit table was added by `picky-server/migrations/0007_admin_audit.sql` and extended by
+`0008_audit_integrity.sql`. No existing business table is altered, so the ingest, scoring and app
+paths are untouched. The effective shape after `0008` is:
 
 ```sql
 CREATE TABLE audit_log (
@@ -158,6 +160,12 @@ CREATE TABLE audit_log (
   target_type text NOT NULL,        -- scores | job | user
   target_id text,
   detail jsonb NOT NULL DEFAULT '{}',
+  reason text,                      -- operator-supplied justification, where required
+  before_data jsonb,                -- state before the mutation; null when there was none
+  after_data jsonb,                 -- state after the mutation; null for a refusal
+  outcome text NOT NULL DEFAULT 'success' CHECK (outcome IN ('success', 'failure')),
+  ip inet,
+  user_agent text,
   request_id text,
   created_at timestamptz NOT NULL DEFAULT now()
 );
@@ -165,12 +173,22 @@ CREATE INDEX audit_log_created_ix ON audit_log (created_at DESC);
 ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
 ```
 
-- **Who writes:** `AdminService` only, inside the same transaction as the mutation it records.
+- **Append-only:** `0008` installs a `BEFORE UPDATE OR DELETE` trigger on `audit_log` that raises
+  an exception. Application code cannot rewrite or remove evidence. `TRUNCATE` remains an
+  owner-only schema/test operation; an authenticated API request cannot issue it.
+- **Who writes success:** `AdminService`, inside the same transaction as the mutation it records.
+  A failed mutation rolls back both the change and its audit row.
+- **Who writes refusals:** `ApiExceptionFilter` records `403`/`409` attempts under `/admin/` after
+  the guard or service rejects them. These have no `before_data`/`after_data` because no mutation
+  occurred; the actor, action, target, supplied reason, request id, IP and user agent are kept.
+- **Required reasons:** role changes and session revocation reject a missing reason before any
+  write. Retry and recompute have no operator reason and record `NULL`.
 - **Who reads:** admin routes only. The actor's email is joined on read (never snapshotted), so
-  account deletion does not leave a duplicate copy of personal data in the log.
+  the log does not duplicate personal data. Accounts are soft-deleted (`deleted_at`), so the
+  actor id remains resolvable without rewriting the append-only row.
 - **Retention:** the audit row contains ids and operator actions, not picker positions. It follows
-  the 12-month retention decision (ADR-055); the row keeps working after the user row is deleted
-  because `actor_id` becomes `NULL`.
+  the 12-month retention decision (ADR-055). Retention is an explicit owner operation that
+  disables the append-only trigger; the normal application path cannot delete rows.
 
 ## 6. Logic
 
@@ -229,8 +247,10 @@ and role carries a text label as well as a colour.
   convenience, not a control.
 - **PII:** emails and nicknames appear on admin screens only. Reports are shown with the
   reporter's trust band, never their position history. No GPS track exists server-side (ADR-010).
-- **Audit:** every mutation is recorded with the request id already emitted by the API, so a
-  support conversation can join the log line to the action.
+- **Audit:** every privileged mutation records the request id, reason, before/after state and
+  outcome; refused `403`/`409` attempts are recorded too. Audit rows are append-only at the
+  database level. Detail is limited to ids, roles, counts and statuses — no tokens, secrets or
+  GPS.
 - **Transport:** HTTPS only in deployment. `picky-server` accepts browser calls only from the
   origins in `CORS_ORIGINS` (the console and Expo web development origins by default); a wildcard
   is rejected, and a deployed console adds its origin to that list.
@@ -242,7 +262,7 @@ and role carries a text label as well as a colour.
 | Phase | Deliverable | State |
 |-------|-------------|-------|
 | 0 | This plan; branch `feature/salman/admin-panel` | ✅ |
-| 1 | `audit_log` migration and audit writer | ✅ this branch |
+| 1 | `audit_log` migration, integrity migration and audit writer | ✅ this branch |
 | 2 | Admin read API: overview, zones, jobs, reports, users, analytics, audit | ✅ this branch |
 | 3 | Admin mutations: role change, job retry, recompute + audit | ✅ this branch |
 | 4 | SPA foundation: Vite/React/TS, auth, shell, design tokens | ✅ this branch |
@@ -262,8 +282,9 @@ existence.
   applies the test baseline and every API migration, and covers anonymous `401`, picker `403`
   and admin success for every admin route; no-store headers and foreign-origin CORS; moderation
   filter reads; session revocation (active/expired/already-revoked tokens, audit, idempotence);
-  and failed/running/queued/missing job retry paths. The container is the only database the
-  integration tests touch.
+  failed/running/queued/missing job retry paths; role and session reasons; explicit before/after
+  evidence; recorded `403`/`409` attempts; and the append-only trigger. The container is the only
+  database the integration tests touch.
 - **Contract:** `npm run openapi:types` regenerates `admin/src/api/schema.d.ts` from
   `picky-server/docs/openapi/admin.yaml`; `npm run openapi:check` fails when the committed
 types drift, and the admin workflow runs it. New endpoints use the generated aliases. Existing

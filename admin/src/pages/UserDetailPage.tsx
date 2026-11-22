@@ -343,6 +343,8 @@ export function UserDetailPage() {
                   <th scope="col">When</th>
                   <th scope="col">Actor</th>
                   <th scope="col">Action</th>
+                  <th scope="col">Outcome</th>
+                  <th scope="col">Reason</th>
                   <th scope="col">Detail</th>
                   <th scope="col">Request</th>
                 </tr>
@@ -357,6 +359,14 @@ export function UserDetailPage() {
                     <td>
                       <Badge tone="accent">{titleCase(entry.action)}</Badge>
                     </td>
+                    <td>
+                      <Badge
+                        tone={entry.outcome === 'failure' ? 'bad' : 'good'}
+                      >
+                        {entry.outcome === 'failure' ? 'Rejected' : 'Succeeded'}
+                      </Badge>
+                    </td>
+                    <td className="small">{entry.reason ?? '—'}</td>
                     <td>
                       {Object.keys(entry.detail).length === 0 ? (
                         <span className="muted">—</span>

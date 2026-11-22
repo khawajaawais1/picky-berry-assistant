@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import type { Account, UserRole, UsersResponse } from '../api/types';
 import { useAuth } from '../auth/AuthContext';
+import { ActionDialog } from '../components/ActionDialog';
 import {
   Badge,
   Button,
@@ -42,7 +43,12 @@ export function UsersPage() {
   const q = useDebouncedValue(search);
   const [role, setRole] = useState<'' | UserRole>('');
   const [page, setPage] = useState(1);
-  const [changing, setChanging] = useState<string | null>(null);
+  const [roleChange, setRoleChange] = useState<{
+    account: Account;
+    next: UserRole;
+  } | null>(null);
+  const [roleBusy, setRoleBusy] = useState(false);
+  const [roleError, setRoleError] = useState<string | null>(null);
 
   useEffect(() => {
     setPage(1);
@@ -59,31 +65,35 @@ export function UsersPage() {
     `/admin/users?${params.toString()}`,
   );
 
-  const changeRole = async (account: Account, next: UserRole) => {
+  const requestRoleChange = (account: Account, next: UserRole) => {
     if (next === account.role) return;
     if (account.id === session?.user.id) {
       toast('bad', 'You cannot change your own role here.');
       return;
     }
-    if (
-      !window.confirm(
-        `Change ${account.email} from ${account.role} to ${next}? This is audited.`,
-      )
-    ) {
-      return;
-    }
-    setChanging(account.id);
+    setRoleError(null);
+    setRoleChange({ account, next });
+  };
+
+  const changeRole = async (reason: string) => {
+    if (!roleChange) return;
+    setRoleBusy(true);
+    setRoleError(null);
     try {
-      await api(`/admin/users/${account.id}/role`, {
+      await api(`/admin/users/${roleChange.account.id}/role`, {
         method: 'PATCH',
-        body: { role: next },
+        body: { role: roleChange.next, reason },
       });
-      toast('good', `${account.email} is now ${next}.`);
+      toast(
+        'good',
+        `${roleChange.account.email} is now ${roleChange.next}.`,
+      );
+      setRoleChange(null);
       reload();
     } catch (cause) {
-      toast('bad', errorMessage(cause));
+      setRoleError(errorMessage(cause));
     } finally {
-      setChanging(null);
+      setRoleBusy(false);
     }
   };
 
@@ -200,14 +210,14 @@ export function UsersPage() {
                         <select
                           aria-label={`Role for ${account.email}`}
                           value={account.role}
-                          disabled={isSelf || changing === account.id}
+                          disabled={isSelf || roleBusy}
                           title={
                             isSelf
                               ? 'You cannot change your own role'
                               : `Current role: ${account.role}`
                           }
                           onChange={(event) =>
-                            void changeRole(
+                            requestRoleChange(
                               account,
                               event.target.value as UserRole,
                             )
@@ -219,7 +229,7 @@ export function UsersPage() {
                             </option>
                           ))}
                         </select>
-                        {changing === account.id ? (
+                        {roleBusy && roleChange?.account.id === account.id ? (
                           <span className="muted small block">Saving…</span>
                         ) : null}
                         {isSelf ? (
@@ -251,6 +261,27 @@ export function UsersPage() {
           Re-read accounts
         </Button>
       </div>
+
+      <ActionDialog
+        open={roleChange !== null}
+        title="Change account role"
+        consequence={
+          roleChange
+            ? `${roleChange.account.email} will move from ${titleCase(roleChange.account.role)} to ${titleCase(roleChange.next)}. The change is written to the audit log with this reason and the before/after roles.`
+            : ''
+        }
+        confirmLabel="Change role"
+        reasonLabel="Why is this role changing?"
+        busy={roleBusy}
+        error={roleError}
+        onClose={() => {
+          if (!roleBusy) {
+            setRoleChange(null);
+            setRoleError(null);
+          }
+        }}
+        onConfirm={(reason) => void changeRole(reason)}
+      />
     </div>
   );
 }

@@ -39,6 +39,12 @@ export interface AuditEntry {
   target_id: string | null;
   detail: Record<string, unknown>;
   request_id: string | null;
+  reason: string | null;
+  before_data: Record<string, unknown> | null;
+  after_data: Record<string, unknown> | null;
+  outcome: 'success' | 'failure';
+  ip: string | null;
+  user_agent: string | null;
   created_at: string | null;
 }
 
