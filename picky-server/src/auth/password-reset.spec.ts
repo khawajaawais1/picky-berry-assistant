@@ -168,14 +168,42 @@ describe('AuthService password reset', () => {
         sql.some((s) => s.includes('UPDATE users SET password_hash = $2')),
       ).toBe(true);
       expect(
-        sql.some((s) =>
-          s.includes('UPDATE email_tokens SET used_at = now() WHERE id'),
+        sql.some(
+          (s) =>
+            s.includes('UPDATE email_tokens SET used_at = now()') &&
+            s.includes('WHERE user_id = $1'),
         ),
       ).toBe(true);
       expect(
         sql.some((s) => s.includes('UPDATE refresh_tokens SET revoked_at')),
       ).toBe(true);
       expect(sql).toContain('COMMIT');
+    });
+
+    it('retires every outstanding reset token for the account', async () => {
+      const { client, db } = database((sql) =>
+        sql.includes('FROM email_tokens')
+          ? { rows: [{ id: 'token-1', user_id: USER.id }] }
+          : undefined,
+      );
+      const passwords = { hash: jest.fn(() => Promise.resolve('new-hash')) };
+      const { auth } = service(db, passwords);
+
+      await auth.confirmPasswordReset({
+        token: 'the-presented-token',
+        password: 'a-new-password-1',
+      });
+
+      const retirement = client.query.mock.calls.find(
+        ([sql]) =>
+          sql.includes('UPDATE email_tokens SET used_at = now()') &&
+          sql.includes('WHERE user_id = $1'),
+      );
+      expect(retirement).toBeDefined();
+      expect(retirement![0]).toContain("purpose = 'reset_password'");
+      expect(retirement![0]).toContain('used_at IS NULL');
+      expect(retirement![0]).not.toContain('WHERE id');
+      expect(retirement![1]).toEqual([USER.id]);
     });
   });
 });

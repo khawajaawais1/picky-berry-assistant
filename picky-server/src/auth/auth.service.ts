@@ -350,8 +350,8 @@ export class AuthService {
 
   /**
    * Completes a password reset: the token must be an unused, unexpired reset token. The new
-   * password is hashed, the token is spent, and every refresh token is revoked, so each device
-   * has to sign in again with the new password.
+   * password is hashed, every outstanding reset token for the account is spent, and every refresh
+   * token is revoked, so each device has to sign in again with the new password.
    */
   async confirmPasswordReset(input: ConfirmPasswordResetDto): Promise<void> {
     const client = await this.database.pool.connect();
@@ -380,8 +380,9 @@ export class AuthService {
         passwordHash,
       ]);
       await client.query(
-        'UPDATE email_tokens SET used_at = now() WHERE id = $1',
-        [row.id],
+        `UPDATE email_tokens SET used_at = now()
+         WHERE user_id = $1 AND purpose = 'reset_password' AND used_at IS NULL`,
+        [row.user_id],
       );
       await client.query(
         `UPDATE refresh_tokens SET revoked_at = now()
