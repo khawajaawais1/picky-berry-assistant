@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 
-import { loadConfig, type ConfigResult } from '@/config/env';
+import type { ConfigResult } from '@/config/env';
+import { appConfig } from '@/services/api/app-config';
 import { createApiClient, type ApiFetch } from '@/services/api/api-client';
 
 import {
@@ -66,6 +67,6 @@ export function createAppSessionPort({
 
 /** The port the app itself uses. One instance, because a session is one thing. */
 export const sessionPort: ApiSessionPort = createAppSessionPort({
-  config: loadConfig(),
+  config: appConfig(),
   platform: Platform.OS,
 });

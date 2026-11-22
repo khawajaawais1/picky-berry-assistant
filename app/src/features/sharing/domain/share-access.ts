@@ -1,5 +1,3 @@
-import type { DemoZone } from '@/features/discover';
-
 /**
  * The access rule of the first backend slice: **who may read a share.**
  *
@@ -56,7 +54,7 @@ import type { DemoZone } from '@/features/discover';
 export type ShareGrant = {
   id: string;
   /** The zone the grant is about. A zone id until question 26 says what a spot is. */
-  zoneId: DemoZone['id'];
+  zoneId: string;
   /** The account that made the grant. */
   sharerId: string;
   /** When it was made, ISO-8601. */

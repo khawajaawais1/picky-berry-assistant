@@ -8,18 +8,12 @@ import { Screen } from '@/components/templates';
 import { layout, radii, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useSavedZones } from '@/hooks/use-saved-zones';
-import { formatLongDate, interpolate, useTranslation, type TranslationKey } from '@/services/i18n';
+import { formatLongDate, interpolate, useTranslation } from '@/services/i18n';
 
 import type { Species } from '../domain/species';
-import { CARD_ZONE_STATE, DEMO_ZONES, type ZoneState } from '../domain/zone';
-import { DEMO_ROUTE, formatDistance } from '../domain/route';
-import {
-  DEMO_ZONE_DETAILS,
-  REPORT_YIELD_MAX,
-  SCORE_MAX,
-  type ReportTrust,
-  type ZoneWeather,
-} from '../domain/zone-details';
+import type { ZoneState } from '../domain/zone';
+import { formatDistance } from '../domain/route';
+import { SCORE_MAX } from '../domain/zone-details';
 import {
   PILOT_ZONE_SPECIES,
   zoneSpecies,
@@ -31,22 +25,11 @@ import {
 import type { ZoneInsightSource } from '../domain/zone-insight';
 import { scoreRange } from '../domain/zone-insight';
 import { useZoneInsight, type ZoneInsightState } from '../hooks/use-zone-insight';
+import { useZoneDistance } from '../hooks/use-zone-distance';
 import { useZones } from '../hooks/use-zones';
-import { testZoneSource } from '../services/test-zone-source';
 import { SPECIES_LABEL_KEY } from './species-copy';
 import { ZONE_STATE_LABEL_KEY } from './zone-state-copy';
 import { CONFIDENCE_LABEL_KEY, RIPENESS_LABEL_KEY } from './zone-source-copy';
-
-const WIND_KEY: Record<ZoneWeather['wind'], TranslationKey> = {
-  light: 'discover.details.wind.light',
-  moderate: 'discover.details.wind.moderate',
-  strong: 'discover.details.wind.strong',
-};
-
-const TRUST_KEY: Record<ReportTrust, TranslationKey> = {
-  trusted: 'discover.details.reports.trust.trusted',
-  unverified: 'discover.details.reports.trust.unverified',
-};
 
 export type ZoneDetailsScreenProps = {
   /**
@@ -59,8 +42,8 @@ export type ZoneDetailsScreenProps = {
   zoneId?: string;
   /** The berry whose score layer the card showed; the screen reads the same one. */
   species?: Species;
-  /** Where the zone comes from. Defaults to the pilot stub, as on frame 06. */
-  zoneSource?: ZoneSource;
+  /** Where the zone comes from: the same source frame 06 read. */
+  zoneSource: ZoneSource;
   /**
    * The zone service's own facts about the zone (ADR-065): every berry it scored, its reasons for
    * this berry's score, the week's reports and the recent range. Without one the screen draws
@@ -165,43 +148,12 @@ type DetailsRead = {
  * pixel smaller than “Today's outlook”; the app keeps one section-heading slot for both.
  */
 export function ZoneDetailsScreen({ zoneId, ...props }: ZoneDetailsScreenProps) {
-  // The two readings are separate components so the demo path asks no query cache for an
-  // answer it does not draw, and the source path cannot forget which zone it is about.
-  return zoneId === undefined ? (
-    <DemoZoneDetails {...props} />
-  ) : (
-    <SourceZoneDetails {...props} zoneId={zoneId} />
-  );
-}
-
-/** The design's sample: the same demo zone frames 06 and 07 have always drawn. */
-function DemoZoneDetails({ onBack, onNavigate, onSeeReports }: ZoneDetailsScreenProps) {
   const { t } = useTranslation();
-  const zone = DEMO_ZONES.find((candidate) => candidate.state === CARD_ZONE_STATE);
-  const details = DEMO_ZONE_DETAILS;
 
-  const read: DetailsRead | undefined = zone
-    ? {
-        zoneId: zone.id,
-        title: interpolate(t('discover.details.title'), {
-          place: t('discover.map.place'),
-          zone: zone.number,
-        }),
-        layer: PILOT_ZONE_SPECIES,
-        species: zone.species,
-        score: details.score,
-        confidence: details.confidence,
-        ripeness: details.ripeness,
-        state: details.state,
-        reportsThisWeek: details.reportsThisWeek,
-      }
-    : undefined;
-
-  if (!read) {
-    // The constant always holds the card's zone; a build that lost it must not draw another
-    // zone's figures, so it says nothing rather than something false.
+  if (zoneId === undefined) {
+    // A bare link names no zone; another zone's figures are never stood in for it.
     return (
-      <Screen edges={['top']} eyebrow={t('discover.details.eyebrow')} onBack={onBack}>
+      <Screen edges={['top']} eyebrow={t('discover.details.eyebrow.live')} onBack={props.onBack}>
         <AppText testID="zone-details-status" tone="muted" variant="bodySmall">
           {t('discover.details.unknown')}
         </AppText>
@@ -209,31 +161,23 @@ function DemoZoneDetails({ onBack, onNavigate, onSeeReports }: ZoneDetailsScreen
     );
   }
 
-  return (
-    <DetailsView
-      onBack={onBack}
-      onNavigate={onNavigate}
-      onSeeReports={onSeeReports}
-      read={read}
-      sampleNote={false}
-    />
-  );
+  return <SourceZoneDetails {...props} zoneId={zoneId} />;
 }
 
-/** The zone the route named, read through the `ZoneSource` port. */
 function SourceZoneDetails({
   onBack,
   onNavigate,
   onSeeReports,
   species = PILOT_ZONE_SPECIES,
   zoneId,
-  zoneSource = testZoneSource,
+  zoneSource,
   insightSource,
 }: ZoneDetailsScreenProps & { zoneId: string }) {
   const { locale, t } = useTranslation();
   const { status, zones } = useZones(zoneSource, species);
   const insight = useZoneInsight(insightSource, zoneId, species, locale);
   const zone: Zone | undefined = zones.find((candidate) => candidate.id === zoneId);
+  const distance = useZoneDistance(zone);
 
   if (!zone) {
     // Loading, failed and “the source does not answer to this id” are three different
@@ -275,6 +219,7 @@ function SourceZoneDetails({
         ripeness: zone.ripeness,
         updatedAt: zone.updatedAt,
       }}
+      distanceMeters={distance?.meters ?? null}
       insight={insight}
       live={zoneSource.demo !== true}
       sampleNote
@@ -297,7 +242,9 @@ function DetailsView({
   sampleNote,
   insight,
   live = false,
+  distanceMeters = null,
 }: {
+  distanceMeters?: number | null;
   onBack?: () => void;
   onNavigate?: () => void;
   onSeeReports?: () => void;
@@ -313,7 +260,8 @@ function DetailsView({
 }) {
   const { colors } = useAppTheme();
   const { locale, t } = useTranslation();
-  const details = DEMO_ZONE_DETAILS;
+  const weekReports =
+    insight?.status === 'ready' ? (insight.insight.detail.reports[read.layer]?.count ?? 0) : null;
   const {
     busy: savingZone,
     error: saveError,
@@ -440,83 +388,22 @@ function DetailsView({
           </AppText>
         ) : null}
 
-        {live ? null : (
-          <>
-            <View className="w-full gap-sm">
-              <AppText variant="sectionHeading">{t('discover.details.outlook.title')}</AppText>
-              <AppText tone="muted" variant="bodySmall">
-                {t('discover.details.outlook.body')}
-              </AppText>
-              <View className="w-full flex-row items-center gap-gap">
-                <Feather color={colors.warning} name="sun" size={20} />
-                <AppText style={styles.flexible} tone="muted" variant="caption">
-                  {interpolate(t('discover.details.weather'), {
-                    temperature: String(details.weather.temperature),
-                    time: details.weather.forecastHour,
-                    wind: t(WIND_KEY[details.weather.wind]),
+        {onSeeReports ? (
+          <Pressable
+            accessibilityLabel={t('discover.details.reports.open')}
+            accessibilityRole="button"
+            onPress={onSeeReports}
+            testID="zone-details-see-all"
+          >
+            <AppText tone="accent" variant="label">
+              {weekReports === null
+                ? t('discover.details.reports.open')
+                : interpolate(t('discover.details.reports.seeAll'), {
+                    count: String(weekReports),
                   })}
-                </AppText>
-              </View>
-            </View>
-
-            {/* The frame stacks these four rows 6 px apart (`spacing.setting`), where the outlook
-            above uses 8: measured on nodes 5:23073–5:23079. */}
-            <View className="w-full gap-setting">
-              {/*
-            The heading and the frame's link wrap rather than squeezing side by side. At the largest
-            system text size the Finnish pair (“Tuoreet havainnot” + “Näytä kaikki 11”) is wider than
-            the content column in Android's typeface, and a row that keeps them on one line clips one
-            of them — the defect the layout harness reported on a Linux runner, whose fallback font
-            was wide enough to show it (found 2026-10-21). The design's own size still draws one line.
-          */}
-              <View className="w-full flex-row flex-wrap items-center gap-gap">
-                <AppText style={styles.flexible} variant="sectionHeading">
-                  {t('discover.details.reports.title')}
-                </AppText>
-                {/*
-              The design's own words, which are a control only when the route gives them the list
-              to open (ADR-044). The visible label stays the frame's; the accessible name says
-              where the press leads, because the frame's count and the phone's own list are not
-              the same thing (the rule frame 16's contact action follows).
-            */}
-                {onSeeReports ? (
-                  <Pressable
-                    accessibilityLabel={interpolate(t('discover.details.reports.seeAll.a11y'), {
-                      count: String(details.reportsThisWeek),
-                    })}
-                    accessibilityRole="button"
-                    onPress={onSeeReports}
-                    testID="zone-details-see-all"
-                  >
-                    <AppText tone="accent" variant="label">
-                      {interpolate(t('discover.details.reports.seeAll'), {
-                        count: String(details.reportsThisWeek),
-                      })}
-                    </AppText>
-                  </Pressable>
-                ) : (
-                  <AppText tone="accent" variant="label">
-                    {interpolate(t('discover.details.reports.seeAll'), {
-                      count: String(details.reportsThisWeek),
-                    })}
-                  </AppText>
-                )}
-              </View>
-              <AppText variant="bodySmall">{t('discover.details.reports.quote')}</AppText>
-              <AppText tone="muted" variant="metadata">
-                {interpolate(t('discover.details.reports.meta'), {
-                  max: String(REPORT_YIELD_MAX),
-                  minutes: String(details.latestReport.minutesAgo),
-                  trust: t(TRUST_KEY[details.latestReport.trust]),
-                  yield: String(details.latestReport.yield),
-                })}
-              </AppText>
-              <AppText tone="muted" variant="metadata">
-                {t('discover.details.reports.scoring')}
-              </AppText>
-            </View>
-          </>
-        )}
+            </AppText>
+          </Pressable>
+        ) : null}
 
         {/*
           The frame's own row (node 5:23080): its 54 px bookmark tile, 10 px from the action
@@ -565,13 +452,17 @@ function DetailsView({
             />
           </Pressable>
 
-          {onNavigate && !live ? (
+          {onNavigate ? (
             <View className="flex-1">
               <AppButton
                 icon={<Feather color={colors.onAccent} name="navigation" size={20} />}
-                label={interpolate(t('discover.details.navigate'), {
-                  distance: formatDistance(DEMO_ROUTE.distanceMeters, locale),
-                })}
+                label={
+                  distanceMeters === null
+                    ? t('discover.details.navigate.plain')
+                    : interpolate(t('discover.details.navigate'), {
+                        distance: formatDistance(distanceMeters, locale),
+                      })
+                }
                 onPress={onNavigate}
                 testID="zone-details-navigate"
               />

@@ -12,8 +12,6 @@ export const fi: Record<TranslationKey, string> = {
   'common.back': 'Takaisin',
   'common.readFailed': 'Tallennettuja käyntejä ei voitu lukea.',
   'common.loading': 'Ladataan…',
-  'common.on': 'Päällä',
-  'common.off': 'Pois',
   'error.eyebrow': 'PICKY · JOTAIN MENI PIELEEN',
   'error.title': 'Tämä näkymä kohtasi ongelman',
   'error.body':
@@ -160,9 +158,6 @@ export const fi: Record<TranslationKey, string> = {
   'discover.title': 'Löydä lähialueet',
   'discover.map.label': 'Kartta lähellä olevista marja-alueista',
   'discover.map.place': 'Laajavuori',
-  'discover.map.lake': 'Tuomiojärvi',
-  'discover.map.position': 'Sijaintimerkki kartalla',
-  'discover.map.scale': '━━  200 m   ·   Kausidemo',
   'discover.map.count': '{count} aluetta · testiaineisto',
   'discover.map.countOne': '{count} alue · testiaineisto',
   'discover.map.place.live': 'Jyväskylä',
@@ -178,21 +173,13 @@ export const fi: Record<TranslationKey, string> = {
   // Expo Go does not contain MapLibre's native binary, so the map explains the build it needs
   // rather than taking the app down at import time.
   'discover.map.requiresDevelopmentBuild':
-    'Kartta ei ole käytettävissä tässä versiossa. Käytä kehitysversiota nähdäksesi sen.',
+    'Katukartta vaatii kehitysversion; alueet piirretään ilman sitä.',
   'discover.score.label': 'Sadon pisteet',
   'discover.score.lowConfidence': 'Vaaleat alueet ovat epävarmoja',
-  'discover.zone.a11y': 'Alue {id}, {state}',
-  'discover.zone.score.a11y': 'Alue {id}, sadon pisteet {score} sadasta',
-  'discover.legend.label': 'Alueiden tilat',
   'discover.legend.unpicked': 'Poimimaton',
   'discover.legend.recentlyPicked': 'Äskettäin poimittu',
   'discover.legend.ripening': 'Kypsymässä',
-  'discover.card.title': 'Alue {zone} · {species}',
   'discover.card.zoneTitle': '{zone} · {species}',
-  'discover.card.place': 'Laajavuori · 1,4 km kävely',
-  'discover.card.yield': 'Sato 78 / 100',
-  'discover.card.confidence': 'Varma tieto',
-  'discover.card.status': 'Poimimaton · Kypsä · Havainto päivitetty 38 min sitten',
   'discover.card.source': 'Koealue · testiaineisto',
   'discover.card.source.live': 'Koealue',
   'discover.ripeness.unripe': 'Ei vielä kypsä',
@@ -223,13 +210,12 @@ export const fi: Record<TranslationKey, string> = {
   // demo disclosure frame 06's map carries (“KAUSIDEMO”): a source zone's own figures come from
   // the zone port, the blocks below them are the design's sample, and the whole screen is the
   // sample when no zone id is given.
-  'discover.details.eyebrow': 'POIMINTA · ALUEEN TIEDOT · KAUSIDEMO',
+  'discover.details.eyebrow': 'POIMINTA · ALUEEN TIEDOT · TESTIAINEISTO',
   'discover.details.eyebrow.live': 'POIMINTA · ALUEEN TIEDOT',
   // The title before a zone is known: loading, a failed read, or an id the source does not know.
   'discover.details.pendingTitle': 'Alueen tiedot',
   'discover.details.unknown':
     'Tämä alue ei ole niissä pilottialueissa, jotka tämä puhelin voi lukea.',
-  'discover.details.title': 'Alue {zone} · {place}',
   'discover.details.hero': 'Valokuva marjakaudesta',
   'discover.details.scoreLabel': '/ {max} sadon pisteet',
   'discover.details.confidence.high': 'Varma tieto',
@@ -251,28 +237,13 @@ export const fi: Record<TranslationKey, string> = {
   'discover.details.insight.loading': 'Kysytään vyöhykepalvelulta…',
   'discover.details.insight.unavailable': 'Vyöhykepalvelu ei vastannut.',
   'discover.details.sample':
-    'Alla olevat näkymät, tuorein havainto, kävelyreitti ja niiden takana oleva raporttilista ovat suunnittelun oma malliesimerkki: sääpalvelua tai raporttivirtaa ei vielä ole.',
-  'discover.details.outlook.title': 'Tämän päivän näkymät',
-  'discover.details.outlook.body':
-    'Kypsiä puolukoita lämpimän viikon jälkeen. Samanlaisia olosuhteita odotetaan huomenna.',
+    'Nämä alueet ovat sovelluksen mukana tulevaa testiaineistoa, eivät vyöhykepalvelun vastaus.',
   // The wind is its own translated phrase rather than a noun the sentence appends, so
   // Finnish can say “Heikko tuuli” where English says “Light wind”.
-  'discover.details.weather': '{temperature}°C · {wind} · Ennuste klo {time}',
-  'discover.details.wind.light': 'Heikko tuuli',
-  'discover.details.wind.moderate': 'Kohtalainen tuuli',
-  'discover.details.wind.strong': 'Kova tuuli',
-  'discover.details.reports.title': 'Tuoreet havainnot',
-  'discover.details.reports.seeAll': 'Näytä kaikki {count}',
+  'discover.details.reports.seeAll': 'Kaikki raportit · {count} tällä viikolla',
   // Havaittavissa oleva teksti on kehyksen oma; saavutettava nimi kertoo, mihin painallus vie.
-  'discover.details.reports.seeAll.a11y':
-    'Näytä kaikki {count} raporttia · avaa tähän puhelimeen tallennetut raportit',
-  'discover.details.reports.quote': '“Reitillä runsaasti kypsiä terttuja.”',
-  'discover.details.reports.meta':
-    '{trust} havainto · {minutes} min sitten · Arvosana {yield} / {max}',
   // Kept to one line: the frame gives this note a single line (342x17), and the first wording
   // (”…lähihavaintojen yhtäpitävyys.”) ran to two — the layout harness caught it.
-  'discover.details.reports.scoring':
-    'Pisteisiin vaikuttavat tuoreus, luotettavuus ja lähihavainnot.',
   'discover.details.reports.trust.trusted': 'Luotettu',
   'discover.details.reports.trust.unverified': 'Vahvistamaton',
   // Frame 07's bookmark: the control is a glyph, so the label names the control and what its
@@ -285,18 +256,11 @@ export const fi: Record<TranslationKey, string> = {
   // Kehyksen 07 “Näytä kaikki 11” -linkin avaama lista — **sovelluksen oma**, koska suunnittelma ei
   // piirtänyt listaa, jonka sen oma linkki nimeää (ADR-044). Kehyksen yksitoista ovat sen
   // malliviikko; alla oleva luku on se, mitä tämä puhelin pitää.
-  'discover.zoneReports.eyebrow': 'POIMINTA · ALUEEN RAPORTIT · KAUSIDEMO',
-  'discover.zoneReports.title': 'Alue {zone} · raportit',
-  'discover.zoneReports.intro':
-    'Suunnittelun malliviikkoon kuuluu {count} raporttia lähialueen poimijoilta. Sovellus näyttää vain tähän puhelimeen tallennetut:',
-  'discover.zoneReports.held.one': '1 raportti tässä puhelimessa',
-  'discover.zoneReports.held.many': '{count} raporttia tässä puhelimessa',
-  'discover.zoneReports.row.meta': '{date} · {minutes} min · Arvosana {yield} / {max} · {amount}',
-  'discover.zoneReports.row.metaNoAmount': '{date} · {minutes} min · Arvosana {yield} / {max}',
-  'discover.zoneReports.empty':
-    'Tälle alueelle ei ole vielä tallennettu raporttia tässä puhelimessa.',
-  'discover.zoneReports.missing':
-    'Muiden poimijoiden raportit saapuvat raporttipalvelun mukana, jota tässä sovelluksessa ei vielä ole.',
+  'discover.zoneReports.eyebrow': 'POIMINTA · ALUEEN RAPORTIT',
+  'discover.zoneReports.title': '{zone} · raportit',
+  'discover.zoneReports.row.meta': '{date} · Arvio {yield} / {max} · {amount}',
+  'discover.zoneReports.row.metaNoAmount': '{date} · Arvio {yield} / {max}',
+  'discover.zoneReports.empty': 'Kukaan ei ole vielä raportoinut tätä aluetta.',
 
   // Screen 08. Finnish turns take an allative ending (“oikealle”), so the direction is a word
   // of its own in each language and the sentence around it belongs to the language as well;
@@ -307,22 +271,17 @@ export const fi: Record<TranslationKey, string> = {
   // The frame promises a downloaded tile cache and the app downloads nothing, so the note says
   // what it can be true about (the boundaries are drawn from data on the device) and names the
   // cache as the thing still missing.
-  'discover.route.eyebrow': 'POIMINTA · KÄVELYREITTI · KAUSIDEMO',
-  'discover.route.title': 'Alueelle {zone}',
-  'discover.route.offline.title': 'Kartta piirretään tällä laitteella',
-  'discover.route.offline.body':
-    '{place}: alueiden rajat piirretään tällä laitteella. Karttatiilejä ei ole vielä ladattu.',
-  'discover.route.distance': 'Kävelymatka',
+  'discover.route.eyebrow': 'POIMINTA · KÄVELYREITTI',
+  'discover.route.title': 'Kohteeseen {zone}',
+  'discover.route.distance': 'Linnuntie',
   'discover.route.duration': '{minutes} min',
-  'discover.route.arrival': 'Arvioitu perillä · {time}',
-  'discover.route.guidance.title': 'Seuraa metsäpolkua',
+  'discover.route.arrival': 'Perillä noin {time}, {pace} km/h',
+  'discover.route.guidance.title': 'Kulje kohti aluetta',
   // Kept to the frame's single line (264x18): the first wording carried the word “määränpää”
   // (destination) as well and ran to two, which the layout harness caught.
-  'discover.route.guidance.detail': 'Käänny {direction} {distance} kuluttua · {place}',
-  'discover.route.turn.left': 'vasemmalle',
-  'discover.route.turn.right': 'oikealle',
+  'discover.route.guidance.detail': '{direction}, linnuntietä {distance}',
   'discover.route.supporting':
-    'Pysy merkitvillä poluilla. Reittiarviot voivat vaihdella maaston mukaan.',
+    'Metsäpolut ovat suoraa viivaa pidempiä. Katso kävelyreitti Reittiohjeista.',
   'discover.route.cancel': 'Peruuta reitti',
   'discover.route.start': 'Aloita kävely',
 
@@ -403,27 +362,20 @@ export const fi: Record<TranslationKey, string> = {
   // Screen 12. The alert is the design's sample, so the eyebrow names the demo and the closing
   // note says the alert is one. The headline's direction lives in the sentence — Finnish says it
   // with an allative ending (“pohjoiseen”) rather than as a word the app appends to a distance.
-  'discover.alert.eyebrow': 'POIMINTA · ENNUSTEEN PERUSTEET · KAUSIDEMO',
-  'discover.alert.title': 'Vihje metsästä',
-  'discover.alert.stamp': 'TÄNÄÄN · {date} · {time}',
-  'discover.alert.headline': 'Kypsiä mustikoita {distance} pohjoiseen',
+  'discover.alert.eyebrow': 'POIMINTA · ENNUSTEEN PERUSTELUT',
+  'discover.alert.title': 'Hälytykset metsästä',
+  'discover.alert.stamp': '{date} · {time}',
+  'discover.alert.headline': '{species} {distance} päässä',
   'discover.alert.score': '{score} / {max} sato',
   // Kept to the frame's single line (306x18): “Tuorein havainto” (latest report) beside the zone
   // and the place ran to two, which the layout harness caught — the card's own heading already
   // says what the figure is about, so the Finnish line states the reading alone.
-  'discover.alert.context': 'Alue {zone} · {place} · {minutes} min sitten',
-  'discover.alert.why': 'Miksi tämä hälytys?',
-  'discover.alert.reason.warm.title': 'Lämmin viikko',
-  'discover.alert.reason.warm.detail': 'Kolme lämmintä päivää edistää kypsymistä.',
-  'discover.alert.reason.rain.title': 'Sunnuntain sade',
-  'discover.alert.reason.rain.detail': 'Kosteus tukee marjojen kasvua.',
-  'discover.alert.reason.picked.title': 'Viimeksi poimittu 6 päivää sitten',
-  'discover.alert.reason.picked.detail': 'Tuoreet havainnot lupaavat hyvää paluuta.',
+  'discover.alert.context': '{zone} · Viimeisin raportti {date}',
   // The frame's note claims a forecast assembled from weather, season and trust-weighted
   // reports, and none of the three has a source. The line says what is true instead and keeps
   // the design's own promise that a harvest is never guaranteed.
   'discover.alert.note':
-    'Esimerkkihälytys. Sää-, kausi- tai havaintolähdettä ei ole vielä liitetty, eikä satoa taata.',
+    'Hälytykset yhdistävät satomallin, kypsyyden ja luotettavuuspainotetut raportit. Ennuste, ei taattu sato.',
   // The frame's alert-preferences card, drawn as the design's sample: the three values are
   // formatted from `domain/alert.ts` and the last line says so, so none of the figures reads as
   // this phone's own settings. “Push-hälytys” is what a Finnish phone calls one.
@@ -431,11 +383,8 @@ export const fi: Record<TranslationKey, string> = {
   'discover.alert.preferences.push': 'Push-hälytykset kypsistä marjoista',
   'discover.alert.preferences.radius': 'Hakusäde',
   'discover.alert.preferences.quiet': 'Hiljaiset tunnit',
-  'discover.alert.preferences.quietValue': '{from}–{to}',
   'discover.alert.preferences.species': 'Lajit',
   'discover.alert.preferences.speciesValue': '{species} + {count}',
-  'discover.alert.preferences.sample':
-    'Suunnittelun esimerkkivalinnat: hälytyksiä ei vielä lähetetä eikä mikään lue sädettä, hiljaisia tunteja tai lajeja.',
   'discover.alert.preferences.quietUnset': 'Ei vielä tarjolla',
   'discover.alert.preferences.speciesNone': 'Ei valittu',
   'discover.alert.preferences.live': 'Tallentuu tiliisi. Palvelu ei vielä lähetä ilmoituksia.',
@@ -466,42 +415,27 @@ export const fi: Record<TranslationKey, string> = {
   'offline.snapshot.updated': 'Päivitetty: {count} vyöhykettä muuttui.',
   'offline.snapshot.updatedOne': 'Päivitetty: {count} vyöhyke muuttui.',
   'offline.snapshot.failed': 'Vyöhykepalvelu ei vastannut. Mitään uutta ei tallennettu.',
-  'offline.eyebrow': 'TILI / OFFLINE · SYNKRONOINTI · KAUSIDEMO',
+  'offline.eyebrow': 'TILI / OFFLINE · SYNKRONOINTI',
   'offline.title': 'Valmiina ilman verkkoa',
-  'offline.sample.note':
-    'Alue, tallennustilat ja kaksi alla olevaa painiketta ovat suunnittelun oma esimerkki: tähän puhelimeen ei ole ladattu mitään eikä mikään synkronoidu vielä.',
-  'offline.region.title': 'Laajavuoren alue',
-  'offline.region.detail': '{area} km² · {size} MB · ladattu',
-  'offline.cached': 'Välimuistissa',
-  'offline.tiles.title': 'Karttalaatat ja {count} aluetta',
-  'offline.tiles.detail': 'Käytettävissä ilman verkkoa',
-  'offline.forecast.title': 'Tämän päivän ennuste',
-  'offline.forecast.detail': '{date} · tallennettu klo {time}',
-  'offline.refresh.note': 'Päivitä ennusteet verkossa ennen lähtöä.',
-  'offline.storage.label': 'Tallennustilaa käytössä',
-  'offline.storage.value': '{used} / {total} MB',
-  'offline.retry': 'Yritä synkronoida uudelleen',
-  'offline.manage': 'Hallitse ladattuja alueita',
-  'offline.lastSync': 'Viimeisin onnistunut synkronointi · {date} klo {time}',
+  'offline.retry': 'Lähetä nyt',
   // The frame's own status message, drawn only when the device really reports no connection.
   'offline.status.title': 'Ei verkkoyhteyttä',
   'offline.status.body': 'Jatka poimintaa. Käynnit ja raportit tallennetaan puhelimeesi.',
   'offline.waiting.one': 'Odottaa synkronointia · {count} raportti',
   'offline.waiting.many': 'Odottaa synkronointia · {count} raporttia',
-  'offline.row.title': 'Alue {zone} · {species}',
+  'offline.row.title': '{zone} · {species}',
   'offline.row.meta': '{date} · {minutes} min · Arvosana {yield} / {max} · {amount}',
   'offline.row.metaNoAmount': '{date} · {minutes} min · Arvosana {yield} / {max}',
-  'offline.row.chip': 'Jonossa · käynti ja raportti',
-  'offline.note':
-    'Tallennettu tähän puhelimeen. Mitään ei ole lähetetty — synkronointi tulee palvelimen myötä.',
+  'offline.row.chip': 'Jonossa · raportti',
+  'offline.note': 'Tallennettu puhelimeen. Ne lähetetään vyöhykepalveluun heti, kun olet verkossa.',
   'offline.empty': 'Mitään ei odota synkronointia.',
 
   // Screen 11. The eyebrow keeps the frame's own words and adds “KAUSIDEMO”, the same disclosure
   // frame 06's eyebrow carries about its map: the month's figures are the design's sample, not
   // the picker's own data. “Käynti” is the visit the other core-picker screens already call it.
-  'discover.season.eyebrow': 'POIMINTA · HENKILÖKOHTAISET TIEDOT · KAUSIDEMO',
+  'discover.season.eyebrow': 'POIMINTA · HENKILÖKOHTAISET TIEDOT',
   'discover.season.title': 'Kautesi tähän mennessä',
-  'discover.season.period.month': 'Elokuu 2026',
+  'discover.season.period.month': 'Tämä kuukausi',
   'discover.season.period.all': 'Kaikki käynnit',
   // The two chips are one real choice, so the group carries its own name, and the lines under
   // “Käyntihistoria” state what it shows: the period and its count, and — under the month chip
@@ -511,7 +445,7 @@ export const fi: Record<TranslationKey, string> = {
   'discover.season.history.shown.many': '{period} · {count} käyntiä',
   'discover.season.history.outside.one': '1 käynti tämän jakson ulkopuolella',
   'discover.season.history.outside.many': '{count} käyntiä tämän jakson ulkopuolella',
-  'discover.season.summary': 'Hyvä kuukausi metsässä.',
+  'discover.season.summary': 'Kautesi {year}',
   'discover.season.metric.harvested': 'Sato yhteensä',
   'discover.season.metric.rate': 'kg / tunti',
   'discover.season.metric.zones': 'Alueita käyty',
@@ -520,7 +454,7 @@ export const fi: Record<TranslationKey, string> = {
   'discover.season.chart.title': 'Sato käynneittäin',
   'discover.season.chart.unit': 'kg',
   'discover.season.history.title': 'Käyntihistoria',
-  'discover.season.row.title': 'Alue {zone} · {species}',
+  'discover.season.row.title': '{zone} · {species}',
   'discover.season.row.queued': 'Jonossa',
   'discover.season.row.synced': 'Synkronoitu',
   // The visits the team API recorded for this account (ADR-065, the API plan's phase 4).
@@ -532,7 +466,7 @@ export const fi: Record<TranslationKey, string> = {
   'discover.season.recorded.loading': 'Kysytään vyöhykepalvelulta…',
   'discover.season.recorded.failed': 'Vyöhykepalvelu ei vastannut.',
   'discover.season.note':
-    'Sisältää jonossa olevan käyntisi. Satoasteet lasketaan vain käynneistä, joilla on kirjattu määrä.',
+    'Jonossa olevat raportit lähetetään, kun olet verkossa. Satotahti lasketaan vain punnituista raporteista.',
 
   // The frame labels this row “Käyntien taustaseuranta”; the switch withdraws the consent screen
   // 05 collects, which is tracking while the app is open (ADR-047). Measured: the row's own 244 px
@@ -567,8 +501,6 @@ export const fi: Record<TranslationKey, string> = {
   // Frame 14's “Saved spots”, which screen 03's privacy line already calls “Tallennetut paikat”.
   // The eyebrow no longer repeats the demo disclosure frame 06's map carries (“KAUSIDEMO”): since
   // ADR-060 the rows are source zones, and an id the source cannot describe is printed alone.
-  'privacy.previewSample':
-    'Tämä esikatseluversio voi alkaa näytetallennetuilla paikoilla ja raporteilla, jotta näytöillä on jotain näytettävää. Uloskirjautuminen poistaa ne muun laiteluettelon mukana.',
   'privacy.savedSpots.eyebrow': 'TILI / OFFLINE · TALLENNETUT PAIKAT',
   'privacy.savedSpots.title': 'Tallennetut paikat',
   // The frame's own subtitle under the row's label (“4 spots · private by default”). The clause is
@@ -743,16 +675,11 @@ export const fi: Record<TranslationKey, string> = {
 
   // Frames 15–18, the planned marketplace as a demo. The frame's own disclosure is kept in words
   // a reader cannot miss: nothing here charges, sends or receives anything.
-  'market.disclosure': 'Suunniteltu lisäosa',
 
   // Screen 15.
-  'market.eyebrow.browse': 'SUUNNITELTU MARKKINAPAIKKA · YTIMEN ULKOPUOLELLA',
-  'market.browse.mode': 'Ostotila · Esikatselu',
+  'market.eyebrow.browse': 'MARKKINAPAIKKA · PAIKALLINEN SATO',
   'market.title.browse': 'Lähiseudun sato',
   'market.search.placeholder': 'Marjoja Jyväskylän läheltä',
-  'market.filter.all': 'Kaikki marjat',
-  'market.filter.pickup': 'Nouto',
-  'market.filter.distance': '10 km säteellä',
   // The frame's “Browse 12 local listings” with the app's own number in it, so the sentence and
   // the count the search leaves cannot disagree; Finnish writes the same word for both numbers.
   'market.browse.count.one': 'Selaa {count} paikallista ilmoitusta',
@@ -765,64 +692,94 @@ export const fi: Record<TranslationKey, string> = {
   'market.card.open': 'Avaa {name}',
 
   // Screen 16.
-  'market.eyebrow.listing': 'SUUNNITELTU MARKKINAPAIKKA · ILMOITUS',
+  'market.eyebrow.listing': 'MARKKINAPAIKKA · ILMOITUS',
   'market.listing.headline': 'Metsästä pöytääsi.',
   'market.listing.price': '{amount} €/kg',
   'market.listing.stock': '{species} · {available} kg saatavilla',
-  'market.listing.blurb':
-    'Käsin poimittu tänään, lajiteltu ja pidetty viileänä. Suomalaisia metsämustikoita, täynnä metsän makua.',
   'market.listing.harvested': 'Poimittu {date}',
   'market.listing.pickup': 'Nouto · {place} {window}',
   // The frame's own delivery line (272x18, node `5:23866`) is one line, and the app draws it in a
   // 13 px slot beside its truck glyph: “Paikallinen toimitus sopimuksen mukaan chatissa” needs
   // three lines there. The wording keeps what the line is for — delivery is agreed, not booked.
-  'market.listing.delivery': 'Toimitus sopimuksen mukaan chatissa',
-  'market.seller.badge': 'Vahvistettu myyjä',
   'market.seller.meta': 'Vahvistettu myyjä · {rating} / 5 · {reviews} arvostelua',
   'market.seller.metaUnverified': '{rating} / 5 · {reviews} arvostelua',
   'market.listing.contact': 'Ota yhteyttä',
   'market.listing.contactA11y': 'Ota yhteyttä: {name}',
   'market.listing.order': 'Tilaa marjoja',
-  'market.listing.escrow':
-    'Suunniteltu palveluntarjoajan escrow pitää maksun suojattuna, kunnes vahvistat toimituksen.',
+  'market.listing.escrow': 'Maksa myyjälle, kun noudat marjat. Picky ei käsittele maksuja.',
 
   // Screen 17. The sample exchange, in Finnish.
-  'market.eyebrow.chat': 'SUUNNITELTU MARKKINAPAIKKA · MYYJÄN CHAT',
+  'market.eyebrow.chat': 'MARKKINAPAIKKA · KESKUSTELU MYYJÄN KANSSA',
   'market.chat.listing': '{name} · {price}',
   'market.chat.listingMeta': '{available} kg saatavilla · {place}',
-  'market.chat.stamp': '{date}',
-  'market.chat.ask': 'Moi Matti! Saisinko 5 kg mustikoita tänä iltana?',
-  'market.chat.reply': 'Totta kai! Se tekee 40 €. Nouto Laajavuoren parkkipaikalta klo 17–19.',
-  'market.chat.confirm': 'Hienoa. Olen siellä klo 18.30.',
-  'market.chat.pack': 'Hyvä, pakkaan sinulle 5 kg. Tee tilaus Pickyssä, niin maksu pysyy turvassa.',
   'market.chat.read': 'Luettu',
   'market.chat.author.picker': 'Sinä',
   'market.chat.author.seller': 'Myyjä',
   'market.chat.messageA11y': '{author}: {text}',
-  'market.chat.summary': 'Näytä tilausyhteenveto · {total} €',
   'market.chat.composer': 'Kirjoita viesti…',
 
   // Screen 18.
-  'market.eyebrow.order': 'SUUNNITELTU MARKKINAPAIKKA · DEMOTILAUS',
+  'market.eyebrow.order': 'MARKKINAPAIKKA · TILAUS',
   'market.order.title': 'Marjasi on varattu',
-  'market.order.testMode': 'Palveluntarjoajan testitila',
-  'market.order.confirmed.title': 'Testitilaus vahvistettu',
-  'market.order.confirmed.body':
-    'Oikeaa rahaa ei veloitettu. Demomaksu on palveluntarjoajan hallussa.',
+  'market.order.confirmed.body': 'Myyjä on saanut tilauksesi. Maksa noudon yhteydessä.',
   'market.order.by': '{seller} · Poimittu {date}',
   'market.order.line': '{kilograms} kg × {unit}',
   'market.order.delivery': 'Nouto · ei toimitusmaksua',
-  'market.order.total': 'Pidossa yhteensä',
+  'market.order.total': 'Yhteensä',
   'market.price.symbol': '{amount} €',
   'market.order.pickup.title': 'Nouto: {name}',
-  'market.order.pickup.meta': '{date} · klo {time} {place}, {town}',
-  'market.order.status.confirmed': 'Tilaus vahvistettu · maksu pidossa',
-  'market.order.status.waiting': 'Odottaa noutovahvistusta',
-  'market.order.hold.title': 'Vahvista vasta, kun olet saanut marjasi',
+  'market.order.pickup.meta': '{time} · {place}, {town}',
+  'market.order.status.confirmed': 'Myyjä on vahvistanut',
   // The frame's hold message is two lines in its 282 px box (node `5:23987`) and the Finnish of the
   // first wording needed three. Same claim, the seller named in fewer words.
-  'market.order.hold.body':
-    'Maksu on pidossa, kunnes vahvistat toimituksen. Se vapautuu myyjälle {name}.',
   'market.order.message': 'Viesti myyjälle {name}',
-  'market.order.disputeNote': 'Ongelma tilauksessa? Riita pitää maksun pidossa käsittelyn ajan.',
+  'discover.season.figures.loading': 'Luetaan kauttasi…',
+  'discover.season.figures.failed': 'Kautesi lukuja ei voitu lukea.',
+  'discover.season.chart.empty': 'Ei vielä punnittua satoa.',
+  'discover.season.history.empty': 'Ei vielä raportteja. Päätä käynti lisätäksesi sellaisen.',
+  'discover.zoneReports.week.one': '1 raportti viimeisen 7 päivän aikana',
+  'discover.zoneReports.week.many': '{count} raporttia viimeisen 7 päivän aikana',
+  'discover.route.directions': 'Reittiohjeet karttasovelluksessa',
+  'discover.route.noPosition': 'Salli sijainti nähdäksesi, kuinka kaukana alue on.',
+  'discover.route.compass.n': 'Pohjoiseen',
+  'discover.route.compass.ne': 'Koilliseen',
+  'discover.route.compass.e': 'Itään',
+  'discover.route.compass.se': 'Kaakkoon',
+  'discover.route.compass.s': 'Etelään',
+  'discover.route.compass.sw': 'Lounaaseen',
+  'discover.route.compass.w': 'Länteen',
+  'discover.route.compass.nw': 'Luoteeseen',
+  'discover.details.reports.open': 'Katso alueen raportit',
+  'discover.details.navigate.plain': 'Reitti',
+  'discover.alert.headline.zone': '{species} · {zone}',
+  'discover.alert.context.noReport': '{zone} · Ei vielä raportteja',
+  'discover.alert.open': 'Avaa {zone}',
+  'discover.alert.empty': 'Ei hälytyksiä marjoillesi ja säteellesi juuri nyt.',
+  'discover.alert.readFailed': 'Hälytyksiä ei voitu lukea.',
+  'offline.sending': 'Lähetetään…',
+  'offline.sendFailed': 'Raportteja ei voitu lähettää. Ne pysyvät puhelimessa.',
+  'market.browse.empty': 'Marjoja ei ole juuri nyt myynnissä.',
+  'market.readFailed': 'Markkinapaikkaa ei voitu lukea.',
+  'market.card.sellerNew': '{name} · Uusi myyjä',
+  'market.seller.new': 'Uusi myyjä · ei vielä arvioita',
+  'market.seller.newVerified': 'Vahvistettu myyjä · ei vielä arvioita',
+  'market.listing.unknown': 'Ilmoitusta ei löytynyt.',
+  'market.listing.soldOut': 'Loppuunmyyty',
+  'market.chat.empty': 'Ei vielä viestejä. Kysy myyjältä marjoista tai noudosta.',
+  'market.chat.send': 'Lähetä viesti',
+  'market.chat.sendFailed': 'Viestiä ei voitu lähettää.',
+  'market.order.form.title': 'Tilaa marjoja',
+  'market.order.form.kilograms': 'Montako kiloa?',
+  'market.order.form.kilogramsInvalid': 'Anna 0,1–{available} kg.',
+  'market.order.form.pickup': 'Noutoaika ({window})',
+  'market.order.form.pickupInvalid': 'Anna aika muodossa 18:30.',
+  'market.order.form.place': 'Varaa marjat',
+  'market.order.form.placing': 'Varataan…',
+  'market.order.form.failed': 'Tilausta ei voitu tehdä. Varasto on voinut muuttua.',
+  'market.order.status.pending': 'Varattu · odottaa myyjää',
+  'market.order.status.completed': 'Noudettu',
+  'market.order.status.cancelled': 'Peruttu',
+  'discover.zoneReports.heading': 'Alueen raportit',
+  'privacy.marketplace.title': 'Marjatori',
+  'privacy.marketplace.subtitle': 'Osta ja myy ylimääräisiä marjoja läheltä',
 };

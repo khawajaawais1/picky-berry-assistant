@@ -1,6 +1,12 @@
+# Local stack: PostGIS and, with `--profile api`, the API itself.
+#   docker compose -f docker-compose.dev.yml up -d               # database only
+#   docker compose -f docker-compose.dev.yml --profile api up -d --build
+# Point the API at a database that is already running elsewhere with API_DATABASE_URL, e.g.
+#   API_DATABASE_URL=postgresql://postgres:postgres@host.docker.internal:5432/picky
 services:
   postgres:
-    image: postgis/postgis:17-3.5
+    # Multi-architecture PostGIS build: the official image has no arm64 manifest (Apple Silicon).
+    image: imresamu/postgis:17-3.5
     environment:
       POSTGRES_DB: picky
       POSTGRES_USER: postgres
@@ -14,6 +20,26 @@ services:
       retries: 10
     volumes:
       - postgres-data:/var/lib/postgresql/data
+
+  api:
+    profiles: ['api']
+    build: .
+    image: picky/server:dev
+    ports:
+      - '${API_PORT:-3000}:3000'
+    environment:
+      # The container runs the compiled build; development mode keeps the dev CORS origins and
+      # seeds allowed. Never use these values outside a local machine.
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: ${API_DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/picky}
+      DB_SSL: disable
+      JWT_SECRET: ${JWT_SECRET:-local-docker-jwt-secret-not-for-production-use}
+      MAIL_MODE: console
+      APP_PUBLIC_URL: http://localhost:8081
+      DEV_AUTH_BYPASS: 'false'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
 
 volumes:
   postgres-data:

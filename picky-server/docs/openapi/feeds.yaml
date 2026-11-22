@@ -1,0 +1,330 @@
+openapi: 3.1.0
+info:
+  title: Berry Picker Picker Feeds API
+  version: 1.0.0
+  license:
+    name: UNLICENSED
+    identifier: LicenseRef-UNLICENSED
+  description: "Reports, season figures, alerts and the marketplace the mobile app reads."
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+paths:
+  /reports:
+    post:
+      summary: "Submit a post-visit report"
+      operationId: createReport
+      description: "Feature 6.4. Idempotent on client_id: a replay answers 200 with idempotent_replay true."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '201':
+          description: "Created"
+          content:
+            application/json:
+              schema: { type: object }
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema: { type: object }
+        '409':
+          description: "Conflict"
+          content:
+            application/json:
+              schema: { type: object }
+        '422':
+          description: "Invalid input"
+          content:
+            application/json:
+              schema: { type: object }
+        '401':
+          description: "Not signed in"
+  /zones/{id}/reports:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      summary: "A zone's recent reports"
+      operationId: listZoneReports
+      description: "Anonymous: rating, harvest, trust label and time. Optional species and limit (1–50)."
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema: { type: object }
+        '404':
+          description: "Not found"
+          content:
+            application/json:
+              schema: { type: object }
+        '422':
+          description: "Invalid input"
+          content:
+            application/json:
+              schema: { type: object }
+        '401':
+          description: "Not signed in"
+  /me/reports:
+    get:
+      summary: "The caller's own reports"
+      operationId: listMyReports
+      description: "Newest first."
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema: { type: object }
+        '401':
+          description: "Not signed in"
+  /me/season:
+    get:
+      summary: "The caller's season figures"
+      operationId: getMySeason
+      description: "Totals over accepted visits and reports in one Helsinki calendar year (default: this year)."
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema: { type: object }
+        '422':
+          description: "Invalid input"
+          content:
+            application/json:
+              schema: { type: object }
+        '401':
+          description: "Not signed in"
+  /alerts:
+    get:
+      summary: "Explainable alerts for the caller"
+      operationId: listAlerts
+      description: "Feature 6.7: latest alert per zone and species from the reasoning job, filtered to the caller species interest and, with lat/lng, to their alert radius."
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema: { type: object }
+        '422':
+          description: "Invalid input"
+          content:
+            application/json:
+              schema: { type: object }
+        '401':
+          description: "Not signed in"
+  /market/listings:
+    get:
+      summary: "Active marketplace listings"
+      operationId: listListings
+      description: "Feature E1. Optional q, species, lat/lng (adds distance_km) and limit."
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema: { type: object }
+        '422':
+          description: "Invalid input"
+          content:
+            application/json:
+              schema: { type: object }
+        '401':
+          description: "Not signed in"
+    post:
+      summary: "Post a listing"
+      operationId: createListing
+      description: "The caller becomes the seller."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '201':
+          description: "Created"
+          content:
+            application/json:
+              schema: { type: object }
+        '422':
+          description: "Invalid input"
+          content:
+            application/json:
+              schema: { type: object }
+        '401':
+          description: "Not signed in"
+  /market/listings/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      summary: "One listing"
+      operationId: getListing
+      description: "One listing"
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema: { type: object }
+        '404':
+          description: "Not found"
+          content:
+            application/json:
+              schema: { type: object }
+        '422':
+          description: "Invalid input"
+          content:
+            application/json:
+              schema: { type: object }
+        '401':
+          description: "Not signed in"
+  /market/listings/{id}/messages:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      summary: "The buyer–seller thread"
+      operationId: getListingThread
+      description: "A buyer reads their own thread; the seller passes buyer_id. Marks the other side read."
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema: { type: object }
+        '404':
+          description: "Not found"
+          content:
+            application/json:
+              schema: { type: object }
+        '422':
+          description: "Invalid input"
+          content:
+            application/json:
+              schema: { type: object }
+        '401':
+          description: "Not signed in"
+    post:
+      summary: "Send a message on a listing"
+      operationId: sendListingMessage
+      description: "The seller passes buyer_id."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '201':
+          description: "Created"
+          content:
+            application/json:
+              schema: { type: object }
+        '404':
+          description: "Not found"
+          content:
+            application/json:
+              schema: { type: object }
+        '422':
+          description: "Invalid input"
+          content:
+            application/json:
+              schema: { type: object }
+        '401':
+          description: "Not signed in"
+  /market/orders:
+    get:
+      summary: "The caller's orders"
+      operationId: listOrders
+      description: "As buyer or seller, newest first."
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema: { type: object }
+        '401':
+          description: "Not signed in"
+    post:
+      summary: "Order from a listing"
+      operationId: createOrder
+      description: "Reserves the kilograms; 409 when there is not enough left, 403 on your own listing."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '201':
+          description: "Created"
+          content:
+            application/json:
+              schema: { type: object }
+        '403':
+          description: "Forbidden"
+          content:
+            application/json:
+              schema: { type: object }
+        '404':
+          description: "Not found"
+          content:
+            application/json:
+              schema: { type: object }
+        '409':
+          description: "Conflict"
+          content:
+            application/json:
+              schema: { type: object }
+        '422':
+          description: "Invalid input"
+          content:
+            application/json:
+              schema: { type: object }
+        '401':
+          description: "Not signed in"
+  /market/orders/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      summary: "One order"
+      operationId: getOrder
+      description: "Only its buyer or seller can read it."
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema: { type: object }
+        '404':
+          description: "Not found"
+          content:
+            application/json:
+              schema: { type: object }
+        '422':
+          description: "Invalid input"
+          content:
+            application/json:
+              schema: { type: object }
+        '401':
+          description: "Not signed in"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

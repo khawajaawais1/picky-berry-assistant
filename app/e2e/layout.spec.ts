@@ -131,47 +131,6 @@ const LOCALES: readonly Locale[] = [
  */
 const SOURCE_ZONE_ID = 'cc0e7929-de9f-516a-9049-7a25a1a6d092';
 
-/**
- * Screen 07's frame blocks, which both of its readings draw from the same view with the same
- * values: the forecast note inside the yield card, the outlook, the freshest report behind the
- * “See all” link, and the scoring note. One list rather than two, because a rule added for one
- * reading is a string the other renders too — and because the source reading must not drift from
- * the design's sample it discloses under itself.
- */
-const ZONE_DETAILS_BLOCKS: readonly CopyRule[] = [
-  { what: 'the forecast note', key: 'discover.details.forecastDisclaimer' },
-  { what: 'the outlook heading', key: 'discover.details.outlook.title' },
-  // The one block the frame lays out over two lines (342x40, node 5:23069).
-  { what: 'the outlook body', key: 'discover.details.outlook.body', maxLines: 2 },
-  {
-    what: 'the weather line',
-    key: 'discover.details.weather',
-    values: {
-      temperature: '18',
-      time: '08:00',
-      wind: { key: 'discover.details.wind.light' },
-    },
-  },
-  { what: 'the report heading', key: 'discover.details.reports.title' },
-  {
-    what: 'the reports action',
-    key: 'discover.details.reports.seeAll',
-    values: { count: '11' },
-  },
-  { what: 'the report’s own words', key: 'discover.details.reports.quote' },
-  {
-    what: 'the report’s provenance line',
-    key: 'discover.details.reports.meta',
-    values: {
-      max: '5',
-      minutes: '38',
-      trust: { key: 'discover.details.reports.trust.trusted' },
-      yield: '4',
-    },
-  },
-  { what: 'the scoring note', key: 'discover.details.reports.scoring' },
-];
-
 const SCREENS: readonly Screen[] = [
   {
     name: '01 · Onboarding · Welcome',
@@ -358,194 +317,70 @@ const SCREENS: readonly Screen[] = [
     ],
   },
   {
+    // A bare link names no zone, so the screen says it cannot tell which zone it is about.
     name: '07 · Core picker · Zone details',
     path: '/zone-details',
     shell: true,
-    anchor: 'discover.details.eyebrow',
+    anchor: 'discover.details.eyebrow.live',
     copy: [
-      { what: 'the eyebrow', key: 'discover.details.eyebrow' },
-      // The title names the same demo zone and place the map draws (298x28, node 5:23044).
-      {
-        what: 'the screen title',
-        key: 'discover.details.title',
-        values: { place: { key: 'discover.map.place' }, zone: '14' },
-      },
-      {
-        what: 'the score’s own scale',
-        key: 'discover.details.scoreLabel',
-        values: { max: '100' },
-      },
-      { what: 'the confidence line', key: 'discover.details.confidence.high' },
-      {
-        what: 'the week’s report count',
-        key: 'discover.details.reportsThisWeek',
-        values: { count: '11' },
-      },
-      // The chip is the map legend's word for the same zone, which is the point: the two
-      // screens describe one zone one way (node 5:23063, “Unpicked”).
-      { what: 'the state chip', key: 'discover.legend.unpicked' },
-      { what: 'the ripeness chip', key: 'discover.ripeness.ripe' },
-      // The frame's species row (node `5:23047`): what this zone is reported for, each chip one
-      // line inside its 36 px pill — including the two berries the design names.
-      { what: 'the first species chip', key: 'report.species.lingonberry', maxLines: 1 },
-      { what: 'the second species chip', key: 'report.species.bilberry', maxLines: 1 },
-      ...ZONE_DETAILS_BLOCKS,
+      { what: 'the eyebrow', key: 'discover.details.eyebrow.live' },
+      { what: 'the unknown-zone line', key: 'discover.details.unknown', maxLines: 3 },
     ],
   },
   {
-    // The same frame read from the **zone source** instead of the design's sample: the state the
-    // map's card and the saved plan open (ADR-058, ADR-060), which `/zone-details` alone cannot
-    // reach because a bare URL draws the sample. The zone and berry are the ones the saved-plan
-    // journey opens — Laajavuori 1, scored for lingonberry — so the harness measures the page the
-    // picker actually arrives on, not only the one the design drew.
+    // The zone the map's card and the saved plan open, read from the bundled test zones (the
+    // harness runs with EXPO_PUBLIC_ZONE_SOURCE=stub): Laajavuori 1, scored for lingonberry.
     name: '07 · Core picker · Zone details (a source zone)',
     path: `/zone-details?zone=${SOURCE_ZONE_ID}&species=lingonberry`,
     shell: true,
-    // The source reading's own sentence: it is drawn only once the zone has been read, so it also
-    // proves the screen is not still pending — or the sample the entry above measures.
     anchor: 'discover.details.sample',
     copy: [
       { what: 'the eyebrow', key: 'discover.details.eyebrow' },
-      // The title is the zone's own name from the payload (“Laajavuori 1”), not a catalogue
-      // sentence, so there is no key to measure here. Its date line below proves the same payload
-      // rendered, and the saved-plan journey asserts the name itself.
       {
         what: 'the score’s own scale',
         key: 'discover.details.scoreLabel',
         values: { max: '100' },
       },
       { what: 'the confidence line', key: 'discover.details.confidence.medium' },
-      // One chip, not the sample's two: a zone's picking state is the design's and is not part of
-      // the source's answer, which is what the sample note below says out loud.
       { what: 'the ripeness chip', key: 'discover.ripeness.ripe' },
-      // The berry the screen was asked for comes first, then every other berry the payload scores
-      // — a source zone's row is its data, not the design's three chips.
       { what: 'the first species chip', key: 'report.species.lingonberry', maxLines: 1 },
       { what: 'the second species chip', key: 'report.species.bilberry', maxLines: 1 },
       { what: 'the third species chip', key: 'report.species.cloudberry', maxLines: 1 },
       { what: 'the fourth species chip', key: 'report.species.crowberry', maxLines: 1 },
-      // The zone's own freshness in frame 06's words, with the instant the source sent — formatted
-      // per language, the way the rows' dates are (so both forms are given).
       {
         what: 'the zone’s own freshness',
         key: 'discover.map.updated',
         values: { date: { en: '3 August 2026', fi: '3.8.2026' } },
       },
-      // The app's own sentence, not a frame's: its allowance is the one its wording takes rather
-      // than a frame's count (measured 2026-10-24; Finnish is the longer of the two).
-      { what: 'where the app’s own knowledge stops', key: 'discover.details.sample', maxLines: 3 },
-      ...ZONE_DETAILS_BLOCKS,
+      { what: 'the forecast note', key: 'discover.details.forecastDisclaimer' },
+      { what: 'the test-data note', key: 'discover.details.sample', maxLines: 3 },
+      { what: 'the reports action', key: 'discover.details.reports.open', maxLines: 1 },
+      { what: 'the navigate action', key: 'discover.details.navigate.plain', maxLines: 1 },
     ],
   },
   {
-    // The list behind frame 07's “See all 11” (node `5:23076`), opened by that row on the screen
-    // above. **The design never drew it** (ADR-044), so it has no frame's line counts to be held
-    // to: every string below is the app's own, and the run at the largest text size is what holds
-    // it to “nothing is lost”.
+    // Without a zone the report list says it cannot tell which zone it is about.
     name: '07b · Core picker · Zone reports',
     path: '/zone-reports',
     shell: true,
     anchor: 'discover.zoneReports.eyebrow',
-    // The zone it is about is the frame's own demo zone, and the queue is seeded with the frame's
-    // own visit — Zone 14, 28 Aug, 52 min, 1.3 kg, rated 4 of 5 — so the list the screen draws is
-    // the one the frame's week is about. The empty state, which the design never drew, is asserted
-    // in the screen's unit test.
-    seed: {
-      'picky.report-queue.v1': JSON.stringify([
-        {
-          amountText: '1.3 kg',
-          minutes: 52,
-          recordedAt: '2026-08-28T10:55:00.000Z',
-          speciesId: 'lingonberry',
-          yieldRating: 4,
-          zoneId: 'Z14',
-        },
-      ]),
-    },
     copy: [
-      // The design's sample week, said as such by the eyebrow and by the sentence under it: the
-      // frame's eleven are read from the zone's own figures, so the count is a value here.
       { what: 'the eyebrow', key: 'discover.zoneReports.eyebrow' },
-      { what: 'the screen title', key: 'discover.zoneReports.title', values: { zone: '14' } },
-      // The app's own sentence, so it carries the lines its wording needs in the wider language
-      // (Finnish takes three; measured 2026-10-12) rather than the one line a frame would draw.
-      {
-        what: 'what the frame’s own week is',
-        key: 'discover.zoneReports.intro',
-        maxLines: 3,
-        values: { count: '11' },
-      },
-      // What this phone holds, counted in the language's own sentence — one report here, so the
-      // singular entry is the one the page renders.
-      { what: 'the count of the phone’s own reports', key: 'discover.zoneReports.held.one' },
-      // The row's own line, in the frame's own order of facts — its day (a value the app formats
-      // per language, so both forms are given), its length, the rating and the harvest typed.
-      {
-        what: 'a report’s own line',
-        key: 'discover.zoneReports.row.meta',
-        values: {
-          amount: '1.3 kg',
-          date: { en: '28 Aug', fi: '28.8.' },
-          max: '5',
-          minutes: '52',
-          yield: '4',
-        },
-      },
-      { what: 'a report’s species', key: 'report.species.lingonberry' },
-      // The queue's own word for the row's state, the same one the season screen's rows carry.
-      { what: 'a report’s state', key: 'discover.season.row.queued' },
-      // The half of the design's own list nothing can return yet, named rather than faked — the
-      // app's own sentence again, two lines in Finnish (measured 2026-10-12).
-      { what: 'what is missing from the list', key: 'discover.zoneReports.missing', maxLines: 2 },
-      // `discover.zoneReports.empty` and `common.readFailed` are deliberately absent: the harness
-      // opens the screen holding a report, and the design draws no failure state. Both are
-      // asserted in the screen's unit test.
+      { what: 'the screen title', key: 'discover.zoneReports.heading' },
+      { what: 'the unknown-zone line', key: 'discover.details.unknown', maxLines: 3 },
     ],
   },
   {
+    // Without a zone the route has nowhere to lead, and says so; Cancel still returns.
     name: '08 · Core picker · Route to zone',
     path: '/route-to-zone',
     shell: true,
     anchor: 'discover.route.eyebrow',
     copy: [
       { what: 'the eyebrow', key: 'discover.route.eyebrow' },
-      { what: 'the screen title', key: 'discover.route.title', values: { zone: '14' } },
-      { what: 'the offline note title', key: 'discover.route.offline.title' },
-      // The frame lays the note out over two lines (282x36, node 5:23124).
-      {
-        what: 'the offline note body',
-        key: 'discover.route.offline.body',
-        maxLines: 2,
-        values: { place: { key: 'discover.map.place' } },
-      },
-      // The card's distance is a formatted value, not copy: the frame draws “1.4 km” and a
-      // Finnish device draws “1,4 km” for the same data, so this measures the label only.
-      { what: 'the distance label', key: 'discover.route.distance' },
-      {
-        what: 'the duration',
-        key: 'discover.route.duration',
-        values: { minutes: '22' },
-      },
-      {
-        what: 'the arrival label',
-        key: 'discover.route.arrival',
-        values: { time: '10:03' },
-      },
-      { what: 'the guidance title', key: 'discover.route.guidance.title' },
-      {
-        what: 'the guidance line',
-        key: 'discover.route.guidance.detail',
-        values: {
-          direction: { key: 'discover.route.turn.right' },
-          distance: '180 m',
-          place: { key: 'discover.map.place' },
-        },
-      },
-      // The frame lays the supporting line out over two lines (342x40, node 5:23160).
-      { what: 'the supporting line', key: 'discover.route.supporting', maxLines: 2 },
+      { what: 'the screen title', key: 'discover.details.pendingTitle' },
+      { what: 'the unknown-zone line', key: 'discover.details.unknown', maxLines: 3 },
       { what: 'the cancel action', key: 'discover.route.cancel' },
-      // `discover.route.turn.left` is deliberately absent: the frame's turn is to the right, so
-      // the other direction is copy no rendered screen shows until a route turns left.
     ],
   },
   {
@@ -579,6 +414,7 @@ const SCREENS: readonly Screen[] = [
     ],
   },
   {
+    // The harness has no session, so the alert feed cannot be read and the screen says so.
     name: '12 · Core picker · Alerts and forecast',
     path: '/alerts',
     shell: true,
@@ -586,128 +422,28 @@ const SCREENS: readonly Screen[] = [
     copy: [
       { what: 'the eyebrow', key: 'discover.alert.eyebrow' },
       { what: 'the screen title', key: 'discover.alert.title' },
-      // The frame's own stamp line (272x17, node 5:23455); its day is a value the language writes.
-      {
-        what: 'the alert stamp',
-        key: 'discover.alert.stamp',
-        maxLines: 1,
-        values: { date: { en: '28 Aug', fi: '28.8.' }, time: '09:30' },
-      },
-      // The frame's headline (306x68, node 5:23456) is set over two lines, and its distance is a
-      // formatted value, so both forms are given here.
-      {
-        what: 'the alert headline',
-        key: 'discover.alert.headline',
-        maxLines: 2,
-        values: { distance: { en: '1.8 km', fi: '1,8 km' } },
-      },
-      {
-        what: 'the score chip',
-        key: 'discover.alert.score',
-        values: { max: '100', score: '82' },
-      },
-      { what: 'the confidence chip', key: 'discover.details.confidence.high' },
-      // The frame draws this context line on one line (306x18, node 5:23462).
-      {
-        what: 'the alert’s zone line',
-        key: 'discover.alert.context',
-        maxLines: 1,
-        values: { minutes: '60', place: 'Laajavuori', zone: '18' },
-      },
-      { what: 'the reasons heading', key: 'discover.alert.why' },
-      // Each reason is a 15/21 title over a 13/18.2 line, both on one line in the frame
-      // (308 px wide, nodes 5:23467-5:23479).
-      { what: 'the first reason title', key: 'discover.alert.reason.warm.title', maxLines: 1 },
-      { what: 'the first reason detail', key: 'discover.alert.reason.warm.detail', maxLines: 1 },
-      { what: 'the second reason title', key: 'discover.alert.reason.rain.title', maxLines: 1 },
-      { what: 'the second reason detail', key: 'discover.alert.reason.rain.detail', maxLines: 1 },
-      { what: 'the third reason title', key: 'discover.alert.reason.picked.title', maxLines: 1 },
-      { what: 'the third reason detail', key: 'discover.alert.reason.picked.detail', maxLines: 1 },
-      // The frame's preferences card, drawn as the design's own sample (ADR-043). Its three values
-      // are formatted rather than translated — the radius by `formatRadius` (the screen test holds
-      // it) and the other two by the sentence keys below — and the sample line is the disclosure
-      // that travels with them.
-      { what: 'the preferences heading', key: 'discover.alert.preferences.title' },
-      // Finnish needs two lines in the row's label column where the frame draws one (ADR-019).
-      { what: 'the push setting', key: 'discover.alert.preferences.push', maxLines: 2 },
-      { what: 'the radius setting', key: 'discover.alert.preferences.radius' },
-      { what: 'the quiet-hours setting', key: 'discover.alert.preferences.quiet' },
-      {
-        what: 'the quiet-hours value',
-        key: 'discover.alert.preferences.quietValue',
-        maxLines: 1,
-        values: { from: '21:00', to: '07:00' },
-      },
-      { what: 'the species setting', key: 'discover.alert.preferences.species' },
-      {
-        what: 'the species value',
-        key: 'discover.alert.preferences.speciesValue',
-        maxLines: 1,
-        values: { count: '1', species: { key: 'report.species.bilberry' } },
-      },
-      // The app's own disclosure, not the frame's: the design draws no such line, so it carries the
-      // lines its wording needs in the wider language — three, in both languages (measured
-      // 2026-10-11 on a 304 px box).
-      { what: 'the sample line', key: 'discover.alert.preferences.sample', maxLines: 3 },
-      // The frame lays its disclaimer out over two lines (342x34, node 5:23509).
-      { what: 'the forecast note', key: 'discover.alert.note', maxLines: 2 },
-      // The frame's “View Zone 18” action is not registered: it is not drawn, and the unit test is
-      // where its absence is asserted (PROJECT.md).
+      { what: 'the read failure', key: 'discover.alert.readFailed', maxLines: 2 },
+      { what: 'the forecast note', key: 'discover.alert.note', maxLines: 3 },
     ],
   },
   {
+    // No session: the season's figures cannot be read, and the history is this phone's queue.
     name: '11 · Core picker · Visits and analytics',
     path: '/visits',
     shell: true,
     anchor: 'discover.season.eyebrow',
     copy: [
-      // The frame's eyebrow carries the design's own disclosure that its season is a sample
-      // month, the way frame 06's does about its map (PROJECT.md).
       { what: 'the eyebrow', key: 'discover.season.eyebrow' },
       { what: 'the screen title', key: 'discover.season.title' },
-      { what: 'the selected period chip', key: 'discover.season.period.month' },
-      { what: 'the other period chip', key: 'discover.season.period.all' },
-      // The frame lays the summary line out on one line (306x20, node 5:23362).
-      { what: 'the summary line', key: 'discover.season.summary', maxLines: 1 },
-      // Each of the five figures is a value the screen formats; its label is the frame's copy,
-      // drawn on one line in a 147 px or a 94 px column (nodes 5:23364-5:23380).
-      { what: 'the harvest label', key: 'discover.season.metric.harvested', maxLines: 1 },
-      { what: 'the rate label', key: 'discover.season.metric.rate', maxLines: 1 },
-      { what: 'the zones label', key: 'discover.season.metric.zones', maxLines: 1 },
-      { what: 'the stay label', key: 'discover.season.metric.stay', maxLines: 1 },
-      { what: 'the median label', key: 'discover.season.metric.median', maxLines: 1 },
-      { what: 'the chart title', key: 'discover.season.chart.title' },
-      { what: 'the chart unit', key: 'discover.season.chart.unit' },
+      { what: 'the month chip', key: 'discover.season.period.month' },
+      { what: 'the all chip', key: 'discover.season.period.all' },
+      { what: 'the figures failure', key: 'discover.season.figures.failed', maxLines: 2 },
       { what: 'the history heading', key: 'discover.season.history.title' },
-      // The line the chips' own choice is stated in — the period, then the visits it holds — drawn
-      // on one line under the heading. The screen opens on “All visits” (ADR-043), which is where
-      // the three rows the frame draws sit; the line about what a period leaves out is deliberately
-      // absent here, because nothing is outside the period the page opens in (the screen test
-      // enqueues a September visit, presses the month chip and measures that line).
-      {
-        what: 'the history count line',
-        key: 'discover.season.history.shown.many',
-        maxLines: 1,
-        values: { count: '3', period: { key: 'discover.season.period.all' } },
-      },
-      // The frame's rows title themselves “Zone 14 · Lingonberry” (node 5:23403), and the two
-      // statuses it draws are both on the screen: its newest row is queued, the rest synced.
-      {
-        what: 'a history row title',
-        key: 'discover.season.row.title',
-        values: { species: { key: 'report.species.lingonberry' }, zone: '14' },
-      },
-      { what: 'a queued status', key: 'discover.season.row.queued' },
-      { what: 'a synced status', key: 'discover.season.row.synced' },
-      // The frame lays its note out over two lines (342x34, node 5:23418).
-      { what: 'the closing note', key: 'discover.season.note', maxLines: 2 },
-      // `common.readFailed` is deliberately absent: the design has no failure state, so it has
-      // no line count to hold it to; the unit tests are where it is asserted.
+      { what: 'the closing note', key: 'discover.season.note', maxLines: 3 },
     ],
   },
   {
-    // Frame 13 with a report on the phone, because that is the screen the design draws: the
-    // frame's own visit — Zone 14, 28 Aug, 52 min, 1.3 kg, rated 4 of 5.
+    // The sync centre with one report waiting on the phone.
     name: '13 · Account and offline · Downloads',
     path: '/downloads',
     shell: true,
@@ -720,31 +456,29 @@ const SCREENS: readonly Screen[] = [
           recordedAt: '2026-08-28T10:55:00.000Z',
           speciesId: 'lingonberry',
           yieldRating: 4,
-          zoneId: 'Z14',
+          zoneId: SOURCE_ZONE_ID,
+          zoneName: 'Laajavuori 1',
+          clientId: '00000000-0000-4000-8000-000000000014',
         },
       ]),
     },
     copy: [
       { what: 'the eyebrow', key: 'offline.eyebrow' },
       { what: 'the screen title', key: 'offline.title' },
-      // The frame lays its heading out on one line (272x24, node 5:23581).
       {
         what: 'the waiting heading',
         key: 'offline.waiting.one',
-        maxLines: 1,
+        maxLines: 2,
         values: { count: '1' },
       },
       {
-        what: 'the queued row title',
+        what: 'the report’s title',
         key: 'offline.row.title',
-        values: { species: { key: 'report.species.lingonberry' }, zone: '14' },
+        values: { species: { key: 'report.species.lingonberry' }, zone: 'Laajavuori 1' },
       },
-      // The frame's own line: “28 Aug · 52 min · Rating 4 / 5 · 1.3 kg” (306x18, node 5:23583).
-      // Its day is a value the app formats per language, so both forms are given here.
       {
-        what: 'the queued row’s own line',
+        what: 'the report’s line',
         key: 'offline.row.meta',
-        maxLines: 1,
         values: {
           amount: '1.3 kg',
           date: { en: '28 Aug', fi: '28.8.' },
@@ -754,61 +488,8 @@ const SCREENS: readonly Screen[] = [
         },
       },
       { what: 'the queued chip', key: 'offline.row.chip' },
-      // The frame lays its note out over two lines (306x34, node 5:23586).
-      { what: 'the queue note', key: 'offline.note', maxLines: 2 },
-      // The frame's downloaded region and everything that hangs off it, drawn as the design's own
-      // sample since ADR-042 and labelled on the screen by the eyebrow above and this sentence
-      // (the app's own words, so it carries the lines the wider language needs).
-      { what: 'the sample disclosure', key: 'offline.sample.note', maxLines: 3 },
-      // The frame's own card (node 5:23549): “Laajavuori region” on one line (232x25) and
-      // “12 km² · 86 MB · Downloaded” on one (232x18).
-      { what: 'the region’s name', key: 'offline.region.title', maxLines: 1 },
-      {
-        what: 'the region’s own line',
-        key: 'offline.region.detail',
-        maxLines: 1,
-        values: { area: '12', size: '86' },
-      },
-      // The card's two rows, each one line in the frame (217x21 and 217x18, nodes 5:23559 and
-      // 5:23560) with the frame's own value at the end (53x17, node 5:23562).
-      {
-        what: 'the tiles row',
-        key: 'offline.tiles.title',
-        maxLines: 1,
-        values: { count: '24' },
-      },
-      { what: 'what the tiles are for', key: 'offline.tiles.detail', maxLines: 1 },
-      { what: 'the rows’ value', key: 'offline.cached', maxLines: 1 },
-      { what: 'the forecast row', key: 'offline.forecast.title', maxLines: 1 },
-      {
-        what: 'and when it was saved',
-        key: 'offline.forecast.detail',
-        maxLines: 1,
-        values: { date: { en: '28 Aug', fi: '28.8.' }, time: '08:00' },
-      },
-      // The frame's own note under the card (306x17, node 5:23571).
-      { what: 'the refresh note', key: 'offline.refresh.note', maxLines: 1 },
-      // The storage block (nodes 5:23574 and 5:23575), both one line in the frame (165x20 each).
-      { what: 'the storage label', key: 'offline.storage.label', maxLines: 1 },
-      {
-        what: 'and what is used of what there is',
-        key: 'offline.storage.value',
-        maxLines: 1,
-        values: { total: '500', used: '86' },
-      },
-      // The frame's two actions (nodes 5:23587 and 5:23590), drawn without a role: their labels
-      // are the frame's own words, one line each (83x19 and 224x19).
-      { what: 'the retry action', key: 'offline.retry', maxLines: 1 },
-      { what: 'the manage action', key: 'offline.manage', maxLines: 1 },
-      // The frame's last line (342x20, node 5:23592).
-      {
-        what: 'the last-sync line',
-        key: 'offline.lastSync',
-        maxLines: 1,
-        values: { date: { en: '28 Aug', fi: '28.8.' }, time: '08:12' },
-      },
-      // `offline.empty` is deliberately absent: the harness opens the screen the way the frame
-      // draws it — holding a report — so the empty state is asserted in the unit test.
+      { what: 'the queue note', key: 'offline.note', maxLines: 3 },
+      { what: 'the send action', key: 'offline.retry', maxLines: 1 },
     ],
   },
   {
@@ -1156,221 +837,43 @@ const SCREENS: readonly Screen[] = [
     ],
   },
   {
-    // Frames 15–18, the planned marketplace. Its four screens are **outside the app shell**: the
-    // frames label themselves “OUTSIDE CORE” and draw no navigation bar, so nothing of the shell's
-    // is measured here (ADR-022).
-    name: '15 · Planned marketplace · Browse',
+    // No session: the listings cannot be read, and the screen offers to try again.
+    name: '15 · Marketplace · Browse',
     path: '/marketplace',
     anchor: 'market.eyebrow.browse',
     copy: [
       { what: 'the eyebrow', key: 'market.eyebrow.browse' },
       { what: 'the screen title', key: 'market.title.browse' },
-      { what: 'the disclosure chip', key: 'market.disclosure' },
-      { what: 'the mode line', key: 'market.browse.mode' },
-      // The frame's three filter chips, one line each inside their 36 px pill (node 5:23801).
-      { what: 'the first filter chip', key: 'market.filter.all', maxLines: 1 },
-      { what: 'the second filter chip', key: 'market.filter.pickup', maxLines: 1 },
-      { what: 'the third filter chip', key: 'market.filter.distance', maxLines: 1 },
-      // A card's own lines (nodes 5:23811-5:23816): the title and the price share one 318 px row,
-      // and the availability line and the seller line are one line each.
-      { what: 'the first card’s price', key: 'market.card.price', values: { amount: '8' } },
-      {
-        what: 'the first card’s availability',
-        key: 'market.card.available',
-        maxLines: 1,
-        values: { available: '20', place: 'Laajavuori, Jyväskylä' },
-      },
-      {
-        what: 'the second card’s availability',
-        key: 'market.card.availableAway',
-        maxLines: 1,
-        values: {
-          available: '8',
-          place: 'Palokka',
-          // A formatted distance, so each language's own decimal mark is what is measured.
-          distance: { en: '4.2 km', fi: '4,2 km' },
-        },
-      },
-      {
-        what: 'a card’s seller line',
-        key: 'market.card.seller',
-        maxLines: 1,
-        values: { name: 'Matti Laine', rating: '4.9', reviews: '24' },
-      },
-      {
-        what: 'the listing count',
-        key: 'market.browse.count.many',
-        values: { count: '2' },
-      },
-      // `market.browse.none` and `market.browse.count.one` are deliberately absent: the harness
-      // opens the screen as the frame draws it — two listings and nothing typed — so the empty
-      // answer and the singular are asserted in the unit tests.
+      { what: 'the read failure', key: 'market.readFailed', maxLines: 2 },
+      { what: 'the retry action', key: 'discover.map.retry' },
     ],
   },
   {
-    name: '16 · Planned marketplace · Listing detail',
+    name: '16 · Marketplace · Listing detail',
     path: '/marketplace-listing',
     anchor: 'market.eyebrow.listing',
     copy: [
       { what: 'the eyebrow', key: 'market.eyebrow.listing' },
-      { what: 'the disclosure chip', key: 'market.disclosure' },
-      { what: 'the listing’s headline', key: 'market.listing.headline' },
-      // The frame's own price slot beside the headline (node 5:23854).
-      { what: 'the price per kilogram', key: 'market.listing.price', values: { amount: '8' } },
-      {
-        what: 'the stock line',
-        key: 'market.listing.stock',
-        values: { species: { key: 'report.species.bilberry' }, available: '20' },
-      },
-      // The frame lays the description out over two lines (342x40, node 5:23856).
-      { what: 'the listing’s description', key: 'market.listing.blurb', maxLines: 2 },
-      {
-        what: 'the harvest date',
-        key: 'market.listing.harvested',
-        maxLines: 1,
-        values: { date: { en: '28 August 2026', fi: '28.8.2026' } },
-      },
-      // The frame lays the pickup line out over two lines (272x40, node 5:23863).
-      {
-        what: 'the pickup line',
-        key: 'market.listing.pickup',
-        maxLines: 2,
-        values: { place: 'Laajavuori car park', window: '17:00–19:00' },
-      },
-      { what: 'the delivery line', key: 'market.listing.delivery' },
-      {
-        what: 'the seller’s reputation',
-        key: 'market.seller.meta',
-        maxLines: 1,
-        values: { rating: '4.9', reviews: '24' },
-      },
-      // The design's own word alone: the frame draws it 104 px wide inside a 165 px action, and the
-      // seller's whole name goes in the action's accessible name instead (see the key's comment).
-      { what: 'the contact action', key: 'market.listing.contact', maxLines: 1 },
-      { what: 'the order action', key: 'market.listing.order' },
-      // The frame lays the escrow note out over two lines (342x34, node 5:23879).
-      { what: 'the escrow note', key: 'market.listing.escrow', maxLines: 2 },
+      { what: 'the unknown-listing line', key: 'market.listing.unknown', maxLines: 2 },
     ],
   },
   {
-    name: '17 · Planned marketplace · Seller chat',
+    name: '17 · Marketplace · Seller chat',
     path: '/marketplace-chat',
     anchor: 'market.eyebrow.chat',
     copy: [
-      { what: 'the eyebrow', key: 'market.eyebrow.chat' },
-      { what: 'the disclosure chip', key: 'market.disclosure' },
-      { what: 'the seller’s badge', key: 'market.seller.badge' },
-      {
-        what: 'the thread’s listing',
-        key: 'market.chat.listing',
-        maxLines: 1,
-        // The price is the unit price the screen formats, and Finnish writes it the other way round
-        // (screen 16 measures the same figure); a value written once would look for the wrong line.
-        values: { name: 'Fresh blueberries', price: { en: '€8/kg', fi: '8 €/kg' } },
-      },
-      {
-        what: 'the thread’s listing line',
-        key: 'market.chat.listingMeta',
-        maxLines: 1,
-        values: { available: '20', place: 'Laajavuori' },
-      },
-      {
-        what: 'the thread’s stamp',
-        key: 'market.chat.stamp',
-        maxLines: 1,
-        values: { date: { en: '28 August 2026', fi: '28.8.2026' } },
-      },
-      // The design's own four messages: two lines, two lines, one and three inside the frame's
-      // 280 px bubble (nodes 5:23910-5:23923).
-      { what: 'the first message', key: 'market.chat.ask', maxLines: 3 },
-      { what: 'the second message', key: 'market.chat.reply', maxLines: 3 },
-      { what: 'the third message', key: 'market.chat.confirm', maxLines: 2 },
-      { what: 'the fourth message', key: 'market.chat.pack', maxLines: 3 },
-      // `market.chat.read` is deliberately absent: the frame sets the receipt inside the timestamp
-      // line itself (“14:02 · Read”, node `5:23912`) rather than as a slot of its own, so there is no
-      // single string to hold to a line count. The unit test is where the receipt is asserted.
-      {
-        what: 'the order summary action',
-        key: 'market.chat.summary',
-        maxLines: 1,
-        values: { total: '40' },
-      },
-      { what: 'the composer’s own line', key: 'market.chat.composer', maxLines: 1 },
+      { what: 'the eyebrow', key: 'market.eyebrow.chat', maxLines: 2 },
+      { what: 'the unknown-listing line', key: 'market.listing.unknown', maxLines: 2 },
     ],
   },
   {
-    name: '18 · Planned marketplace · Checkout and order status',
+    name: '18 · Marketplace · Order',
     path: '/marketplace-order',
     anchor: 'market.eyebrow.order',
     copy: [
       { what: 'the eyebrow', key: 'market.eyebrow.order' },
-      { what: 'the screen title', key: 'market.order.title' },
-      { what: 'the disclosure chip', key: 'market.disclosure' },
-      { what: 'the test-mode chip', key: 'market.order.testMode' },
-      { what: 'the status message’s title', key: 'market.order.confirmed.title' },
-      // The frame lays the status message's body out over two lines (282x36, node 5:23958).
-      { what: 'the status message’s body', key: 'market.order.confirmed.body', maxLines: 2 },
-      {
-        what: 'the order’s seller line',
-        key: 'market.order.by',
-        maxLines: 1,
-        values: { seller: 'Matti Laine', date: { en: '28 August 2026', fi: '28.8.2026' } },
-      },
-      {
-        what: 'the order’s own line',
-        key: 'market.order.line',
-        maxLines: 1,
-        // The unit is the listing's own price per kilogram, which Finnish writes with the symbol
-        // after the figure — the same value the listing screen measures (ADR-017).
-        values: { kilograms: '5', unit: { en: '€8/kg', fi: '8 €/kg' } },
-      },
-      { what: 'the delivery line', key: 'market.order.delivery', maxLines: 1 },
-      { what: 'the total’s label', key: 'market.order.total', maxLines: 1 },
-      {
-        what: 'a figure with its own symbol',
-        key: 'market.price.symbol',
-        maxLines: 1,
-        values: { amount: '40' },
-      },
-      {
-        what: 'the pickup row’s title',
-        key: 'market.order.pickup.title',
-        maxLines: 1,
-        values: { name: 'Matti Laine' },
-      },
-      // The frame lays the pickup row's own line out over two lines (308x36, node 5:23978).
-      {
-        what: 'the pickup row’s line',
-        key: 'market.order.pickup.meta',
-        maxLines: 2,
-        values: {
-          date: { en: '28 Aug', fi: '28.8.' },
-          time: '18:30',
-          place: 'Laajavuori car park',
-          town: 'Jyväskylä',
-        },
-      },
-      { what: 'the confirmed status', key: 'market.order.status.confirmed', maxLines: 1 },
-      { what: 'the waiting status', key: 'market.order.status.waiting', maxLines: 1 },
-      // The frame lays both halves of its hold message out over two lines each (282x79,
-      // node 5:23987).
-      { what: 'the hold message’s title', key: 'market.order.hold.title', maxLines: 2 },
-      {
-        what: 'the hold message’s body',
-        key: 'market.order.hold.body',
-        maxLines: 2,
-        values: { name: 'Matti Laine' },
-      },
-      {
-        what: 'the message action',
-        key: 'market.order.message',
-        maxLines: 1,
-        values: { name: 'Matti Laine' },
-      },
-      // The frame lays its dispute note out over two lines (342x34, node 5:23998).
-      { what: 'the dispute note', key: 'market.order.disputeNote', maxLines: 2 },
-      // `market.order.confirm` and `market.order.dispute` do not exist: neither action is drawn,
-      // because no provider holds the payment they would release or freeze (PROJECT.md).
+      { what: 'the screen title', key: 'market.order.form.title' },
+      { what: 'the unknown-listing line', key: 'market.listing.unknown', maxLines: 2 },
     ],
   },
   {

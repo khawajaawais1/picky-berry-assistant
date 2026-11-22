@@ -447,6 +447,18 @@ describe('PrivacySettingsScreen', () => {
     expect(onOpenSavedSpots).toHaveBeenCalledTimes(1);
   });
 
+  it('opens the berry marketplace, and draws no row without that destination', async () => {
+    const onOpenMarketplace = jest.fn();
+    const { rerender } = await render(<PrivacySettingsScreen />);
+
+    expect(screen.queryByTestId('privacy-marketplace-row')).not.toBeOnTheScreen();
+
+    await rerender(<PrivacySettingsScreen onOpenMarketplace={onOpenMarketplace} />);
+    await fireEvent.press(screen.getByRole('button', { name: /^Berry marketplace/ }));
+
+    expect(onOpenMarketplace).toHaveBeenCalledTimes(1);
+  });
+
   it('opens the two screens its remaining rows name, and is a reading until the route can', async () => {
     const onOpenAccountSecurity = jest.fn();
     const onOpenTermsPrivacy = jest.fn();
@@ -534,24 +546,6 @@ describe('PrivacySettingsScreen', () => {
 
     await rerender(<PrivacySettingsScreen />);
     expect(screen.queryByRole('button', { name: 'Back' })).not.toBeOnTheScreen();
-  });
-
-  it('says a preview may start with sample records', async () => {
-    await render(<PrivacySettingsScreen />);
-
-    expect(screen.getByTestId('preview-sample-data')).toBeOnTheScreen();
-  });
-
-  it('does not promise samples in a production build', async () => {
-    process.env.EXPO_PUBLIC_APP_ENV = 'production';
-
-    try {
-      await render(<PrivacySettingsScreen />);
-
-      expect(screen.queryByTestId('preview-sample-data')).not.toBeOnTheScreen();
-    } finally {
-      delete process.env.EXPO_PUBLIC_APP_ENV;
-    }
   });
 });
 

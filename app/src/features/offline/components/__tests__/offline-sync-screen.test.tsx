@@ -4,7 +4,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useNetworkState } from 'expo-network';
 import type { ReactNode } from 'react';
 
-import { themes } from '@/constants/theme';
 import { enqueueReport } from '@/services/report-queue';
 
 import { OfflineSyncScreen } from '../offline-sync-screen';
@@ -31,7 +30,8 @@ const REPORT = {
   recordedAt: '2026-08-28T10:55:00.000Z',
   speciesId: 'lingonberry',
   yieldRating: 4,
-  zoneId: 'Z14',
+  zoneId: 'zone-14',
+  zoneName: 'Laajavuori 14',
 } as const;
 
 beforeEach(async () => {
@@ -41,18 +41,22 @@ beforeEach(async () => {
   networkState.mockReturnValue({});
 });
 
+/** A cache with no timers: this file mocks `expo-network`, which `QueryProvider` listens to. */
+function CacheProvider({ children }: { children: ReactNode }) {
+  const [client] = [new QueryClient({ defaultOptions: { queries: { gcTime: Infinity } } })];
+  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+}
+
 describe('OfflineSyncScreen', () => {
   it('renders the frame’s header', async () => {
-    await render(<OfflineSyncScreen />);
+    await render(<OfflineSyncScreen />, { wrapper: CacheProvider });
 
-    // The eyebrow carries the same season-demo disclosure frame 06's map and frame 11's season
-    // screen do, because the region drawn below it is the design's sample (ADR-042).
-    expect(screen.getByText('ACCOUNT / OFFLINE · SYNC CENTRE · SEASON DEMO')).toBeOnTheScreen();
+    expect(screen.getByText('ACCOUNT / OFFLINE · SYNC CENTRE')).toBeOnTheScreen();
     expect(screen.getByText('Ready beyond the signal')).toBeOnTheScreen();
   });
 
   it('says nothing is waiting when the phone is holding no reports', async () => {
-    await render(<OfflineSyncScreen />);
+    await render(<OfflineSyncScreen />, { wrapper: CacheProvider });
 
     expect(await screen.findByText('Nothing is waiting to sync.')).toBeOnTheScreen();
   });
@@ -60,44 +64,47 @@ describe('OfflineSyncScreen', () => {
   it('lists the reports the phone is holding, as the frame’s card prints them', async () => {
     await enqueueReport(REPORT);
 
-    await render(<OfflineSyncScreen />);
+    await render(<OfflineSyncScreen />, { wrapper: CacheProvider });
 
     expect(await screen.findByText('Waiting to sync · 1 report')).toBeOnTheScreen();
-    expect(screen.getByText('Zone 14 · Lingonberry')).toBeOnTheScreen();
+    expect(screen.getByText('Laajavuori 14 · Lingonberry')).toBeOnTheScreen();
     expect(screen.getByText('28 Aug · 52 min · Rating 4 / 5 · 1.3 kg')).toBeOnTheScreen();
-    expect(screen.getByText('Queued · visit + report')).toBeOnTheScreen();
+    expect(screen.getByText('Queued · report')).toBeOnTheScreen();
 
     expect(screen.queryByText('Nothing is waiting to sync.')).not.toBeOnTheScreen();
   });
 
   it('counts several reports in the frame’s own heading', async () => {
     await enqueueReport(REPORT);
-    await enqueueReport({ ...REPORT, recordedAt: '2026-08-30T11:00:00.000Z', zoneId: 'Z17' });
+    await enqueueReport({
+      ...REPORT,
+      recordedAt: '2026-08-30T11:00:00.000Z',
+      zoneId: 'zone-17',
+      zoneName: 'Laajavuori 17',
+    });
 
-    await render(<OfflineSyncScreen />);
+    await render(<OfflineSyncScreen />, { wrapper: CacheProvider });
 
     expect(await screen.findByText('Waiting to sync · 2 reports')).toBeOnTheScreen();
-    expect(screen.getByText('Zone 17 · Lingonberry')).toBeOnTheScreen();
+    expect(screen.getByText('Laajavuori 17 · Lingonberry')).toBeOnTheScreen();
   });
 
   it('leaves the harvest off a row that has none, rather than inventing a weight', async () => {
     await enqueueReport({ ...REPORT, amountText: '' });
 
-    await render(<OfflineSyncScreen />);
+    await render(<OfflineSyncScreen />, { wrapper: CacheProvider });
 
     expect(await screen.findByText('28 Aug · 52 min · Rating 4 / 5')).toBeOnTheScreen();
   });
 
-  it('says the reports are on the phone and that nothing has been sent', async () => {
+  it('says the reports are on the phone and will be sent when online', async () => {
     await enqueueReport(REPORT);
 
-    await render(<OfflineSyncScreen />);
+    await render(<OfflineSyncScreen />, { wrapper: CacheProvider });
 
-    // The frame's own sentence (“Your report is safe and will retry automatically”) promises a
-    // retry, and there is no transport to retry over (ADR-005); what is true is said instead.
     expect(
       await screen.findByText(
-        'Saved on this phone. Nothing has been sent yet — syncing arrives with the server.',
+        'Saved on this phone. They are sent to the zone service as soon as you are online.',
       ),
     ).toBeOnTheScreen();
   });
@@ -107,7 +114,7 @@ describe('OfflineSyncScreen', () => {
       .spyOn(AsyncStorage, 'getItem')
       .mockRejectedValueOnce(new Error('device storage is unreadable'));
 
-    await render(<OfflineSyncScreen />);
+    await render(<OfflineSyncScreen />, { wrapper: CacheProvider });
 
     expect(await screen.findByText('Your saved visits could not be read.')).toBeOnTheScreen();
     // An unreadable queue is not an empty one: the false-empty sentence must not sit above the
@@ -120,7 +127,7 @@ describe('OfflineSyncScreen', () => {
   it('draws the frame’s status message when the device reports no connection', async () => {
     networkState.mockReturnValue({ isConnected: false });
 
-    await render(<OfflineSyncScreen />);
+    await render(<OfflineSyncScreen />, { wrapper: CacheProvider });
 
     expect(screen.getByText('You’re offline')).toBeOnTheScreen();
     expect(
@@ -133,14 +140,14 @@ describe('OfflineSyncScreen', () => {
     // guessed at (AGENTS.md §11.2).
     networkState.mockReturnValue({ isConnected: true });
 
-    await render(<OfflineSyncScreen />);
+    await render(<OfflineSyncScreen />, { wrapper: CacheProvider });
 
     expect(screen.queryByText('You’re offline')).not.toBeOnTheScreen();
   });
 
   it('draws no status message before the platform has answered', async () => {
     // `beforeEach` leaves the platform silent, which is the state a screen must not speak in.
-    await render(<OfflineSyncScreen />);
+    await render(<OfflineSyncScreen />, { wrapper: CacheProvider });
 
     expect(screen.queryByText('You’re offline')).not.toBeOnTheScreen();
   });
@@ -148,65 +155,31 @@ describe('OfflineSyncScreen', () => {
   it('treats a link with no internet behind it as offline', async () => {
     networkState.mockReturnValue({ isConnected: true, isInternetReachable: false });
 
-    await render(<OfflineSyncScreen />);
+    await render(<OfflineSyncScreen />, { wrapper: CacheProvider });
 
     expect(screen.getByText('You’re offline')).toBeOnTheScreen();
   });
 
-  it('draws the design’s sample region, and names it as the design’s sample where it is drawn', async () => {
-    await render(<OfflineSyncScreen />);
+  it('sends the queue now, and lists what is left', async () => {
+    await enqueueReport(REPORT);
+    const send = jest.fn().mockResolvedValue('recorded');
 
-    // The sentence comes before the card in the tree, and it is what keeps the figures below it
-    // from reading as a measurement of this phone (ADR-042).
-    const note = screen.getByTestId('offline-sample-note');
-    expect(note).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        'The region, the storage figures and the two actions below are the design’s own sample: this phone has downloaded nothing and nothing syncs yet.',
-      ),
-    ).toBeOnTheScreen();
+    await render(<OfflineSyncScreen reportsApi={{ send }} />, { wrapper: CacheProvider });
+    await fireEvent.press(await screen.findByRole('button', { name: 'Send now' }));
 
-    for (const drawn of [
-      'Laajavuori region',
-      '12 km² · 86 MB · Downloaded',
-      'Map tiles & 24 zones',
-      'Today’s forecast',
-      'Storage used',
-      '86 / 500 MB',
-      'Last successful sync · 28 Aug at 08:12',
-    ]) {
-      expect(screen.getByText(drawn)).toBeOnTheScreen();
-    }
+    expect(await screen.findByText('Nothing is waiting to sync.')).toBeOnTheScreen();
+    expect(send).toHaveBeenCalledWith(expect.objectContaining({ zoneId: 'zone-14' }));
   });
 
-  it('draws the frame’s two actions without a role, because nothing behind them can act', async () => {
-    await render(<OfflineSyncScreen />);
+  it('keeps the queue when the service cannot be reached', async () => {
+    await enqueueReport(REPORT);
+    const send = jest.fn().mockResolvedValue('retry');
 
-    for (const action of ['offline-action-primary', 'offline-action-secondary']) {
-      expect(screen.getByTestId(action)).toBeOnTheScreen();
-    }
+    await render(<OfflineSyncScreen reportsApi={{ send }} />, { wrapper: CacheProvider });
+    await fireEvent.press(await screen.findByRole('button', { name: 'Send now' }));
 
-    // The frame's words are drawn; the button role it would need to be a control is not.
-    expect(screen.getByText('Retry sync')).toBeOnTheScreen();
-    expect(screen.getByText('Manage downloaded regions')).toBeOnTheScreen();
-    // Painted as drawings, not as the screen's primary action: a filled accent button that does
-    // nothing invites the tap it cannot honour (frontend review, 2026-10-25).
-    expect(screen.getByTestId('offline-action-primary')).toHaveStyle({
-      backgroundColor: themes.light.colors.surfaceMuted,
-    });
-    expect(screen.getByText('Retry sync')).toHaveStyle({ color: themes.light.colors.textMuted });
-    expect(screen.queryByRole('button', { name: 'Retry sync' })).not.toBeOnTheScreen();
-    expect(
-      screen.queryByRole('button', { name: 'Manage downloaded regions' }),
-    ).not.toBeOnTheScreen();
-  });
-
-  it('fills the storage meter with the same share its own figures report', async () => {
-    await render(<OfflineSyncScreen />);
-
-    // 86 of 500 MB, which is the frame's own 59 px of a 342 px bar — computed from the two figures
-    // above it so the bar cannot disagree with the line (ADR-042).
-    expect(screen.getByTestId('offline-storage-meter-fill')).toHaveStyle({ width: '17.2%' });
+    await waitFor(() => expect(send).toHaveBeenCalledTimes(1));
+    expect(await screen.findByText('Waiting to sync · 1 report')).toBeOnTheScreen();
   });
 });
 
@@ -214,11 +187,6 @@ describe('OfflineSyncScreen', () => {
  * Downloading the pilot area for offline use (ADR-065, the plan's phase 6): the zone service's
  * snapshot is written into the zone cache, so the map opens without a connection for every berry.
  */
-/** A cache with no timers: this file mocks `expo-network`, which `QueryProvider` listens to. */
-function CacheProvider({ children }: { children: ReactNode }) {
-  const [client] = [new QueryClient({ defaultOptions: { queries: { gcTime: Infinity } } })];
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
-}
 
 describe('OfflineSyncScreen, downloading the pilot area', () => {
   const zone = (id: string) => ({
@@ -288,7 +256,7 @@ describe('OfflineSyncScreen, downloading the pilot area', () => {
   });
 
   it('offers no download without the zone service', async () => {
-    await render(<OfflineSyncScreen />);
+    await render(<OfflineSyncScreen />, { wrapper: CacheProvider });
 
     expect(screen.queryByTestId('offline-snapshot-download')).not.toBeOnTheScreen();
   });

@@ -1,9 +1,11 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
 
 import { PostVisitFeedbackScreen } from '@/features/discover';
 import { clearLastFinalized, useVisitSession, type VisitSessionVisit } from '@/features/visits';
 import { enqueueReport } from '@/services/report-queue';
+import { appReportsApi, flushReportQueue } from '@/services/reports';
 
 /**
  * Screen 10 · Core picker · Post-visit feedback (Figma node `5:23259`).
@@ -24,6 +26,7 @@ import { enqueueReport } from '@/services/report-queue';
  */
 export default function PostVisitFeedbackRoute() {
   const { lastFinalized } = useVisitSession();
+  const queryClient = useQueryClient();
   // Keep the visit on screen while the route leaves: clearing the store after a save or skip
   // must not flash the empty state before the next route draws. The mount-time reading is the
   // fallback for the frame after the store is cleared.
@@ -38,6 +41,10 @@ export default function PostVisitFeedbackRoute() {
       }}
       onSave={async (report) => {
         await enqueueReport(report);
+        // Kept on the phone first, then sent: without signal it waits in the queue for the next pass.
+        void flushReportQueue(appReportsApi)
+          .then(() => queryClient.invalidateQueries({ queryKey: ['me'] }))
+          .catch(() => undefined);
         clearLastFinalized();
         router.replace('/visits');
       }}

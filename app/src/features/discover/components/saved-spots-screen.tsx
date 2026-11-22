@@ -13,7 +13,6 @@ import { savedPlanSpecies, savedSpots } from '../domain/saved-spots';
 import type { Species } from '../domain/species';
 import type { ZoneSource } from '../domain/zone-source';
 import { useZoneAnswers } from '../hooks/use-zones';
-import { testZoneSource } from '../services/test-zone-source';
 import { ZoneSourceRow } from './zone-source-row';
 
 export type SavedSpotsScreenProps = {
@@ -27,7 +26,7 @@ export type SavedSpotsScreenProps = {
    */
   onOpenZone?: (zoneId: string, species: Species) => void;
   /** Where the zones come from. Defaults to the pilot stub, as on frame 06 and screen 07. */
-  zoneSource?: ZoneSource;
+  zoneSource: ZoneSource;
 };
 
 /**
@@ -60,7 +59,7 @@ export function SavedSpotsScreen({
   onBack,
   onBrowseZones,
   onOpenZone,
-  zoneSource = testZoneSource,
+  zoneSource,
 }: SavedSpotsScreenProps) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();

@@ -1,77 +1,82 @@
 import type { TranslationKey } from '@/services/i18n';
 
-import type { Species } from './species';
-import type { Confidence } from './zone-details';
+import { isSpecies, type Species } from './species';
 
-// The radius is a setting of the account's, not part of the sample (ADR-067); it is re-exported
-// so the sample card keeps one import.
 export { formatRadius } from './alert-radius';
 
-/**
- * What frame 12 (Core picker · Alerts and forecast, node `5:23439`) says, and what it is worth.
- *
- * The design's alert is a heads-up about the forest: ripe berries a short walk north, a yield
- * score, the confidence behind it, and the three reasons the app is saying so. **Nothing here is
- * observed**: there is no weather source, no season model and no report stream, so the alert is
- * the design's own sample, exactly as frame 07's forecast and frame 08's offline note are
- * (PROJECT.md records it). What is real is the vocabulary: the score's scale, the confidence's
- * own word and the distance are the same ones frames 06 to 08 already use.
- */
+export type Confidence = 'high' | 'medium' | 'low';
+export type AlertRipeness = 'unripe' | 'ripening' | 'ripe' | 'past';
 
-/** The three confidences the design draws, in its own order (“High, Medium, Low”). */
+/**
+ * One explainable alert the reasoning job produced for a zone and berry (feature 6.7), as
+ * `GET /alerts` serves it for this picker: filtered to their species and alert radius.
+ */
+export type PickerAlert = {
+  id: string;
+  zoneId: string;
+  zoneName: string;
+  species: Species;
+  score: number;
+  confidence: Confidence;
+  ripeness: AlertRipeness;
+  /** Metres from the phone, or `null` when the request carried no position. */
+  distanceMeters: number | null;
+  latestReportAt: string | null;
+  computedAt: string;
+};
+
+export type AlertFeed = {
+  radiusKm: number;
+  alerts: PickerAlert[];
+};
+
 export const ALERT_CONFIDENCE = ['high', 'medium', 'low'] as const satisfies readonly Confidence[];
 
-/**
- * The confidence's own word, from the same table frame 07's zone card uses.
- *
- * One idea, one vocabulary: an alert claiming “High confidence” about a zone whose screen says
- * something else would be the app disagreeing with itself.
- */
 export function confidenceLabelKey(confidence: Confidence): TranslationKey {
   return `discover.details.confidence.${confidence}`;
 }
 
-/**
- * The design's own alert (nodes 5:23453-5:23462): ripe bilberries 1.8 km north, on the frame's
- * own sample day, about a zone the design's story names.
- */
-export const DEMO_ALERT = {
-  /** How far the berries are — the frame's “1.8 km north”, with the direction in the sentence. */
-  distanceMeters: 1800,
-  score: 82,
-  confidence: 'high',
-  /** The design's own zone and place (node 5:23462). */
-  zoneNumber: '18',
-  place: 'Laajavuori',
-  /** How long ago the freshest report behind the alert arrived — the frame's “1 h ago”. */
-  latestReportMinutesAgo: 60,
-  /** The frame's own stamp (“TODAY · 28 AUG · 09:30”), as the instant and the time it shows. */
-  at: '2026-08-28T09:30:00.000Z',
-  atTime: '09:30',
-} as const;
+const RIPENESS: readonly AlertRipeness[] = ['unripe', 'ripening', 'ripe', 'past'];
 
-/**
- * How many reasons the frame gives for its alert (“A warm week”, “Rain on Sunday”, “Last picked
- * 6 days ago”). The screen draws them from its own copy table; this is the count the domain
- * promises, so a screen cannot quietly drop one of the design's three.
- */
-export const DEMO_ALERT_REASON_COUNT = 3;
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
 
-/**
- * The frame's own preferences card (nodes 5:23480–5:23504), as the screen's own sample: ripe-berry
- * push alerts on, a 3 km search radius, quiet hours from 21:00 to 07:00, and bilberry plus one more
- * species. **Nothing reads any of them** — no alert is delivered, no permission is asked for, and
- * no radius, hour or species filter exists — so they are the design's sample rather than this
- * phone's settings, which is what the screen says on the card itself (ADR-043).
- */
-export const DEMO_ALERT_PREFERENCES = {
-  pushAlerts: true,
-  /** Kilometres, as the frame's own “3 km” — the unit is the value's, the word is the catalogue's. */
-  radiusKm: 3,
-  quietFrom: '21:00',
-  quietTo: '07:00',
-  /** One of the app's own species, so the row's word comes from the one vocabulary table. */
-  speciesId: 'bilberry' satisfies Species,
-  /** How many species beyond the first the sample subscribes to (“+ 1” on the frame). */
-  extraSpecies: 1,
-} as const;
+function parseAlert(value: unknown): PickerAlert | null {
+  if (!isRecord(value)) return null;
+  const { id, zone_id, zone_name, species, score, confidence, ripeness } = value;
+  if (
+    typeof id !== 'string' ||
+    typeof zone_id !== 'string' ||
+    !isSpecies(species) ||
+    typeof score !== 'number' ||
+    !(ALERT_CONFIDENCE as readonly unknown[]).includes(confidence) ||
+    !(RIPENESS as readonly unknown[]).includes(ripeness) ||
+    typeof value.computed_at !== 'string'
+  ) {
+    return null;
+  }
+
+  return {
+    id,
+    zoneId: zone_id,
+    zoneName: typeof zone_name === 'string' ? zone_name : '',
+    species,
+    score,
+    confidence: confidence as Confidence,
+    ripeness: ripeness as AlertRipeness,
+    distanceMeters: typeof value.distance_m === 'number' ? value.distance_m : null,
+    latestReportAt: typeof value.latest_report_at === 'string' ? value.latest_report_at : null,
+    computedAt: value.computed_at,
+  };
+}
+
+/** The alert feed, or `null` for a body that is not one; an alert the app cannot read is dropped. */
+export function parseAlertFeed(body: unknown): AlertFeed | null {
+  if (!isRecord(body) || !Array.isArray(body.alerts)) return null;
+
+  return {
+    radiusKm: typeof body.radius_km === 'number' ? body.radius_km : 0,
+    alerts: body.alerts.map(parseAlert).filter((alert): alert is PickerAlert => alert !== null),
+  };
+}

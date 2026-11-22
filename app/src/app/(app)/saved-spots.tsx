@@ -1,12 +1,6 @@
-import { router, useCanGoBack, useLocalSearchParams } from 'expo-router';
+import { router, useCanGoBack } from 'expo-router';
 
-import { appEnvironment } from '@/config/env';
-import {
-  appZoneSource,
-  CommunityMapPrototype,
-  communityMapReading,
-  SavedSpotsScreen,
-} from '@/features/discover';
+import { appZoneSource, SavedSpotsScreen } from '@/features/discover';
 /**
  * The picker's own saved plan, the screen frame 14's “Saved spots” row opens (Figma node
  * `5:23613`'s row; the screen behind it was never drawn — ADR-030).
@@ -25,24 +19,9 @@ import {
  *
  * The way in is the settings screen (`src/app/(app)/privacy-settings.tsx`), which is frame 14's
  * own row; the plan belongs to the Profile destination, as the frames 13–14 half of the app does.
- *
- * PROTOTYPE — `?variant=C` swaps this route's rendering for one throwaway reading of the design's
- * community map: shared places as cards carrying the person who shared them, filed beside the
- * picker's own plan ([to-questionnaire-community-map.md](../../to-questionnaire-community-map.md)).
- * The other two readings live on `/discover` and `/zone-details`, which the prototype's own bar
- * navigates to; a **production** build ignores the parameter entirely, so no stray prototype can
- * ship.
  */
 export default function SavedSpotsRoute() {
   const canGoBack = useCanGoBack();
-  const params = useLocalSearchParams<{ variant?: string }>();
-  const reading =
-    appEnvironment() === 'production'
-      ? undefined
-      : communityMapReading('/saved-spots', params.variant);
-
-  if (reading) return <CommunityMapPrototype variant={reading} />;
-
   return (
     <SavedSpotsScreen
       zoneSource={appZoneSource}

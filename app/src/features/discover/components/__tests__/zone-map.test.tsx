@@ -49,8 +49,8 @@ describe('ZoneMap', () => {
     await render(<ZoneMap status="ready" zones={zones} />);
 
     expect(screen.getByTestId('zone-map-drawing')).toBeOnTheScreen();
-    expect(screen.getByText('Laajavuori')).toBeOnTheScreen();
-    expect(screen.getByText('2 zones · test data')).toBeOnTheScreen();
+    expect(screen.getByText('Jyväskylä')).toBeOnTheScreen();
+    expect(screen.getByText('2 zones')).toBeOnTheScreen();
     expect(screen.getByTestId('zone-map')).toHaveStyle({
       backgroundColor: themes.light.colors.mapBase,
       borderRadius: radii.lg,
@@ -61,7 +61,7 @@ describe('ZoneMap', () => {
   it('says “one zone” in the singular, because a search can leave exactly one', async () => {
     await render(<ZoneMap status="ready" zones={[zone()]} />);
 
-    expect(screen.getByText('1 zone · test data')).toBeOnTheScreen();
+    expect(screen.getByText('1 zone')).toBeOnTheScreen();
   });
 
   it('says it is still loading rather than drawing an empty map', async () => {
@@ -115,12 +115,11 @@ describe('ZoneMap', () => {
     expect(screen.getByRole('button', { name: 'Recentre the map on the zones' })).toBeOnTheScreen();
   });
 
-  it('drops the test-data disclosure over a live answer', async () => {
-    await render(<ZoneMap demo={false} status="ready" zones={[zone(), zone({ id: 'b' })]} />);
+  it('discloses the bundled test zones only when the stub source is drawn', async () => {
+    await render(<ZoneMap demo status="ready" zones={[zone(), zone({ id: 'b' })]} />);
 
-    expect(screen.getByText('Jyväskylä')).toBeOnTheScreen();
-    expect(screen.getByText('2 zones')).toBeOnTheScreen();
-    expect(screen.queryByText(/test data/)).not.toBeOnTheScreen();
+    expect(screen.getByText('Laajavuori')).toBeOnTheScreen();
+    expect(screen.getByText('2 zones · test data')).toBeOnTheScreen();
   });
 
   it('draws the OpenFreeMap basemap for the theme, with the OpenStreetMap credit', async () => {

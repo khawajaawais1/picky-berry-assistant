@@ -142,20 +142,7 @@ const FAMILIES: readonly Family[] = [
     subject: 'cached tiles, a saved forecast and a sync that happened',
     pattern:
       /^Cached$|^Välimuistissa$|Retry sync|Yritä synkronoida uudelleen|last successful sync|Viimeisin synkronointi/i,
-    recorded: [
-      {
-        key: 'offline.cached',
-        why: 'The design’s sample region, disclosed on the screen by its eyebrow and its own sentence; both actions are readings with no role (demo row A16).',
-      },
-      {
-        key: 'offline.retry',
-        why: 'A reading, not a control: there is no transport to retry over (demo row A16, ADR-042).',
-      },
-      {
-        key: 'offline.lastSync',
-        why: 'The design’s own sample instant (demo row A16).',
-      },
-    ],
+    recorded: [],
   },
   {
     id: 'a-forecast-service',
@@ -167,20 +154,12 @@ const FAMILIES: readonly Family[] = [
         why: 'The frame’s own disclaimer, which hedges the claim instead of making it (demo row A3).',
       },
       {
-        key: 'discover.details.weather',
-        why: 'The reading beside that disclaimer, on the same disclosed card (demo row A3).',
-      },
-      {
         key: 'discover.alert.eyebrow',
-        why: 'The alert screen’s own disclosure, which names the reasoning as the design’s sample (demo row A10).',
+        why: 'Names the screen: the alerts are the reasoning job’s output, served by GET /alerts.',
       },
       {
-        key: 'offline.forecast.title',
-        why: 'The saved forecast in the design’s sample region (demo row A16).',
-      },
-      {
-        key: 'offline.refresh.note',
-        why: 'The frame’s instruction to refresh online, which names the missing source rather than hiding it (demo row A16).',
+        key: 'discover.alert.note',
+        why: 'Says what an alert combines and hedges it as a forecast, not a promised harvest.',
       },
     ],
   },
@@ -206,11 +185,11 @@ const FAMILIES: readonly Family[] = [
     recorded: [
       {
         key: 'discover.details.reports.trust.trusted',
-        why: 'The design’s vocabulary for reports no service has judged, on the zone details card disclosed as its sample (demo rows A3, F4).',
+        why: 'The zone report list’s label for a reporter whose trust weight the API scores at 0.6 or more (GET /zones/:id/reports).',
       },
       {
         key: 'discover.details.reports.trust.unverified',
-        why: 'The same vocabulary, in the negative (demo row A3).',
+        why: 'The same label for every other reporter, including new ones.',
       },
     ],
   },
@@ -219,32 +198,7 @@ const FAMILIES: readonly Family[] = [
     subject: 'money held for a purchase',
     pattern:
       /escrow|payment held|payment stays held|payment is held|maksu pidossa|maksu pysyy turvassa|maksun suojattuna/i,
-    recorded: [
-      {
-        key: 'market.listing.escrow',
-        why: 'Hedged on screen (“Planned provider escrow”), on a screen carrying the Planned extra disclosure (demo row A12, finding F4, known issue 22).',
-      },
-      {
-        key: 'market.order.status.confirmed',
-        why: 'The marketplace demo’s own status, disclosed by Provider test mode and the test-order note (demo row A12).',
-      },
-      {
-        key: 'market.order.hold.body',
-        why: 'The demo order’s hold, on the same disclosed screen (demo row A12).',
-      },
-      {
-        key: 'market.order.confirmed.body',
-        why: 'The test-order note itself: it says no real money was charged (demo row A12).',
-      },
-      {
-        key: 'market.order.disputeNote',
-        why: 'The demo order’s dispute note, on the same disclosed screen (demo row A12).',
-      },
-      {
-        key: 'market.chat.pack',
-        why: 'One line of the demo thread, on a composer drawn without a role and a thread nothing can send (demo row A12, ADR-044).',
-      },
-    ],
+    recorded: [],
   },
   {
     id: 'others-see-your-position',
@@ -511,6 +465,8 @@ describe('the claims the copy makes', () => {
     expect(cleared.map((family) => family.id)).toEqual([
       'background-capture',
       'automatic-detection',
+      'cached-tiles-and-a-sync',
+      'money-held',
       'identifier-is-an-address',
       'a-settings-step-the-app-never-takes',
     ]);

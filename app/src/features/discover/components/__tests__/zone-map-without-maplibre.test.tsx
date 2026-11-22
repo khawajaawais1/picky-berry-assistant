@@ -38,13 +38,13 @@ function zone(): Zone {
 }
 
 describe('ZoneMap without MapLibre', () => {
-  it('states that the map needs a development build instead of crashing the app', async () => {
+  it('still draws the zones, as an SVG, instead of crashing the app', async () => {
     await render(<ZoneMap status="ready" zones={[zone()]} />);
 
     expect(screen.getByTestId('zone-map-unavailable')).toHaveTextContent(
-      'The map isn’t available in this build. Use a development build to see it.',
+      'Street map needs a development build; zones are drawn without it.',
     );
-    expect(screen.queryByTestId('zone-map-drawing')).not.toBeOnTheScreen();
-    expect(screen.getByText('1 zone · test data')).toBeOnTheScreen();
+    expect(screen.getByTestId('zone-map-canvas')).toBeOnTheScreen();
+    expect(screen.getByText('1 zone')).toBeOnTheScreen();
   });
 });

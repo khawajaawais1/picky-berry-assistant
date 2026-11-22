@@ -46,12 +46,6 @@ const PROTOTYPES: readonly PrototypeSource[] = [
     table: 'SIGN_IN_VARIANTS',
     component: 'SignInPrototype',
   },
-  {
-    name: 'community-map',
-    file: 'src/features/discover/components/prototype/community-map-variants.tsx',
-    table: 'COMMUNITY_MAP_VARIANTS',
-    component: 'CommunityMapPrototype',
-  },
 ];
 
 /** One reading, as the prototype's own table declares it. */
@@ -142,23 +136,6 @@ const COPY: Record<string, readonly string[]> = {
     'Fingerprint, Face ID or whatever this phone already uses — the OS does the asking, and the app is never told which one it was.',
     'Use my password instead',
     'Last used on this phone',
-  ],
-  'community-map:A': [
-    'Shared with you',
-    'Shared spot — a place someone picked and shared with you (3 now)',
-    'Left out on purpose: frame 14’s “Public” state, an invite list, and any way to remove a spot someone else shared.',
-  ],
-  'community-map:B': [
-    'Shared here',
-    'Places other pickers shared with you in this zone. Their own position is not on this screen and never was: a shared spot is a place.',
-    'Big lingonberry patch on the north side — the bog is dry this year.',
-    'Not drawn: the empty state (nobody has shared a place here yet), a spot whose sharer removed it, and any action — the rows are readings, and no screen opens a shared place.',
-  ],
-  'community-map:C': [
-    'Shared with you',
-    'This reading files shared places in the picker’s own plan — the screen frame 14’s “Saved spots” row opens, whose title is the one above — as one card per place, with the person who shared it on the card.',
-    'Your own plan',
-    'Left out on purpose: whether a shared place belongs on this screen at all, the frame’s “Public” state, and any way to un-share or to leave the list.',
   ],
 };
 

@@ -1,18 +1,22 @@
-import { router, useCanGoBack } from 'expo-router';
+import { router, useCanGoBack, useLocalSearchParams } from 'expo-router';
 
-import { ZoneReportsScreen } from '@/features/discover';
+import { isSpecies, ZoneReportsScreen } from '@/features/discover';
+import { appReportsApi } from '@/services/reports';
+
 /**
- * The list behind frame 07's “See all 11” — **the design never drew it** (ADR-044).
- *
- * A route only wires a screen to a feature's public API. The frame's link names the zone's
- * reports for the week, and the design's eleven are its own sample week; what the app can hold is
- * the reports saved on this phone, so the screen states both rather than standing the sample in
- * for the phone's record. It is reached from the zone screen's own row, and the frame draws a back
- * control there, so the route offers one only when the screen was actually pushed onto a stack —
- * which keeps a deep link from drawing a control that cannot act.
+ * The zone's own report list (ADR-044), pushed from the zone screen with the zone and the berry
+ * it was reading. The back control is offered only when there is history to go back to.
  */
 export default function ZoneReportsRoute() {
   const canGoBack = useCanGoBack();
+  const params = useLocalSearchParams<{ species?: string; zone?: string }>();
 
-  return <ZoneReportsScreen onBack={canGoBack ? () => router.back() : undefined} />;
+  return (
+    <ZoneReportsScreen
+      onBack={canGoBack ? () => router.back() : undefined}
+      reportsApi={appReportsApi}
+      species={isSpecies(params.species) ? params.species : undefined}
+      zoneId={params.zone}
+    />
+  );
 }

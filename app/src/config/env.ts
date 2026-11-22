@@ -75,6 +75,23 @@ export function isLoopbackHost(hostname: string): boolean {
 }
 
 /**
+ * A host on the developer's own network: an RFC 1918 address, the Android emulator's alias for
+ * the host machine (`10.0.2.2` is inside 10/8) or an mDNS `.local` name. A phone running a
+ * development build reaches the API on the developer's machine through one of these, never
+ * through `localhost`, which on the phone is the phone itself.
+ */
+export function isPrivateNetworkHost(hostname: string): boolean {
+  const host = hostname.toLowerCase();
+  if (host.endsWith('.local')) return true;
+
+  const octets = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);
+  if (!octets) return false;
+
+  const [a, b] = [Number(octets[1]), Number(octets[2])];
+  return a === 10 || (a === 192 && b === 168) || (a === 172 && b >= 16 && b <= 31);
+}
+
+/**
  * Validates and normalises the API base URL.
  *
  * Rejects:
@@ -85,7 +102,7 @@ export function isLoopbackHost(hostname: string): boolean {
  */
 export function parseApiBaseUrl(
   raw: string | undefined,
-  options: { allowInsecureLoopback?: boolean } = {},
+  options: { allowInsecureLoopback?: boolean; allowInsecureLocalNetwork?: boolean } = {},
 ): UrlParseResult {
   const value = raw?.trim();
   if (!value) {
@@ -101,11 +118,14 @@ export function parseApiBaseUrl(
   }
   if (
     parsed.protocol === 'http' &&
-    !(options.allowInsecureLoopback && isLoopbackHost(parsed.hostname))
+    !(options.allowInsecureLoopback && isLoopbackHost(parsed.hostname)) &&
+    !(options.allowInsecureLocalNetwork && isPrivateNetworkHost(parsed.hostname))
   ) {
     return {
       ok: false,
-      reason: 'must use https (clear-text http is only allowed for loopback hosts)',
+      reason: options.allowInsecureLocalNetwork
+        ? 'must use https (clear-text http is only allowed for loopback and local-network hosts)'
+        : 'must use https (clear-text http is only allowed for loopback hosts)',
     };
   }
 
@@ -202,6 +222,7 @@ export function loadConfig(source: PublicEnvSource = declaredPublicEnv()): Confi
 
   const urlResult = parseApiBaseUrl(source[PUBLIC_ENV_VARS.apiBaseUrl], {
     allowInsecureLoopback: environment === 'development',
+    allowInsecureLocalNetwork: environment === 'development',
   });
   if (!urlResult.ok) {
     problems.push({ variable: PUBLIC_ENV_VARS.apiBaseUrl, reason: urlResult.reason });
@@ -216,4 +237,50 @@ export function loadConfig(source: PublicEnvSource = declaredPublicEnv()): Confi
       apiBaseUrl: urlResult.url,
     },
   };
+}
+
+export type DevelopmentHost = {
+  /** The platform the bundle runs on (`Platform.OS`). */
+  platform: string;
+  /**
+   * The host the bundle was served from, as Expo reports it (`Constants.expoConfig.hostUri`,
+   * e.g. `192.168.1.20:8081`), or nothing when it is unknown.
+   */
+  devServerHostUri?: string | null;
+};
+
+/**
+ * Where a development build on a device should send the API's requests.
+ *
+ * `.env` names the API as `http://localhost:3000`, which is right for the web build and the iOS
+ * simulator on the same machine, and wrong everywhere else: on a phone and in the Android
+ * emulator `localhost` is the device itself, so every request failed and the map — which draws
+ * only once its zones arrive — never loaded. A loopback API URL on a native platform is therefore
+ * pointed at the machine Metro is serving from (the same host the bundle came from), keeping the
+ * configured scheme, port and path; with no Metro host to go by, the Android emulator's own alias
+ * for its host (`10.0.2.2`) is used. Only `development` is rewritten, and only a loopback URL.
+ */
+export function resolveDevelopmentApiBaseUrl(config: AppConfig, host: DevelopmentHost): AppConfig {
+  if (config.environment !== 'development' || host.platform === 'web') return config;
+
+  const parsed = parseAbsoluteUrl(config.apiBaseUrl);
+  if (!parsed || !isLoopbackHost(parsed.hostname)) return config;
+
+  const metroHost = host.devServerHostUri
+    ?.trim()
+    .replace(/^[a-z]+:\/\//i, '')
+    .split(/[/:]/)[0];
+  const target =
+    metroHost && !isLoopbackHost(metroHost)
+      ? metroHost
+      : host.platform === 'android'
+        ? '10.0.2.2'
+        : null;
+  if (target === null) return config;
+
+  const port = parsed.host.startsWith('[')
+    ? parsed.host.slice(parsed.host.indexOf(']') + 1)
+    : parsed.host.slice(parsed.hostname.length);
+
+  return { ...config, apiBaseUrl: `${parsed.protocol}://${target}${port}${parsed.path}` };
 }

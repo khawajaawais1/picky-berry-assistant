@@ -1,5 +1,6 @@
 import { SeasonInsightsScreen } from '@/features/discover';
 import { appVisitsApi } from '@/features/visits';
+import { appReportsApi } from '@/services/reports';
 
 /**
  * Screen 11 · Core picker · Visits and analytics (Figma node `5:23343`).
@@ -14,5 +15,5 @@ import { appVisitsApi } from '@/features/visits';
  * makes the queue visible instead of a promise.
  */
 export default function VisitsRoute() {
-  return <SeasonInsightsScreen visitsApi={appVisitsApi} />;
+  return <SeasonInsightsScreen reportsApi={appReportsApi} visitsApi={appVisitsApi} />;
 }

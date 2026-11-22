@@ -163,14 +163,9 @@ const LEDGER: readonly LedgerEntry[] = [
     why: 'Save writes the report to this phone’s queue, Skip leaves it, the note field holds what is typed, the species chips and the yield radios are real local choices, and “Add a berry photo” is absent (demo-and-stand-ins §7).',
   },
   {
-    file: 'src/features/discover/components/prototype/community-map-variants.tsx',
-    offers: { pressable: 1, role: 1, textAction: 1 },
-    why: 'The community-map readings under review, reachable only outside a production build.',
-  },
-  {
     file: 'src/features/discover/components/route-to-zone-screen.tsx',
-    offers: { button: 1, textAction: 1 },
-    why: 'Start walk opens the active-visit screen and Cancel returns; both act on this device.',
+    offers: { button: 2, textAction: 2 },
+    why: '“Directions in Maps” opens the platform maps app for walking directions to the zone’s middle, Start walking opens the active visit, and Cancel returns (drawn in both the loading and the ready state).',
   },
   {
     file: 'src/features/discover/components/saved-spots-screen.tsx',
@@ -193,11 +188,6 @@ const LEDGER: readonly LedgerEntry[] = [
     why: 'Frame 10’s yield radios, a real choice stored with the report it describes.',
   },
   {
-    file: 'src/features/discover/components/design-zone-card.tsx',
-    offers: { pressable: 1, role: 1 },
-    why: 'The design’s demo card, kept for the community-map prototype: it is a control only where the caller has somewhere to go, and without a handler it returns the drawing, with no role and no chevron.',
-  },
-  {
     file: 'src/features/discover/components/zone-card.tsx',
     offers: { pressable: 1, role: 1 },
     why: 'Frame 06’s card hands its zone and score layer to frame 07; it is a control only where the route supplies that destination, and without a handler it returns the drawing, with no role and no chevron.',
@@ -215,7 +205,7 @@ const LEDGER: readonly LedgerEntry[] = [
   {
     file: 'src/features/discover/components/zone-details-screen.tsx',
     offers: { button: 1, pressable: 2, role: 2 },
-    why: 'Navigate and Save zone act on this device, the bookmark waits while the record is read, and “See all 11” opens the zone’s own report list (ADR-044).',
+    why: 'Navigate opens the route to this zone, Save zone acts on this device and waits while the record is read, and “See all reports” opens the zone’s report list from the API (ADR-044).',
   },
   {
     file: 'src/features/discover/components/zone-search-field.tsx',
@@ -223,9 +213,19 @@ const LEDGER: readonly LedgerEntry[] = [
     why: 'Frame 06’s search field: what is typed narrows the zone list on the spot.',
   },
   {
-    file: 'src/features/discover/components/zone-row.tsx',
+    file: 'src/features/discover/components/alerts-screen.tsx',
     offers: { pressable: 1, role: 1 },
-    why: 'A list row that is a control only for a zone the app has a detail screen for, so it can never open the wrong zone’s numbers.',
+    why: 'Each alert card opens its zone on the zone screen, for the berry the alert is about; it is a control only when the route supplies that destination.',
+  },
+  {
+    file: 'src/features/discover/components/zone-map-svg.tsx',
+    offers: { role: 1 },
+    why: 'The SVG drawing of the zone rings (web, and Expo Go without MapLibre) claims `image`: it is the text alternative for the zones, and no part of it is a control.',
+  },
+  {
+    file: 'src/features/marketplace/components/market-browse-screen.tsx',
+    offers: { textAction: 1 },
+    why: 'Retry after the listings could not be read, wired to the same query.',
   },
   {
     file: 'src/features/discover/components/zone-source-row.tsx',
@@ -233,19 +233,9 @@ const LEDGER: readonly LedgerEntry[] = [
     why: 'Frame 06’s list row, and the saved plan’s row since ADR-060: it is a control only where the caller supplies a destination (the plan does for a resolved zone; the map’s list does not), and without one it returns the card with no role and no chevron.',
   },
   {
-    file: 'src/features/discover/components/design-zone-map.tsx',
-    offers: { role: 1 },
-    why: 'The design’s drawing claims `image` — the text alternative it carries, not a control (known issue 35, corrected): it has no handler to lose and nothing on it acts, which is why the frame’s own recentre button is still not drawn. It remains the map on frames 08 and 09.',
-  },
-  {
     file: 'src/features/discover/components/zone-map-canvas.native.tsx',
     offers: { pressable: 1, role: 2 },
     why: 'The MapLibre map claims `image` — the text alternative WCAG 1.1.1 asks of the screen’s primary presentation of the zones (known issue 35, corrected). It pans and zooms, so it draws the frame’s recentre button, which fits the camera back to the zones the picker can otherwise lose.',
-  },
-  {
-    file: 'src/features/discover/components/zone-map-canvas.web.tsx',
-    offers: { role: 1 },
-    why: 'The web fallback draws the same rings as an SVG and claims `image` for the same reason: it is the node a browser exposes, and no part of it is a control.',
   },
   {
     file: 'src/features/field-test/components/field-test-screen.tsx',
@@ -255,7 +245,7 @@ const LEDGER: readonly LedgerEntry[] = [
   {
     file: 'src/features/marketplace/components/listing-card.tsx',
     offers: { pressable: 1, role: 1 },
-    why: 'The same guard as the zone row: only the one listing the app has a screen for is a button, and that press opens it.',
+    why: 'A listing card opens its listing when the route supplies the destination; without one it is the drawing, with no role and no chevron.',
   },
   {
     file: 'src/features/marketplace/components/market-search-field.tsx',
@@ -264,18 +254,18 @@ const LEDGER: readonly LedgerEntry[] = [
   },
   {
     file: 'src/features/marketplace/components/market-chat-screen.tsx',
-    offers: { button: 1 },
-    why: 'The order summary opens the order screen; the composer is drawn and inert, claiming no input role (ADR-044).',
+    offers: { button: 1, pressable: 1, role: 1, textField: 1 },
+    why: 'The composer sends the typed message to the seller (`POST /market/listings/:id/messages`), the send glyph is its button and waits while the field is empty or a send is in flight, and “Order berries” opens the order form for an active listing.',
   },
   {
     file: 'src/features/marketplace/components/market-listing-screen.tsx',
     offers: { button: 2 },
-    why: 'Contact the seller and Order open the demo’s chat and order screens, on a screen that states it is the provider test mode (ADR-026).',
+    why: 'Contact opens the thread with this listing’s seller, and Order opens the order form; Order is drawn only while the listing has stock.',
   },
   {
     file: 'src/features/marketplace/components/market-order-screen.tsx',
-    offers: { button: 1 },
-    why: 'Message the seller opens the demo thread; “Confirm berries received” and “Open dispute” are absent from the catalogue entirely (ADR-044).',
+    offers: { button: 2, formField: 2 },
+    why: 'The form takes kilograms and a pickup time, checked against the stock, and “Reserve berries” places the order (`POST /market/orders`); the summary’s “Message” opens the seller thread.',
   },
   {
     file: 'src/features/onboarding/components/create-account-screen.tsx',
@@ -319,8 +309,8 @@ const LEDGER: readonly LedgerEntry[] = [
   },
   {
     file: 'src/features/offline/components/offline-sync-screen.tsx',
-    offers: { textAction: 1 },
-    why: 'Downloads the pilot area’s snapshot from the zone service (`GET /zones/snapshot`, ADR-065) into the zone cache the map reads offline; drawn only when the route supplies the service, and it states what it saved or that nothing new was saved.',
+    offers: { textAction: 2 },
+    why: '“Send now” sends the queued reports to the API (`POST /reports`) and re-reads the queue; the snapshot action downloads the pilot area (`GET /zones/snapshot`) into the cache the map reads offline. Both are drawn only when the route supplies the service.',
   },
   {
     file: 'src/features/privacy/components/account-security-screen.tsx',
@@ -456,18 +446,6 @@ describe('the controls the app offers', () => {
     // the audit (§2) and in docs/demo-and-stand-ins.md.
     const readings: readonly { file: string; why: string }[] = [
       {
-        file: 'src/features/discover/components/alerts-screen.tsx',
-        why: 'Frame 12: the push switch is a figure and its three settings are readings, so the screen carries no role at all (demo row A17, ADR-043).',
-      },
-      {
-        file: 'src/features/offline/components/offline-sync-screen.tsx',
-        why: 'Frame 13: “Retry sync” and “Manage downloads” are drawings of the design’s actions, because there is no transport to retry over (demo row A16, ADR-042, ADR-048 §4).',
-      },
-      {
-        file: 'src/features/marketplace/components/market-browse-screen.tsx',
-        why: 'Frame 15: its three filter chips would leave the app’s two listings unchanged, and its count line opens no index — both claim nothing (ADR-026).',
-      },
-      {
         file: 'src/components/molecules/chip.tsx',
         why: 'A chip is a reading of a state, never a control: a chip that can act is `ChoiceChips` (ADR-026, ADR-043).',
       },
@@ -486,14 +464,6 @@ describe('the controls the app offers', () => {
     // while `TextAction` and `AppButton` keep the box they drew and drop the role, the name and the
     // tab stop instead, which is the same rule where the action's own metrics are the drawing.
     const guards: readonly { file: string; source: string }[] = [
-      {
-        file: 'src/features/discover/components/zone-row.tsx',
-        source: 'if (!openable) return row;',
-      },
-      {
-        file: 'src/features/discover/components/design-zone-card.tsx',
-        source: 'if (!onPress) return card;',
-      },
       {
         file: 'src/features/marketplace/components/listing-card.tsx',
         source: 'if (!onPress) return card;',

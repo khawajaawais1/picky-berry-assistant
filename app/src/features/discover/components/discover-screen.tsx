@@ -12,7 +12,6 @@ import type { Species } from '../domain/species';
 import { filterZones, isFilterActive, type ZoneFilter } from '../domain/zone-filter';
 import { PILOT_ZONE_SPECIES, type Zone, type ZoneSource } from '../domain/zone-source';
 import { useZones } from '../hooks/use-zones';
-import { testZoneSource } from '../services/test-zone-source';
 import { MapListToggle, type ZoneView } from './map-list-toggle';
 import { SpeciesChips } from './species-chips';
 import { ZoneCard } from './zone-card';
@@ -41,7 +40,7 @@ export type DiscoverScreenProps = {
    * Where the screen's zones come from. Defaults to the bundled pilot stub; a test, or a
    * future composition root that has a real service, supplies its own through the port.
    */
-  zoneSource?: ZoneSource;
+  zoneSource: ZoneSource;
 };
 
 /**
@@ -89,7 +88,7 @@ export function DiscoverScreen({
   onBack,
   onOpenDownloads,
   onOpenZone,
-  zoneSource = testZoneSource,
+  zoneSource,
 }: DiscoverScreenProps) {
   const { colors } = useAppTheme();
   const { locale, t } = useTranslation();

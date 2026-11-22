@@ -23,7 +23,7 @@ export type ReportQueueState = {
   error: boolean;
 };
 
-export function useReportQueue(): ReportQueueState {
+export function useReportQueue(version = 0): ReportQueueState {
   const [reports, setReports] = useState<VisitReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -45,7 +45,7 @@ export function useReportQueue(): ReportQueueState {
     return () => {
       active = false;
     };
-  }, []);
+  }, [version]);
 
   return { error, loading, reports };
 }

@@ -61,6 +61,9 @@ export function listingAvailability(listing: MarketListing, locale: Locale, t: T
 
 /** A seller's own line on frame 15's card: “Matti Laine · 4.9 · 24 reviews”. */
 export function sellerLine(seller: MarketSeller, t: Translate): string {
+  if (seller.rating === null) {
+    return interpolate(t('market.card.sellerNew'), { name: seller.name });
+  }
   return interpolate(t('market.card.seller'), {
     name: seller.name,
     rating: String(seller.rating),
@@ -73,6 +76,9 @@ export function sellerLine(seller: MarketSeller, t: Translate): string {
  * figures behind it, or the figures alone for a seller the app has not verified.
  */
 export function sellerReputation(seller: MarketSeller, t: Translate): string {
+  if (seller.rating === null) {
+    return t(seller.verified ? 'market.seller.newVerified' : 'market.seller.new');
+  }
   const values = { rating: String(seller.rating), reviews: String(seller.reviews) };
 
   return seller.verified

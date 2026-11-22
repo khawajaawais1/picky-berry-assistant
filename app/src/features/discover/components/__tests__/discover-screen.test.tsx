@@ -76,7 +76,7 @@ function sourceOf(zones: readonly Zone[]): ZoneSource & { list: jest.Mock } {
   };
 }
 
-async function renderScreen(props: DiscoverScreenProps = {}) {
+async function renderScreen(props: Partial<DiscoverScreenProps> = {}) {
   return render(<DiscoverScreen zoneSource={sourceOf(ZONES)} {...props} />, {
     wrapper: QueryProvider,
   });

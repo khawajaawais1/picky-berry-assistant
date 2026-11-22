@@ -7,19 +7,22 @@ import { View } from 'react-native';
 import { AppText } from '@/components/atoms';
 import { Callout, Card, StatusMessage, TextAction } from '@/components/molecules';
 import { Screen } from '@/components/templates';
-import { radii, spacing } from '@/constants/theme';
+import { spacing } from '@/constants/theme';
 import { applyZoneSnapshot, type ZoneSnapshot, type ZoneSnapshotSource } from '@/features/discover';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useReportQueue } from '@/hooks/use-report-queue';
-import { formatShortDate, interpolate, useTranslation, type TranslationKey } from '@/services/i18n';
+import { interpolate, useTranslation, type TranslationKey } from '@/services/i18n';
 import { YIELD_RATING_MAX } from '@/services/report-queue';
+import type { ReportsApi } from '@/services/reports';
+import { flushReportQueue } from '@/services/reports';
 
 import { connectionState } from '../domain/connection';
-import { DEMO_DOWNLOADS, DEMO_REGION_SIZE_MB, demoStorageShare } from '../domain/downloads';
 import { queuedReportRows, waitingLabelKey, type QueuedReportRow } from '../domain/queued-reports';
 
 export type OfflineSyncScreenProps = {
   onBack?: () => void;
+  /** Sends the queued reports now; without it the queue waits for the app's own pass. */
+  reportsApi?: Pick<ReportsApi, 'send'>;
   /**
    * The zone service's offline snapshot (ADR-065, the plan's phase 6). With it, the screen offers
    * to download the pilot area with every berry's score into the zone cache. Without it, no
@@ -39,6 +42,8 @@ export type OfflineSyncScreenProps = {
 const SPECIES_LABEL_KEY: Record<string, TranslationKey> = {
   bilberry: 'report.species.bilberry',
   lingonberry: 'report.species.lingonberry',
+  cloudberry: 'report.species.cloudberry',
+  crowberry: 'report.species.crowberry',
 };
 
 /**
@@ -77,59 +82,13 @@ const SPECIES_LABEL_KEY: Record<string, TranslationKey> = {
  * there, and the app drops it, exactly as the settings screen's Language row does: a row that will
  * never open anything may not draw the sign that says it will (AGENTS.md §11.2).
  */
-function DownloadRow({ detail, title, value }: { detail: string; title: string; value: string }) {
-  return (
-    <View className="w-full flex-row items-center gap-gap py-setting">
-      <View className="flex-1 gap-tight">
-        <AppText variant="cardTitle">{title}</AppText>
-        <AppText tone="muted" variant="caption">
-          {detail}
-        </AppText>
-      </View>
-      <AppText tone="accent" variant="rowValue">
-        {value}
-      </AppText>
-    </View>
-  );
-}
-
-/**
- * One of the frame's two actions, drawn and inert.
- *
- * It is a `View`, not an `AppButton`, because `AppButton` always claims the button role (it is the
- * app's real action) — and an action that cannot act must not claim one (AGENTS.md §11.2). What the
- * user gets instead is the frame's own drawing with the frame's own words, under a sentence saying
- * the block is the design's sample.
- */
-function DownloadAction({ label, tone }: { label: string; tone: 'primary' | 'secondary' }) {
-  const { colors } = useAppTheme();
-  const primary = tone === 'primary';
-
-  return (
-    <View
-      className="min-h-action w-full flex-row items-center justify-center gap-sm rounded-control px-md"
-      style={{
-        // The design draws two actions; the app has no transport to honour either. They are
-        // painted as drawings — a muted fill and muted words — so the screen's real action is
-        // not confused with the sample (frontend review, 2026-10-25).
-        backgroundColor: colors.surfaceMuted,
-        borderColor: colors.border,
-        borderWidth: 1,
-      }}
-      testID={`offline-action-${tone}`}
-    >
-      {primary ? <Feather color={colors.textMuted} name="refresh-cw" size={20} /> : null}
-      <AppText style={{ color: colors.textMuted, fontWeight: '600' }} variant="body">
-        {label}
-      </AppText>
-    </View>
-  );
-}
-
-export function OfflineSyncScreen({ onBack, snapshotSource }: OfflineSyncScreenProps) {
+export function OfflineSyncScreen({ onBack, reportsApi, snapshotSource }: OfflineSyncScreenProps) {
   const { colors } = useAppTheme();
   const { locale, t } = useTranslation();
-  const { error, loading, reports } = useReportQueue();
+  const queryClient = useQueryClient();
+  const [queueVersion, setQueueVersion] = useState(0);
+  const { error, loading, reports } = useReportQueue(queueVersion);
+  const [sending, setSending] = useState<'idle' | 'sending' | 'failed'>('idle');
   const network = useNetworkState();
 
   const rows = queuedReportRows(reports, locale);
@@ -159,110 +118,6 @@ export function OfflineSyncScreen({ onBack, snapshotSource }: OfflineSyncScreenP
           </Callout>
         ) : null}
 
-        {/*
-          The frame's downloaded region and everything that hangs off it — drawn as the design's
-          own sample, and said so before any of it is drawn. The sentence is the app's: the frame
-          has no reason to disclose its own composition, and a picker reading “Downloaded” over a
-          phone that has downloaded nothing is exactly what a disclosure is for.
-        */}
-        <AppText tone="muted" variant="metadata" testID="offline-sample-note">
-          {t('offline.sample.note')}
-        </AppText>
-
-        <View
-          className="w-full gap-cardGap rounded-lg px-section py-section"
-          style={{ backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }}
-          testID="offline-region"
-        >
-          <View className="w-full flex-row items-center gap-gap">
-            <Feather color={colors.accent} name="map" size={22} />
-            <View className="flex-1 gap-tight">
-              <AppText variant="sectionHeading">{t('offline.region.title')}</AppText>
-              <AppText tone="muted" variant="caption">
-                {interpolate(t('offline.region.detail'), {
-                  area: String(DEMO_DOWNLOADS.areaKm2),
-                  size: String(DEMO_REGION_SIZE_MB),
-                })}
-              </AppText>
-            </View>
-            <Feather color={colors.success} name="check-circle" size={22} />
-          </View>
-
-          {/* The frame's 1 px divider inside the card (node 5:23556). */}
-          <View style={{ backgroundColor: colors.border, height: 1 }} />
-
-          <DownloadRow
-            detail={t('offline.tiles.detail')}
-            title={interpolate(t('offline.tiles.title'), {
-              count: String(DEMO_DOWNLOADS.zoneCount),
-            })}
-            value={t('offline.cached')}
-          />
-          <DownloadRow
-            detail={interpolate(t('offline.forecast.detail'), {
-              date: formatShortDate(DEMO_DOWNLOADS.forecastSavedOn, locale),
-              time: DEMO_DOWNLOADS.forecastSavedAtTime,
-            })}
-            title={t('offline.forecast.title')}
-            value={t('offline.cached')}
-          />
-
-          <AppText tone="muted" variant="metadata">
-            {t('offline.refresh.note')}
-          </AppText>
-        </View>
-
-        {/*
-          The frame's storage block (node 5:23572): the label, what is used of what there is, and
-          the meter. Its fill is computed from those two figures rather than drawn to a width, so
-          the bar cannot disagree with the line above it.
-        */}
-        <View className="w-full gap-sm" testID="offline-storage">
-          <View className="w-full flex-row items-center justify-between">
-            <AppText style={{ fontWeight: '600' }} variant="bodySmall">
-              {t('offline.storage.label')}
-            </AppText>
-            <AppText tone="muted" variant="bodySmall">
-              {interpolate(t('offline.storage.value'), {
-                total: String(DEMO_DOWNLOADS.storage.totalMb),
-                used: String(DEMO_DOWNLOADS.storage.usedMb),
-              })}
-            </AppText>
-          </View>
-          <View
-            style={{
-              backgroundColor: colors.border,
-              borderRadius: radii.pill,
-              height: spacing.sm,
-            }}
-          >
-            <View
-              style={{
-                backgroundColor: colors.accent,
-                borderRadius: radii.pill,
-                height: spacing.sm,
-                width: `${demoStorageShare() * 100}%`,
-              }}
-              testID="offline-storage-meter-fill"
-            />
-          </View>
-        </View>
-
-        {/*
-          The frame's two actions (nodes 5:23587 and 5:23590), drawn as the readings they are: the
-          drawing is the frame's, and neither claims a role — there is no transport to retry over
-          and no region store to manage, so a pressable action here would promise both.
-        */}
-        <DownloadAction label={t('offline.retry')} tone="primary" />
-        <DownloadAction label={t('offline.manage')} tone="secondary" />
-
-        <AppText tone="muted" variant="bodySmall">
-          {interpolate(t('offline.lastSync'), {
-            date: formatShortDate(DEMO_DOWNLOADS.lastSyncOn, locale),
-            time: DEMO_DOWNLOADS.lastSyncAtTime,
-          })}
-        </AppText>
-
         <View
           className="w-full gap-cardGap rounded-lg px-section py-section"
           style={{ backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }}
@@ -286,7 +141,7 @@ export function OfflineSyncScreen({ onBack, snapshotSource }: OfflineSyncScreenP
               {rows.map((row, index) => (
                 <QueuedReport
                   index={index}
-                  key={`${row.zoneNumber}-${row.date}-${index}`}
+                  key={`${row.zoneName}-${row.date}-${index}`}
                   row={row}
                 />
               ))}
@@ -294,6 +149,33 @@ export function OfflineSyncScreen({ onBack, snapshotSource }: OfflineSyncScreenP
               <AppText tone="muted" variant="metadata">
                 {t('offline.note')}
               </AppText>
+
+              {reportsApi ? (
+                <TextAction
+                  align="center"
+                  label={t(sending === 'sending' ? 'offline.sending' : 'offline.retry')}
+                  onPress={
+                    sending === 'sending'
+                      ? undefined
+                      : () => {
+                          setSending('sending');
+                          void flushReportQueue(reportsApi)
+                            .then(async () => {
+                              setSending('idle');
+                              await queryClient.invalidateQueries({ queryKey: ['me'] });
+                            })
+                            .catch(() => setSending('failed'))
+                            .finally(() => setQueueVersion((version) => version + 1));
+                        }
+                  }
+                  testID="offline-send-now"
+                />
+              ) : null}
+              {sending === 'failed' ? (
+                <StatusMessage testID="offline-send-failed" tone="danger" variant="caption">
+                  {t('offline.sendFailed')}
+                </StatusMessage>
+              ) : null}
             </>
           ) : null}
 
@@ -334,7 +216,7 @@ function QueuedReport({ row, index }: { row: QueuedReportRow; index: number }) {
       <AppText variant="cardTitle">
         {interpolate(t('offline.row.title'), {
           species: species ? t(species) : row.speciesId,
-          zone: row.zoneNumber,
+          zone: row.zoneName || t('discover.season.recorded.unknownZone'),
         })}
       </AppText>
       <AppText tone="muted" variant="caption">

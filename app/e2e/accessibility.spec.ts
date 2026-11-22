@@ -35,6 +35,10 @@ const CONSENT_KEY = 'picky.privacy-consent.v2';
  */
 const QUEUE_KEY = 'picky.report-queue.v1';
 
+/** Laajavuori 1, the bundled test zone the harness's stub source serves first. */
+const SOURCE_ZONE_ID = 'cc0e7929-de9f-516a-9049-7a25a1a6d092';
+const SOURCE_ZONE_PATH = `/zone-details?zone=${SOURCE_ZONE_ID}&species=lingonberry`;
+
 test.describe('the consent controls in the built web app', () => {
   test('the onboarding checklist exposes its checked state, which nothing else there carries', async ({
     page,
@@ -122,8 +126,7 @@ test.describe('the visit screens that read the tracker', () => {
   test('states the visit history’s period, and what the choice does to the list', async ({
     page,
   }) => {
-    // Frame 11's period chips, over a visit the app did not make in this run: a September report,
-    // written the way the device's store holds one, while the design's own chip is its August 2026.
+    // A report still queued on the phone, from a month that is not this one.
     await page.goto('/visits');
     await page.evaluate(
       (key) =>
@@ -136,7 +139,9 @@ test.describe('the visit screens that read the tracker', () => {
               recordedAt: '2026-09-14T09:20:00.000Z',
               speciesId: 'bilberry',
               yieldRating: 5,
-              zoneId: 'Z21',
+              zoneId: 'zone-21',
+              zoneName: 'Laajavuori 21',
+              clientId: '00000000-0000-4000-8000-000000000021',
             },
           ]),
         ),
@@ -144,31 +149,20 @@ test.describe('the visit screens that read the tracker', () => {
     );
     await page.reload();
 
-    const month = page.getByRole('radio', { name: 'August 2026' });
+    const month = page.getByRole('radio', { name: 'This month' });
     const all = page.getByRole('radio', { name: 'All visits' });
 
-    // The screen opens on every visit the phone holds — the period that holds the visit screen 10
-    // has just saved — and says so on one line under the heading.
     await expect(all).toHaveAttribute('aria-checked', 'true');
-    await expect(month).toHaveAttribute('aria-checked', 'false');
-    await expect(page.getByTestId('season-history-count')).toHaveText('All visits · 4 visits');
-    await expect(page.getByTestId('season-history-0')).toContainText('Zone 21 · Bilberry');
+    await expect(page.getByTestId('season-history-count')).toHaveText('All visits · 1 visit');
+    await expect(page.getByTestId('season-history-0')).toContainText('Laajavuori 21 · Bilberry');
 
     await month.click();
 
-    // The design's own month: its three sample visits, the picker's September one filtered off the
-    // list, and the line that says so — the row the archetype would otherwise hide in silence.
     await expect(month).toHaveAttribute('aria-checked', 'true');
-    await expect(all).toHaveAttribute('aria-checked', 'false');
-    await expect(page.getByTestId('season-history-count')).toHaveText('August 2026 · 3 visits');
     await expect(page.getByTestId('season-history-outside')).toHaveText(
       '1 visit outside this period',
     );
-    await expect(page.getByTestId('season-history-0')).toContainText('Zone 14 · Lingonberry');
-
-    // The filtered list and its “1 visit outside this period” row, read as a tree: the choice just
-    // made is the screen's whole state, and the row is what says so for whoever cannot see the list.
-    await expectTreeReadable(page, '/visits, after switching to the design’s month');
+    await expectTreeReadable(page, '/visits, filtered to this month');
   });
 });
 
@@ -300,7 +294,7 @@ test.describe('the app shell in the built web app', () => {
  */
 test.describe('the zone screen’s wiring in the built web app', () => {
   test('writes the plan from the zone screen, and removes it again', async ({ page }) => {
-    await page.goto('/zone-details');
+    await page.goto(SOURCE_ZONE_PATH);
 
     await page.getByRole('button', { name: 'Save zone' }).click();
     await expect(page.getByRole('button', { name: 'Remove zone from saved zones' })).toBeVisible();
@@ -312,65 +306,22 @@ test.describe('the zone screen’s wiring in the built web app', () => {
   test('carries the walk on to the route screen, and cancels back to the zone', async ({
     page,
   }) => {
-    await page.goto('/zone-details');
+    await page.goto(SOURCE_ZONE_PATH);
 
-    // The zone screen's action names the walk; the screen it opens prints the same figure
-    // (frame 07's “Navigate · 1.4 km” leads to frame 08's card).
-    await page.getByRole('button', { name: 'Navigate · 1.4 km' }).click();
+    // Without a position fix the action carries no distance; the route says why.
+    await page.getByRole('button', { name: 'Navigate' }).click();
 
-    await expect(page).toHaveURL(/\/route-to-zone$/);
-    await expect(page.getByText('To Zone 14')).toBeVisible();
-    await expect(page.getByTestId('route-distance')).toHaveText('1.4 km');
-    await expect(page.getByTestId('zone-map-route')).toBeVisible();
+    await expect(page).toHaveURL(/\/route-to-zone\?/);
+    await expect(page.getByText('To Laajavuori 1')).toBeVisible();
+    await expect(page.getByTestId('route-no-position')).toBeVisible();
+    await expect(page.getByTestId('zone-map-drawing')).toBeVisible();
 
     await expectTreeReadable(page, '/route-to-zone, reached from the zone’s own action');
 
-    // The frame's own way out, which the route has to supply for both an in-app and a deep
-    // entry: here it is the history entry the click just made.
     await page.getByRole('button', { name: 'Cancel route' }).click();
-    await expect(page).toHaveURL(/\/zone-details$/);
+    await expect(page).toHaveURL(/\/zone-details\?/);
 
     await expectTreeReadable(page, '/zone-details, returned from the route');
-  });
-});
-
-/**
- * The list behind frame 07's own “See all 11” — **the app-drawn screen the design never drew**
- * (ADR-044).
- *
- * It belongs in a browser because the press, the destination and what the destination says are
- * three different files: the row is a control only when the route gives it the list to open, the
- * route decides where that press leads, and the screen it lands on states the design's sample week
- * and the phone's own record as two different things. A Jest render holds the strings; only the
- * built page holds the route between them.
- */
-test.describe('the zone’s report list in the built web app', () => {
-  test('opens from the zone screen’s link, and states what it can and cannot show', async ({
-    page,
-  }) => {
-    await page.goto('/zone-details');
-
-    // The frame's own words stay the visible label, and the accessible name says where the press
-    // leads — because the frame's eleven and this phone's own list are not the same thing.
-    await page.getByRole('button', { name: /See all 11 reports/ }).click();
-
-    await expect(page).toHaveURL(/\/zone-reports$/);
-    // The design's own week, said as the sample it is and read from the zone's own figures.
-    await expect(page.getByTestId('zone-reports-sample')).toHaveText(/11 reports/);
-    // This build's phone holds nothing for the zone, and the screen says so rather than standing the
-    // design's eleven in for the picker's own record.
-    await expect(page.getByTestId('zone-reports-empty')).toBeVisible();
-    // And the half nothing can return yet is named rather than faked.
-    await expect(page.getByTestId('zone-reports-missing')).toBeVisible();
-
-    await expectTreeReadable(page, '/zone-reports, opened from the zone screen');
-
-    // The frame draws a back control on the screen that opens it, so the way back is the history
-    // entry the press just made.
-    await page.getByRole('button', { name: 'Back' }).click();
-    await expect(page).toHaveURL(/\/zone-details$/);
-
-    await expectTreeReadable(page, '/zone-details, returned from the report list');
   });
 });
 
@@ -388,65 +339,47 @@ test.describe('the marketplace in the built web app', () => {
   test('searches, opens the listing, and carries it through the thread to the order', async ({
     page,
   }) => {
-    await page.goto('/marketplace');
+    // The marketplace needs an account: sign in against the faked service, then go in through
+    // the profile's own row.
+    await fakeAccountService(page);
+    await page.goto('/sign-in');
+    await page.getByRole('textbox', { name: 'Email address' }).fill('aino@example.fi');
+    await page.getByRole('textbox', { name: 'Password' }).fill('berries1234');
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    await expect(page).toHaveURL(/\/discover$/);
+    await page.getByRole('tab', { name: 'Profile' }).click();
+    await page.getByRole('button', { name: /^Berry marketplace/ }).click();
 
-    await expect(page.getByText('The local harvest')).toBeVisible();
-    await expect(page.getByText('Fresh blueberries')).toBeVisible();
+    await expect(page).toHaveURL(/\/marketplace$/);
+    await expect(page.getByText('Fresh bilberries')).toBeVisible();
     await expect(page.getByText('Wild lingonberries')).toBeVisible();
 
-    // The search is the one control on this screen that acts, so it is the one that is checked
-    // here: the list narrows to what was typed and the count says so.
     await page.getByLabel('Berries near Jyväskylä').fill('lingon');
-    await expect(page.getByText('Fresh blueberries')).toHaveCount(0);
-    await expect(page.getByText('Wild lingonberries')).toBeVisible();
+    await expect(page.getByText('Fresh bilberries')).toHaveCount(0);
     await expect(page.getByText('Browse 1 local listing')).toBeVisible();
-
-    // The narrowed list, read as a tree: the search's own field, the count it produced and the one
-    // card left standing are what a screen reader has to be given after a keystroke.
     await expectTreeReadable(page, '/marketplace, with the search narrowed');
-
     await page.getByLabel('Berries near Jyväskylä').fill('');
 
-    // The one card with a screen behind it opens it, and the other one is not an action at all.
-    await expect(page.getByRole('button', { name: 'Open Wild lingonberries' })).toHaveCount(0);
-    await page.getByRole('button', { name: 'Open Fresh blueberries' }).click();
-
-    await expect(page).toHaveURL(/\/marketplace-listing$/);
-    await expect(page.getByText('Forest to your table.')).toBeVisible();
+    await page.getByRole('button', { name: 'Open Fresh bilberries' }).click();
+    await expect(page).toHaveURL(/\/marketplace-listing\?/);
     await expect(page.getByText('Bilberry · 20 kg available')).toBeVisible();
-
     await expectTreeReadable(page, '/marketplace-listing, opened from the card');
 
-    await page.getByRole('button', { name: 'Contact Matti Laine' }).click();
+    await page.getByRole('button', { name: 'Contact Matti L.' }).click();
+    await expect(page).toHaveURL(/\/marketplace-chat\?/);
+    await page.getByRole('textbox', { name: 'Write a message…' }).fill('Still available?');
+    await page.getByRole('button', { name: 'Send message' }).click();
+    await expect(page.getByText('Still available?')).toBeVisible();
+    await expectTreeReadable(page, '/marketplace-chat, after sending');
 
-    await expect(page).toHaveURL(/\/marketplace-chat$/);
-    await expect(
-      page.getByText('Hi Matti! Could I get 5 kg of blueberries this evening?'),
-    ).toBeVisible();
+    await page.getByRole('button', { name: 'Order berries' }).click();
+    await expect(page).toHaveURL(/\/marketplace-order\?/);
+    await page.getByRole('textbox', { name: 'How many kilograms?' }).fill('2');
+    await page.getByRole('button', { name: 'Reserve berries' }).click();
 
-    // The composer is drawn and is not a field: no transport exists, so a textbox here would be a
-    // promise the app cannot keep.
-    await expect(page.getByTestId('market-chat-composer')).toBeVisible();
-    await expect(page.getByRole('textbox')).toHaveCount(0);
-
-    await expectTreeReadable(page, '/marketplace-chat, opened from the listing');
-
-    await page.getByRole('button', { name: 'View order summary · €40' }).click();
-
-    await expect(page).toHaveURL(/\/marketplace-order$/);
-    await expect(page.getByText('Total held')).toBeVisible();
-
-    await expectTreeReadable(page, '/marketplace-order, opened from the thread');
-
-    // Confirming receipt releases a payment and a dispute freezes one; neither exists here.
-    await expect(page.getByRole('button', { name: 'Confirm berries received' })).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Open dispute' })).toHaveCount(0);
-
-    // The order's one real action is the thread it came from, and it comes back there.
-    await page.getByRole('button', { name: 'Message Matti Laine' }).click();
-    await expect(page).toHaveURL(/\/marketplace-chat$/);
-
-    await expectTreeReadable(page, '/marketplace-chat, returned from the order');
+    await expect(page.getByText('Reserved · waiting for the seller')).toBeVisible();
+    await expect(page.getByTestId('market-order-total')).toHaveText('€16');
+    await expectTreeReadable(page, '/marketplace-order, after reserving');
   });
 
   test('draws no core navigation, which the marketplace frames do not draw', async ({ page }) => {
@@ -468,7 +401,7 @@ test.describe('the marketplace in the built web app', () => {
  */
 test.describe('the visit flow in the built web app', () => {
   test('opens the walk’s visit screen with no visit invented', async ({ page }) => {
-    await page.goto('/route-to-zone');
+    await page.goto(`/route-to-zone?zone=${SOURCE_ZONE_ID}&species=lingonberry`);
     await page.getByRole('button', { name: 'Start walking' }).click();
 
     await expect(page).toHaveURL(/\/active-visit$/);
@@ -488,9 +421,9 @@ test.describe('the visit flow in the built web app', () => {
     // covered by its component test; this journey is about screen 13 reading the queue.
     await page.goto('/visits');
     await page.evaluate(
-      (key) =>
+      ([key, zone]) =>
         localStorage.setItem(
-          key,
+          key!,
           JSON.stringify([
             {
               amountText: '',
@@ -498,11 +431,13 @@ test.describe('the visit flow in the built web app', () => {
               recordedAt: '2026-08-28T10:55:00.000Z',
               speciesId: 'lingonberry',
               yieldRating: 4,
-              zoneId: 'Z14',
+              zoneId: zone,
+              zoneName: 'Laajavuori 1',
+              clientId: '00000000-0000-4000-8000-000000000014',
             },
           ]),
         ),
-      QUEUE_KEY,
+      [QUEUE_KEY, SOURCE_ZONE_ID],
     );
 
     // In through the app's own door: frame 14's “Offline maps & sync” row, whose value is the
@@ -518,18 +453,15 @@ test.describe('the visit flow in the built web app', () => {
     // picker's own values — including the rating, on the design's 1–5 scale.
     await expect(page.getByText('Waiting to sync · 1 report')).toBeVisible();
     const row = page.getByTestId('offline-report-0');
-    await expect(row).toContainText('Zone 14 · Lingonberry');
+    await expect(row).toContainText('Laajavuori 1 · Lingonberry');
     await expect(row).toContainText('52 min · Rating 4 / 5');
-    await expect(row).toContainText('Queued · visit + report');
-
-    // What the frame promises here is a retry (“will retry automatically”), and nothing has been
-    // sent at all: the screen says what is true (ADR-005).
+    await expect(row).toContainText('Queued · report');
     await expect(
       page.getByText(
-        'Saved on this phone. Nothing has been sent yet — syncing arrives with the server.',
+        'Saved on this phone. They are sent to the zone service as soon as you are online.',
       ),
     ).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Retry sync' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Send now' })).toBeVisible();
   });
 });
 
@@ -887,7 +819,7 @@ test.describe('the discover map in the built web app', () => {
    * tree with no accessible name is a finding. Screen 09 no longer draws a map, so the two routes
    * below are the app's two maps.
    */
-  for (const route of ['/discover', '/route-to-zone']) {
+  for (const route of ['/discover', `/route-to-zone?zone=${SOURCE_ZONE_ID}&species=lingonberry`]) {
     test(`${route} draws the map as a named image, with its own words beside it`, async ({
       page,
     }) => {
@@ -909,7 +841,8 @@ test.describe('the discover map in the built web app', () => {
       expect(snapshot).toContain('- img "Map of nearby berry zones"');
       // The name is a text alternative, not a replacement: the places and zones the frame draws
       // are still the screen's own text, and nothing about them was hidden to make room for it.
-      expect(snapshot).toContain('Laajavuori');
+      // The stub's own map names its test area; the route's map names the live pilot area.
+      expect(snapshot).toContain(route === '/discover' ? 'Laajavuori' : 'Jyväskylä');
       expect(snapshot).not.toContain('- img\n');
     });
   }
@@ -968,10 +901,9 @@ test.describe('the review-only prototype surfaces in the built web app', () => {
     // The reach, asserted: the prototypes are here, and every declared reading is one this harness
     // can actually open. A variant with nothing declared to measure is a failure, not a skip.
     expect([...new Set(PROTOTYPE_READINGS.map((reading) => reading.prototype))].sort()).toEqual([
-      'community-map',
       'sign-in',
     ]);
-    expect(PROTOTYPE_READINGS.length).toBeGreaterThanOrEqual(6);
+    expect(PROTOTYPE_READINGS.length).toBeGreaterThanOrEqual(3);
     expect(undescribedReadings()).toEqual([]);
     expect(readingsOffTheirPrototype()).toEqual([]);
   });
@@ -1008,24 +940,6 @@ test.describe('the review-only prototype surfaces in the built web app', () => {
 
     await page.keyboard.press('ArrowLeft');
     await expect(page).toHaveURL(/variant=A/);
-  });
-
-  test('the bar carries the community map between the screens its readings live on', async ({
-    page,
-  }) => {
-    // This prototype's readings answer “which screen” as much as “which shape”, so the arrows
-    // navigate rather than swap a parameter: nothing else checks that, and a reading that stopped
-    // being reachable would leave the designer with two thirds of the question.
-    await page.goto('/discover?variant=A');
-    await expect(page.getByText('PROTOTYPE · A · Map layer')).toBeVisible();
-
-    await page.getByRole('button', { name: 'Next variant' }).click();
-    await expect(page).toHaveURL(/\/zone-details\?variant=B$/);
-    await expect(page.getByText('PROTOTYPE · B · Under the zone')).toBeVisible();
-
-    await page.keyboard.press('ArrowRight');
-    await expect(page).toHaveURL(/\/saved-spots\?variant=C$/);
-    await expect(page.getByText('PROTOTYPE · C · Place cards')).toBeVisible();
   });
 });
 
@@ -1181,6 +1095,11 @@ test.describe('a screen read while an action is working', () => {
  * freshly loaded export, which holds no session and no interaction at all.
  */
 async function expectTreeReadable(page: Page, step: string): Promise<void> {
+  // A screen that reads the API says “Loading…” first; read the tree once that line has settled,
+  // or the page and the tree are read on two sides of the change.
+  await expect(page.getByRole('status').filter({ hasText: '…' })).toHaveCount(0, {
+    timeout: 10_000,
+  });
   expect((await controlsOn(page)).length).toBeGreaterThan(0);
   expect(await readPage(page, step)).toEqual([]);
 }

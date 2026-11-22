@@ -32,6 +32,7 @@ export default function PrivacySettingsRoute() {
       accountApi={appAccountApi}
       onOpenAccountSecurity={() => router.push('/account-security')}
       onOpenLanguage={() => router.push('/language')}
+      onOpenMarketplace={() => router.push('/marketplace')}
       onOpenSavedSpots={() => router.push('/saved-spots')}
       onOpenSync={() => router.push('/downloads')}
       onOpenTermsPrivacy={() => router.push('/terms-privacy')}

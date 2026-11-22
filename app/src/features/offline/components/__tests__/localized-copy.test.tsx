@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { QueryProvider } from '@/services/query-client';
 import { render, screen } from '@testing-library/react-native';
 
 import { enqueueReport } from '@/services/report-queue';
@@ -29,23 +30,22 @@ describe('the sync centre on a Finnish device', () => {
       recordedAt: '2026-08-28T10:55:00.000Z',
       speciesId: 'lingonberry',
       yieldRating: 4,
-      zoneId: 'Z14',
+      zoneId: 'zone-14',
+      zoneName: 'Laajavuori 14',
     });
 
-    await render(<OfflineSyncScreen />);
+    await render(<OfflineSyncScreen />, { wrapper: QueryProvider });
 
-    // The disclosure the eyebrow carries is translated too: it is the sentence that keeps the
-    // design's sample region below it from reading as what this phone holds (ADR-042).
-    expect(screen.getByText('TILI / OFFLINE · SYNKRONOINTI · KAUSIDEMO')).toBeOnTheScreen();
+    expect(screen.getByText('TILI / OFFLINE · SYNKRONOINTI')).toBeOnTheScreen();
     expect(screen.getByText('Valmiina ilman verkkoa')).toBeOnTheScreen();
     expect(await screen.findByText('Odottaa synkronointia · 1 raportti')).toBeOnTheScreen();
-    expect(screen.getByText('Alue 14 · Puolukka')).toBeOnTheScreen();
+    expect(screen.getByText('Laajavuori 14 · Puolukka')).toBeOnTheScreen();
     // “28.8.”, not “28 Aug”: the day is the language's, and the harvest is the picker's own text.
     expect(screen.getByText('28.8. · 52 min · Arvosana 4 / 5 · 1,3 kg')).toBeOnTheScreen();
-    expect(screen.getByText('Jonossa · käynti ja raportti')).toBeOnTheScreen();
+    expect(screen.getByText('Jonossa · raportti')).toBeOnTheScreen();
     expect(
       screen.getByText(
-        'Tallennettu tähän puhelimeen. Mitään ei ole lähetetty — synkronointi tulee palvelimen myötä.',
+        'Tallennettu puhelimeen. Ne lähetetään vyöhykepalveluun heti, kun olet verkossa.',
       ),
     ).toBeOnTheScreen();
 
@@ -53,7 +53,7 @@ describe('the sync centre on a Finnish device', () => {
   });
 
   it('says nothing is waiting in Finnish when the phone is holding nothing', async () => {
-    await render(<OfflineSyncScreen />);
+    await render(<OfflineSyncScreen />, { wrapper: QueryProvider });
 
     expect(await screen.findByText('Mitään ei odota synkronointia.')).toBeOnTheScreen();
   });

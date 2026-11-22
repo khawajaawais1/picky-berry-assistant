@@ -75,6 +75,37 @@ The link points at `APP_PUBLIC_URL/reset-password?token=…`. External mail deli
 included: console mail mode (`MAIL_MODE=console`) records that a verification or reset message
 was requested and deliberately does not log tokens, links or email addresses.
 
+## Picker feeds (reports, season, alerts, marketplace)
+
+The mobile app reads every picker-facing screen from these routes (contract:
+[`docs/openapi/feeds.yaml`](./docs/openapi/feeds.yaml)); all need a signed-in account.
+
+| Route | What it serves |
+|-------|----------------|
+| `POST /reports` | a post-visit report; idempotent on `client_id` |
+| `GET /zones/:id/reports` | a zone's recent reports, anonymous, with a trust label |
+| `GET /me/reports`, `GET /me/season` | the picker's own reports and season totals |
+| `GET /alerts?lat&lng` | the reasoning job's latest alert per zone × species, filtered to the picker's species and radius |
+| `/market/listings`, `/market/listings/:id/messages`, `/market/orders` | listings, the buyer–seller thread, orders that reserve stock |
+
+Migration `0012_picker_feeds.sql` adds the report details and the market tables.
+`npm run seed:feeds` fills development alerts (from the current scores) and three listings by
+`seller@example.com`; it refuses to run in production.
+
+### Running the API in local Docker
+
+```bash
+npm run db:migrate          # add --no-check-order if your local history was applied out of order
+npm run seed:feeds
+API_DATABASE_URL=postgresql://postgres:postgres@host.docker.internal:5432/picky \
+  docker compose -f docker-compose.dev.yml --profile api up -d --build api
+curl localhost:3000/api/v1/health
+```
+
+Leave `API_DATABASE_URL` unset to use the compose file's own `postgres` service instead. For the
+Expo app, set `EXPO_PUBLIC_API_BASE_URL=http://localhost:3000` in `app/.env`: a development build
+on a phone or emulator reaches it through the Metro host's address automatically.
+
 ## Admin API (feature E5)
 
 Every route under `/api/v1/admin/*` requires an `admin` role and answers `Cache-Control: no-store`.

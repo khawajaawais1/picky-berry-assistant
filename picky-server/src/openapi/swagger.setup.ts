@@ -57,6 +57,7 @@ export function setupSwagger(
   let auth: OpenAPIObject;
   let visits: OpenAPIObject;
   let admin: OpenAPIObject;
+  let feeds: OpenAPIObject | undefined;
   try {
     const read = (name: string) =>
       load(readFileSync(resolve(openapiDir, name), 'utf8')) as OpenAPIObject;
@@ -64,6 +65,11 @@ export function setupSwagger(
     auth = read('auth.yaml');
     visits = read('visits.yaml');
     admin = read('admin.yaml');
+    try {
+      feeds = read('feeds.yaml');
+    } catch {
+      feeds = undefined;
+    }
   } catch (error) {
     new Logger('Swagger').warn(
       `OpenAPI contract not found in ${openapiDir}; /docs is disabled. ${
@@ -80,6 +86,7 @@ export function setupSwagger(
       ...auth.paths,
       ...visits.paths,
       ...admin.paths,
+      ...feeds?.paths,
     },
     components: {
       ...zones.components,

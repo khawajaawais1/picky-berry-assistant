@@ -85,3 +85,4 @@ export {
 } from './hooks/use-visit-session';
 export { VisitTracker, type VisitTrackerProps } from './components/visit-tracker';
 export { AppVisitTracking } from './components/app-visit-tracking';
+export { ReportSync } from './components/report-sync';

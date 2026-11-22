@@ -18,7 +18,7 @@ import {
   PushRegistration,
 } from '@/features/privacy';
 import { appPushPort } from '@/services/push';
-import { AppVisitTracking } from '@/features/visits';
+import { AppVisitTracking, ReportSync } from '@/features/visits';
 import { ErrorScreen } from '@/components/templates';
 import { useAppTheme } from '@/hooks/use-app-theme';
 
@@ -114,6 +114,8 @@ export default function AppShellLayout() {
         consent and the platform's permission, foreground only, and it draws nothing.
       */}
       <AppVisitTracking />
+      {/* Sends reports queued while offline (`POST /reports`). */}
+      <ReportSync />
       {/* While an account is signed in, the app speaks the account's language (ADR-067). */}
       <AccountLanguage accountApi={appProfileApi} />
       {/* Hands this phone's push token to the account service once alerts are allowed (ADR-067). */}

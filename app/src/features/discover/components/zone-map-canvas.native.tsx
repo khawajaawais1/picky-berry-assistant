@@ -22,6 +22,7 @@ import { zoneFeatureCollection } from '../domain/zone-source';
 
 import { loadMapLibre } from './map-libre';
 import type { ZoneMapCanvasProps } from './zone-map-canvas-props';
+import { ZoneMapSvg } from './zone-map-svg';
 
 /** The map is the whole canvas; one object, so a parent render does not hand the native view a new style. */
 const CANVAS_STYLE = { flex: 1 } as const;
@@ -64,7 +65,44 @@ const MAX_ZOOM = 17;
  * and the camera on the zones alone. A keystroke that leaves the same zones on the map now hands
  * MapLibre the same objects instead of rebuilding them on every render.
  */
-export function ZoneMapCanvas({ label, zones }: ZoneMapCanvasProps) {
+export function ZoneMapCanvas(props: ZoneMapCanvasProps) {
+  // Expo Go (and a dev build made before MapLibre was added) has no MapLibre native view. The
+  // map still loads there: the zones are drawn as the web build draws them, as an SVG of the
+  // same rings, with a line saying the street basemap needs a development build.
+  if (mapLibre === null) return <SvgFallback {...props} />;
+
+  return <MapLibreCanvas {...props} />;
+}
+
+function SvgFallback(props: ZoneMapCanvasProps) {
+  const { colors } = useAppTheme();
+  const { t } = useTranslation();
+
+  return (
+    <View style={CANVAS_STYLE}>
+      <ZoneMapSvg {...props} />
+      <View
+        pointerEvents="none"
+        style={{
+          backgroundColor: colors.surface,
+          borderRadius: radii.sm,
+          bottom: spacing.tight,
+          left: spacing.tight,
+          paddingHorizontal: spacing.tight,
+          position: 'absolute',
+          right: spacing.tight,
+        }}
+        testID="zone-map-unavailable"
+      >
+        <AppText tone="muted" variant="mapAnnotation">
+          {t('discover.map.requiresDevelopmentBuild')}
+        </AppText>
+      </View>
+    </View>
+  );
+}
+
+function MapLibreCanvas({ label, zones }: ZoneMapCanvasProps) {
   const { colors, scheme } = useAppTheme();
   const { t } = useTranslation();
 
@@ -116,15 +154,7 @@ export function ZoneMapCanvas({ label, zones }: ZoneMapCanvasProps) {
     return bounds === null ? null : [bounds[0], bounds[1], bounds[2], bounds[3]];
   }, [zones]);
 
-  if (mapLibre === null) {
-    return (
-      <View className="flex-1 items-center justify-center px-section" testID="zone-map-unavailable">
-        <AppText tone="muted" variant="bodySmall">
-          {t('discover.map.requiresDevelopmentBuild')}
-        </AppText>
-      </View>
-    );
-  }
+  if (mapLibre === null) return null;
 
   const { Camera, GeoJSONSource, Layer, Map: MapView } = mapLibre;
 

@@ -1,22 +1,21 @@
-import { router, useCanGoBack } from 'expo-router';
+import { router, useCanGoBack, useLocalSearchParams } from 'expo-router';
 
-import { MarketListingScreen } from '@/features/marketplace';
-/**
- * Screen 16 · Planned marketplace · Listing detail (Figma node `5:23832`).
- *
- * Both of the frame's actions are wired here because both have a destination: the thread with the
- * seller (frame 17) and the order the two of them agreed on (frame 18). The screen draws a back
- * control only when the route was actually pushed onto a stack, so a deep link never draws a
- * control that cannot act.
- */
+import { appMarketApi, MarketListingScreen } from '@/features/marketplace';
+
+/** Screen 16 · Marketplace · Listing detail, for the listing the browse screen opened. */
 export default function MarketListingRoute() {
   const canGoBack = useCanGoBack();
+  const { listing } = useLocalSearchParams<{ listing?: string }>();
 
   return (
     <MarketListingScreen
+      listingId={listing}
+      marketApi={appMarketApi}
       onBack={canGoBack ? () => router.back() : undefined}
-      onContactSeller={() => router.push('/marketplace-chat')}
-      onOpenOrder={() => router.push('/marketplace-order')}
+      onContactSeller={(id) =>
+        router.push({ pathname: '/marketplace-chat', params: { listing: id } })
+      }
+      onOpenOrder={(id) => router.push({ pathname: '/marketplace-order', params: { listing: id } })}
     />
   );
 }

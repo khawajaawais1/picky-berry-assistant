@@ -206,6 +206,8 @@ describe('PostVisitFeedbackScreen', () => {
       speciesId: 'lingonberry',
       yieldRating: 5,
       zoneId: 'zone-laajavuori-1',
+      visitId: 'visit-1',
+      zoneName: 'Laajavuori 1',
     });
   });
 

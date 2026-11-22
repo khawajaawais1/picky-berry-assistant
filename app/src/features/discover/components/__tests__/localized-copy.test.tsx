@@ -1,8 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { testZoneSource } from '@/features/discover/services/test-zone-source';
 
 import { QueryProvider } from '@/services/query-client';
 
-import type { Zone } from '../../domain/zone-source';
+import { ALERT_FEED, LIVE_ZONE, liveZoneSource, OWN_REPORTS, SEASON } from '../../test-fixtures';
 
 /**
  * A device set to Finnish. The app is Finnish and English (PROJECT.md), so the copy of every
@@ -16,6 +17,14 @@ import type { Zone } from '../../domain/zone-source';
  * English, and the two lines that claimed a tile cache and a forecast model say what is true
  * instead. A disclosure is copy like any other, so it is translated, not appended in code.
  */
+jest.mock('@/hooks/use-device-position', () => ({
+  // About 1.4 km south of the test zone's middle.
+  useDevicePosition: () => ({
+    fix: { latitude: 62.2422, longitude: 25.6964, accuracyMeters: 10, at: 0 },
+    status: 'tracking',
+  }),
+}));
+
 jest.mock('expo-localization', () => ({
   getLocales: () => [{ languageCode: 'fi', languageTag: 'fi-FI' }],
   useLocales: () => [{ languageCode: 'fi', languageTag: 'fi-FI' }],
@@ -46,7 +55,7 @@ const VISIT = {
 
 describe('the discover screen on a Finnish device', () => {
   it('renders the screen, the map’s labels and the source card in Finnish', async () => {
-    await render(<DiscoverScreen />, { wrapper: QueryProvider });
+    await render(<DiscoverScreen zoneSource={testZoneSource} />, { wrapper: QueryProvider });
 
     expect(screen.getByText('POIMINTA · KAUSIDEMO / 28.8.')).toBeOnTheScreen();
     expect(screen.getByText('Löydä lähialueet')).toBeOnTheScreen();
@@ -83,7 +92,7 @@ describe('the discover screen on a Finnish device', () => {
   });
 
   it('says in Finnish what the filter left, including the case of one zone', async () => {
-    await render(<DiscoverScreen />, { wrapper: QueryProvider });
+    await render(<DiscoverScreen zoneSource={testZoneSource} />, { wrapper: QueryProvider });
     await screen.findByText('50 aluetta · testiaineisto');
 
     await fireEvent.changeText(screen.getByLabelText('Hae paikkaa tai aluetta'), 'Laajavuori 50');
@@ -100,7 +109,7 @@ describe('the discover screen on a Finnish device', () => {
   });
 
   it('reads another berry’s scores in Finnish when its chip is pressed', async () => {
-    await render(<DiscoverScreen />, { wrapper: QueryProvider });
+    await render(<DiscoverScreen zoneSource={testZoneSource} />, { wrapper: QueryProvider });
     await screen.findByText('Sato 53 / 100');
 
     await fireEvent.press(screen.getByRole('button', { name: 'Puolukka' }));
@@ -113,7 +122,7 @@ describe('the discover screen on a Finnish device', () => {
   });
 
   it('names the zone list’s rows in Finnish, chips and all', async () => {
-    await render(<DiscoverScreen />, { wrapper: QueryProvider });
+    await render(<DiscoverScreen zoneSource={testZoneSource} />, { wrapper: QueryProvider });
     await screen.findByText('50 aluetta · testiaineisto');
 
     await fireEvent.press(screen.getByRole('button', { name: 'Näytä alueluettelo' }));
@@ -130,62 +139,13 @@ describe('the discover screen on a Finnish device', () => {
 });
 
 describe('the zone details screen on a Finnish device', () => {
-  it('renders the frame’s figures, its forecast note and its report in Finnish', async () => {
-    // With the route supplied, because the frame's Navigate action is the screen's one control
-    // and its label carries the distance in Finnish notation.
-    await render(<ZoneDetailsScreen onNavigate={jest.fn()} />);
-
-    expect(screen.getByText('POIMINTA · ALUEEN TIEDOT · KAUSIDEMO')).toBeOnTheScreen();
-    expect(screen.getByText('Alue 14 · Laajavuori')).toBeOnTheScreen();
-    expect(screen.getByText('/ 100 sadon pisteet')).toBeOnTheScreen();
-    expect(screen.getByText('Varma tieto')).toBeOnTheScreen();
-    expect(screen.getByText('11 havaintoa tällä viikolla')).toBeOnTheScreen();
-    // The state chip is the map legend's word for the same zone, in the same language.
-    expect(screen.getByText('Poimimaton')).toBeOnTheScreen();
-    expect(screen.getByText('Kypsä nyt')).toBeOnTheScreen();
-    expect(screen.getByText('Ennuste olosuhteista, ei taattu sato.')).toBeOnTheScreen();
-    expect(screen.getByText('Tämän päivän näkymät')).toBeOnTheScreen();
-    expect(screen.getByText('18°C · Heikko tuuli · Ennuste klo 08:00')).toBeOnTheScreen();
-    expect(screen.getByText('Tuoreet havainnot')).toBeOnTheScreen();
-    expect(
-      screen.getByText('Luotettu havainto · 38 min sitten · Arvosana 4 / 5'),
-    ).toBeOnTheScreen();
-    // The action that opens screen 08 names the same walk in Finnish notation.
-    expect(screen.getByText('Reitille · 1,4 km')).toBeOnTheScreen();
-    // …and the species row (frame 07's node `5:23047`) says what is found in the zone, in
-    // Finnish, with the same words the filter chips and the report chips use.
-    expect(screen.getByTestId('zone-species-chip-lingonberry')).toHaveTextContent('Puolukka');
-    expect(screen.getByTestId('zone-species-chip-bilberry')).toHaveTextContent('Mustikka');
-
-    expect(screen.queryByText('High confidence')).not.toBeOnTheScreen();
-    expect(screen.queryByText('Fresh from pickers')).not.toBeOnTheScreen();
-  });
-
-  it('reads a source zone in Finnish, with the sample note in Finnish too', async () => {
-    const zone: Zone = {
-      id: 'zone-a',
-      h3: 'zone-a',
-      name: 'Laajavuori 1',
-      score: 70,
-      confidence: 'high',
-      ripeness: 'ripe',
-      scores: {
-        bilberry: { score: 53, confidence: 'medium', ripeness: 'past' },
-        lingonberry: { score: 70, confidence: 'high', ripeness: 'ripe' },
-      },
-      ring: [
-        [25.689711, 62.25623],
-        [25.69564, 62.253184],
-        [25.703822, 62.254551],
-        [25.689711, 62.25623],
-      ],
-    };
-
+  it('reads a served zone in Finnish, with the walk in Finnish notation', async () => {
     await render(
       <ZoneDetailsScreen
+        onNavigate={jest.fn()}
         species="lingonberry"
         zoneId="zone-a"
-        zoneSource={{ list: async () => [zone], demo: true }}
+        zoneSource={liveZoneSource()}
       />,
       { wrapper: QueryProvider },
     );
@@ -194,44 +154,30 @@ describe('the zone details screen on a Finnish device', () => {
     expect(screen.getByText('/ 100 sadon pisteet')).toBeOnTheScreen();
     expect(screen.getByText('Varma tieto')).toBeOnTheScreen();
     expect(screen.getByText('Kypsä nyt')).toBeOnTheScreen();
-    // The blocks with no source are the design's sample, and the sentence that says so is a
-    // catalogue string like any other — not English appended in code.
-    expect(screen.getByTestId('zone-details-sample-note')).toHaveTextContent(
-      'Alla olevat näkymät, tuorein havainto, kävelyreitti ja niiden takana oleva raporttilista ovat suunnittelun oma malliesimerkki: sääpalvelua tai raporttivirtaa ei vielä ole.',
+    expect(screen.getByText('Reitille · 1,4 km')).toBeOnTheScreen();
+    expect(screen.queryByText('High confidence')).not.toBeOnTheScreen();
+  });
+
+  it('names the walk to the zone with the language’s own decimal mark and heading', async () => {
+    await render(
+      <RouteToZoneScreen
+        onCancel={jest.fn()}
+        onStart={jest.fn()}
+        zoneId="zone-a"
+        zoneSource={liveZoneSource()}
+      />,
+      { wrapper: QueryProvider },
     );
-  });
 
-  it('names the walk to the zone with the language’s own decimal mark and turn', async () => {
-    await render(<RouteToZoneScreen onCancel={jest.fn()} />);
-
-    expect(screen.getByText('POIMINTA · KÄVELYREITTI · KAUSIDEMO')).toBeOnTheScreen();
-    expect(screen.getByText('Alueelle 14')).toBeOnTheScreen();
-    // The frame promises a downloaded tile cache. Nothing is downloaded, so the note says what
-    // the app can be true about — the boundaries are drawn from data on the device — and names
-    // the cache as the thing still missing.
-    expect(screen.getByText('Kartta piirretään tällä laitteella')).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        'Laajavuori: alueiden rajat piirretään tällä laitteella. Karttatiilejä ei ole vielä ladattu.',
-      ),
-    ).toBeOnTheScreen();
-    // “1,4 km”, not “1.4 km”: the number is data and the notation is the language's.
+    expect(await screen.findByText('Kohteeseen Laajavuori 1')).toBeOnTheScreen();
+    expect(screen.getByText('POIMINTA · KÄVELYREITTI')).toBeOnTheScreen();
     expect(screen.getByText('1,4 km')).toBeOnTheScreen();
-    expect(screen.getByText('Kävelymatka')).toBeOnTheScreen();
-    expect(screen.getByText('Arvioitu perillä · 10:03')).toBeOnTheScreen();
-    expect(screen.getByText('Seuraa metsäpolkua')).toBeOnTheScreen();
-    expect(screen.getByText('Käänny oikealle 180 m kuluttua · Laajavuori')).toBeOnTheScreen();
-    expect(screen.getByText('Peruuta reitti')).toBeOnTheScreen();
-
-    expect(screen.queryByText('1.4 km')).not.toBeOnTheScreen();
-    expect(screen.queryByText('Walking distance')).not.toBeOnTheScreen();
-  });
-
-  it('names the walk on to the visit in Finnish, now that the action leads there', async () => {
-    await render(<RouteToZoneScreen onCancel={jest.fn()} onStart={jest.fn()} />);
-
+    expect(screen.getByText('Linnuntie')).toBeOnTheScreen();
+    expect(screen.getByText('Pohjoiseen, linnuntietä 1,4 km')).toBeOnTheScreen();
+    expect(screen.getByText('Reittiohjeet karttasovelluksessa')).toBeOnTheScreen();
     expect(screen.getByText('Aloita kävely')).toBeOnTheScreen();
-    expect(screen.queryByText('Start walking')).not.toBeOnTheScreen();
+    expect(screen.getByText('Peruuta reitti')).toBeOnTheScreen();
+    expect(screen.queryByText('1.4 km')).not.toBeOnTheScreen();
   });
 });
 
@@ -275,72 +221,40 @@ describe('the active visit screen on a Finnish device', () => {
 });
 
 describe('the alerts screen on a Finnish device', () => {
-  it('renders the alert, its reasons and its disclaimer in Finnish', async () => {
-    await render(<AlertsScreen />);
+  it('renders the served alert in Finnish notation', async () => {
+    await render(<AlertsScreen alertsSource={{ list: async () => ALERT_FEED }} />, {
+      wrapper: QueryProvider,
+    });
 
-    expect(screen.getByText('POIMINTA · ENNUSTEEN PERUSTEET · KAUSIDEMO')).toBeOnTheScreen();
-    expect(screen.getByText('Vihje metsästä')).toBeOnTheScreen();
-    expect(screen.getByText('TÄNÄÄN · 28.8. · 09:30')).toBeOnTheScreen();
-    // “1,8 km”, not “1.8 km”: the distance is data and its notation is the language's.
-    expect(screen.getByText('Kypsiä mustikoita 1,8 km pohjoiseen')).toBeOnTheScreen();
-    expect(screen.getByText('82 / 100 sato')).toBeOnTheScreen();
-    // The same word frame 07's zone card gives the same confidence.
+    expect(await screen.findByText('Mustikka 1,8 km päässä')).toBeOnTheScreen();
+    expect(screen.getByText('POIMINTA · ENNUSTEEN PERUSTELUT')).toBeOnTheScreen();
+    expect(screen.getByText('Hälytykset metsästä')).toBeOnTheScreen();
+    expect(screen.getByText('71 / 100 sato')).toBeOnTheScreen();
     expect(screen.getByText('Varma tieto')).toBeOnTheScreen();
-    expect(screen.getByText('Alue 18 · Laajavuori · 60 min sitten')).toBeOnTheScreen();
-    expect(screen.getByText('Miksi tämä hälytys?')).toBeOnTheScreen();
-    expect(screen.getByText('Lämmin viikko')).toBeOnTheScreen();
-    expect(screen.getByText('Kolme lämmintä päivää edistää kypsymistä.')).toBeOnTheScreen();
-    expect(screen.getByText('Sunnuntain sade')).toBeOnTheScreen();
-    expect(screen.getByText('Viimeksi poimittu 6 päivää sitten')).toBeOnTheScreen();
-    // The frame's note claims a model that combines three sources, and none of the three
-    // exists. What is drawn instead says the alert is a sample and keeps the design's promise.
-    expect(
-      screen.getByText(
-        'Esimerkkihälytys. Sää-, kausi- tai havaintolähdettä ei ole vielä liitetty, eikä satoa taata.',
-      ),
-    ).toBeOnTheScreen();
-    expect(
-      screen.queryByText(
-        'Ennusteet yhdistävät sään, kauden ja luotettavuuspainotetut havainnot. Satoa ei taata.',
-      ),
-    ).not.toBeOnTheScreen();
-
-    expect(screen.queryByText('A heads-up from the forest')).not.toBeOnTheScreen();
+    expect(screen.getByText('Laajavuori 22 · Viimeisin raportti 28.8.')).toBeOnTheScreen();
+    expect(screen.queryByText('Alerts from the forest')).not.toBeOnTheScreen();
   });
 });
 
 describe('the season screen on a Finnish device', () => {
-  it('renders the month, its chart and its history in Finnish notation', async () => {
-    await render(<SeasonInsightsScreen />);
+  it('renders the season, its chart and its history in Finnish notation', async () => {
+    await render(
+      <SeasonInsightsScreen
+        reportsApi={{ season: async () => SEASON, mine: async () => OWN_REPORTS }}
+      />,
+      { wrapper: QueryProvider },
+    );
 
-    expect(screen.getByText('POIMINTA · HENKILÖKOHTAISET TIEDOT · KAUSIDEMO')).toBeOnTheScreen();
+    expect(await screen.findByText('4,5 kg')).toBeOnTheScreen();
+    expect(screen.getByText('POIMINTA · HENKILÖKOHTAISET TIEDOT')).toBeOnTheScreen();
     expect(screen.getByText('Kautesi tähän mennessä')).toBeOnTheScreen();
-    expect(screen.getByText('Elokuu 2026')).toBeOnTheScreen();
-    expect(screen.getByText('Kaikki käynnit')).toBeOnTheScreen();
-    expect(screen.getByText('Hyvä kuukausi metsässä.')).toBeOnTheScreen();
-    // “4,5 kg”, not “4.5 kg”: the figure is data and the decimal mark is the language's.
-    expect(screen.getByText('4,5 kg')).toBeOnTheScreen();
-    expect(screen.getByText('Sato yhteensä')).toBeOnTheScreen();
-    // “1,5” is both the rate in the summary card and a bar's own label, so it is counted.
+    expect(screen.getByText('Tämä kuukausi')).toBeOnTheScreen();
+    expect(screen.getByText('Kautesi 2026')).toBeOnTheScreen();
     expect(screen.getAllByText('1,5')).toHaveLength(2);
-    expect(screen.getByText('kg / tunti')).toBeOnTheScreen();
-    expect(screen.getByText('Alueita käyty')).toBeOnTheScreen();
-    expect(screen.getByText('Aikaa alueilla')).toBeOnTheScreen();
-    expect(screen.getByText('Mediaanikesto')).toBeOnTheScreen();
     expect(screen.getByText('Sato käynneittäin')).toBeOnTheScreen();
-    expect(screen.getByText('Käyntihistoria')).toBeOnTheScreen();
-    // The design's own sample visits, written the Finnish way: “28.8.” and “1,3 kg”.
-    expect(screen.getByText('Alue 14 · Puolukka')).toBeOnTheScreen();
+    expect(await screen.findByText('Laajavuori 14 · Puolukka')).toBeOnTheScreen();
     expect(screen.getByText('28.8. · 52 min · 1,3 kg')).toBeOnTheScreen();
-    expect(screen.getByText('Jonossa')).toBeOnTheScreen();
-    expect(screen.getAllByText('Synkronoitu')).toHaveLength(2);
-    expect(
-      screen.getByText(
-        'Sisältää jonossa olevan käyntisi. Satoasteet lasketaan vain käynneistä, joilla on kirjattu määrä.',
-      ),
-    ).toBeOnTheScreen();
-
-    expect(screen.queryByText('Your season so far')).not.toBeOnTheScreen();
+    expect(screen.getByText('Synkronoitu')).toBeOnTheScreen();
     expect(screen.queryByText('Visit history')).not.toBeOnTheScreen();
   });
 });

@@ -66,7 +66,7 @@ const ANSWERS: Readonly<Record<Species, readonly Zone[]>> = {
 
 const source: ZoneSource = { list: async ({ species }) => ANSWERS[species] };
 
-async function renderScreen(props: SavedSpotsScreenProps = {}) {
+async function renderScreen(props: Partial<SavedSpotsScreenProps> = {}) {
   return render(<SavedSpotsScreen zoneSource={source} {...props} />, {
     wrapper: QueryProvider,
   });

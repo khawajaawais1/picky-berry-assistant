@@ -1,7 +1,8 @@
-import { loadConfig, type ConfigResult } from '@/config/env';
+import type { ConfigResult } from '@/config/env';
 import { sessionPort } from '@/services/session';
 
 import { createApiClient, type ApiClient, type ApiFetch, type TokenProvider } from './api-client';
+import { appConfig } from './app-config';
 
 /**
  * The transport every feature reads the team API through (ADR-065 decision 5): the validated
@@ -27,6 +28,6 @@ export function createAppApiClient({ config, tokens, fetchImpl }: AppApiClientOp
 
 /** The client the app itself uses. */
 export const apiClient: ApiClient = createAppApiClient({
-  config: loadConfig(),
+  config: appConfig(),
   tokens: sessionPort.tokens,
 });

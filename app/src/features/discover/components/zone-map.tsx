@@ -48,7 +48,7 @@ export type ZoneMapProps = {
  *   the screen's toggle opens.
  */
 export function ZoneMap({
-  demo = true,
+  demo = false,
   height = layout.mapHeight,
   onRetry,
   status,

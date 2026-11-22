@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { randomUUID } from 'expo-crypto';
 
 /**
  * The queue of visit reports waiting to reach the server — frame 10's “Save report offline”.
@@ -49,7 +50,7 @@ export const YIELD_RATING_MAX: YieldRating = YIELD_RATINGS[YIELD_RATINGS.length 
 
 /** One visit report, as the picker's own screen captures it and the queue keeps it. */
 export type VisitReport = {
-  /** The zone the visit was in — the design's own identity for it (“Z14”). */
+  /** The zone the visit was in, by the API's id for it. */
   zoneId: string;
   /** What the picker said they found, 1–5. */
   yieldRating: YieldRating;
@@ -61,6 +62,15 @@ export type VisitReport = {
   minutes: number;
   /** When the visit ended — the moment the report was saved, ISO-8601. */
   recordedAt: string;
+  /**
+   * The app's own id for the report, generated when it is queued: the API stores a report once
+   * per id, so a send retried after a lost answer cannot record it twice.
+   */
+  clientId?: string;
+  /** The tracked visit the report belongs to, when there was one. */
+  visitId?: string;
+  /** The zone's name as the tracker knew it, for the history row. */
+  zoneName?: string;
 };
 
 /**
@@ -111,6 +121,10 @@ function parseReport(value: unknown): VisitReport | null {
 
   const candidate = value as Record<string, unknown>;
   const { amountText, minutes, recordedAt, speciesId, yieldRating, zoneId } = candidate;
+  const optional = (key: 'clientId' | 'visitId' | 'zoneName') =>
+    typeof candidate[key] === 'string' && candidate[key] !== ''
+      ? { [key]: candidate[key] as string }
+      : {};
 
   if (
     typeof zoneId !== 'string' ||
@@ -138,6 +152,9 @@ function parseReport(value: unknown): VisitReport | null {
     speciesId,
     yieldRating: yieldRating as YieldRating,
     zoneId,
+    ...optional('clientId'),
+    ...optional('visitId'),
+    ...optional('zoneName'),
   };
 }
 
@@ -175,10 +192,24 @@ export async function readReportQueue(): Promise<VisitReport[]> {
  * Appends a report to the queue and hands back the queue as it now stands. A write that
  * fails rejects: a screen must never tell the picker their report was kept when it wasn't.
  */
+/** A version-4 UUID: the platform's, or one built here where the platform gives none. */
+function newClientId(): string {
+  const platform = randomUUID();
+  if (typeof platform === 'string' && platform !== '') return platform;
+
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = Math.floor(Math.random() * 16);
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
+
 export async function enqueueReport(report: VisitReport): Promise<VisitReport[]> {
   validateReport(report);
 
-  const queued = [...(await readReportQueue()), report];
+  const queued = [
+    ...(await readReportQueue()),
+    { ...report, clientId: report.clientId ?? newClientId() },
+  ];
 
   await AsyncStorage.setItem(REPORT_QUEUE_STORAGE_KEY, JSON.stringify(queued));
 
@@ -188,4 +219,13 @@ export async function enqueueReport(report: VisitReport): Promise<VisitReport[]>
 /** Deletes the whole queue: the user's way out, and what signing out calls. */
 export async function clearReportQueue(): Promise<void> {
   await AsyncStorage.removeItem(REPORT_QUEUE_STORAGE_KEY);
+}
+
+/** Takes one report off the queue once the API has it (or has refused it for good). */
+export async function removeQueuedReport(clientId: string): Promise<VisitReport[]> {
+  const remaining = (await readReportQueue()).filter((report) => report.clientId !== clientId);
+
+  await AsyncStorage.setItem(REPORT_QUEUE_STORAGE_KEY, JSON.stringify(remaining));
+
+  return remaining;
 }
