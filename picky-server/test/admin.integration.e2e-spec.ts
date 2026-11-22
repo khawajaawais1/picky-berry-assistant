@@ -4,6 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { configureApp } from '../src/configure-app';
+import type { AdminMap } from '../src/admin/admin-map.service';
 import {
   startAdminIntegrationDatabase,
   resetAdminFixtures,
@@ -301,13 +302,14 @@ describe('Admin API against PostGIS (integration)', () => {
       .expect(200);
 
     expect(response.headers['cache-control']).toBe('no-store');
-    expect(response.body).toMatchObject({
+    const map = response.body as AdminMap;
+    expect(map).toMatchObject({
       species: null,
       total: 1,
       truncated: false,
       bounds: { min_lat: 62.2, min_lng: 25.7, max_lat: 62.2, max_lng: 25.7 },
     });
-    expect(response.body.spots).toEqual([
+    expect(map.spots).toEqual([
       expect.objectContaining({
         id: fixtures.zoneId,
         name: 'Laajavuori',
@@ -318,7 +320,7 @@ describe('Admin API against PostGIS (integration)', () => {
         reports_total: 2,
       }),
     ]);
-    expect(response.body.spots[0].best_score).toBe(80);
+    expect(map.spots[0].best_score).toBe(80);
 
     const filtered = await request(app.getHttpServer())
       .get('/api/v1/admin/map')
@@ -339,7 +341,9 @@ describe('Admin API against PostGIS (integration)', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(404);
 
-    expect(response.body.error.code).toBe('ROUTE_NOT_FOUND');
+    expect((response.body as { error: { code: string } }).error.code).toBe(
+      'ROUTE_NOT_FOUND',
+    );
   });
 
   it('reads moderation reports with species, rating, trust and age filters', async () => {
