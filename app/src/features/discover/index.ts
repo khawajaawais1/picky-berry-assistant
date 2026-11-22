@@ -35,7 +35,6 @@ export {
 export { RouteToZoneScreen, type RouteToZoneScreenProps } from './components/route-to-zone-screen';
 export { SavedSpotsScreen, type SavedSpotsScreenProps } from './components/saved-spots-screen';
 export { ZoneDetailsScreen, type ZoneDetailsScreenProps } from './components/zone-details-screen';
-export { DesignZoneMap } from './components/design-zone-map';
 export { ZoneCard, type ZoneCardProps } from './components/zone-card';
 export { ZoneMap } from './components/zone-map';
 export { ZoneScoreLegend } from './components/zone-score-legend';
@@ -43,7 +42,6 @@ export { ZoneReportsScreen, type ZoneReportsScreenProps } from './components/zon
 export { SpeciesChips, type SpeciesChipsProps } from './components/species-chips';
 export { ZoneList, type ZoneListProps } from './components/zone-list';
 export { ZoneSearchField, type ZoneSearchFieldProps } from './components/zone-search-field';
-export { ZoneStateLegend } from './components/zone-state-legend';
 export { ZONE_SCORE_BANDS, scoreBand, type ZoneScoreBand } from './domain/zone-score-band';
 export {
   PILOT_ZONE_SPECIES,
@@ -72,14 +70,12 @@ export {
 export type { ZoneInsight, ZoneInsightSource } from './domain/zone-insight';
 export { createApiZoneSource, PILOT_BBOX, ZoneSourceError } from './services/api-zone-source';
 export {
-  CARD_ZONE_STATE,
-  DEMO_ZONES,
-  ZONE_APPEARANCE,
-  ZONE_STATES,
-  type DemoZone,
-  type ZoneAppearance,
-  type ZoneState,
-} from './domain/zone';
+  appAlertsSource,
+  createApiAlertsSource,
+  type AlertsSource,
+} from './services/api-alerts-source';
+export type { AlertFeed, PickerAlert } from './domain/alert';
+export { ZONE_STATES, type ZoneState } from './domain/zone';
 export { SPECIES, isSpecies, type Species } from './domain/species';
 // The one table that turns a species into its word, exported because a second feature names berries
 // now: the marketplace's listing screen prints what its produce is (“Bilberry · 20 kg available”).
@@ -90,18 +86,3 @@ export { NO_ZONE_FILTER, filterZones, isFilterActive, type ZoneFilter } from './
 // marketplace describes a listing by how far away it is (frame 15's “4.2 km away”), and two
 // formatters for one unit is how “1.4 km” and “1,4 km” end up on two screens of the same app.
 export { formatDistance } from './domain/route';
-
-/**
- * PROTOTYPE — throwaway scaffolding for a design question, exported because a route may only
- * import from a feature's public API: three readings of the design's “community map”, each mounted
- * on the screen it would live on behind `?variant=` (`/discover`, `/zone-details`, `/saved-spots`)
- * — see [to-questionnaire-community-map.md](../../../to-questionnaire-community-map.md) and the
- * feature's `components/prototype/`. Delete this export with `components/prototype/` once the
- * question is answered.
- */
-export {
-  CommunityMapPrototype,
-  communityMapReading,
-  type CommunityMapPrototypeProps,
-  type CommunityMapVariantKey,
-} from './components/prototype/community-map-variants';

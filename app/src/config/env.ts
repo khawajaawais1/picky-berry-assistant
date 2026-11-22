@@ -266,7 +266,10 @@ export function resolveDevelopmentApiBaseUrl(config: AppConfig, host: Developmen
   const parsed = parseAbsoluteUrl(config.apiBaseUrl);
   if (!parsed || !isLoopbackHost(parsed.hostname)) return config;
 
-  const metroHost = host.devServerHostUri?.trim().replace(/^[a-z]+:\/\//i, '').split(/[/:]/)[0];
+  const metroHost = host.devServerHostUri
+    ?.trim()
+    .replace(/^[a-z]+:\/\//i, '')
+    .split(/[/:]/)[0];
   const target =
     metroHost && !isLoopbackHost(metroHost)
       ? metroHost

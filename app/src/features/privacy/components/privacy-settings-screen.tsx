@@ -1,6 +1,6 @@
 import { Feather } from '@/components/atoms/app-icon';
 import { useState } from 'react';
-import { Platform, Pressable, Switch, View } from 'react-native';
+import { Pressable, Switch, View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
 import {
@@ -11,7 +11,6 @@ import {
   SignOutAction,
   StatusMessage,
 } from '@/components/molecules';
-import { appEnvironment } from '@/config/env';
 import { Screen } from '@/components/templates';
 import { layout, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -133,9 +132,6 @@ export function PrivacySettingsScreen({
   const { error: queueError, loading: queueLoading, reports } = useReportQueue();
   const { error: zonesError, loading: zonesLoading, zones } = useSavedZones();
   const { error: sessionError, loading: sessionLoading, session } = useSession();
-  // Native development/preview builds start with sample plan and queue records; say so here,
-  // where the picker's own record is counted (frontend review, 2026-10-25).
-  const previewSamples = Platform.OS !== 'web' && appEnvironment() !== 'production';
 
   const consentLabel = t('privacy.visitTracking');
   const syncLabel = t('privacy.sync.title');
@@ -221,12 +217,6 @@ export function PrivacySettingsScreen({
               </AppText>
             </View>
           </View>
-        ) : null}
-
-        {previewSamples ? (
-          <AppText testID="preview-sample-data" tone="muted" variant="bodySmall">
-            {t('privacy.previewSample')}
-          </AppText>
         ) : null}
 
         {/* The frame's “Use Picky as” card, and the design's own note under it. */}

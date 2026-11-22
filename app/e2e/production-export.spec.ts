@@ -66,26 +66,6 @@ test.describe('the production export', () => {
     await expect(page.getByRole('button', { name: 'Next variant' })).toHaveCount(0);
   });
 
-  test('mounts no prototype on the three routes the community-map readings live on', async ({
-    page,
-  }) => {
-    // A shipped build draws the app's own screen on each of them: the map with no layer over it,
-    // the zone's own figures with no shared list, and the picker's own plan with no cards.
-    await page.goto('/discover?variant=A');
-    await expect(page.getByTestId('zone-map')).toBeVisible();
-    await expect(page.getByText('PROTOTYPE')).toHaveCount(0);
-
-    await page.goto('/zone-details?variant=B');
-    await expect(page.getByTestId('zone-yield-score')).toHaveText('78');
-    await expect(page.getByText('PROTOTYPE')).toHaveCount(0);
-
-    await page.goto('/saved-spots?variant=C');
-    await expect(page.getByTestId('saved-spots-browse')).toBeVisible();
-    await expect(page.getByText('PROTOTYPE')).toHaveCount(0);
-
-    await expect(page.getByRole('button', { name: 'Next variant' })).toHaveCount(0);
-  });
-
   test('keeps the location-watch field test out of a shipped build', async ({ page }) => {
     // ADR-063: the instrument exists to measure the watch's cadence and battery cost on a tester's
     // own phone. It is not a screen a picker may meet, so a shipped bundle has no route to it: the

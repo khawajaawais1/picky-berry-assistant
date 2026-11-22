@@ -45,6 +45,6 @@ describe('ZoneMap without MapLibre', () => {
       'Street map needs a development build; zones are drawn without it.',
     );
     expect(screen.getByTestId('zone-map-canvas')).toBeOnTheScreen();
-    expect(screen.getByText('1 zone · test data')).toBeOnTheScreen();
+    expect(screen.getByText('1 zone')).toBeOnTheScreen();
   });
 });

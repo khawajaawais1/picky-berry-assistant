@@ -49,7 +49,7 @@ export type ZoneCardProps = {
  * card hands it the zone and the berry whose score it is showing instead of opening another
  * zone's figures.
  */
-export function ZoneCard({ demo = true, onOpen, species, zone }: ZoneCardProps) {
+export function ZoneCard({ demo = false, onOpen, species, zone }: ZoneCardProps) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
 

@@ -335,46 +335,6 @@ test.describe('the zone screen’s wiring in the built web app', () => {
 });
 
 /**
- * The list behind frame 07's own “See all 11” — **the app-drawn screen the design never drew**
- * (ADR-044).
- *
- * It belongs in a browser because the press, the destination and what the destination says are
- * three different files: the row is a control only when the route gives it the list to open, the
- * route decides where that press leads, and the screen it lands on states the design's sample week
- * and the phone's own record as two different things. A Jest render holds the strings; only the
- * built page holds the route between them.
- */
-test.describe('the zone’s report list in the built web app', () => {
-  test('opens from the zone screen’s link, and states what it can and cannot show', async ({
-    page,
-  }) => {
-    await page.goto('/zone-details');
-
-    // The frame's own words stay the visible label, and the accessible name says where the press
-    // leads — because the frame's eleven and this phone's own list are not the same thing.
-    await page.getByRole('button', { name: /See all 11 reports/ }).click();
-
-    await expect(page).toHaveURL(/\/zone-reports$/);
-    // The design's own week, said as the sample it is and read from the zone's own figures.
-    await expect(page.getByTestId('zone-reports-sample')).toHaveText(/11 reports/);
-    // This build's phone holds nothing for the zone, and the screen says so rather than standing the
-    // design's eleven in for the picker's own record.
-    await expect(page.getByTestId('zone-reports-empty')).toBeVisible();
-    // And the half nothing can return yet is named rather than faked.
-    await expect(page.getByTestId('zone-reports-missing')).toBeVisible();
-
-    await expectTreeReadable(page, '/zone-reports, opened from the zone screen');
-
-    // The frame draws a back control on the screen that opens it, so the way back is the history
-    // entry the press just made.
-    await page.getByRole('button', { name: 'Back' }).click();
-    await expect(page).toHaveURL(/\/zone-details$/);
-
-    await expectTreeReadable(page, '/zone-details, returned from the report list');
-  });
-});
-
-/**
  * The planned marketplace, end to end in the built app: the browse screen's search really narrows
  * the list, the card it leaves opens the listing, the listing reaches the seller's thread, and the
  * thread reaches the order it is about (frames 15–18).
@@ -968,10 +928,9 @@ test.describe('the review-only prototype surfaces in the built web app', () => {
     // The reach, asserted: the prototypes are here, and every declared reading is one this harness
     // can actually open. A variant with nothing declared to measure is a failure, not a skip.
     expect([...new Set(PROTOTYPE_READINGS.map((reading) => reading.prototype))].sort()).toEqual([
-      'community-map',
       'sign-in',
     ]);
-    expect(PROTOTYPE_READINGS.length).toBeGreaterThanOrEqual(6);
+    expect(PROTOTYPE_READINGS.length).toBeGreaterThanOrEqual(3);
     expect(undescribedReadings()).toEqual([]);
     expect(readingsOffTheirPrototype()).toEqual([]);
   });
