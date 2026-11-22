@@ -364,13 +364,10 @@ export const fi: Record<TranslationKey, string> = {
   // with an allative ending (“pohjoiseen”) rather than as a word the app appends to a distance.
   'discover.alert.eyebrow': 'POIMINTA · ENNUSTEEN PERUSTELUT',
   'discover.alert.title': 'Hälytykset metsästä',
-  'discover.alert.stamp': '{date} · {time}',
-  'discover.alert.headline': '{species} {distance} päässä',
   'discover.alert.score': '{score} / {max} sato',
   // Kept to the frame's single line (306x18): “Tuorein havainto” (latest report) beside the zone
   // and the place ran to two, which the layout harness caught — the card's own heading already
   // says what the figure is about, so the Finnish line states the reading alone.
-  'discover.alert.context': '{zone} · Viimeisin raportti {date}',
   // The frame's note claims a forecast assembled from weather, season and trust-weighted
   // reports, and none of the three has a source. The line says what is true instead and keeps
   // the design's own promise that a harvest is never guaranteed.
@@ -752,9 +749,9 @@ export const fi: Record<TranslationKey, string> = {
   'discover.details.reports.open': 'Katso alueen raportit',
   'discover.details.navigate.plain': 'Reitti',
   'discover.alert.headline.zone': '{species} · {zone}',
-  'discover.alert.context.noReport': '{zone} · Ei vielä raportteja',
   'discover.alert.open': 'Avaa {zone}',
-  'discover.alert.empty': 'Ei hälytyksiä marjoillesi ja säteellesi juuri nyt.',
+  'discover.alert.empty': 'Ei kypsien marjojen hälytyksiä juuri nyt.',
+  'discover.alert.notification.title': 'Marjahälytys: {species}',
   'discover.alert.readFailed': 'Hälytyksiä ei voitu lukea.',
   'offline.sending': 'Lähetetään…',
   'offline.sendFailed': 'Raportteja ei voitu lähettää. Ne pysyvät puhelimessa.',

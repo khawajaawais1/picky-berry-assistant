@@ -17,7 +17,8 @@ import {
   appProfileApi,
   PushRegistration,
 } from '@/features/privacy';
-import { appPushPort } from '@/services/push';
+import { AlertNotifications, appReasoningAlertsSource } from '@/features/discover';
+import { appAlertNotifier, appPushPort } from '@/services/push';
 import { AppVisitTracking, ReportSync } from '@/features/visits';
 import { ErrorScreen } from '@/components/templates';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -123,6 +124,17 @@ export default function AppShellLayout() {
         accountApi={appAccountApi}
         appVersion={Constants.expoConfig?.version}
         push={appPushPort}
+      />
+      {/*
+        Feature 6.7: the reasoning backend's alerts shown as notifications (their sentence is the
+        text), and a tapped one — raised here or pushed by FCM — opening its zone.
+      */}
+      <AlertNotifications
+        notifier={appAlertNotifier}
+        onOpenZone={(zone, species) =>
+          router.push({ pathname: '/zone-details', params: { species, zone } })
+        }
+        source={appReasoningAlertsSource}
       />
       <Stack screenOptions={{ animation: 'fade', headerShown: false }} />
       {activeKey ? (

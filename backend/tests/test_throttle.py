@@ -135,7 +135,7 @@ class TestPushAlertsLayer6Guards:
             m.APNSPayload = MagicMock(return_value=MagicMock())
             m.Aps = MagicMock(return_value=MagicMock())
             resp = MagicMock(success=True)
-            m.send_multicast.return_value = MagicMock(
+            m.send_each_for_multicast.return_value = MagicMock(
                 success_count=1, failure_count=0, responses=[resp]
             )
             return m

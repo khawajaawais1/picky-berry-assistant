@@ -49,11 +49,11 @@ def _messaging_mock(success: int = 1, failure: int = 0, exc: Exception | None = 
     for cls in ("MulticastMessage", "Notification", "AndroidConfig", "APNSConfig", "APNSPayload", "Aps"):
         setattr(mod, cls, MagicMock(return_value=MagicMock()))
     if exc:
-        mod.send_multicast.side_effect = exc
+        mod.send_each_for_multicast.side_effect = exc
     else:
         # responses list is needed for per-token logging
         responses = [MagicMock(success=(i < success)) for i in range(success + failure)]
-        mod.send_multicast.return_value = MagicMock(
+        mod.send_each_for_multicast.return_value = MagicMock(
             success_count=success, failure_count=failure, responses=responses
         )
     return mod
@@ -142,5 +142,5 @@ class TestPushAlerts:
         messaging = _messaging_mock(success=2, failure=0)
         with patch.dict("sys.modules", _firebase_mocks(messaging)):
             result = push_alerts("postgresql://test", [_alert()], fcm_app=None)
-        messaging.send_multicast.assert_called_once()
+        messaging.send_each_for_multicast.assert_called_once()
         assert result["sent"] == 2

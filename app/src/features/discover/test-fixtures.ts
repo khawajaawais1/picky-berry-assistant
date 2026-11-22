@@ -1,4 +1,4 @@
-import type { AlertFeed } from './domain/alert';
+import type { ReasoningAlert } from './domain/reasoning-alert';
 import type { Zone, ZoneSource } from './domain/zone-source';
 
 /** A served zone, for the screen tests. Its middle is about 62.2548 N, 25.6964 E. */
@@ -25,23 +25,18 @@ export function liveZoneSource(zones: readonly Zone[] = [LIVE_ZONE]): ZoneSource
   return { list: async () => zones };
 }
 
-export const ALERT_FEED: AlertFeed = {
-  radiusKm: 10,
-  alerts: [
-    {
-      id: 'alert-1',
-      zoneId: 'zone-a',
-      zoneName: 'Laajavuori 22',
-      species: 'bilberry',
-      score: 71,
-      confidence: 'high',
-      ripeness: 'ripening',
-      distanceMeters: 1800,
-      latestReportAt: '2026-08-28T09:00:00.000Z',
-      computedAt: '2026-08-28T09:30:00.000Z',
-    },
-  ],
-};
+export const REASONING_ALERTS: ReasoningAlert[] = [
+  {
+    ruleId: 'ripe_nearby',
+    zoneId: 'zone-a',
+    zoneName: 'Laajavuori 22',
+    species: 'bilberry',
+    score: 71,
+    confidence: 'high',
+    ripeness: 'ripening',
+    sentence: 'Ripe bilberry in zone Laajavuori 22 — yield score 71, high confidence.',
+  },
+];
 
 export const SEASON = {
   year: 2026,

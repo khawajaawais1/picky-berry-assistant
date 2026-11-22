@@ -117,6 +117,9 @@ function copyRulesOf(screen: Screen): readonly CopyRule[] {
 /** Long enough for the export to hydrate, short enough to fail a stalled page. */
 const RENDER_TIMEOUT_MS = 15_000;
 
+/** The reasoning backend's origin in the harness build (`playwright.config.ts`). */
+const REASONING_ORIGIN = 'https://picky-reasoning.invalid';
+
 const LOCALES: readonly Locale[] = [
   { code: 'en', name: 'English', tag: 'en-US', catalogue: en },
   { code: 'fi', name: 'Finnish', tag: 'fi-FI', catalogue: fi },
@@ -414,11 +417,13 @@ const SCREENS: readonly Screen[] = [
     ],
   },
   {
-    // The harness has no session, so the alert feed cannot be read and the screen says so.
+    // The reasoning backend is on `.invalid` in the harness, so the alert feed cannot be read and
+    // the screen says so. The read failure is the anchor because it is the last thing to appear:
+    // the feed is a network request, and measuring before it settles would measure "Loading…".
     name: '12 · Core picker · Alerts and forecast',
     path: '/alerts',
     shell: true,
-    anchor: 'discover.alert.eyebrow',
+    anchor: 'discover.alert.readFailed',
     copy: [
       { what: 'the eyebrow', key: 'discover.alert.eyebrow' },
       { what: 'the screen title', key: 'discover.alert.title' },
@@ -909,6 +914,10 @@ async function openScreen(browser: Browser, screen: Screen, locale: Locale) {
     }, screen.seed);
   }
 
+  // The reasoning backend's alerts need no session, so the export requests them for real. Its
+  // `.invalid` host never resolves; refusing it here makes the failure arrive at once rather than
+  // after the platform's own DNS timeout.
+  await page.route(`${REASONING_ORIGIN}/**`, (route) => route.abort('namenotresolved'));
   await page.goto(screen.path);
 
   return { context, page };

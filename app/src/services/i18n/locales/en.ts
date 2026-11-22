@@ -422,13 +422,10 @@ export const en = {
   'discover.alert.eyebrow': 'CORE PICKER · FORECAST REASONING',
   'discover.alert.title': 'Alerts from the forest',
   // The frame's own stamp (“TODAY · 28 AUG · 09:30”), with the day as a value the language writes.
-  'discover.alert.stamp': '{date} · {time}',
   // The frame's headline: “Ripe bilberries 1.8 km north”. The distance is a value and the rest is
   // the sentence — the species is plural here where a chip names it singular, and Finnish names the
   // direction with its own case ending rather than as a word the app appends.
-  'discover.alert.headline': '{species} {distance} away',
   'discover.alert.score': '{score} / {max} yield',
-  'discover.alert.context': '{zone} · Latest report {date}',
   // The frame's own note says a forecast is made by combining weather, season and trust-weighted
   // reports. Nothing combines anything today, so the line says what is true and keeps the
   // design's own promise: a harvest is never guaranteed.
@@ -904,9 +901,9 @@ export const en = {
   'discover.details.reports.open': 'See the zone’s reports',
   'discover.details.navigate.plain': 'Navigate',
   'discover.alert.headline.zone': '{species} in {zone}',
-  'discover.alert.context.noReport': '{zone} · No reports yet',
   'discover.alert.open': 'Open {zone}',
-  'discover.alert.empty': 'No alerts for your berries and radius right now.',
+  'discover.alert.empty': 'No ripe-berry alerts right now.',
+  'discover.alert.notification.title': 'Berry alert: {species}',
   'discover.alert.readFailed': 'Alerts could not be read.',
   'offline.sending': 'Sending…',
   'offline.sendFailed': 'The reports could not be sent. They stay on this phone.',
