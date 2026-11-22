@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { QueryProvider } from '@/services/query-client';
 
 import { accountProfile, fakeAccountApi } from '@/features/privacy/services/testing';
 import { fakePushPort } from '@/services/push/testing';
@@ -13,7 +14,6 @@ import { AlertsScreen } from '../alerts-screen';
  * read from `GET /me` and changed on the Alert preferences screen. Quiet hours has no field in the
  * contract, so the row says it is not offered yet rather than drawing the design's 21:00–07:00.
  *
- * The alert itself stays the design's sample: no forecast exists behind it.
  */
 async function signedIn() {
   await sessionPort.register({
@@ -32,14 +32,19 @@ beforeEach(async () => {
 
 function live(overrides: Partial<Parameters<typeof AlertsScreen>[0]> = {}) {
   return (
-    <AlertsScreen
-      accountApi={fakeAccountApi(
-        accountProfile({ alertRadiusKm: 25, speciesInterest: ['cloudberry', 'bilberry', 'rowan'] }),
-      )}
-      push={fakePushPort({ permission: 'undetermined' })}
-      register={jest.fn(async () => ({ ok: true }))}
-      {...overrides}
-    />
+    <QueryProvider>
+      <AlertsScreen
+        accountApi={fakeAccountApi(
+          accountProfile({
+            alertRadiusKm: 25,
+            speciesInterest: ['cloudberry', 'bilberry', 'rowan'],
+          }),
+        )}
+        push={fakePushPort({ permission: 'undetermined' })}
+        register={jest.fn(async () => ({ ok: true }))}
+        {...overrides}
+      />
+    </QueryProvider>
   );
 }
 

@@ -1,100 +1,68 @@
 import { Feather } from '@/components/atoms/app-icon';
-import { View } from 'react-native';
+import { useQuery } from '@tanstack/react-query';
+import { Pressable, View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
-import { Card } from '@/components/molecules';
+import { StatusMessage } from '@/components/molecules';
 import { Screen } from '@/components/templates';
-import { layout, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { useDevicePosition } from '@/hooks/use-device-position';
 import type { ProfileApi } from '@/features/privacy';
-import { formatShortDate, interpolate, useTranslation, type TranslationKey } from '@/services/i18n';
+import { formatShortDate, interpolate, useTranslation } from '@/services/i18n';
 import { appPushPort, type PushPort, type RegisterDevice } from '@/services/push';
 
-import {
-  DEMO_ALERT,
-  DEMO_ALERT_PREFERENCES,
-  confidenceLabelKey,
-  formatRadius,
-} from '../domain/alert';
+import { confidenceLabelKey, type PickerAlert } from '../domain/alert';
 import { formatDistance } from '../domain/route';
+import type { Species } from '../domain/species';
 import { SCORE_MAX } from '../domain/zone-details';
+import type { AlertsSource } from '../services/api-alerts-source';
 import { LiveAlertPreferences } from './live-alert-preferences';
 import { SPECIES_LABEL_KEY } from './species-copy';
+import { RIPENESS_LABEL_KEY } from './zone-source-copy';
 
 export type AlertsScreenProps = {
   onBack?: () => void;
-  /**
-   * The account service. With it the alert-preferences card is the account's own (ADR-067); without
-   * it the card stays the design's sample (ADR-043), which is what the layout harness draws.
-   */
+  /** The alert feed (`GET /alerts`); without it the screen shows the preferences alone. */
+  alertsSource?: AlertsSource;
   accountApi?: ProfileApi;
-  /** The platform's push permission and token, behind the card's switch (ADR-067). */
   push?: PushPort;
-  /** Registers this phone with the account service (`POST /me/devices`). */
   register?: RegisterDevice;
-  /** Opens the Alert preferences screen from the card's radius and species rows. */
   onOpenPreferences?: () => void;
+  /** Opens an alert's zone on the zone screen, for the berry the alert is about. */
+  onOpenZone?: (zoneId: string, species: Species) => void;
 };
-
-/**
- * The frame's three reasons, and the glyph and the two lines each of them gets (nodes 5:23465,
- * 5:23470 and 5:23475). They are copy, so they live beside the screen rather than in the domain.
- */
-const ALERT_REASONS: readonly {
-  /** The frame draws `sun`, `cloud-rain` and `calendar-check`; Feather has no calendar-check, so
-   *  the third reason uses the nearest glyph it does have, as screen 14's lock does. */
-  icon: 'sun' | 'cloud-rain' | 'calendar';
-  titleKey: TranslationKey;
-  detailKey: TranslationKey;
-}[] = [
-  {
-    detailKey: 'discover.alert.reason.warm.detail',
-    icon: 'sun',
-    titleKey: 'discover.alert.reason.warm.title',
-  },
-  {
-    detailKey: 'discover.alert.reason.rain.detail',
-    icon: 'cloud-rain',
-    titleKey: 'discover.alert.reason.rain.title',
-  },
-  {
-    detailKey: 'discover.alert.reason.picked.detail',
-    icon: 'calendar',
-    titleKey: 'discover.alert.reason.picked.title',
-  },
-];
 
 /**
  * Screen 12 · Core picker · Alerts and forecast (Figma node `5:23439`).
  *
- * The design's heads-up: what is ripe and how far away, what the app's own reading of it is worth,
- * and the three reasons it is saying so — followed by the frame's own note about what a forecast
- * is made of.
- *
- * The alert is the **design's sample**, like the zone screens' forecast and frame 08's offline
- * note: no weather source, season model or report stream exists behind it (PROJECT.md records it,
- * and the frame's own note is the disclaimer the design draws for exactly that reason).
- *
- * With the account service the frame's **alert preferences** card is the account's own
- * (`LiveAlertPreferences`, ADR-067). Without one it is drawn as the design's own sample (ADR-043): so its switch is a figure rather than a control, its
- * four rows claim no role and draw no chevron — a row that will never open anything may not draw
- * the sign that says it will (AGENTS.md §11.2) — and a line on the card says the settings are the
- * design's, not this phone's.
- *
- * One part of the frame stays deliberately absent, recorded in PROJECT.md: its **“View Zone 18”**
- * action — the app's demo map has no Zone 18, so the action would open nothing.
- *
- * Its **core navigation** is absent as it is on every other core picker screen.
+ * The explainable alerts the reasoning job produced for this picker (`GET /alerts`): one card per
+ * zone and berry, nearest first when the phone has a position fix, each with its score,
+ * confidence, ripeness and freshest report, and a way into the zone. Below them, the picker's own
+ * alert preferences, saved to their account (ADR-067).
  */
 export function AlertsScreen({
   accountApi,
+  alertsSource,
   onBack,
   onOpenPreferences,
+  onOpenZone,
   push = appPushPort,
   register,
 }: AlertsScreenProps) {
-  const { colors } = useAppTheme();
-  const { locale, t } = useTranslation();
+  const { t } = useTranslation();
+  const { fix } = useDevicePosition();
+  const position = fix ? { latitude: fix.latitude, longitude: fix.longitude } : undefined;
+  const feed = useQuery({
+    // Rounded so a walking picker does not refetch on every metre.
+    queryKey: [
+      'alerts',
+      position ? Math.round(position.latitude * 100) : null,
+      position ? Math.round(position.longitude * 100) : null,
+    ],
+    queryFn: () => alertsSource!.list(position),
+    enabled: alertsSource !== undefined,
+    retry: false,
+  });
 
   return (
     <Screen
@@ -104,80 +72,30 @@ export function AlertsScreen({
       title={t('discover.alert.title')}
     >
       <View className="w-full gap-section">
-        <View
-          className="w-full gap-cardGap rounded-lg px-section py-section"
-          style={{ backgroundColor: colors.accentMuted }}
-          testID="alert-card"
-        >
-          <View className="w-full flex-row items-center gap-gap">
-            <Feather color={colors.accent} name="bell" size={22} />
-            <AppText
-              className="flex-1"
-              style={{ fontWeight: '600' }}
-              tone="accent"
-              variant="metadata"
-            >
-              {interpolate(t('discover.alert.stamp'), {
-                date: formatShortDate(DEMO_ALERT.at, locale),
-                time: DEMO_ALERT.atTime,
-              })}
-            </AppText>
-          </View>
+        {alertsSource === undefined ? null : feed.data ? (
+          feed.data.alerts.length === 0 ? (
+            <StatusMessage testID="alerts-empty" tone="muted" variant="bodySmall">
+              {t('discover.alert.empty')}
+            </StatusMessage>
+          ) : (
+            feed.data.alerts.map((alert) => (
+              <AlertCard
+                alert={alert}
+                key={alert.id}
+                onOpen={onOpenZone ? () => onOpenZone(alert.zoneId, alert.species) : undefined}
+              />
+            ))
+          )
+        ) : (
+          <StatusMessage
+            testID="alerts-status"
+            tone={feed.isError ? 'danger' : 'muted'}
+            variant="bodySmall"
+          >
+            {t(feed.isError ? 'discover.alert.readFailed' : 'common.loading')}
+          </StatusMessage>
+        )}
 
-          <AppText variant="heroTitle">
-            {interpolate(t('discover.alert.headline'), {
-              distance: formatDistance(DEMO_ALERT.distanceMeters, locale),
-            })}
-          </AppText>
-
-          {/* The chips wrap for the same reason screen 11's period chips do: the design sets them
-              in one row and its own labels fit in one, and a large system text size does not. */}
-          <View className="w-full flex-row flex-wrap gap-sm">
-            <AlertChip
-              label={interpolate(t('discover.alert.score'), {
-                max: String(SCORE_MAX),
-                score: String(DEMO_ALERT.score),
-              })}
-              testID="alert-score"
-              tone="accent"
-            />
-            <AlertChip
-              label={t(confidenceLabelKey(DEMO_ALERT.confidence))}
-              testID="alert-confidence"
-              tone="success"
-            />
-          </View>
-
-          <AppText tone="muted" variant="caption">
-            {interpolate(t('discover.alert.context'), {
-              minutes: String(DEMO_ALERT.latestReportMinutesAgo),
-              place: DEMO_ALERT.place,
-              zone: DEMO_ALERT.zoneNumber,
-            })}
-          </AppText>
-        </View>
-
-        <View className="w-full gap-section">
-          <AppText variant="sectionHeading">{t('discover.alert.why')}</AppText>
-
-          {ALERT_REASONS.map((reason) => (
-            <View className="w-full flex-row items-center gap-gap" key={reason.titleKey}>
-              <Feather color={colors.success} name={reason.icon} size={22} />
-              <View className="flex-1 gap-tight">
-                <AppText variant="cardTitle">{t(reason.titleKey)}</AppText>
-                <AppText tone="muted" variant="caption">
-                  {t(reason.detailKey)}
-                </AppText>
-              </View>
-            </View>
-          ))}
-        </View>
-
-        {/*
-          The frame's preferences card (nodes 5:23480–5:23504), in the frame's own place: after its
-          three reasons and before its closing note. With the account service it is the account's
-          own (ADR-067); without one it is the design's sample (ADR-043).
-        */}
         {accountApi ? (
           <LiveAlertPreferences
             accountApi={accountApi}
@@ -185,67 +103,7 @@ export function AlertsScreen({
             push={push}
             register={register}
           />
-        ) : (
-          <Card
-            style={{ gap: spacing.cardGap, padding: spacing.section }}
-            testID="alert-preferences"
-          >
-            <AppText style={{ fontWeight: '600' }} variant="cardLead">
-              {t('discover.alert.preferences.title')}
-            </AppText>
-
-            {/*
-            The frame's switch is a figure, not a control: nothing delivers an alert and no
-            permission is asked for. It is still a reading whose state matters, so the row is one
-            accessible group named with its answer rather than a switch that goes nowhere
-            (frontend review, 2026-10-25).
-          */}
-            <View
-              accessibilityLabel={`${t('discover.alert.preferences.push')}, ${t(
-                DEMO_ALERT_PREFERENCES.pushAlerts ? 'common.on' : 'common.off',
-              )}`}
-              accessible
-              className="w-full flex-row items-center gap-gap py-setting"
-              role="group"
-              testID="alert-preferences-push"
-            >
-              <AppText className="flex-1" variant="cardTitle">
-                {t('discover.alert.preferences.push')}
-              </AppText>
-              <SwitchFigure on={DEMO_ALERT_PREFERENCES.pushAlerts} />
-            </View>
-
-            {/* The frame draws one divider, under its first setting (node 5:23487). */}
-            <View
-              className="w-full"
-              style={{ backgroundColor: colors.border, height: 1 }}
-              testID="alert-preferences-divider"
-            />
-
-            <PreferenceRow
-              label={t('discover.alert.preferences.radius')}
-              value={formatRadius(DEMO_ALERT_PREFERENCES.radiusKm, locale)}
-            />
-            <PreferenceRow
-              label={t('discover.alert.preferences.quiet')}
-              value={interpolate(t('discover.alert.preferences.quietValue'), {
-                from: DEMO_ALERT_PREFERENCES.quietFrom,
-                to: DEMO_ALERT_PREFERENCES.quietTo,
-              })}
-            />
-            <PreferenceRow
-              label={t('discover.alert.preferences.species')}
-              value={interpolate(t('discover.alert.preferences.speciesValue'), {
-                count: String(DEMO_ALERT_PREFERENCES.extraSpecies),
-                species: t(SPECIES_LABEL_KEY[DEMO_ALERT_PREFERENCES.speciesId]),
-              })}
-            />
-
-            <AppText testID="alert-preferences-sample" tone="muted" variant="metadata">
-              {t('discover.alert.preferences.sample')}
-            </AppText>
-          </Card>
-        )}
+        ) : null}
 
         <AppText tone="muted" variant="metadata">
           {t('discover.alert.note')}
@@ -255,65 +113,87 @@ export function AlertsScreen({
   );
 }
 
-/**
- * The switch the frame draws on the first setting, as a **figure**: `on` paints the frame's own
- * state (accent track, thumb at the end), and nothing here can be pressed, because nothing
- * delivers an alert and no permission is asked for. A plain view claims no role, so assistive
- * technology is not offered a control that would turn on nothing (AGENTS.md §11.2).
- */
-function SwitchFigure({ on }: { on: boolean }) {
+function AlertCard({ alert, onOpen }: { alert: PickerAlert; onOpen?: () => void }) {
   const { colors } = useAppTheme();
+  const { locale, t } = useTranslation();
+  const species = t(SPECIES_LABEL_KEY[alert.species]);
+  const at = new Date(alert.computedAt);
+  const time = at.toLocaleTimeString(locale === 'fi' ? 'fi-FI' : 'en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
-  return (
+  const card = (
     <View
-      className="flex-row items-center rounded-pill"
-      style={{
-        backgroundColor: on ? colors.accent : colors.border,
-        height: layout.switchHeight,
-        // The frame's 3 px inset, derived rather than written down: the thumb is centred in the
-        // track by construction, so the padding cannot disagree with the two heights.
-        padding: (layout.switchHeight - layout.switchThumb) / 2,
-        width: layout.switchWidth,
-        justifyContent: on ? 'flex-end' : 'flex-start',
-      }}
-      testID="alert-preferences-push-figure"
+      className="w-full gap-cardGap rounded-lg px-section py-section"
+      style={{ backgroundColor: colors.accentMuted }}
+      testID={`alert-card-${alert.id}`}
     >
-      <View
-        style={{
-          backgroundColor: colors.onAccent,
-          borderRadius: layout.switchThumb / 2,
-          height: layout.switchThumb,
-          width: layout.switchThumb,
-        }}
-      />
+      <View className="w-full flex-row items-center gap-gap">
+        <Feather color={colors.accent} name="bell" size={22} />
+        <AppText className="flex-1" style={{ fontWeight: '600' }} tone="accent" variant="metadata">
+          {interpolate(t('discover.alert.stamp'), {
+            date: formatShortDate(alert.computedAt, locale),
+            time,
+          })}
+        </AppText>
+        {onOpen ? <Feather color={colors.accent} name="chevron-right" size={20} /> : null}
+      </View>
+
+      <AppText variant="heroTitle">
+        {alert.distanceMeters === null
+          ? interpolate(t('discover.alert.headline.zone'), { species, zone: alert.zoneName })
+          : interpolate(t('discover.alert.headline'), {
+              distance: formatDistance(alert.distanceMeters, locale),
+              species,
+            })}
+      </AppText>
+
+      <View className="w-full flex-row flex-wrap gap-sm">
+        <AlertChip
+          label={interpolate(t('discover.alert.score'), {
+            max: String(SCORE_MAX),
+            score: String(alert.score),
+          })}
+          testID="alert-score"
+          tone="accent"
+        />
+        <AlertChip
+          label={t(confidenceLabelKey(alert.confidence))}
+          testID="alert-confidence"
+          tone="success"
+        />
+        <AlertChip
+          label={t(RIPENESS_LABEL_KEY[alert.ripeness])}
+          testID="alert-ripeness"
+          tone="success"
+        />
+      </View>
+
+      <AppText tone="muted" variant="caption">
+        {alert.latestReportAt === null
+          ? interpolate(t('discover.alert.context.noReport'), { zone: alert.zoneName })
+          : interpolate(t('discover.alert.context'), {
+              date: formatShortDate(alert.latestReportAt, locale),
+              zone: alert.zoneName,
+            })}
+      </AppText>
     </View>
+  );
+
+  return onOpen ? (
+    <Pressable
+      accessibilityLabel={interpolate(t('discover.alert.open'), { zone: alert.zoneName })}
+      accessibilityRole="button"
+      onPress={onOpen}
+    >
+      {card}
+    </Pressable>
+  ) : (
+    card
   );
 }
 
-/**
- * One of the card's three read-only settings: the frame's label, the frame's accent value at the
- * end, and no more. **It claims no role and draws no chevron** — the design draws an arrow on each
- * of these rows, and the app drops it, for the reason frame 13's rows drop theirs (ADR-042): a row
- * that will never open anything may not draw the sign that says it will (AGENTS.md §11.2).
- */
-function PreferenceRow({ label, value }: { label: string; value: string }) {
-  return (
-    <View className="w-full flex-row items-center gap-gap py-setting">
-      <AppText className="flex-1" variant="cardTitle">
-        {label}
-      </AppText>
-      <AppText tone="accent" variant="rowValue">
-        {value}
-      </AppText>
-    </View>
-  );
-}
-
-/**
- * One of the alert's two chips. The design paints the score filled with the accent colour and the
- * confidence tinted with the success one; whatever the tint, the chip carries its own word, so
- * colour is never the only thing that says what it means.
- */
 function AlertChip({
   label,
   testID,
