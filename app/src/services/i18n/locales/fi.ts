@@ -755,6 +755,7 @@ export const fi: Record<TranslationKey, string> = {
   'discover.alert.context.noReport': '{zone} · Ei vielä raportteja',
   'discover.alert.open': 'Avaa {zone}',
   'discover.alert.empty': 'Ei hälytyksiä marjoillesi ja säteellesi juuri nyt.',
+  'discover.alert.notification.title': 'Marjahälytys: {species}',
   'discover.alert.readFailed': 'Hälytyksiä ei voitu lukea.',
   'offline.sending': 'Lähetetään…',
   'offline.sendFailed': 'Raportteja ei voitu lähettää. Ne pysyvät puhelimessa.',

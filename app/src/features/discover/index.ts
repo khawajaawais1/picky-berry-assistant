@@ -19,6 +19,13 @@
  */
 export { ActiveVisitScreen, type ActiveVisitScreenProps } from './components/active-visit-screen';
 export { AlertsScreen, type AlertsScreenProps } from './components/alerts-screen';
+export { AlertNotifications, type AlertNotificationsProps } from './components/alert-notifications';
+export {
+  appReasoningAlertsSource,
+  createReasoningAlertsSource,
+  type ReasoningAlertsSource,
+} from './services/reasoning-alerts-source';
+export type { ReasoningAlert } from './domain/reasoning-alert';
 export {
   AlertPreferencesScreen,
   type AlertPreferencesScreenProps,

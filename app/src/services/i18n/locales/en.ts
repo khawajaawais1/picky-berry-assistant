@@ -907,6 +907,7 @@ export const en = {
   'discover.alert.context.noReport': '{zone} · No reports yet',
   'discover.alert.open': 'Open {zone}',
   'discover.alert.empty': 'No alerts for your berries and radius right now.',
+  'discover.alert.notification.title': 'Berry alert: {species}',
   'discover.alert.readFailed': 'Alerts could not be read.',
   'offline.sending': 'Sending…',
   'offline.sendFailed': 'The reports could not be sent. They stay on this phone.',
