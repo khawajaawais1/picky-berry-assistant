@@ -34,6 +34,8 @@ export class ApiError extends Error {
   readonly code: string;
   readonly requestId: string | null;
   readonly details: unknown;
+  /** Path of the request that failed, e.g. /api/v1/admin/overview; null when unknown. */
+  readonly path: string | null;
 
   constructor(
     status: number,
@@ -41,6 +43,7 @@ export class ApiError extends Error {
     message: string,
     requestId: string | null = null,
     details: unknown = null,
+    path: string | null = null,
   ) {
     super(message);
     this.name = 'ApiError';
@@ -48,6 +51,7 @@ export class ApiError extends Error {
     this.code = code;
     this.requestId = requestId;
     this.details = details;
+    this.path = path;
   }
 }
 
@@ -150,7 +154,28 @@ async function toApiError(response: Response): Promise<ApiError> {
     body?.error?.message ?? fallback,
     body?.request_id ?? response.headers.get('x-request-id'),
     body?.error?.details ?? null,
+    pathOf(response.url),
   );
+}
+
+function pathOf(url: string): string | null {
+  try {
+    return new URL(url).pathname;
+  } catch {
+    return null;
+  }
+}
+
+const RECORD_ID = /^(\d+|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+
+/**
+ * An API built before ROUTE_NOT_FOUND answers a route it does not have with plain
+ * NOT_FOUND. When the path names no record (no numeric or UUID segment), a 404 can only
+ * mean the route is missing; with an id it may just be a record that does not exist.
+ */
+function isMissingRouteOnOlderApi(error: ApiError): boolean {
+  if (error.status !== 404 || error.code !== 'NOT_FOUND' || !error.path) return false;
+  return !error.path.split('/').some((segment) => RECORD_ID.test(segment));
 }
 
 function normalizePath(path: string): string {
@@ -185,6 +210,7 @@ export function isApiUnavailable(error: unknown): boolean {
     error instanceof ApiError &&
     (error.code === 'API_UNREACHABLE' ||
       error.code === 'ROUTE_NOT_FOUND' ||
+      isMissingRouteOnOlderApi(error) ||
       [501, 502, 503, 504].includes(error.status))
   );
 }
