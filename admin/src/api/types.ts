@@ -316,6 +316,43 @@ export interface AuditResponse {
   total: number;
 }
 
+export type HealthStatus = 'ok' | 'warn' | 'fail';
+
+export interface OperationsBreakdown {
+  key: string;
+  label: string;
+  status: HealthStatus;
+  value: string;
+  detail?: string;
+}
+
+export interface OperationsCheck {
+  id: string;
+  label: string;
+  status: HealthStatus;
+  value: string;
+  threshold: string;
+  detail: string;
+  owner: string;
+  runbook: string;
+  href?: string;
+  checked_at: string;
+  breakdown?: OperationsBreakdown[];
+}
+
+export interface OperationsUnavailable {
+  id: string;
+  label: string;
+  reason: string;
+}
+
+export interface OperationsHealth {
+  generated_at: string;
+  status: HealthStatus;
+  checks: OperationsCheck[];
+  unavailable: OperationsUnavailable[];
+}
+
 export interface HistoryResponse {
   zone_id: string;
   species: string;

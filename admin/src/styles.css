@@ -1008,7 +1008,58 @@ th.numeric {
   flex-direction: column;
   gap: 6px;
   text-align: right;
-  white-space: nowrap;
+}
+
+.ops-check-threshold {
+  max-width: 24ch;
+}
+
+.ops-breakdown-list {
+  display: flex;
+  margin: 8px 0 0;
+  padding: 0;
+  flex-direction: column;
+  gap: 5px;
+  list-style: none;
+}
+
+.ops-breakdown-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #100d17;
+  font-size: 0.78rem;
+}
+
+.ops-breakdown-name {
+  overflow-wrap: anywhere;
+}
+
+.ops-unavailable {
+  margin-top: 14px;
+  padding: 11px 13px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 10px;
+  background: rgba(131, 201, 255, 0.045);
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.ops-unavailable strong {
+  color: var(--info);
+  font-weight: 600;
+}
+
+.ops-unavailable ul {
+  display: flex;
+  margin: 6px 0 0;
+  padding-left: 16px;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .ops-runbook {
@@ -1978,6 +2029,10 @@ th.numeric {
 
   .ops-hero-meta {
     align-items: flex-start;
+  }
+
+  .ops-check-threshold {
+    max-width: none;
   }
 
   .topbar {

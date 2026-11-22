@@ -12,7 +12,7 @@ API contract: [`../picky-server/docs/openapi/admin.yaml`](../picky-server/docs/o
 | Screen | Purpose |
 |--------|---------|
 | Overview | zone coverage, score freshness, report/visit volume, queue depth, recent audit |
-| Operations | pipeline health checks, runbook links, running jobs and stale-lock evidence |
+| Operations | server-side freshness, coverage, queue-age and data-quality checks with runbook links, unavailable capabilities, and running jobs |
 | Analytics | daily reports/visits/signups, jobs finished, species coverage, score distribution |
 | Zones | search by name/H3/id, filter by species, sort, open a zone |
 | Zone detail | scores with confidence and ripeness, 30-day history, stored explanation, species fit, reports, visits, jobs |

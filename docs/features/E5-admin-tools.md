@@ -106,6 +106,7 @@ standard error envelope. Pagination is `page` (1-based) and `page_size` (default
 | Method & path | Returns |
 |---------------|---------|
 | `GET /admin/overview` | coverage, freshness, users/reports/visits/jobs counters, species, recent audit |
+| `GET /admin/operations/health` | server-side health checks with thresholds, owners, runbooks, per-species breakdowns and unavailable capabilities |
 | `GET /admin/zones?q=&species=&sort=&page=&page_size=` | paged zone list with score/report summaries |
 | `GET /admin/zones/{id}` | zone facts, geometry, scores + explanations, species fit, reports, visits, jobs |
 | `GET /admin/jobs?status=&type=&page=&page_size=` | paged jobs + status counts |
@@ -178,6 +179,13 @@ ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
   than 24 h.
 - **Queue depth** = count of `jobs` per status; "overdue" = queued and `run_at` older than 15
   minutes. The worker's own schedule owns the run time; the panel only reports it.
+- **Operations health** is computed by the API, not the browser. Coverage is checked per
+  species (≥95% ok, ≥80% warn); freshness uses the oldest species' newest current score (≤26 h
+  ok, ≤48 h warn); queue age warns at 1–4 overdue jobs and fails at 5+. Stale score rows (>5%),
+  duplicate reports (same reporter, zone, species and UTC day in 7 days), missing
+  `explanation.model_version` and out-of-range numeric values are also checked. Every check
+  names an owner, a threshold and a runbook. Expired leases appear under `unavailable` until
+  `jobs` records lease expiry; ingest runs are checked only when `ingest_runs` is installed.
 - **Recompute** keeps the existing dedupe keys (`recompute_all`, `recompute:<zone>`), so repeated
   clicks do not queue a flood.
 - **Retry** uses `retry:<job id>` as its dedupe key and only accepts `done` or `failed` jobs.
@@ -191,7 +199,7 @@ ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
 |-------|--------|---------------|
 | `/sign-in` | Sign in | email + password, role check, API origin, error state |
 | `/` | Overview | coverage, freshness, volumes, queue, quick actions, recent audit |
-| `/operations` | Operations | derived health checks, runbook/evidence links, running jobs, stale-lock warning |
+| `/operations` | Operations | server-side health checks with per-species detail, runbook/evidence links, unavailable capabilities and running jobs |
 | `/zones` | Zones | search, species filter, sort, pagination |
 | `/zones/:id` | Zone detail | facts, geometry summary, scores + explanation, history chart, species fit, reports, visits, jobs |
 | `/jobs` | Queue | status counts, filters, live refresh, retry |
@@ -254,8 +262,9 @@ existence.
 - **Query review:** every filter is parameterised; sort columns are chosen from a fixed map, never
   from the request string.
 - **Frontend:** `tsc --noEmit`, ESLint, Vitest/Testing Library and `vite build` gate the branch.
-  Tests cover operations health rules and the privileged-action/drawer primitives; route smoke
-  is manual against a database, and empty states are part of the acceptance check.
+  Server tests cover the operations-health builder, thresholds and SQL availability path;
+  frontend tests cover the privileged-action/drawer primitives. Route smoke is manual against a
+  database, and empty states are part of the acceptance check.
 - **Data checks:** after `seed-dev-scores`, the overview's coverage should equal the seed's
   zone × species coverage; when local report rows are loaded, the reports screen and counters
   should match their count.

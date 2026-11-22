@@ -62,7 +62,7 @@ picky-berry-assistant/
 | Folder | Status |
 |--------|--------|
 | `app/` | ✅ Expo app: every v1 design screen, 120 suites / 1195 tests, layout + accessibility + native bundle + coverage + secret-scan CI; MapLibre draws the pilot stub's zones — a basemap and the zone service are next ([`app/README.md`](app/README.md)) |
-| `admin/` | 🟡 E5 operator console: admin API in `picky-server` plus a React SPA for operations, coverage, zones, queue, moderation triage, accounts, audit investigation, analytics and an API lab; not yet run against pilot data ([`admin/README.md`](admin/README.md)) |
+| `admin/` | 🟡 E5 operator console: admin API in `picky-server` plus a React SPA for server-side operations health, coverage, zones, queue, moderation triage, accounts, audit investigation, analytics and an API lab; not yet run against pilot data ([`admin/README.md`](admin/README.md)) |
 | `data/` | ✅ Pipelines for 6.2 + 28 tests; 50 stub zones committed; the real backfill and bucket upload are not run |
 | `docker/` | 🟡 Postgres 17 + PostGIS + h3 image and dev compose defined; no CI build |
 | `ml/` | ✅ v1 models + `berry_ml` package + reference API, 24 tests — see [ml/API.md](ml/API.md) for wiring it into the backend |

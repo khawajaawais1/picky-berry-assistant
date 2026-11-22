@@ -1,7 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client';
-import type { EnqueueResult, JobsResponse, Overview } from '../api/types';
+import type {
+  EnqueueResult,
+  JobsResponse,
+  OperationsCheck,
+  OperationsHealth,
+  Overview,
+} from '../api/types';
 import {
   Badge,
   Button,
@@ -16,26 +22,27 @@ import {
 } from '../components/ui';
 import { errorMessage } from '../lib/errors';
 import {
-  buildOperationsChecks,
-  overallStatus,
-  type CheckStatus,
-  type OperationsCheck,
-} from '../lib/operations';
-import { formatDate, formatNumber, formatRelative } from '../lib/format';
+  formatDate,
+  formatNumber,
+  formatRelative,
+  titleCase,
+} from '../lib/format';
 import { useApi } from '../lib/useApi';
 
-function checkTone(status: CheckStatus): Tone {
+type HealthStatus = OperationsCheck['status'] | 'unknown';
+
+function checkTone(status: HealthStatus): Tone {
   if (status === 'ok') return 'good';
   if (status === 'warn') return 'warn';
   if (status === 'fail') return 'bad';
   return 'neutral';
 }
 
-function checkLabel(status: CheckStatus): string {
+function checkLabel(status: HealthStatus): string {
   if (status === 'ok') return 'Healthy';
   if (status === 'warn') return 'Watch';
   if (status === 'fail') return 'Needs action';
-  return 'No data';
+  return 'No snapshot';
 }
 
 function CheckRow({ check }: { check: OperationsCheck }) {
@@ -51,9 +58,30 @@ function CheckRow({ check }: { check: OperationsCheck }) {
         <p className="ops-check-runbook">
           <strong>Runbook</strong> {check.runbook}
         </p>
+        {check.breakdown?.length ? (
+          <details className="details ops-breakdown">
+            <summary>By species ({check.breakdown.length})</summary>
+            <ul className="ops-breakdown-list">
+              {check.breakdown.map((item) => (
+                <li key={item.key}>
+                  <span className="ops-breakdown-name">
+                    {titleCase(item.label)}
+                    {item.detail ? (
+                      <span className="muted small"> · {item.detail}</span>
+                    ) : null}
+                  </span>
+                  <Badge tone={checkTone(item.status)}>{item.value}</Badge>
+                </li>
+              ))}
+            </ul>
+          </details>
+        ) : null}
       </div>
       <div className="ops-check-foot">
         <span className="muted small">Owner · {check.owner}</span>
+        <span className="muted small ops-check-threshold">
+          Threshold · {check.threshold}
+        </span>
         {check.href ? (
           <Link className="text-link small" to={check.href}>
             Open evidence →
@@ -66,20 +94,24 @@ function CheckRow({ check }: { check: OperationsCheck }) {
 
 export function OperationsPage() {
   const overview = useApi<Overview>('/admin/overview');
+  const health = useApi<OperationsHealth>('/admin/operations/health');
   const running = useApi<JobsResponse>(
     '/admin/jobs?status=running&page_size=100',
   );
   const toast = useToast();
   const [recomputing, setRecomputing] = useState(false);
 
-  const checks = useMemo(
-    () =>
-      overview.data
-        ? buildOperationsChecks(overview.data, running.data, new Date())
-        : [],
-    [overview.data, running.data],
+  const checks = health.data?.checks ?? [];
+  const status: HealthStatus = health.data?.status ?? 'unknown';
+  const failingChecks = checks.filter(
+    (check) => check.status === 'fail' || check.status === 'warn',
   );
-  const status = overallStatus(checks);
+
+  const reloadAll = () => {
+    overview.reload();
+    health.reload();
+    running.reload();
+  };
 
   const recomputeAll = async () => {
     if (!window.confirm('Queue a recomputation of every zone score?')) return;
@@ -95,8 +127,7 @@ export function OperationsPage() {
           ? `Job #${result.job_id} was already queued.`
           : `Queued job #${result.job_id}.`,
       );
-      overview.reload();
-      running.reload();
+      reloadAll();
     } catch (cause) {
       toast('bad', errorMessage(cause));
     } finally {
@@ -104,11 +135,10 @@ export function OperationsPage() {
     }
   };
 
-  const error = overview.error ?? running.error;
-  const loading = overview.loading || running.loading;
+  const loading = overview.loading || health.loading || running.loading;
 
-  if (error && !overview.data) {
-    return <ErrorState error={error} onRetry={overview.reload} />;
+  if (overview.error && !overview.data) {
+    return <ErrorState error={overview.error} onRetry={overview.reload} />;
   }
   if (overview.loading && !overview.data) {
     return <Loading label="Reading the pipeline…" />;
@@ -117,9 +147,6 @@ export function OperationsPage() {
 
   const data = overview.data;
   const runningJobs = running.data?.jobs ?? [];
-  const failingChecks = checks.filter(
-    (check) => check.status === 'fail' || check.status === 'warn',
-  );
 
   return (
     <div className="stack">
@@ -129,13 +156,7 @@ export function OperationsPage() {
         description="The daily loop at a glance: coverage, freshness, queue delay and the work that needs a human."
         actions={
           <>
-            <Button
-              onClick={() => {
-                overview.reload();
-                running.reload();
-              }}
-              loading={loading}
-            >
+            <Button onClick={reloadAll} loading={loading}>
               Refresh
             </Button>
             <Button
@@ -157,20 +178,27 @@ export function OperationsPage() {
               ? 'The loop is healthy'
               : status === 'fail'
                 ? 'The loop needs attention'
-                : 'The loop is degraded'}
+                : status === 'warn'
+                  ? 'The loop is degraded'
+                  : 'Checking the pipeline'}
           </h2>
           <p className="ops-hero-copy">
-            {failingChecks.length === 0
-              ? 'Every check is green. Keep the daily worker running.'
-              : `${failingChecks.length} check${failingChecks.length === 1 ? '' : 's'} need attention: ${failingChecks
-                  .map((check) => check.label.toLowerCase())
-                  .join(', ')}.`}
+            {!health.data
+              ? health.error
+                ? 'The server-side health snapshot could not be loaded. Refresh to try again.'
+                : 'Waiting for the server-side health snapshot.'
+              : failingChecks.length === 0
+                ? 'Every check is green. Keep the daily worker running.'
+                : `${failingChecks.length} check${failingChecks.length === 1 ? '' : 's'} need attention: ${failingChecks
+                    .map((check) => check.label.toLowerCase())
+                    .join(', ')}.`}
           </p>
         </div>
         <div className="ops-hero-meta">
           <Badge tone={checkTone(status)}>{checkLabel(status)}</Badge>
           <span className="mono small">
-            snapshot {formatDate(data.generated_at)}
+            snapshot{' '}
+            {health.data ? formatDate(health.data.generated_at) : '—'}
           </span>
         </div>
       </section>
@@ -210,20 +238,46 @@ export function OperationsPage() {
 
       <Card
         title="Health checks"
-        subtitle="Each failure names an owner and the next action; nothing here writes to the service."
+        subtitle="Server-side snapshot. Each failure names an owner and the next action; nothing here writes to the service."
       >
-        <div className="ops-check-list">
-          {checks.map((check) => (
-            <CheckRow key={check.id} check={check} />
-          ))}
-        </div>
+        {health.error ? (
+          <ErrorState error={health.error} onRetry={health.reload} />
+        ) : health.loading && !health.data ? (
+          <Loading label="Checking the pipeline…" />
+        ) : checks.length === 0 ? (
+          <EmptyState title="No checks returned">
+            The health endpoint returned no checks. Refresh to try again.
+          </EmptyState>
+        ) : (
+          <div className="ops-check-list">
+            {checks.map((check) => (
+              <CheckRow key={check.id} check={check} />
+            ))}
+          </div>
+        )}
+        {health.data?.unavailable.length ? (
+          <div className="ops-unavailable">
+            <strong>Not checked</strong>
+            <ul>
+              {health.data.unavailable.map((item) => (
+                <li key={item.id}>
+                  <span>{item.label}</span> · {item.reason}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </Card>
 
       <div className="split split-wide">
         <Card
           title="Running now"
           subtitle="The current worker claims. A lock older than 30 minutes is a stale-lock warning."
-          actions={<Link className="text-link" to="/jobs">Open queue →</Link>}
+          actions={
+            <Link className="text-link" to="/jobs">
+              Open queue →
+            </Link>
+          }
         >
           {running.error ? (
             <ErrorState error={running.error} onRetry={running.reload} />
@@ -240,7 +294,9 @@ export function OperationsPage() {
                     <th scope="col">Job</th>
                     <th scope="col">Type</th>
                     <th scope="col">Locked</th>
-                    <th scope="col" className="numeric">Attempts</th>
+                    <th scope="col" className="numeric">
+                      Attempts
+                    </th>
                     <th scope="col">Payload</th>
                   </tr>
                 </thead>
@@ -317,9 +373,9 @@ export function OperationsPage() {
       </div>
 
       <p className="muted small">
-        Current schema note: jobs have <code>locked_at</code> but no lease expiry
-        yet. The stale-lock check is a conservative 30-minute heuristic until the
-        worker lease contract lands.
+        The server derives freshness, coverage and queue age from the current
+        tables. Expired-lease checks stay listed as unavailable until jobs record
+        lease expiry.
       </p>
     </div>
   );
