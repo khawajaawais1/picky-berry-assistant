@@ -163,7 +163,7 @@ export function ZoneDetailPage() {
         actions={
           data.scores.length > 0 ? (
             <span className="muted small">
-              {data.scores.length} {data.scores.length === 1 ? 'species' : 'species'} scored
+              {data.scores.length} species scored
             </span>
           ) : null
         }
@@ -262,6 +262,8 @@ export function ZoneDetailPage() {
                 count: point.score,
               }))}
               label={`${selected} score`}
+              maxValue={100}
+              summary="latest"
             />
           ) : (
             <EmptyState title="No history in the last 30 days" />

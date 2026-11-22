@@ -2,6 +2,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { NextFunction, Request, Response } from 'express';
 import { ApiExceptionFilter } from './common/filters/api-exception.filter';
+import { parseCorsOrigins } from './config/cors';
 
 /** The prefix every API route is served under, as the OpenAPI document's server names it. */
 export const API_PREFIX = 'api/v1';
@@ -15,6 +16,12 @@ export const API_PREFIX = 'api/v1';
  * sees it, so both paths run the same controller, guards and filters.
  */
 export function configureApp(app: INestApplication): void {
+  app.enableCors({
+    origin: parseCorsOrigins(process.env.CORS_ORIGINS),
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Authorization', 'Content-Type'],
+    maxAge: 600,
+  });
   app.setGlobalPrefix(API_PREFIX);
 
   app.use((request: Request, response: Response, next: NextFunction) => {

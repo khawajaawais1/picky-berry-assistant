@@ -5,10 +5,16 @@ export function LineChart({
   data,
   label,
   colour = 'var(--accent)',
+  maxValue,
+  summary = 'total',
 }: {
   data: DailyCount[];
   label: string;
   colour?: string;
+  /** Fix the top of the y-axis, for a bounded value such as a 0–100 score. */
+  maxValue?: number;
+  /** Describe a count total, or the latest point of a time series. */
+  summary?: 'total' | 'latest';
 }) {
   if (data.length === 0) return <p className="muted">No data in this range.</p>;
 
@@ -19,7 +25,10 @@ export function LineChart({
   const padBottom = 28;
   const innerWidth = width - padX * 2;
   const innerHeight = height - padTop - padBottom;
-  const max = Math.max(1, ...data.map((point) => point.count));
+  const max = Math.max(
+    maxValue ?? 1,
+    ...data.map((point) => point.count),
+  );
   const x = (index: number) =>
     padX +
     (data.length === 1 ? innerWidth / 2 : (index / (data.length - 1)) * innerWidth);
@@ -32,6 +41,15 @@ export function LineChart({
     .join(' ');
   const area = `${line} L${x(data.length - 1).toFixed(1)},${height - padBottom} L${x(0).toFixed(1)},${height - padBottom} Z`;
   const total = data.reduce((sum, point) => sum + point.count, 0);
+  const latest = data[data.length - 1].count;
+  const summaryText =
+    summary === 'latest'
+      ? `latest ${formatNumber(latest)}`
+      : `${formatNumber(total)} in this range`;
+  const ariaSummary =
+    summary === 'latest'
+      ? `latest ${formatNumber(latest)}`
+      : `${formatNumber(total)} total`;
 
   return (
     <figure className="chart-figure">
@@ -39,7 +57,7 @@ export function LineChart({
         viewBox={`0 0 ${width} ${height}`}
         className="chart"
         role="img"
-        aria-label={`${label}: ${formatNumber(total)} total across ${data.length} days`}
+        aria-label={`${label}: ${ariaSummary} across ${data.length} days`}
       >
         <title>{label}</title>
         {[0, 0.5, 1].map((fraction) => (
@@ -80,7 +98,7 @@ export function LineChart({
         </text>
       </svg>
       <figcaption className="chart-caption">
-        {label} · {formatNumber(total)} in this range
+        {label} · {summaryText}
       </figcaption>
     </figure>
   );

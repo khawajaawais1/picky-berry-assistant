@@ -56,24 +56,12 @@ export function formatDuration(seconds: number): string {
   return remainder === 0 ? `${hours} h` : `${hours} h ${remainder} min`;
 }
 
-export function formatPct(value: number | null | undefined): string {
-  return value === null || value === undefined ? '—' : `${value}%`;
-}
-
 export function formatTrust(value: number): string {
   return value.toFixed(2);
 }
 
 export function titleCase(value: string): string {
   return value
-    .replace(/_/g, ' ')
+    .replace(/[_.]/g, ' ')
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
-export function truncate(value: string, max: number): string {
-  return value.length <= max ? value : `${value.slice(0, max - 1)}…`;
-}
-
-export function plural(count: number, singular: string, pluralForm?: string): string {
-  return count === 1 ? singular : (pluralForm ?? `${singular}s`);
 }

@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { ApiError } from '../api/client';
-import { formatNumber, plural, titleCase } from '../lib/format';
+import { formatNumber, titleCase } from '../lib/format';
 
 export type Tone = 'neutral' | 'good' | 'warn' | 'bad' | 'info' | 'accent';
 
@@ -331,26 +331,5 @@ export function CopyButton({
     <Button className="small ghost" onClick={() => void copy()}>
       {label}
     </Button>
-  );
-}
-
-export function CountSummary({
-  counts,
-  suffix,
-}: {
-  counts: { label: string; value: number; tone?: Tone }[];
-  suffix?: string;
-}) {
-  return (
-    <div className="count-summary">
-      {counts.map((count) => (
-        <div key={count.label} className="count-item">
-          <span className="count-value">{formatNumber(count.value)}</span>
-          <span className="count-label">
-            {count.label} {suffix ? plural(count.value, suffix) : ''}
-          </span>
-        </div>
-      ))}
-    </div>
   );
 }

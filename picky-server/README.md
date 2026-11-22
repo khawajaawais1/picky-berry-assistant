@@ -18,6 +18,10 @@ npm install
 docker compose -f docker-compose.dev.yml up -d
 ```
 
+On Apple Silicon, `postgis/postgis:17-3.5` has no arm64 manifest. Use a
+multi-architecture build such as `imresamu/postgis:17-3.5`, or run the official
+image with `platform: linux/amd64` and Docker Desktop's amd64 emulation.
+
 Apply the data engineer's baseline schema to the local database before running
 the API migration. The baseline dump is intentionally not fabricated in this
 repository: it must be generated from the verified source database. Migration
@@ -27,15 +31,27 @@ is not permitted to create extensions. Then run:
 
 ```powershell
 npm run db:migrate
+npm run seed:zones   # committed 50-zone stub, for local development only
 npm run seed:scores
+npm run seed:users
+npm run make-admin -- picker@example.com
 npm run start:dev
 ```
 
+`seed:zones` loads `../data/test_zones.geojson` into `zones` and
+`zone_species`; it is a development fixture, not the data engineer's verified
+baseline, and refuses to run in production. The other seed commands create a
+current score row per zone/species and the development accounts. Set
+`DEV_PICKER_PASSWORD` in `.env` before `seed:users`; the picker signs in with
+that password.
+
 The local example enables `DEV_AUTH_BYPASS`; never use it in production. The API
 refuses to start in production when this bypass is enabled. Set
-`DATABASE_URL`, `DB_SSL`, and `JWT_SECRET` for the target environment. CORS
-currently allows requests from any browser origin; this does not replace API
-authentication.
+`DATABASE_URL`, `DB_SSL`, `JWT_SECRET` and `CORS_ORIGINS` for the target
+environment. CORS accepts only the browser origins named in `CORS_ORIGINS`
+(the console and Expo web development origins by default); a wildcard is
+rejected, and a deployed console's origin must be added. This does not replace
+API authentication.
 
 Account and visit tables are added by migrations `0004` and `0005`; `0006` lets the
 email-token table hold password-reset tokens. After

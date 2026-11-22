@@ -20,6 +20,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "db:migrate": "node-pg-migrate up --migrations-dir migrations --envPath .env",
     "seed:scores": "ts-node -r tsconfig-paths/register scripts/seed-dev-scores.ts",
+    "seed:zones": "ts-node -r tsconfig-paths/register scripts/seed-dev-zones.ts",
     "db:check-a2": "ts-node scripts/check-a2.ts",
     "db:types": "kysely-codegen --env-file .env --out-file src/db/db.types.ts",
     "openapi:lint": "redocly lint docs/openapi/zones.yaml docs/openapi/auth.yaml docs/openapi/visits.yaml docs/openapi/admin.yaml",

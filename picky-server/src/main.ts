@@ -16,7 +16,6 @@ async function bootstrap(): Promise<void> {
   configureApp(app);
   app.use(helmet());
   app.use(compression());
-  app.enableCors({ origin: '*' });
   setupSwagger(app);
 
   await app.listen(Number(process.env.PORT ?? 3000));

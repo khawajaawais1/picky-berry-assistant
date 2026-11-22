@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import { DEFAULT_CORS_ORIGINS } from './cors';
 
 const schema = Joi.object({
   NODE_ENV: Joi.string()
@@ -14,6 +15,7 @@ const schema = Joi.object({
   DEV_PICKER_PASSWORD: Joi.string().min(10).max(128),
   MAIL_MODE: Joi.string().valid('console').default('console'),
   APP_PUBLIC_URL: Joi.string().uri().default('http://localhost:3000'),
+  CORS_ORIGINS: Joi.string().default(DEFAULT_CORS_ORIGINS.join(',')),
   DEV_AUTH_BYPASS: Joi.boolean().truthy('true').falsy('false').default(false),
   THROTTLE_LIMIT: Joi.number().integer().min(1).default(300),
   THROTTLE_DISABLED: Joi.boolean().truthy('true').falsy('false').default(false),

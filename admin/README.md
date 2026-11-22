@@ -64,8 +64,8 @@ npm run build
 1. Build with the API origin compiled in:
    `VITE_API_BASE_URL=https://<api-origin>/api/v1 npm run build`
 2. Publish `dist/` to the chosen static host (Vercel or Caddy on the team VM).
-3. Add the admin origin to the API's CORS allow-list. The API currently enables `origin: *`;
-   tighten that before this panel handles real accounts.
+3. Add the admin origin to the API's `CORS_ORIGINS` (comma-separated bare origins). The API
+   allows only that list and rejects a wildcard.
 
 The bundle contains only the public API origin. No database URL, service key or JWT secret is
 ever compiled into it.

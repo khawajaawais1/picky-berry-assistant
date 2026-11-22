@@ -118,7 +118,6 @@ export interface ZoneDetail {
   source_version: string | null;
   built_at: string | null;
   centroid: Centroid | null;
-  geometry: unknown;
   scores: ZoneScore[];
   species_fit: { species: string; suitability: number; rules_version: string | null }[];
   reports: {

@@ -6,7 +6,7 @@ retries, and completion.
 
 | `type` | `payload` | `dedupe_key` |
 |---|---|---|
-| `recompute_zone_score` | `{ "zone_id": "<uuid>", "species": "<code>?" }` | `recompute:<zone_id>` |
+| `recompute_zone_score` | `{ "zone_id": "<uuid>", "species": "<code>?" }` | `recompute:<zone_id>` for all species · `recompute:<zone_id>:<species>` for one |
 | `recompute_all` | `{}` | `recompute_all` |
 | `validate_report` | `{ "report_id": "<uuid>" }` | `validate:<report_id>` |
 

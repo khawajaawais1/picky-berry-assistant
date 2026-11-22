@@ -68,9 +68,9 @@ surface ships in English; FI/EN remains the field app's contract).
 | D1 | Accounts, sessions and `admin` role in `picky-server` | Hassan | Sign-in, role gate | `DEV_AUTH_BYPASS` locally; `make-admin` script | ✅ built |
 | D2 | Zones, `zone_scores_current`, `zone_scores` | Awais / Hassan | Zone screens | `seed-dev-scores` | ✅ built |
 | D3 | `jobs` table and `JobsService.enqueue` | Hassan | Queue, recompute, retry | none needed | ✅ built |
-| D4 | `reports` / `visits` tables | Hassan | Activity reads | seed `--with-reports` | ✅ tables, ⬜ report API |
+| D4 | `reports` / `visits` tables | Hassan | Activity reads | seed scores; insert report/visit rows for local checks | ✅ tables, ⬜ report API |
 | D5 | `audit_log` | Hassan / Salman | Audit trail | migration `0007` in this branch | ✅ this branch |
-| D6 | Live API origin + CORS for the admin origin | Sabih / Hassan | Deployed panel | local Vite proxy | 🟡 `origin: *` today |
+| D6 | Live API origin + CORS for the admin origin | Sabih / Hassan | Deployed panel | local Vite proxy | ✅ `CORS_ORIGINS` allow-list |
 | D7 | Zone validation/moderation rules (6.5) | Hassan | Report verdicts, trust edits | read-only views now | ⬜ |
 
 ## 3. Architecture
@@ -219,8 +219,9 @@ and role carries a text label as well as a colour.
   reporter's trust band, never their position history. No GPS track exists server-side (ADR-010).
 - **Audit:** every mutation is recorded with the request id already emitted by the API, so a
   support conversation can join the log line to the action.
-- **Transport:** HTTPS only in deployment. Today `picky-server` enables CORS for `*`; before
-  production the allow-list must name the admin origin (see §11).
+- **Transport:** HTTPS only in deployment. `picky-server` accepts browser calls only from the
+  origins in `CORS_ORIGINS` (the console and Expo web development origins by default); a wildcard
+  is rejected, and a deployed console adds its origin to that list.
 - **Throttling:** admin mutations inherit the API's throttler and the tighter per-route limits on
   sign-in and recompute.
 
@@ -251,13 +252,14 @@ existence.
 - **Frontend:** `tsc --noEmit` and `vite build` gate the branch. Route smoke is manual against a
   database; empty states are part of the acceptance check.
 - **Data checks:** after `seed-dev-scores`, the overview's coverage should equal the seed's
-  zone × species coverage; after `seed:users --with-reports`, report counts should match.
+  zone × species coverage; when local report rows are loaded, the reports screen and counters
+  should match their count.
 
 ## 11. Risks and open questions
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| The API is deployed with `CORS origin: *` | Any site could call it with a stolen token | Tighten to the admin origin + app origin before production (Hassan/Sabih) |
+| A new console origin is missing from `CORS_ORIGINS` | The browser blocks the panel | The API lists only explicit origins; add the deployed console origin to the environment |
 | Refresh token in `sessionStorage` is XSS-reachable | Token theft through a future XSS | CSP on the static host, no third-party scripts, `HttpOnly` cookie later |
 | Admin queries scan large tables (`reports`, `jobs`) | Slow panel on a big pilot | Indexes exist for zone/time paths; add `created_at` indexes if p95 > 500 ms |
 | Report moderation is read-only | Admins cannot resolve a bad report yet | 6.5 owns the verdict rules; the panel adds the action when the service exposes it |

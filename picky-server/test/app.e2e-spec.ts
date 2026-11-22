@@ -19,6 +19,8 @@ describe('AppController (e2e)', () => {
     process.env.JWT_SECRET = 'test-secret-with-at-least-thirty-two-characters';
     process.env.DEV_AUTH_BYPASS = 'false';
     process.env.THROTTLE_DISABLED = 'true';
+    process.env.CORS_ORIGINS =
+      'http://localhost:5173,http://127.0.0.1:5173,http://localhost:8081';
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     })
@@ -49,6 +51,50 @@ describe('AppController (e2e)', () => {
       .get('/api/v1/health')
       .expect(200)
       .expect({ status: 'ok', db: 'ok' });
+  });
+
+  it('allows only the configured browser origins', async () => {
+    const server = app.getHttpServer();
+    const allowed = await request(server)
+      .get('/health')
+      .set('Origin', 'http://localhost:5173')
+      .expect(200);
+    expect(allowed.headers['access-control-allow-origin']).toBe(
+      'http://localhost:5173',
+    );
+
+    const appOrigin = await request(server)
+      .get('/health')
+      .set('Origin', 'http://localhost:8081')
+      .expect(200);
+    expect(appOrigin.headers['access-control-allow-origin']).toBe(
+      'http://localhost:8081',
+    );
+
+    const denied = await request(server)
+      .get('/health')
+      .set('Origin', 'https://evil.example')
+      .expect(200);
+    expect(denied.headers['access-control-allow-origin']).toBeUndefined();
+  });
+
+  it('answers preflight only for a configured origin', async () => {
+    const server = app.getHttpServer();
+    const allowed = await request(server)
+      .options('/api/v1/admin/overview')
+      .set('Origin', 'http://localhost:5173')
+      .set('Access-Control-Request-Method', 'GET')
+      .expect(204);
+    expect(allowed.headers['access-control-allow-origin']).toBe(
+      'http://localhost:5173',
+    );
+    expect(allowed.headers['access-control-allow-methods']).toContain('GET');
+
+    const denied = await request(server)
+      .options('/api/v1/admin/overview')
+      .set('Origin', 'https://evil.example')
+      .set('Access-Control-Request-Method', 'GET');
+    expect(denied.headers['access-control-allow-origin']).toBeUndefined();
   });
 
   it('serves the password reset routes publicly, validating their bodies', async () => {

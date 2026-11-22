@@ -91,7 +91,6 @@ interface ZoneRow extends QueryResultRow {
   built_at: Date | null;
   lat: number | null;
   lng: number | null;
-  geometry: unknown;
 }
 
 interface ZoneScoreRow extends QueryResultRow {
@@ -381,7 +380,7 @@ export class AdminService {
         `SELECT count(*)::int AS total
          FROM zones z
          WHERE ($1 = '' OR z.name ILIKE '%' || $1 || '%'
-                OR z.h3 ILIKE $1 || '%' OR z.id::text = $1)
+                OR z.h3::text ILIKE $1 || '%' OR z.id::text = $1)
            AND ($2::text IS NULL OR EXISTS (
              SELECT 1 FROM zone_scores_current c
              WHERE c.zone_id = z.id AND c.species = $2))`,
@@ -399,7 +398,7 @@ export class AdminService {
          LEFT JOIN zone_scores_current c
            ON c.zone_id = z.id AND ($2::text IS NULL OR c.species = $2)
          WHERE ($1 = '' OR z.name ILIKE '%' || $1 || '%'
-                OR z.h3 ILIKE $1 || '%' OR z.id::text = $1)
+                OR z.h3::text ILIKE $1 || '%' OR z.id::text = $1)
            AND ($2::text IS NULL OR EXISTS (
              SELECT 1 FROM zone_scores_current c2
              WHERE c2.zone_id = z.id AND c2.species = $2))
@@ -423,8 +422,7 @@ export class AdminService {
       `SELECT z.id, z.h3, z.h3_parent6, z.name, z.forest_type,
               z.fertility_class, z.area_km2::float8 AS area_km2,
               z.source_version, z.built_at,
-              ST_Y(z.centroid) AS lat, ST_X(z.centroid) AS lng,
-              ST_AsGeoJSON(z.geom, 6)::json AS geometry
+              ST_Y(z.centroid) AS lat, ST_X(z.centroid) AS lng
        FROM zones z WHERE z.id = $1`,
       [id],
     );
@@ -485,7 +483,6 @@ export class AdminService {
         zone.lat === null || zone.lng === null
           ? null
           : { lat: Number(zone.lat), lng: Number(zone.lng) },
-      geometry: zone.geometry,
       scores: scores.rows.map((score) => ({
         species: score.species,
         score: Number(score.score),
@@ -981,7 +978,9 @@ export class AdminService {
           zone_id: input.zone_id,
           ...(input.species ? { species: input.species } : {}),
         },
-        `recompute:${input.zone_id}`,
+        input.species
+          ? `recompute:${input.zone_id}:${input.species}`
+          : `recompute:${input.zone_id}`,
         actorId,
         requestId,
         {
