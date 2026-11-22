@@ -42,4 +42,17 @@ describe('setupSwagger', () => {
       await app.close();
     }
   });
+
+  it('keeps the API bootable when the contract files are not deployed', async () => {
+    const app = await NestFactory.create(TestModule, { logger: false });
+    try {
+      expect(setupSwagger(app, '/nonexistent/openapi')).toBe(false);
+      await app.init();
+      const server = app.getHttpServer() as Server;
+
+      expect((await request(server).get('/docs')).status).toBe(404);
+    } finally {
+      await app.close();
+    }
+  });
 });

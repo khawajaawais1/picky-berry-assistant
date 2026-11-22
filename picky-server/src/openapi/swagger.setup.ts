@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, Logger } from '@nestjs/common';
 import { OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { readFileSync } from 'node:fs';
@@ -44,19 +44,34 @@ const docsInitializer = `window.onload = function () {
   });
 };`;
 
-export function setupSwagger(app: INestApplication): void {
-  const zones = load(
-    readFileSync(resolve(__dirname, '../../docs/openapi/zones.yaml'), 'utf8'),
-  ) as OpenAPIObject;
-  const auth = load(
-    readFileSync(resolve(__dirname, '../../docs/openapi/auth.yaml'), 'utf8'),
-  ) as OpenAPIObject;
-  const visits = load(
-    readFileSync(resolve(__dirname, '../../docs/openapi/visits.yaml'), 'utf8'),
-  ) as OpenAPIObject;
-  const admin = load(
-    readFileSync(resolve(__dirname, '../../docs/openapi/admin.yaml'), 'utf8'),
-  ) as OpenAPIObject;
+/**
+ * Serves Swagger UI from the committed contract. Returns false, and serves no docs, when
+ * the YAML files are not on disk (for example a serverless bundle that did not include
+ * them): missing documentation must never stop the API from booting.
+ */
+export function setupSwagger(
+  app: INestApplication,
+  openapiDir: string = resolve(__dirname, '../../docs/openapi'),
+): boolean {
+  let zones: OpenAPIObject;
+  let auth: OpenAPIObject;
+  let visits: OpenAPIObject;
+  let admin: OpenAPIObject;
+  try {
+    const read = (name: string) =>
+      load(readFileSync(resolve(openapiDir, name), 'utf8')) as OpenAPIObject;
+    zones = read('zones.yaml');
+    auth = read('auth.yaml');
+    visits = read('visits.yaml');
+    admin = read('admin.yaml');
+  } catch (error) {
+    new Logger('Swagger').warn(
+      `OpenAPI contract not found in ${openapiDir}; /docs is disabled. ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+    return false;
+  }
 
   const contract: OpenAPIObject = {
     ...zones,
@@ -113,4 +128,5 @@ export function setupSwagger(app: INestApplication): void {
     ui: false,
     raw: ['json'],
   });
+  return true;
 }
