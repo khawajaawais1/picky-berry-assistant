@@ -1,6 +1,8 @@
 import { Transform } from 'class-transformer';
 import {
   IsInt,
+  IsIn,
+  IsNumber,
   IsOptional,
   IsString,
   IsUUID,
@@ -27,4 +29,29 @@ export class ReportsQueryDto extends PaginationDto {
   @Min(1)
   @Max(5)
   min_rating?: number;
+
+  @IsOptional()
+  @Transform(({ value }) => parseNumericInput(value))
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  max_rating?: number;
+
+  @IsOptional()
+  @Transform(({ value }) => parseNumericInput(value))
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  @Max(1)
+  max_trust?: number;
+
+  @IsOptional()
+  @Transform(({ value }) => parseNumericInput(value))
+  @IsInt()
+  @Min(1)
+  @Max(90)
+  days?: number;
+
+  @IsOptional()
+  @IsIn(['newest', 'oldest'])
+  sort: 'newest' | 'oldest' = 'newest';
 }

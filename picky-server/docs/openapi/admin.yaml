@@ -148,6 +148,10 @@ paths:
         - { name: species, in: query, schema: { type: string } }
         - { name: zone_id, in: query, schema: { type: string, format: uuid } }
         - { name: min_rating, in: query, schema: { type: integer, minimum: 1, maximum: 5 } }
+        - { name: max_rating, in: query, description: Triage upper bound on rating, schema: { type: integer, minimum: 1, maximum: 5 } }
+        - { name: max_trust, in: query, description: Triage upper bound on reporter trust; missing trust is treated as 0.5, schema: { type: number, minimum: 0, maximum: 1 } }
+        - { name: days, in: query, description: Only reports created in the last N days, schema: { type: integer, minimum: 1, maximum: 90 } }
+        - { name: sort, in: query, schema: { type: string, enum: [newest, oldest], default: newest } }
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
       responses:

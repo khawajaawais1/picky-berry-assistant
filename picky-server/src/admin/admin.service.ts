@@ -681,15 +681,35 @@ export class AdminService {
     const species = (query.species ?? '').trim() || null;
     const zoneId = query.zone_id ?? null;
     const minRating = query.min_rating ?? null;
+    const maxRating = query.max_rating ?? null;
+    const maxTrust = query.max_trust ?? null;
+    const since = query.days
+      ? new Date(Date.now() - query.days * 24 * 60 * 60 * 1000)
+      : null;
     const offset = (query.page - 1) * query.page_size;
+    const order = query.sort === 'oldest' ? 'ASC' : 'DESC';
     const filter = `WHERE ($1::text IS NULL OR r.species = $1)
                       AND ($2::uuid IS NULL OR r.zone_id = $2)
-                      AND ($3::int IS NULL OR r.rating >= $3)`;
+                      AND ($3::int IS NULL OR r.rating >= $3)
+                      AND ($4::int IS NULL OR r.rating <= $4)
+                      AND ($5::float8 IS NULL OR COALESCE(t.trust, 0.5) <= $5)
+                      AND ($6::timestamptz IS NULL OR r.created_at >= $6)`;
+    const filterParams = [
+      species,
+      zoneId,
+      minRating,
+      maxRating,
+      maxTrust,
+      since,
+    ];
 
     const [total, rows] = await Promise.all([
       this.database.pool.query<CountRow>(
-        `SELECT count(*)::int AS total FROM reports r ${filter}`,
-        [species, zoneId, minRating],
+        `SELECT count(*)::int AS total
+         FROM reports r
+         LEFT JOIN user_trust t ON t.user_id = r.user_id
+         ${filter}`,
+        filterParams,
       ),
       this.database.pool.query<ReportRow>(
         `SELECT r.id, r.zone_id, z.name AS zone_name, z.h3 AS zone_h3,
@@ -702,9 +722,9 @@ export class AdminService {
          LEFT JOIN users u ON u.id = r.user_id
          LEFT JOIN user_trust t ON t.user_id = r.user_id
          ${filter}
-         ORDER BY r.created_at DESC
-         LIMIT $4 OFFSET $5`,
-        [species, zoneId, minRating, query.page_size, offset],
+         ORDER BY r.created_at ${order}
+         LIMIT $7 OFFSET $8`,
+        [...filterParams, query.page_size, offset],
       ),
     ]);
 
