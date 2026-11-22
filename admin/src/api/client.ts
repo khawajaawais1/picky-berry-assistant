@@ -170,7 +170,23 @@ function send(
     method,
     headers,
     body: body === undefined ? undefined : JSON.stringify(body),
+  }).catch(() => {
+    throw new ApiError(0, 'API_UNREACHABLE', `The API at ${API_BASE} could not be reached.`);
   });
+}
+
+/**
+ * True when the failure means the API (or this endpoint) is not running or not deployed
+ * here, rather than the request itself being wrong. Screens show "API not available"
+ * instead of inventing data.
+ */
+export function isApiUnavailable(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    (error.code === 'API_UNREACHABLE' ||
+      error.code === 'ROUTE_NOT_FOUND' ||
+      [501, 502, 503, 504].includes(error.status))
+  );
 }
 
 async function refreshSession(): Promise<Session> {
