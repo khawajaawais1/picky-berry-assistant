@@ -236,7 +236,22 @@ interface AuditRow extends QueryResultRow {
   target_id: string | null;
   detail: Record<string, unknown>;
   request_id: string | null;
+  reason: string | null;
+  before_data: Record<string, unknown> | null;
+  after_data: Record<string, unknown> | null;
+  outcome: 'success' | 'failure';
+  ip: string | null;
+  user_agent: string | null;
   created_at: Date;
+}
+
+interface AuditIntegrity {
+  reason?: string | null;
+  before?: Record<string, unknown> | null;
+  after?: Record<string, unknown> | null;
+  outcome?: 'success' | 'failure';
+  ip?: string | null;
+  userAgent?: string | null;
 }
 
 interface CountRow extends QueryResultRow {
@@ -828,12 +843,14 @@ export class AdminService {
     jobId: number,
     actorId: string,
     requestId: string,
+    ip: string | null = null,
+    userAgent: string | null = null,
   ): Promise<Record<string, unknown>> {
     const client = await this.database.pool.connect();
     try {
       await client.query('BEGIN');
       const found = await client.query<JobRow>(
-        'SELECT id, type, payload, status FROM jobs WHERE id = $1 FOR UPDATE',
+        'SELECT id, type, payload, status, attempts FROM jobs WHERE id = $1 FOR UPDATE',
         [jobId],
       );
       const job = found.rows[0];
@@ -863,6 +880,19 @@ export class AdminService {
           deduplicated: result.deduplicated,
         },
         requestId,
+        {
+          before: {
+            status: job.status,
+            attempts: Number(job.attempts),
+          },
+          after: {
+            status: 'queued',
+            job_id: result.job_id,
+            deduplicated: result.deduplicated,
+          },
+          ip,
+          userAgent,
+        },
       );
       await client.query('COMMIT');
       return { ...result, source_job_id: jobId };
@@ -1042,7 +1072,9 @@ export class AdminService {
       ),
       this.database.pool.query<AuditRow>(
         `SELECT a.id, a.actor_id, u.email AS actor_email, a.action,
-                a.target_type, a.target_id, a.detail, a.request_id, a.created_at
+                a.target_type, a.target_id, a.detail, a.request_id,
+                a.reason, a.before_data, a.after_data, a.outcome, a.ip,
+                a.user_agent, a.created_at
          FROM audit_log a LEFT JOIN users u ON u.id = a.actor_id
          WHERE a.target_type = 'user' AND a.target_id = $1
          ORDER BY a.created_at DESC LIMIT 20`,
@@ -1100,6 +1132,8 @@ export class AdminService {
     reasonInput: string,
     actorId: string,
     requestId: string,
+    ip: string | null = null,
+    userAgent: string | null = null,
   ): Promise<Record<string, unknown>> {
     const reason = reasonInput.trim();
     if (reason.length < 3) {
@@ -1130,6 +1164,13 @@ export class AdminService {
         userId,
         { email: user.email, revoked_count: revokedCount, reason },
         requestId,
+        {
+          reason,
+          before: { active_sessions: revokedCount },
+          after: { active_sessions: 0, revoked_count: revokedCount },
+          ip,
+          userAgent,
+        },
       );
       await client.query('COMMIT');
       return { user_id: userId, revoked_count: revokedCount };
@@ -1146,7 +1187,13 @@ export class AdminService {
     input: UpdateRoleDto,
     actorId: string,
     requestId: string,
+    ip: string | null = null,
+    userAgent: string | null = null,
   ): Promise<Record<string, unknown>> {
+    const reason = input.reason?.trim() ?? '';
+    if (reason.length < 3) {
+      throw new UnprocessableEntityException('A reason is required.');
+    }
     const client = await this.database.pool.connect();
     try {
       await client.query('BEGIN');
@@ -1178,8 +1225,15 @@ export class AdminService {
           'user.role',
           'user',
           userId,
-          { email: user.email, from: user.role, to: input.role },
+          { email: user.email, from: user.role, to: input.role, reason },
           requestId,
+          {
+            reason,
+            before: { role: user.role },
+            after: { role: input.role },
+            ip,
+            userAgent,
+          },
         );
       }
       await client.query('COMMIT');
@@ -1329,6 +1383,10 @@ export class AdminService {
   async listAudit(query: AuditQueryDto): Promise<Record<string, unknown>> {
     const q = (query.q ?? '').trim();
     const targetType = query.target_type ?? null;
+    const actor = (query.actor ?? '').trim();
+    const action = (query.action ?? '').trim();
+    const auditRequestId = (query.request_id ?? '').trim();
+    const outcome = query.outcome ?? null;
     const since = query.days
       ? new Date(Date.now() - query.days * 24 * 60 * 60 * 1000)
       : null;
@@ -1337,10 +1395,23 @@ export class AdminService {
                       OR a.action ILIKE '%' || $1 || '%'
                       OR a.target_id::text ILIKE '%' || $1 || '%'
                       OR a.request_id::text ILIKE '%' || $1 || '%'
+                      OR a.reason ILIKE '%' || $1 || '%'
                       OR u.email ILIKE '%' || $1 || '%')
                     AND ($2::text IS NULL OR a.target_type = $2)
-                    AND ($3::timestamptz IS NULL OR a.created_at >= $3)`;
-    const filterParams = [q, targetType, since];
+                    AND ($3::timestamptz IS NULL OR a.created_at >= $3)
+                    AND ($4 = '' OR u.email ILIKE '%' || $4 || '%')
+                    AND ($5 = '' OR a.action ILIKE '%' || $5 || '%')
+                    AND ($6 = '' OR a.request_id::text ILIKE '%' || $6 || '%')
+                    AND ($7::text IS NULL OR a.outcome = $7)`;
+    const filterParams = [
+      q,
+      targetType,
+      since,
+      actor,
+      action,
+      auditRequestId,
+      outcome,
+    ];
 
     const [total, rows] = await Promise.all([
       this.database.pool.query<CountRow>(
@@ -1351,11 +1422,13 @@ export class AdminService {
       ),
       this.database.pool.query<AuditRow>(
         `SELECT a.id, a.actor_id, u.email AS actor_email, a.action,
-                a.target_type, a.target_id, a.detail, a.request_id, a.created_at
+                a.target_type, a.target_id, a.detail, a.request_id,
+                a.reason, a.before_data, a.after_data, a.outcome, a.ip,
+                a.user_agent, a.created_at
          FROM audit_log a LEFT JOIN users u ON u.id = a.actor_id
          ${filter}
          ORDER BY a.created_at DESC
-         LIMIT $4 OFFSET $5`,
+         LIMIT $8 OFFSET $9`,
         [...filterParams, query.page_size, offset],
       ),
     ]);
@@ -1371,6 +1444,8 @@ export class AdminService {
     input: RecomputeDto,
     actorId: string,
     requestId: string,
+    ip: string | null = null,
+    userAgent: string | null = null,
   ): Promise<EnqueueResult> {
     if (input.species && !input.zone_id) {
       throw new UnprocessableEntityException(
@@ -1399,6 +1474,8 @@ export class AdminService {
           zone_id: input.zone_id,
           species: input.species ?? null,
         },
+        ip,
+        userAgent,
       );
     }
     return this.enqueueWithAudit(
@@ -1408,6 +1485,8 @@ export class AdminService {
       actorId,
       requestId,
       {},
+      ip,
+      userAgent,
     );
   }
 
@@ -1418,6 +1497,8 @@ export class AdminService {
     actorId: string,
     requestId: string,
     detail: Record<string, unknown>,
+    ip: string | null,
+    userAgent: string | null,
   ): Promise<EnqueueResult> {
     const client = await this.database.pool.connect();
     try {
@@ -1431,6 +1512,18 @@ export class AdminService {
         typeof payload.zone_id === 'string' ? payload.zone_id : null,
         { ...detail, job_id: result.job_id, deduplicated: result.deduplicated },
         requestId,
+        {
+          before: result.deduplicated
+            ? { status: 'queued', job_id: result.job_id }
+            : { status: 'none', job_id: null },
+          after: {
+            status: 'queued',
+            job_id: result.job_id,
+            deduplicated: result.deduplicated,
+          },
+          ip,
+          userAgent,
+        },
       );
       await client.query('COMMIT');
       return result;
@@ -1450,11 +1543,14 @@ export class AdminService {
     targetId: string | null,
     detail: Record<string, unknown>,
     requestId: string,
+    integrity: AuditIntegrity = {},
   ): Promise<void> {
     await client.query(
       `INSERT INTO audit_log
-         (actor_id, action, target_type, target_id, detail, request_id)
-       VALUES ($1, $2, $3, $4, $5::jsonb, $6)`,
+         (actor_id, action, target_type, target_id, detail, request_id,
+          reason, before_data, after_data, outcome, ip, user_agent)
+       VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $8::jsonb, $9::jsonb,
+               $10, $11, $12)`,
       [
         actorId,
         action,
@@ -1462,6 +1558,12 @@ export class AdminService {
         targetId,
         JSON.stringify(detail),
         requestId,
+        integrity.reason ?? null,
+        integrity.before ? JSON.stringify(integrity.before) : null,
+        integrity.after ? JSON.stringify(integrity.after) : null,
+        integrity.outcome ?? 'success',
+        integrity.ip ?? null,
+        integrity.userAgent ?? null,
       ],
     );
   }
@@ -1469,7 +1571,9 @@ export class AdminService {
   private async recentAudit(limit: number): Promise<unknown[]> {
     const rows = await this.database.pool.query<AuditRow>(
       `SELECT a.id, a.actor_id, u.email AS actor_email, a.action,
-              a.target_type, a.target_id, a.detail, a.request_id, a.created_at
+              a.target_type, a.target_id, a.detail, a.request_id,
+              a.reason, a.before_data, a.after_data, a.outcome, a.ip,
+              a.user_agent, a.created_at
        FROM audit_log a LEFT JOIN users u ON u.id = a.actor_id
        ORDER BY a.created_at DESC LIMIT $1`,
       [limit],
@@ -1487,6 +1591,12 @@ export class AdminService {
       target_id: row.target_id,
       detail: row.detail,
       request_id: row.request_id,
+      reason: row.reason,
+      before_data: row.before_data,
+      after_data: row.after_data,
+      outcome: row.outcome,
+      ip: row.ip,
+      user_agent: row.user_agent,
       created_at: asIso(row.created_at),
     };
   }

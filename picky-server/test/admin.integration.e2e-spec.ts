@@ -74,6 +74,16 @@ interface OperationsHealthResponse {
   }>;
 }
 
+interface AuditIntegrityRow {
+  actor_id: string | null;
+  reason: string | null;
+  before_data: Record<string, unknown> | null;
+  after_data: Record<string, unknown> | null;
+  outcome: 'success' | 'failure';
+  detail: Record<string, unknown>;
+  request_id: string | null;
+}
+
 /**
  * The suite covers the current read-only moderation queue: feature 6.5 has not frozen
  * verdict or trust rules. Queue coverage is limited to the retry/dedupe/conflict paths
@@ -123,7 +133,7 @@ describe('Admin API against PostGIS (integration)', () => {
         method: 'patch',
         path: `/api/v1/admin/users/${f.targetId}/role`,
         status: 200,
-        body: { role: 'buyer' },
+        body: { role: 'buyer', reason: 'authorization matrix' },
       },
       {
         method: 'post',
@@ -345,16 +355,19 @@ describe('Admin API against PostGIS (integration)', () => {
     expect(byHash.get('expired-token')).toBeNull();
     expect(byHash.get('revoked-token')).not.toBeNull();
 
-    const audit = await database.pool.query<{
-      detail: { reason: string; revoked_count: number };
-      request_id: string;
-    }>(
-      `SELECT detail, request_id FROM audit_log
+    const audit = await database.pool.query<AuditIntegrityRow>(
+      `SELECT actor_id, reason, before_data, after_data, outcome, detail, request_id
+       FROM audit_log
        WHERE action = 'user.sessions_revoke' AND target_id = $1`,
       [fixtures.pickerId],
     );
     expect(audit.rows).toHaveLength(1);
     expect(audit.rows[0]).toMatchObject({
+      actor_id: fixtures.adminId,
+      reason: 'suspected compromise',
+      before_data: { active_sessions: 1 },
+      after_data: { active_sessions: 0, revoked_count: 1 },
+      outcome: 'success',
       request_id: 'revoke-sessions-test',
       detail: {
         reason: 'suspected compromise',
@@ -370,11 +383,64 @@ describe('Admin API against PostGIS (integration)', () => {
     expect((again.body as RevokeSessionsResponse).revoked_count).toBe(0);
   });
 
+  it('records role changes with a reason and explicit before/after evidence', async () => {
+    await request(app.getHttpServer())
+      .patch(`/api/v1/admin/users/${fixtures.targetId}/role`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .set('x-request-id', 'role-change-test')
+      .send({ role: 'buyer', reason: 'moved to the buying team' })
+      .expect(200);
+
+    const audit = await database.pool.query<AuditIntegrityRow>(
+      `SELECT actor_id, reason, before_data, after_data, outcome, detail, request_id
+       FROM audit_log
+       WHERE action = 'user.role' AND target_id = $1`,
+      [fixtures.targetId],
+    );
+
+    expect(audit.rows).toHaveLength(1);
+    expect(audit.rows[0]).toMatchObject({
+      actor_id: fixtures.adminId,
+      reason: 'moved to the buying team',
+      before_data: { role: 'picker' },
+      after_data: { role: 'buyer' },
+      outcome: 'success',
+      request_id: 'role-change-test',
+    });
+
+    const listed = await request(app.getHttpServer())
+      .get('/api/v1/admin/audit')
+      .query({
+        actor: 'admin@example.com',
+        action: 'user.role',
+        request_id: 'role-change-test',
+        outcome: 'success',
+      })
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    const body = listed.body as {
+      total: number;
+      entries: Array<{
+        reason: string | null;
+        before_data: Record<string, unknown> | null;
+        after_data: Record<string, unknown> | null;
+        outcome: string;
+      }>;
+    };
+    expect(body.total).toBe(1);
+    expect(body.entries[0]).toMatchObject({
+      reason: 'moved to the buying team',
+      before_data: { role: 'picker' },
+      after_data: { role: 'buyer' },
+      outcome: 'success',
+    });
+  });
+
   it('refuses to remove the caller’s own admin role', async () => {
     const response = await request(app.getHttpServer())
       .patch(`/api/v1/admin/users/${fixtures.adminId}/role`)
       .set('Authorization', `Bearer ${adminToken}`)
-      .send({ role: 'picker' })
+      .send({ role: 'picker', reason: 'attempted self demotion' })
       .expect(409);
 
     expect((response.body as ProblemResponse).error.code).toBe(
@@ -385,6 +451,49 @@ describe('Admin API against PostGIS (integration)', () => {
       [fixtures.adminId],
     );
     expect(role.rows[0].role).toBe('admin');
+
+    const audit = await database.pool.query<AuditIntegrityRow>(
+      `SELECT actor_id, reason, before_data, after_data, outcome, detail
+       FROM audit_log
+       WHERE action = 'user.role' AND target_id = $1 AND outcome = 'failure'`,
+      [fixtures.adminId],
+    );
+    expect(audit.rows).toHaveLength(1);
+    expect(audit.rows[0]).toMatchObject({
+      actor_id: fixtures.adminId,
+      reason: 'attempted self demotion',
+      before_data: null,
+      after_data: null,
+      outcome: 'failure',
+      detail: { code: 'SELF_DEMOTION_NOT_ALLOWED' },
+    });
+  });
+
+  it('records a forbidden privileged attempt without changing the target', async () => {
+    await request(app.getHttpServer())
+      .patch(`/api/v1/admin/users/${fixtures.targetId}/role`)
+      .set('Authorization', `Bearer ${pickerToken}`)
+      .set('x-request-id', 'forbidden-role-attempt')
+      .send({ role: 'admin', reason: 'trying to promote myself' })
+      .expect(403);
+
+    const audit = await database.pool.query<AuditIntegrityRow>(
+      `SELECT actor_id, reason, before_data, after_data, outcome, detail, request_id
+       FROM audit_log
+       WHERE action = 'user.role' AND target_id = $1 AND outcome = 'failure'`,
+      [fixtures.targetId],
+    );
+
+    expect(audit.rows).toHaveLength(1);
+    expect(audit.rows[0]).toMatchObject({
+      actor_id: fixtures.pickerId,
+      reason: 'trying to promote myself',
+      before_data: null,
+      after_data: null,
+      outcome: 'failure',
+      request_id: 'forbidden-role-attempt',
+      detail: { code: 'FORBIDDEN' },
+    });
   });
 
   it('validates the session revoke reason before changing anything', async () => {
@@ -436,8 +545,12 @@ describe('Admin API against PostGIS (integration)', () => {
 
     const audit = await database.pool.query<{
       detail: Record<string, unknown>;
+      reason: string | null;
+      before_data: Record<string, unknown> | null;
+      after_data: Record<string, unknown> | null;
+      outcome: string;
     }>(
-      `SELECT detail FROM audit_log
+      `SELECT detail, reason, before_data, after_data, outcome FROM audit_log
        WHERE action = 'job.retry' AND target_id = $1`,
       [String(fixtures.failedJobId)],
     );
@@ -445,6 +558,16 @@ describe('Admin API against PostGIS (integration)', () => {
       previous_status: 'failed',
       new_job_id: queuedJobId,
       deduplicated: false,
+    });
+    expect(audit.rows[0]).toMatchObject({
+      reason: null,
+      before_data: { status: 'failed', attempts: 2 },
+      after_data: {
+        status: 'queued',
+        job_id: queuedJobId,
+        deduplicated: false,
+      },
+      outcome: 'success',
     });
 
     const second = await request(app.getHttpServer())
@@ -456,6 +579,42 @@ describe('Admin API against PostGIS (integration)', () => {
       job_id: queuedJobId,
       status: 'queued',
       deduplicated: true,
+    });
+  });
+
+  it('records explicit before/after evidence when a recompute is queued', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/admin/scores/recompute')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .set('x-request-id', 'recompute-zone-audit')
+      .send({ zone_id: fixtures.zoneId, species: 'bilberry' })
+      .expect(202);
+    const jobId = (response.body as RetryResponse).job_id;
+
+    const audit = await database.pool.query<AuditIntegrityRow>(
+      `SELECT actor_id, reason, before_data, after_data, outcome, detail, request_id
+       FROM audit_log
+       WHERE action = 'scores.recompute' AND target_id = $1`,
+      [fixtures.zoneId],
+    );
+
+    expect(audit.rows).toHaveLength(1);
+    expect(audit.rows[0]).toMatchObject({
+      actor_id: fixtures.adminId,
+      reason: null,
+      before_data: { status: 'none', job_id: null },
+      after_data: {
+        status: 'queued',
+        job_id: jobId,
+        deduplicated: false,
+      },
+      outcome: 'success',
+      request_id: 'recompute-zone-audit',
+      detail: {
+        zone_id: fixtures.zoneId,
+        species: 'bilberry',
+        job_id: jobId,
+      },
     });
   });
 
@@ -477,6 +636,42 @@ describe('Admin API against PostGIS (integration)', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .send({})
       .expect(404);
+
+    const audit = await database.pool.query<AuditIntegrityRow>(
+      `SELECT outcome, detail FROM audit_log
+       WHERE action = 'job.retry' AND target_id = $1 AND outcome = 'failure'`,
+      [String(fixtures.runningJobId)],
+    );
+    expect(audit.rows).toHaveLength(1);
+    expect(audit.rows[0]).toMatchObject({
+      outcome: 'failure',
+      detail: { code: 'JOB_NOT_FINISHED' },
+    });
+  });
+
+  it('rejects direct updates and deletes against audit rows', async () => {
+    const inserted = await database.pool.query<{ id: string }>(
+      `INSERT INTO audit_log (action, target_type)
+       VALUES ('test.append_only', 'test') RETURNING id`,
+    );
+    const id = inserted.rows[0].id;
+
+    await expect(
+      database.pool.query('UPDATE audit_log SET reason = $1 WHERE id = $2', [
+        'tampered',
+        id,
+      ]),
+    ).rejects.toThrow(/append-only/i);
+    await expect(
+      database.pool.query('DELETE FROM audit_log WHERE id = $1', [id]),
+    ).rejects.toThrow(/append-only/i);
+
+    const row = await database.pool.query<{ reason: string | null }>(
+      'SELECT reason FROM audit_log WHERE id = $1',
+      [id],
+    );
+    expect(row.rows).toHaveLength(1);
+    expect(row.rows[0].reason).toBeNull();
   });
 
   it('surfaces failed and overdue work through the admin API', async () => {

@@ -1,5 +1,6 @@
 import { Transform } from 'class-transformer';
 import {
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -27,4 +28,23 @@ export class AuditQueryDto extends PaginationDto {
   @Min(1)
   @Max(365)
   days?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  actor?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  action?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(128)
+  request_id?: string;
+
+  @IsOptional()
+  @IsIn(['success', 'failure'])
+  outcome?: 'success' | 'failure';
 }

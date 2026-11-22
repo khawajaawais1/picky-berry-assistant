@@ -356,9 +356,10 @@ paths:
           application/json:
             schema:
               type: object
-              required: [role]
+              required: [role, reason]
               properties:
                 role: { type: string, enum: [picker, buyer, admin] }
+                reason: { type: string, minLength: 3, maxLength: 500 }
       responses:
         '200':
           description: The updated account
@@ -420,6 +421,29 @@ paths:
             in: query,
             description: Only entries created in the last N days,
             schema: { type: integer, minimum: 1, maximum: 365 },
+          }
+        - {
+            name: actor,
+            in: query,
+            description: Actor email contains,
+            schema: { type: string, maxLength: 200 },
+          }
+        - {
+            name: action,
+            in: query,
+            description: Action contains,
+            schema: { type: string, maxLength: 80 },
+          }
+        - {
+            name: request_id,
+            in: query,
+            description: Request id contains,
+            schema: { type: string, maxLength: 128 },
+          }
+        - {
+            name: outcome,
+            in: query,
+            schema: { type: string, enum: [success, failure] },
           }
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
@@ -620,6 +644,14 @@ components:
         target_id: { type: string, nullable: true }
         detail: { type: object, additionalProperties: true }
         request_id: { type: string, nullable: true }
+        reason: { type: string, nullable: true }
+        before_data:
+          { type: object, additionalProperties: true, nullable: true }
+        after_data:
+          { type: object, additionalProperties: true, nullable: true }
+        outcome: { type: string, enum: [success, failure] }
+        ip: { type: string, nullable: true }
+        user_agent: { type: string, nullable: true }
         created_at: { type: string, format: date-time }
     Problem:
       type: object

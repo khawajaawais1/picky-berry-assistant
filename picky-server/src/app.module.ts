@@ -11,6 +11,7 @@ import { DbModule } from './db/db.module';
 import { SpeciesModule } from './species/species.module';
 import { ZonesModule } from './zones/zones.module';
 import { AdminModule } from './admin/admin.module';
+import { AuditService } from './audit/audit.service';
 import { ApiExceptionFilter } from './common/filters/api-exception.filter';
 import { HealthService } from './health/health.service';
 import { ReportsModule } from './reports/reports.module';
@@ -97,6 +98,7 @@ function requestPath(url: string | undefined): string {
   controllers: [AppController],
   providers: [
     HealthService,
+    AuditService,
     ApiExceptionFilter,
     { provide: APP_GUARD, useClass: ApiThrottlerGuard },
   ],

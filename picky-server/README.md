@@ -79,11 +79,14 @@ was requested and deliberately does not log tokens, links or email addresses.
 Every route under `/api/v1/admin/*` requires an `admin` role and answers `Cache-Control: no-store`.
 Reads cover the dashboard, zones, jobs, reports, accounts, analytics and the audit log; writes
 cover score recomputation, retrying a finished job and changing another account's role. Each write
-records one `audit_log` row with the actor and the request id. The contract is
+records one `audit_log` row with the actor, request id, reason, before/after state and outcome;
+refused `403`/`409` privileged attempts are recorded as failures. The contract is
 [`docs/openapi/admin.yaml`](./docs/openapi/admin.yaml) and is merged into Swagger UI at `/docs`.
 
-The audit table is migration `0007_admin_audit.sql`; run `npm run db:migrate` before using the
-console. The web client lives in [`../admin`](../admin/README.md).
+The audit table is migration `0007_admin_audit.sql`, extended by `0008_audit_integrity.sql`; run
+`npm run db:migrate` before using the console. Migration `0008` makes the table append-only at the
+database level with a trigger that rejects `UPDATE` and `DELETE`. The web client lives in
+[`../admin`](../admin/README.md).
 
 ## Validation
 

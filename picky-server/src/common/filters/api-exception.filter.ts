@@ -7,16 +7,106 @@ import {
 } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 import { Request, Response } from 'express';
+import { AuditService } from '../../audit/audit.service';
+
+type AuditedRequest = Omit<Request, 'body'> & {
+  id?: string;
+  user?: { id: string; role: string };
+  body?: { reason?: unknown; role?: unknown; zone_id?: unknown };
+};
+
+interface FailedAttempt {
+  actorId: string;
+  action: string;
+  targetType: string;
+  targetId: string | null;
+  reason: string | null;
+  ip: string | null;
+  userAgent: string | null;
+  detail: Record<string, unknown>;
+}
+
+function requestPathOf(request: AuditedRequest): string {
+  return (request.originalUrl ?? request.url ?? '').split('?')[0];
+}
+
+function failedAttemptOf(
+  request: AuditedRequest,
+  path: string,
+  status: number,
+  code: string,
+): FailedAttempt | null {
+  const actorId = request.user?.id;
+  if (!actorId || !path.includes('/admin/')) return null;
+  if (status !== 403 && status !== 409) return null;
+
+  const body = request.body ?? {};
+  const method = request.method.toUpperCase();
+  const userMatch = path.match(/\/admin\/users\/([^/]+)/);
+  const jobMatch = path.match(/\/admin\/jobs\/([^/]+)\/retry/);
+  const isRoleChange = path.endsWith('/role');
+  const isRevoke = path.endsWith('/revoke-sessions');
+  const isRetry = path.endsWith('/retry');
+  const isRecompute = path.endsWith('/scores/recompute');
+
+  const action = isRetry
+    ? 'job.retry'
+    : isRevoke
+      ? 'user.sessions_revoke'
+      : isRoleChange
+        ? 'user.role'
+        : isRecompute
+          ? 'scores.recompute'
+          : `admin.${method.toLowerCase()}`;
+  const targetType = userMatch
+    ? 'user'
+    : jobMatch
+      ? 'job'
+      : isRecompute
+        ? 'scores'
+        : 'admin';
+  const targetId =
+    userMatch?.[1] ??
+    jobMatch?.[1] ??
+    (typeof body.zone_id === 'string' ? body.zone_id : null);
+  const reason =
+    typeof body.reason === 'string' && body.reason.trim().length >= 3
+      ? body.reason.trim()
+      : null;
+  const detail: Record<string, unknown> = {
+    method,
+    path,
+    status,
+    code,
+  };
+  if (typeof body.role === 'string') detail.requested_role = body.role;
+  if (typeof body.zone_id === 'string') detail.zone_id = body.zone_id;
+
+  const userAgent = request.headers['user-agent'];
+  return {
+    actorId,
+    action,
+    targetType,
+    targetId,
+    reason,
+    ip: request.ip ?? null,
+    userAgent: typeof userAgent === 'string' ? userAgent : null,
+    detail,
+  };
+}
 
 @Catch()
 export class ApiExceptionFilter implements ExceptionFilter {
-  constructor(private readonly logger: PinoLogger) {
+  constructor(
+    private readonly logger: PinoLogger,
+    private readonly audit: AuditService,
+  ) {
     this.logger.setContext(ApiExceptionFilter.name);
   }
 
-  catch(exception: unknown, host: ArgumentsHost): void {
+  async catch(exception: unknown, host: ArgumentsHost): Promise<void> {
     const http = host.switchToHttp();
-    const request = http.getRequest<Request & { id?: string }>();
+    const request = http.getRequest<AuditedRequest>();
     const response = http.getResponse<Response>();
     const exceptionStatus =
       exception instanceof HttpException
@@ -43,6 +133,26 @@ export class ApiExceptionFilter implements ExceptionFilter {
       request.id ??
       request.header('x-request-id') ??
       (typeof responseRequestId === 'string' ? responseRequestId : 'unknown');
+
+    const failed = failedAttemptOf(
+      request,
+      requestPathOf(request),
+      status,
+      code,
+    );
+    if (failed) {
+      try {
+        await this.audit.recordFailure({
+          ...failed,
+          requestId,
+        });
+      } catch (auditError) {
+        this.logger.error(
+          { err: auditError, request_id: requestId },
+          'Failed to record a rejected privileged attempt',
+        );
+      }
+    }
 
     if (status >= 500) {
       this.logger.error(

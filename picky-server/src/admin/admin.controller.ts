@@ -38,6 +38,17 @@ function requestIdOf(request: AdminRequest): string {
   return request.id ?? 'unknown';
 }
 
+function requestMetaOf(request: AdminRequest): {
+  ip: string | null;
+  userAgent: string | null;
+} {
+  const userAgent = request.headers['user-agent'];
+  return {
+    ip: request.ip ?? null,
+    userAgent: typeof userAgent === 'string' ? userAgent : null,
+  };
+}
+
 /**
  * The operator surface's only door. Every route is admin-only and no-store: the data is
  * operational, includes account emails, and must never be cached by a browser or proxy.
@@ -89,7 +100,14 @@ export class AdminController {
     jobId: number,
     @Req() request: AdminRequest,
   ): Promise<Record<string, unknown>> {
-    return this.admin.retryJob(jobId, request.user.id, requestIdOf(request));
+    const meta = requestMetaOf(request);
+    return this.admin.retryJob(
+      jobId,
+      request.user.id,
+      requestIdOf(request),
+      meta.ip,
+      meta.userAgent,
+    );
   }
 
   @Get('reports')
@@ -125,11 +143,14 @@ export class AdminController {
     @Body() body: RevokeSessionsDto,
     @Req() request: AdminRequest,
   ): Promise<Record<string, unknown>> {
+    const meta = requestMetaOf(request);
     return this.admin.revokeSessions(
       userId,
       body.reason,
       request.user.id,
       requestIdOf(request),
+      meta.ip,
+      meta.userAgent,
     );
   }
 
@@ -142,11 +163,14 @@ export class AdminController {
     @Body() body: UpdateRoleDto,
     @Req() request: AdminRequest,
   ): Promise<Record<string, unknown>> {
+    const meta = requestMetaOf(request);
     return this.admin.updateUserRole(
       userId,
       body,
       request.user.id,
       requestIdOf(request),
+      meta.ip,
+      meta.userAgent,
     );
   }
 
@@ -172,6 +196,13 @@ export class AdminController {
     @Body() body: RecomputeDto = new RecomputeDto(),
     @Req() request: AdminRequest,
   ): Promise<EnqueueResult> {
-    return this.admin.recompute(body, request.user.id, requestIdOf(request));
+    const meta = requestMetaOf(request);
+    return this.admin.recompute(
+      body,
+      request.user.id,
+      requestIdOf(request),
+      meta.ip,
+      meta.userAgent,
+    );
   }
 }

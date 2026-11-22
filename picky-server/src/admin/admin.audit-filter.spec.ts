@@ -21,6 +21,10 @@ describe('AdminService audit filters', () => {
       q: 'user.role',
       target_type: 'user',
       days: 30,
+      actor: 'admin@example.com',
+      action: 'user.role',
+      request_id: 'req-123',
+      outcome: 'failure',
     });
 
     const calls = query.mock.calls as unknown[][];
@@ -32,12 +36,22 @@ describe('AdminService audit filters', () => {
     expect(rowsSql).toContain('a.action ILIKE');
     expect(rowsSql).toContain('a.target_id::text ILIKE');
     expect(rowsSql).toContain('a.request_id::text ILIKE');
+    expect(rowsSql).toContain('a.reason ILIKE');
     expect(rowsSql).toContain('a.target_type = $2');
     expect(rowsSql).toContain('a.created_at >= $3');
-    expect(rowsSql).toContain('LIMIT $4 OFFSET $5');
+    expect(rowsSql).toContain('u.email ILIKE');
+    expect(rowsSql).toContain('a.outcome = $7');
+    expect(rowsSql).toContain('LIMIT $8 OFFSET $9');
     expect(rowsParams[0]).toBe('user.role');
     expect(rowsParams[1]).toBe('user');
     expect(rowsParams[2]).toEqual(expect.any(Date));
-    expect(rowsParams.slice(3)).toEqual([25, 25]);
+    expect(rowsParams.slice(3)).toEqual([
+      'admin@example.com',
+      'user.role',
+      'req-123',
+      'failure',
+      25,
+      25,
+    ]);
   });
 });
