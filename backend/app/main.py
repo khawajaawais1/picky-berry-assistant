@@ -28,8 +28,41 @@ log = logging.getLogger(__name__)
 async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     ontology_dir = os.getenv("ONTOLOGY_DIR") or None
     load_ontology_into(app, ontology_dir)
+
+    # Optional ML scorer (requires berry-ml extra and the zone grid CSV).
+    try:
+        from berry_ml import ZoneGrid
+        app.state.zone_grid = ZoneGrid()
+        log.info("ZoneGrid loaded (%d cells)", len(app.state.zone_grid.lat))
+    except ImportError:
+        log.info("berry_ml not installed; ZoneGrid not loaded")
+    except Exception as exc:
+        log.warning("ZoneGrid init failed: %s", exc)
+
+    # Optional: wire the DB-backed alerts source when DATABASE_URL is set.
+    db_url = os.getenv("DATABASE_URL") or None
+    if db_url:
+        from app.modules.reasoning.job import make_alerts_source
+        app.state.alerts_source = make_alerts_source(db_url)
+        log.info("alerts_source wired to DATABASE_URL")
+
+    # Optional APScheduler daily job (requires apscheduler extra).
+    _scheduler = None
+    try:
+        from app.modules.reasoning.scheduler import make_scheduler
+        _scheduler = make_scheduler(app.state)
+        _scheduler.start()
+        log.info("APScheduler started; daily reasoning job at 06:00 Helsinki")
+    except ImportError:
+        log.info("apscheduler not installed; daily reasoning job disabled")
+    except Exception as exc:
+        log.warning("scheduler start failed: %s", exc)
+
     log.info("ontology loaded; reasoning service ready")
     yield
+
+    if _scheduler is not None:
+        _scheduler.shutdown()
     log.info("backend shutting down")
 
 

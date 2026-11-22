@@ -16,6 +16,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Install with: pip install -e ".[job]" (adds DB + ML scorer + scheduler)
+job = [
+  "apscheduler>=3.11",
+  "sqlalchemy>=2.0",
+  "psycopg2-binary>=2.9",
+  "berry-ml @ file:../ml",
+]
 dev = ["pytest==9.1.1", "ruff==0.17.6", "httpx==0.28.1", "pyyaml==6.0.3"]
 
 [tool.setuptools.packages.find]
