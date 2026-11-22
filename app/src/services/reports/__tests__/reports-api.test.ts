@@ -3,7 +3,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ApiClient, ApiRequest, ApiResult } from '@/services/api';
 import { enqueueReport, readReportQueue, type VisitReport } from '@/services/report-queue';
 
-import { createReportsApi, flushReportQueue, parseKilograms } from '../reports-api';
+import {
+  createReportsApi,
+  flushReportQueue,
+  parseKilograms,
+  parseSeason,
+  parseZoneReportPage,
+  ReportsReadError,
+} from '../reports-api';
 
 const REPORT: VisitReport = {
   amountText: '1,3 kg',
@@ -17,9 +24,14 @@ const REPORT: VisitReport = {
 };
 
 function clientAnswering(result: ApiResult<unknown>) {
-  const request = jest.fn(async (req: ApiRequest<unknown>) =>
-    result.ok ? { ...result, data: req.parse(result.data) } : result,
-  );
+  // As the real client does: a body the parser refuses is an invalid response, not data.
+  const request = jest.fn(async (req: ApiRequest<unknown>): Promise<ApiResult<unknown>> => {
+    if (!result.ok) return result;
+    const data = req.parse(result.data);
+    return data === null
+      ? { ok: false, error: { kind: 'invalid-response', status: result.status } }
+      : { ...result, data };
+  });
   return { client: { request } as unknown as ApiClient, request };
 }
 
@@ -113,5 +125,141 @@ describe('flushReportQueue', () => {
 
     expect(send).toHaveBeenCalledTimes(2);
     expect((await readReportQueue()).map((report) => report.zoneId)).toEqual(['zone-b', 'zone-c']);
+  });
+});
+
+describe('the reports API’s reads', () => {
+  const RAW_REPORT = {
+    id: 'r1',
+    species: 'bilberry',
+    rating: 4,
+    amount_kg: 1.3,
+    minutes: 52,
+    trust: 'trusted',
+    recorded_at: '2026-08-28T10:55:00.000Z',
+  };
+
+  it('reads a zone’s reports for the berry asked, dropping what it cannot read', async () => {
+    const { client, request } = clientAnswering({
+      ok: true,
+      status: 200,
+      data: {
+        zone_id: 'zone-a',
+        zone_name: 'Laajavuori 1',
+        count_7d: 2,
+        reports: [
+          RAW_REPORT,
+          { ...RAW_REPORT, id: 'r2', trust: 'other', amount_kg: null },
+          { id: 'x' },
+        ],
+      },
+    });
+
+    const page = await createReportsApi({ client }).forZone('zone a', 'bilberry');
+
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({ path: '/zones/zone%20a/reports', query: { species: 'bilberry' } }),
+    );
+    expect(page).toEqual({
+      zoneId: 'zone-a',
+      zoneName: 'Laajavuori 1',
+      countThisWeek: 2,
+      reports: [
+        {
+          id: 'r1',
+          species: 'bilberry',
+          rating: 4,
+          amountKg: 1.3,
+          minutes: 52,
+          trust: 'trusted',
+          recordedAt: RAW_REPORT.recorded_at,
+        },
+        {
+          id: 'r2',
+          species: 'bilberry',
+          rating: 4,
+          amountKg: null,
+          minutes: 52,
+          trust: 'unverified',
+          recordedAt: RAW_REPORT.recorded_at,
+        },
+      ],
+    });
+  });
+
+  it('reads the picker’s own reports', async () => {
+    const { client } = clientAnswering({
+      ok: true,
+      status: 200,
+      data: {
+        reports: [
+          { ...RAW_REPORT, client_id: 'c1', zone_id: 'zone-a', zone_name: null },
+          { id: 'bad' },
+        ],
+      },
+    });
+
+    await expect(createReportsApi({ client }).mine()).resolves.toEqual([
+      {
+        id: 'r1',
+        clientId: 'c1',
+        zoneId: 'zone-a',
+        zoneName: null,
+        species: 'bilberry',
+        rating: 4,
+        amountKg: 1.3,
+        minutes: 52,
+        recordedAt: RAW_REPORT.recorded_at,
+      },
+    ]);
+  });
+
+  it('throws a read error the screen can say, for a failure and for a body it cannot read', async () => {
+    const offline = clientAnswering({ ok: false, error: { kind: 'network' } });
+    const garbled = clientAnswering({ ok: true, status: 200, data: { nothing: true } });
+
+    await expect(createReportsApi(offline).mine()).rejects.toThrow(ReportsReadError);
+    await expect(createReportsApi(garbled).season()).rejects.toThrow(ReportsReadError);
+    await expect(createReportsApi(garbled).forZone('z')).rejects.toThrow(ReportsReadError);
+  });
+
+  it('parses a season with missing figures as zero, and drops unreadable bars', () => {
+    expect(
+      parseSeason({
+        year: 2026,
+        harvest_by_report: [
+          { report_id: 'r1', kilograms: 1, recorded_at: 'x' },
+          'bad',
+          { report_id: 'r2' },
+        ],
+      }),
+    ).toEqual({
+      year: 2026,
+      visitCount: 0,
+      reportCount: 0,
+      zonesVisited: 0,
+      stayHours: 0,
+      medianMinutes: null,
+      harvestedKg: 0,
+      kgPerHour: null,
+      harvestByReport: [{ reportId: 'r1', zoneName: null, kilograms: 1, recordedAt: 'x' }],
+    });
+    expect(parseSeason({ harvest_by_report: [] })).toBeNull();
+    expect(parseZoneReportPage({ reports: [] })).toBeNull();
+    expect(parseZoneReportPage('x')).toBeNull();
+  });
+
+  it('refuses to send a report with no id, and counts an unreadable 2xx as recorded', async () => {
+    const { client } = clientAnswering({
+      ok: false,
+      error: { kind: 'invalid-response', status: 201 },
+    });
+
+    await expect(
+      createReportsApi({ client }).send({ ...REPORT, clientId: undefined }),
+    ).resolves.toBe('refused');
+    await expect(
+      createReportsApi({ client }).send({ ...REPORT, amountText: '', visitId: undefined }),
+    ).resolves.toBe('recorded');
   });
 });

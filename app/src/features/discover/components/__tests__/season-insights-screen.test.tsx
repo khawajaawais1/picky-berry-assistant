@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fireEvent, render, screen, within } from '@testing-library/react-native';
 
+import type { VisitPage } from '@/features/visits';
 import { QueryProvider } from '@/services/query-client';
 import { enqueueReport } from '@/services/report-queue';
 
@@ -71,5 +72,68 @@ describe('SeasonInsightsScreen', () => {
 
     expect(await screen.findByText('Your season figures could not be read.')).toBeOnTheScreen();
     expect(screen.queryByTestId('season-summary')).not.toBeOnTheScreen();
+  });
+});
+
+/**
+ * The visits the zone service recorded for this account (ADR-065, the plan's phase 4), drawn
+ * under the phone's own history when the route supplies the visits API.
+ */
+describe('SeasonInsightsScreen with the zone service’s visits', () => {
+  const PAGE: VisitPage = {
+    visits: [
+      {
+        id: '4cd7a7d4-e6da-4d4c-bdbf-d0997c5ac60d',
+        zoneId: 'cc0e7929-de9f-516a-9049-7a25a1a6d092',
+        zoneName: 'Laajavuori 1',
+        startedAt: '2026-08-03T09:00:00.000Z',
+        durationSeconds: 2700,
+        status: 'accepted',
+        rejectReason: null,
+      },
+      {
+        id: '5cd7a7d4-e6da-4d4c-bdbf-d0997c5ac60d',
+        zoneId: null,
+        zoneName: null,
+        startedAt: '2026-08-01T09:00:00.000Z',
+        durationSeconds: 59,
+        status: 'accepted',
+        rejectReason: null,
+      },
+    ],
+    nextCursor: null,
+  };
+
+  function renderWith(list: () => Promise<VisitPage>) {
+    return render(<SeasonInsightsScreen visitsApi={{ list }} />, { wrapper: QueryProvider });
+  }
+
+  it('lists the recorded visits with their zone, day and length', async () => {
+    await renderWith(async () => PAGE);
+
+    expect(await screen.findByText('Recorded by the zone service')).toBeOnTheScreen();
+    expect(screen.getByText('Laajavuori 1 · 3 August 2026 · 45 min')).toBeOnTheScreen();
+    // A zone the service no longer names, and a visit under a minute, are said as they are.
+    expect(
+      screen.getByText('A zone no longer listed · 1 August 2026 · under 1 min'),
+    ).toBeOnTheScreen();
+  });
+
+  it('says so when the service has recorded nothing yet', async () => {
+    await renderWith(async () => ({ visits: [], nextCursor: null }));
+
+    expect(await screen.findByText('The service has recorded no visits yet.')).toBeOnTheScreen();
+  });
+
+  it('says so when the service could not answer, rather than showing no visits', async () => {
+    await renderWith(async () => Promise.reject(new Error('offline')));
+
+    expect(await screen.findByText('The zone service could not answer.')).toBeOnTheScreen();
+  });
+
+  it('draws no service block without the visits API', async () => {
+    await render(<SeasonInsightsScreen />, { wrapper: QueryProvider });
+
+    expect(screen.queryByText('Recorded by the zone service')).not.toBeOnTheScreen();
   });
 });
