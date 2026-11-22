@@ -90,10 +90,13 @@ One-time setup in the Vercel dashboard (needs someone who can install the Vercel
 1. **Add New → Project → Import** the repository.
 2. **Root Directory:** `admin`. Framework and commands are read from `vercel.json`.
 3. **Production Branch:** `main` (Project → Settings → Git; it is the default).
-4. **Environment variable** (Production): `VITE_API_BASE_URL` = the deployed `picky-server`
-   origin plus `/api/v1`, for example `https://api.example.com/api/v1`. It is compiled into the
+4. **API origin:** `.env.production` sets `VITE_API_BASE_URL` to the deployed `picky-server`,
+   `https://picky-berry-assistant.vercel.app/api/v1`. To point elsewhere, set
+   `VITE_API_BASE_URL` in Vercel (Production); the dashboard value wins. It is compiled into the
    bundle, so redeploy after changing it. The build **fails on purpose** when it is missing or
    not `https`: without it the console would call its own static domain instead of the API.
+   A local `npm run build` also uses this file, so `vite preview` talks to production; use
+   `npm run dev` (proxy to `localhost:3000`) for local work.
 5. **API CORS:** add the console's production origin (e.g. `https://picky-admin.vercel.app`,
    no path) to `CORS_ORIGINS` on the API and restart it. The API allows only listed origins and
    rejects a wildcard.
