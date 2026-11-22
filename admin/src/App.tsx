@@ -1,6 +1,8 @@
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { RequireAdmin } from './auth/RequireAdmin';
 import { AppShell } from './components/AppShell';
+import { Loading } from './components/ui';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { AuditPage } from './pages/AuditPage';
 import { FeatureLabPage } from './pages/FeatureLabPage';
@@ -15,6 +17,11 @@ import { UsersPage } from './pages/UsersPage';
 import { ZoneDetailPage } from './pages/ZoneDetailPage';
 import { ZonesPage } from './pages/ZonesPage';
 
+// Leaflet is only downloaded when the map is opened.
+const MapPage = lazy(() =>
+  import('./pages/MapPage').then((module) => ({ default: module.MapPage })),
+);
+
 export function App() {
   return (
     <Routes>
@@ -23,6 +30,14 @@ export function App() {
         <Route element={<AppShell />}>
           <Route index element={<OverviewPage />} />
           <Route path="operations" element={<OperationsPage />} />
+          <Route
+            path="map"
+            element={
+              <Suspense fallback={<Loading label="Loading the map…" />}>
+                <MapPage />
+              </Suspense>
+            }
+          />
           <Route path="zones" element={<ZonesPage />} />
           <Route path="zones/:id" element={<ZoneDetailPage />} />
           <Route path="jobs" element={<JobsPage />} />
