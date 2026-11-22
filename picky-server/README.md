@@ -99,8 +99,8 @@ operations health fails on an expired lease and warns when a live lease misses i
 ## Deploying to Vercel
 
 Vercel runs this API as a serverless function with zero configuration: it detects NestJS from
-`src/main.ts`. `vercel.json` adds only the deploy rules: **only `main` deploys**, and the build is
-skipped when nothing under `picky-server/` changed since the last deployment.
+`src/main.ts`; no `vercel.json` is needed. The deployed API is
+`https://picky-berry-assistant.vercel.app` (Swagger at `/docs`).
 
 One-time project setup:
 
