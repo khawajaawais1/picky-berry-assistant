@@ -27,7 +27,7 @@ uvicorn service.app:app --reload --port 8100    # reference API → http://local
 
 ```python
 from berry_ml import BerryDetector, ZoneGrid, Report, update_zone_score
-BerryDetector().detect("examples/test_1.jpg").counts            # {'bilberry': 2, ..., 'lingonberry': 1}
+BerryDetector().detect("examples/test_1.jpg").counts            # {'bilberry': 0, 'cloudberry': 2, ...}
 ZoneGrid().score_zone(ring, date="2026-07-25")["bilberry"]      # ZoneScore(score=49, confidence='medium', ripeness='ripe', ...)
 ```
 
@@ -55,7 +55,7 @@ ml/
   detection/prepare_wildbe.py    WildBe parquet → YOLO folders (90/10 split by source image, seed 42)
   yield/parse_marsi.py           parses Ruokavirasto's Marsi harvest reports (2013–2025)
   zones/build_zone_grid.py       builds the forest grid from Luke MS-NFI 2023 (runs locally)
-  examples/              ← 3 WildBe test photos used by the tests
+  examples/              ← 3 clean WildBe test photos (JPEG) + their true labels (.txt, YOLO format)
   tests/                 ← detector (incl. parity with Ultralytics), zones (app payload rules), reports, service
 ```
 
@@ -64,7 +64,8 @@ ml/
 1. **Detector** — `notebooks/BPA_Berry_Detection_YOLO.ipynb` on Kaggle (GPU T4): WildBe (HF `FBK-TeV/WildBe`,
    3,516 images, 18,468 boxes) → 2,852 train / 176 val / 312 test → YOLO11n, imgsz 640, 89 epochs (early stop,
    patience 20), seed 42 → ONNX export. `berry_ml.detector` re-implements the pre/post-processing in numpy and
-   matches Ultralytics' counts exactly on the test photos (`tests/test_detector.py`).
+   gives the same boxes and classes as Ultralytics on the test photos, confidences within 0.02
+   (`tests/test_detector.py`).
 2. **Season quality** — `BPA_Weather_Features` (FMI open data, 16 regions, 2000–2025) + `BPA_Harvest_Labels`
    (Marsi PDFs → `marsi_labels.csv`, 109 rows) → `BPA_Yield_Model`: gradient boosting, ridge and a frost rule
    tested leave-one-year-out against the normal-year baseline. Bilberry MAE: baseline 0.78, frost rule 0.79,

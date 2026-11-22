@@ -155,6 +155,23 @@ def cmd_ndvi(args) -> int:
     return 0
 
 
+def cmd_zone_features(args) -> int:
+    from datetime import date as _date
+
+    from .db import engine, load_zone_features, record_run
+
+    as_of = _date.fromisoformat(args.date) if args.date else None
+    eng = engine()
+    try:
+        n = load_zone_features(eng, as_of)
+        record_run(eng, "zone_features", "ok", n)
+        print(f"{n} zone_features rows upserted for {as_of or 'today'}")
+    except Exception as exc:
+        record_run(eng, "zone_features", "failed", error=str(exc))
+        raise
+    return 0
+
+
 def cmd_basemap(args) -> int:
     from .basemap.pmtiles import extract
 
@@ -225,6 +242,10 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--rebuild", action="store_true", help="ignore existing ndvi_obs.parquet")
     s.add_argument("--stub", action="store_true", help="ndvi_anomaly = 0 for every zone")
     s.set_defaults(fn=cmd_ndvi)
+
+    s = sub.add_parser("zone-features", help="D-ZF: assemble zone_features for a date (default today)")
+    s.add_argument("--date", help="ISO date, e.g. 2026-07-15 (default: today Helsinki time)")
+    s.set_defaults(fn=cmd_zone_features)
 
     s = sub.add_parser("basemap", help="D18: PMTiles extract")
     s.add_argument("--scope", choices=["pilot", "finland"], default="pilot")

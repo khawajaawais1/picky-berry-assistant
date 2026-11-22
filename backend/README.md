@@ -1,43 +1,90 @@
-# backend/ — FastAPI modular monolith (owner: Hassan)
+# backend/ — FastAPI reasoning service (feature 6.7)
 
-One Python package, one Docker image, ten modules. Each module owns its tables and exposes a
-`service.py`; other modules call that service, never its tables. Design: architecture doc §5,
-summary in [../docs/architecture.md](../docs/architecture.md).
+Python package deployed on Render as `picky-backend`. Owns the OWL-ontology reasoning
+pipeline, the daily scoring job, and FCM push delivery. Design: [docs/architecture.md](../docs/architecture.md).
+Feature deep dive: [docs/features/6.7-reasoning-push-alerts.md](../docs/features/6.7-reasoning-push-alerts.md).
 
-**Status (2026-11-21): no API yet.** The folder holds this README, `pyproject.toml`, the `ingest` module's note and the `reasoning` module (`lifespan.py`, `graph.py`, `rules.py`,
-`service.py`, `router.py` and their tests); there is no `main.py`, Alembic migration or database
-access yet, and
-[../docs/architecture.md](../docs/architecture.md) is the status of record for each module.
+**Status (2026-11-22): deployed and operational.**
+Live at `https://picky-backend-cd0u.onrender.com` — health, alerts, species, context.jsonld
+and the reasoning trigger all respond. Daily cron fires at 06:00 Helsinki (produces alerts
+July–September; use `?as_of=2026-08-15` to test outside season).
 
-## Planned layout (architecture doc §5)
+## Running locally
+
+```bash
+cd backend
+pip install -e "../ml"          # editable — keeps zone_grid.csv path intact
+pip install -e ".[job]"         # adds apscheduler, sqlalchemy, psycopg3, firebase-admin
+uvicorn app.main:app --reload --port 8001
+```
+
+**Environment variables** (copy from repo-root `.env` or set directly):
+
+| Var | Required | Purpose |
+|-----|----------|---------|
+| `DATABASE_URL` | Yes (for job + alerts) | Supabase Session pooler URI |
+| `FIREBASE_CREDENTIAL_JSON` | No (push disabled without it) | Firebase service-account JSON as a string |
+| `ONTOLOGY_DIR` | No | Override path to `ontology/` directory |
+| `LOG_LEVEL` | No (default `info`) | Root logger level |
+
+## Module layout
 
 ```
 backend/
   app/
-    main.py            # FastAPI app, routers, middleware
-    core/              # config, db session, security, logging, errors (RFC 9457)
+    main.py                     # FastAPI lifespan — loads ontology, ZoneGrid, Firebase, scheduler
     modules/
-      accounts/        # 6.1, 6.9   router.py, service.py, models.py, schemas.py
-      zones/           # 6.2
-      visits/          # 6.3
-      feedback/        # 6.4
-      trust/           # 6.5
-      prediction/      # 6.2, 6.6   (Remon)
-      reasoning/       # 6.7        (Asmer)
-      analytics/       # 6.8
-      ingest/          # 6.2, 6.6   (Awais) – thin wrapper over ../data (ADR 0004)
-      media/           # 6.4        (Sabih)
-    jobs/              # APScheduler + Postgres job queue worker
-  ml/                  # inference wrappers (YOLO ONNX, XGBoost)
-  ontology/            # mirrors /ontology (Turtle + SPARQL rules)
-  migrations/          # Alembic
+      reasoning/
+        graph.py                # OWL graph loader + add_zone_rows()
+        service.py              # Alert dataclass, alerts_from_rule()
+        rules.py                # Rule + rulebook loader
+        lifespan.py             # load_ontology_into(app)
+        router.py               # GET /api/v1/alerts, POST /api/v1/reasoning/run, GET /api/v1/species
+        job.py                  # _fetch_zone_rows, _apply_scores, run_one_rule, run_reasoning
+        scheduler.py            # make_scheduler() — APScheduler cron at 06:00 Helsinki
+      push/
+        fcm.py                  # push_alerts(), init_fcm_app(), _fetch_devices_for_species()
+        throttle.py             # is_quiet_hours(), user_alert_count_today(), zone_cooldown_active(), log_push()
+      ingest/
+        README.md               # placeholder
   tests/
+    test_app_startup.py         # 8 tests — lifespan, health endpoint
+    test_run_reasoning.py       # 9 tests — _apply_scores, run_one_rule, run_reasoning
+    test_fcm_push.py            # 7 tests — push_alerts end-to-end
+    test_throttle.py            # 16 tests — is_quiet_hours + Layer-6 guards
 ```
 
-## Data tables from `data/`
-`../data/sql/001_data_tables.sql` is the reference DDL for zones, zone_species, weather and
-NDVI (plus `ingest_runs`). Port it into Alembic migrations with identical names; contract in
-[../docs/data-contract.md](../docs/data-contract.md).
+## Running tests
 
-Week 1 deliverables: FastAPI skeleton + Alembic + `/health` (D5), OpenAPI YAML for the zone
-endpoints (D7). By 3 Nov: schema + login + `POST /visits` locally.
+```bash
+cd backend
+pip install -e ".[dev]"
+pytest
+```
+
+All 74 tests pass. Tests mock firebase-admin, SQLAlchemy, and throttle DB calls so they
+run without psycopg2/firebase-admin installed.
+
+## DB migrations (applied to Supabase 2026-11-22)
+
+| File | What it creates |
+|------|-----------------|
+| `picky-server/migrations/0007_alerts.sql` | `alert_rules_log`, `alerts` |
+| `picky-server/migrations/0008_push_log.sql` | `push_log` |
+| `data/sql/001_data_tables.sql` | `zone_features` (and other data tables) |
+
+## Deployment (Render)
+
+Defined in `render.yaml` at the repo root. Build and start commands:
+```
+pip install -e ../ml && pip install -e ".[job]"
+uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+`berry-ml` must be installed **editable first** so `paths.py` resolves `zone_grid.csv`
+from the source tree; installing it as a wheel loses the `models/` directory.
+
+## Known compatibility notes
+
+- **psycopg3** (`psycopg[binary]>=3.1`) required — Render's Python 3.14 has no psycopg2 wheel.
+- **`::uuid` casts** in SQLAlchemy `text()` must be written as `CAST(... AS uuid)` with psycopg3.

@@ -1,11 +1,18 @@
 services:
   - type: web
-    name: picky-ml
-    runtime: docker
-    dockerfilePath: docker/ml/Dockerfile
-    dockerContext: .
+    name: picky-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -e ../ml && pip install -e ".[job]"
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     plan: free
-    healthCheckPath: /api/v1/ml/health
+    healthCheckPath: /health
     envVars:
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: LOG_LEVEL
+        value: info
+      - key: DATABASE_URL
+        sync: false   # set manually in Render dashboard — never commit secrets
+      - key: FIREBASE_CREDENTIAL_JSON
+        sync: false   # paste Firebase service-account JSON in Render dashboard

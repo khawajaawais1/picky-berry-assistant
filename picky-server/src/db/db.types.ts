@@ -145,6 +145,40 @@ export interface UserTrustTable {
   trust: number;
 }
 
+export interface AlertRulesLogTable {
+  id: Generated<string>;
+  rule_id: string;
+  rule_version: string;
+  zone_count: number | null;
+  alert_count: number | null;
+  status: string;
+  error: string | null;
+  duration_ms: number | null;
+  run_at: Timestamp;
+}
+
+export interface AlertsTable {
+  id: Generated<string>;
+  run_id: string;
+  zone_id: string;
+  species: string;
+  rule_id: string;
+  rule_version: string;
+  score: number;
+  confidence: string;
+  ripeness: string;
+  suitability: number;
+  ecology_verified: boolean;
+  sentence: string;
+  place: string | null;
+  zone_number: string;
+  zone_iri: string;
+  species_iri: string;
+  name_en: string;
+  name_fi: string;
+  computed_at: Timestamp;
+}
+
 export interface DbSchema {
   species: SpeciesTable;
   zones: ZonesTable;
@@ -158,6 +192,8 @@ export interface DbSchema {
   reports: ReportsTable;
   jobs: JobsTable;
   user_trust: UserTrustTable;
+  alert_rules_log: AlertRulesLogTable;
+  alerts: AlertsTable;
 }
 
 export type JobId = Generated<number>;
