@@ -111,6 +111,7 @@ describe('Admin API against PostGIS (integration)', () => {
     return [
       { method: 'get', path: '/api/v1/admin/overview', status: 200 },
       { method: 'get', path: '/api/v1/admin/operations/health', status: 200 },
+      { method: 'get', path: '/api/v1/admin/map', status: 200 },
       { method: 'get', path: '/api/v1/admin/zones', status: 200 },
       {
         method: 'get',
@@ -291,6 +292,54 @@ describe('Admin API against PostGIS (integration)', () => {
       .set('Origin', 'https://evil.example')
       .expect(200);
     expect(denied.headers['access-control-allow-origin']).toBeUndefined();
+  });
+
+  it('returns every zone as a map spot with its centroid, score and bounds', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/admin/map')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    expect(response.headers['cache-control']).toBe('no-store');
+    expect(response.body).toMatchObject({
+      species: null,
+      total: 1,
+      truncated: false,
+      bounds: { min_lat: 62.2, min_lng: 25.7, max_lat: 62.2, max_lng: 25.7 },
+    });
+    expect(response.body.spots).toEqual([
+      expect.objectContaining({
+        id: fixtures.zoneId,
+        name: 'Laajavuori',
+        h3: '8811964d9dfffff',
+        lat: 62.2,
+        lng: 25.7,
+        species_scored: 2,
+        reports_total: 2,
+      }),
+    ]);
+    expect(response.body.spots[0].best_score).toBe(80);
+
+    const filtered = await request(app.getHttpServer())
+      .get('/api/v1/admin/map')
+      .query({ species: 'cloudberry' })
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    expect(filtered.body).toMatchObject({
+      species: 'cloudberry',
+      total: 0,
+      bounds: null,
+      spots: [],
+    });
+  });
+
+  it('answers a route the API does not serve with ROUTE_NOT_FOUND', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/admin/not-a-route')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(404);
+
+    expect(response.body.error.code).toBe('ROUTE_NOT_FOUND');
   });
 
   it('reads moderation reports with species, rating, trust and age filters', async () => {
