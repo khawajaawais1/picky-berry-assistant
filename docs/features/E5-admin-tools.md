@@ -109,6 +109,7 @@ standard error envelope. Pagination is `page` (1-based) and `page_size` (default
 |---------------|---------|
 | `GET /admin/overview` | coverage, freshness, users/reports/visits/jobs counters, species, recent audit |
 | `GET /admin/operations/health` | server-side health checks with thresholds, owners, runbooks, per-species breakdowns and unavailable capabilities |
+| `GET /admin/map?species=` | every zone as a map spot (centroid, best score, report count), bounds, `truncated` above 10,000 |
 | `GET /admin/zones?q=&species=&sort=&page=&page_size=` | paged zone list with score/report summaries |
 | `GET /admin/zones/{id}` | zone facts, geometry, scores + explanations, species fit, reports, visits, jobs |
 | `GET /admin/jobs?status=&type=&page=&page_size=` | paged jobs + status counts, worker/lease/heartbeat, recovery and stuck state |
@@ -228,6 +229,7 @@ and reaping functions and their exact semantics are in
 | `/sign-in` | Sign in | email + password, role check, API origin, error state |
 | `/` | Overview | coverage, freshness, volumes, queue, quick actions, recent audit |
 | `/operations` | Operations | server-side health checks with per-species detail, runbook/evidence links, unavailable capabilities and running jobs |
+| `/map` | Map | every spot on an OpenStreetMap basemap, coloured by best score, species filter, click-through to the zone |
 | `/zones` | Zones | search, species filter, sort, pagination |
 | `/zones/:id` | Zone detail | facts, geometry summary, scores + explanation, history chart, species fit, reports, visits, jobs |
 | `/jobs` | Queue | status counts, filters, live refresh, retry |
@@ -238,8 +240,8 @@ and reaping functions and their exact semantics are in
 | `/lab` | Feature lab | request console, presets, recompute/retry actions, environment |
 | `/audit` | Audit log | searchable who/action/target/request id, before/after detail, target links |
 
-Every data screen has loading, empty, error (with request id and retry) and permission-denied
-states. A session that is not `admin` sees the sign-in screen with the reason, never a blank
+Every data screen has loading, empty, error (with request id and retry), permission-denied and
+"API not available" states; no screen shows demo or placeholder data in place of an API answer. A session that is not `admin` sees the sign-in screen with the reason, never a blank
 shell. Layout: a fixed left rail, a sticky top bar, and one scrolling content column; below
 900 px the rail becomes a horizontal nav. Colour is never the only signal — every score, status
 and role carries a text label as well as a colour.
