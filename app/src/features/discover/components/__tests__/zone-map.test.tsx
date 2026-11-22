@@ -14,8 +14,8 @@ import { ZoneMap } from '../zone-map';
  *   the list read, which is the single-dataset rule known issue 14 recorded;
  * - a map with no polygons says **why** — loading, empty or failed — instead of drawing an
  *   empty world;
- * - the device's canvas is MapLibre with every gesture off and **no tile host**, so it works
- *   with no network and cannot be panned away from the pilot area;
+ * - the device's canvas is MapLibre over OpenFreeMap's basemap, pans and zooms, and has a
+ *   recentre control to fit the zones again;
  * - the drawing carries its text alternative (known issue 35), and nothing on the map is a
  *   control the frame cannot act on.
  *
@@ -103,34 +103,36 @@ describe('ZoneMap', () => {
     );
   });
 
-  it('turns every gesture off, because the frame’s recentre control does not exist', async () => {
+  it('pans and zooms, keeps north up, and offers the frame’s recentre control', async () => {
     await render(<ZoneMap status="ready" zones={[zone()]} />);
 
     const drawing = screen.getByTestId('zone-map-drawing').props;
-    for (const gesture of [
-      'dragPan',
-      'touchZoom',
-      'doubleTapZoom',
-      'doubleTapHoldZoom',
-      'touchRotate',
-      'touchPitch',
-    ]) {
-      expect(drawing[gesture]).toBe(false);
+    for (const gesture of ['dragPan', 'touchZoom', 'doubleTapZoom']) {
+      expect(drawing[gesture]).not.toBe(false);
     }
-    expect(screen.queryAllByRole('button')).toHaveLength(0);
+    expect(drawing.touchRotate).toBe(false);
+    expect(drawing.touchPitch).toBe(false);
+    expect(screen.getByRole('button', { name: 'Recentre the map on the zones' })).toBeOnTheScreen();
   });
 
-  it('draws without a tile host, so the map needs no network', async () => {
+  it('drops the test-data disclosure over a live answer', async () => {
+    await render(<ZoneMap demo={false} status="ready" zones={[zone(), zone({ id: 'b' })]} />);
+
+    expect(screen.getByText('Jyväskylä')).toBeOnTheScreen();
+    expect(screen.getByText('2 zones')).toBeOnTheScreen();
+    expect(screen.queryByText(/test data/)).not.toBeOnTheScreen();
+  });
+
+  it('draws the OpenFreeMap basemap for the theme, with the OpenStreetMap credit', async () => {
     await render(<ZoneMap status="ready" zones={[zone()]} />);
 
-    const style = screen.getByTestId('zone-map-drawing').props.mapStyle;
-
-    expect(style.sources).toEqual({});
-    expect(style.layers).toEqual([expect.objectContaining({ type: 'background' })]);
-    // MapLibre's own ornaments are off: there is no logo or attribution to show for a style
-    // the project wrote, and the map is not a source of anyone else's data yet (ADR-031).
+    expect(screen.getByTestId('zone-map-drawing').props.mapStyle).toMatch(
+      /^https:\/\/tiles\.openfreemap\.org\/styles\/(positron|dark)$/,
+    );
+    expect(screen.getByTestId('zone-map-attribution')).toHaveTextContent(
+      '© OpenStreetMap contributors',
+    );
     expect(screen.getByTestId('zone-map-drawing').props.logo).toBe(false);
-    expect(screen.getByTestId('zone-map-drawing').props.attribution).toBe(false);
   });
 
   it('hands MapLibre one feature per zone, carrying the band its score falls in', async () => {

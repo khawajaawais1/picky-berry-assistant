@@ -168,6 +168,8 @@ export const en = {
   // demo and says so — and they live here rather than in the drawing so they can be
   // translated, read out and measured like every other string (docs/design-source.md).
   'discover.eyebrow': 'CORE PICKER · SEASON DEMO / 28 AUG',
+  // The same header over the zone service's live answer: nothing on it is a demo.
+  'discover.eyebrow.live': 'CORE PICKER',
   'discover.title': 'Discover nearby',
   'discover.map.label': 'Map of nearby berry zones',
   'discover.map.place': 'Laajavuori',
@@ -180,6 +182,14 @@ export const en = {
   // line for the one zone it draws: the same data, so the same words rather than a second key.
   'discover.map.count': '{count} zones · test data',
   'discover.map.countOne': '{count} zone · test data',
+  // The live answer's lines: the service's pilot area (PILOT_BBOX, around Jyväskylä) and a
+  // plain count, with no stand-in disclosure because there is none to make.
+  'discover.map.place.live': 'Jyväskylä',
+  'discover.map.count.live': '{count} zones',
+  'discover.map.countOne.live': '{count} zone',
+  'discover.map.recentre': 'Recentre the map on the zones',
+  // ODbL attribution, drawn whenever a basemap is (ADR-031 §3).
+  'discover.map.attribution': '© OpenStreetMap contributors',
   'discover.map.updated': 'Last updated {date}',
   'discover.map.loading': 'Loading zones…',
   'discover.map.unavailable': 'Zones could not be read',
@@ -219,6 +229,7 @@ export const en = {
   // The caption under the source card's name: the same disclosure the map carries, so a
   // picker reading the card knows the numbers are the data team's stub and not reports.
   'discover.card.source': 'Pilot area · test data',
+  'discover.card.source.live': 'Pilot area',
   // The four words a source zone's season can be in — the card's third line and the list
   // rows' chip. The details screen keeps its own two ("Ripe now"), which describe a zone it
   // has a full reading for.
@@ -263,6 +274,7 @@ export const en = {
   // `sample` sentence says before them. The whole screen is the sample when no zone id is given,
   // which a bare URL alone reaches since the saved plan reads the source (ADR-060).
   'discover.details.eyebrow': 'CORE PICKER · ZONE INSIGHT · SEASON DEMO',
+  'discover.details.eyebrow.live': 'CORE PICKER · ZONE INSIGHT',
   // The title the screen can print before it knows a zone: loading, a failed read, or an id the
   // source does not answer to.
   'discover.details.pendingTitle': 'Zone details',

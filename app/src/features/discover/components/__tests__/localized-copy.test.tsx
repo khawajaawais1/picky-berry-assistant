@@ -185,7 +185,7 @@ describe('the zone details screen on a Finnish device', () => {
       <ZoneDetailsScreen
         species="lingonberry"
         zoneId="zone-a"
-        zoneSource={{ list: async () => [zone] }}
+        zoneSource={{ list: async () => [zone], demo: true }}
       />,
       { wrapper: QueryProvider },
     );

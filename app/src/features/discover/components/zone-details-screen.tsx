@@ -276,6 +276,7 @@ function SourceZoneDetails({
         updatedAt: zone.updatedAt,
       }}
       insight={insight}
+      live={zoneSource.demo !== true}
       sampleNote
     />
   );
@@ -295,6 +296,7 @@ function DetailsView({
   read,
   sampleNote,
   insight,
+  live = false,
 }: {
   onBack?: () => void;
   onNavigate?: () => void;
@@ -302,6 +304,12 @@ function DetailsView({
   read: DetailsRead;
   sampleNote: boolean;
   insight?: ZoneInsightState;
+  /**
+   * The zone came from the zone service rather than the bundled stand-in. The design's sample
+   * blocks — outlook, freshest report, the walk — have no service behind them, so a live zone
+   * draws none of them and its header carries no demo disclosure.
+   */
+  live?: boolean;
 }) {
   const { colors } = useAppTheme();
   const { locale, t } = useTranslation();
@@ -319,7 +327,7 @@ function DetailsView({
   return (
     <Screen
       edges={['top']}
-      eyebrow={t('discover.details.eyebrow')}
+      eyebrow={t(live ? 'discover.details.eyebrow.live' : 'discover.details.eyebrow')}
       onBack={onBack}
       title={read.title}
     >
@@ -426,85 +434,89 @@ function DetailsView({
 
         {insight ? <InsightBlock insight={insight} layer={read.layer} /> : null}
 
-        {sampleNote ? (
+        {sampleNote && !live ? (
           <AppText testID="zone-details-sample-note" tone="muted" variant="metadata">
             {t('discover.details.sample')}
           </AppText>
         ) : null}
 
-        <View className="w-full gap-sm">
-          <AppText variant="sectionHeading">{t('discover.details.outlook.title')}</AppText>
-          <AppText tone="muted" variant="bodySmall">
-            {t('discover.details.outlook.body')}
-          </AppText>
-          <View className="w-full flex-row items-center gap-gap">
-            <Feather color={colors.warning} name="sun" size={20} />
-            <AppText style={styles.flexible} tone="muted" variant="caption">
-              {interpolate(t('discover.details.weather'), {
-                temperature: String(details.weather.temperature),
-                time: details.weather.forecastHour,
-                wind: t(WIND_KEY[details.weather.wind]),
-              })}
-            </AppText>
-          </View>
-        </View>
+        {live ? null : (
+          <>
+            <View className="w-full gap-sm">
+              <AppText variant="sectionHeading">{t('discover.details.outlook.title')}</AppText>
+              <AppText tone="muted" variant="bodySmall">
+                {t('discover.details.outlook.body')}
+              </AppText>
+              <View className="w-full flex-row items-center gap-gap">
+                <Feather color={colors.warning} name="sun" size={20} />
+                <AppText style={styles.flexible} tone="muted" variant="caption">
+                  {interpolate(t('discover.details.weather'), {
+                    temperature: String(details.weather.temperature),
+                    time: details.weather.forecastHour,
+                    wind: t(WIND_KEY[details.weather.wind]),
+                  })}
+                </AppText>
+              </View>
+            </View>
 
-        {/* The frame stacks these four rows 6 px apart (`spacing.setting`), where the outlook
+            {/* The frame stacks these four rows 6 px apart (`spacing.setting`), where the outlook
             above uses 8: measured on nodes 5:23073–5:23079. */}
-        <View className="w-full gap-setting">
-          {/*
+            <View className="w-full gap-setting">
+              {/*
             The heading and the frame's link wrap rather than squeezing side by side. At the largest
             system text size the Finnish pair (“Tuoreet havainnot” + “Näytä kaikki 11”) is wider than
             the content column in Android's typeface, and a row that keeps them on one line clips one
             of them — the defect the layout harness reported on a Linux runner, whose fallback font
             was wide enough to show it (found 2026-10-21). The design's own size still draws one line.
           */}
-          <View className="w-full flex-row flex-wrap items-center gap-gap">
-            <AppText style={styles.flexible} variant="sectionHeading">
-              {t('discover.details.reports.title')}
-            </AppText>
-            {/*
+              <View className="w-full flex-row flex-wrap items-center gap-gap">
+                <AppText style={styles.flexible} variant="sectionHeading">
+                  {t('discover.details.reports.title')}
+                </AppText>
+                {/*
               The design's own words, which are a control only when the route gives them the list
               to open (ADR-044). The visible label stays the frame's; the accessible name says
               where the press leads, because the frame's count and the phone's own list are not
               the same thing (the rule frame 16's contact action follows).
             */}
-            {onSeeReports ? (
-              <Pressable
-                accessibilityLabel={interpolate(t('discover.details.reports.seeAll.a11y'), {
-                  count: String(details.reportsThisWeek),
-                })}
-                accessibilityRole="button"
-                onPress={onSeeReports}
-                testID="zone-details-see-all"
-              >
-                <AppText tone="accent" variant="label">
-                  {interpolate(t('discover.details.reports.seeAll'), {
-                    count: String(details.reportsThisWeek),
-                  })}
-                </AppText>
-              </Pressable>
-            ) : (
-              <AppText tone="accent" variant="label">
-                {interpolate(t('discover.details.reports.seeAll'), {
-                  count: String(details.reportsThisWeek),
+                {onSeeReports ? (
+                  <Pressable
+                    accessibilityLabel={interpolate(t('discover.details.reports.seeAll.a11y'), {
+                      count: String(details.reportsThisWeek),
+                    })}
+                    accessibilityRole="button"
+                    onPress={onSeeReports}
+                    testID="zone-details-see-all"
+                  >
+                    <AppText tone="accent" variant="label">
+                      {interpolate(t('discover.details.reports.seeAll'), {
+                        count: String(details.reportsThisWeek),
+                      })}
+                    </AppText>
+                  </Pressable>
+                ) : (
+                  <AppText tone="accent" variant="label">
+                    {interpolate(t('discover.details.reports.seeAll'), {
+                      count: String(details.reportsThisWeek),
+                    })}
+                  </AppText>
+                )}
+              </View>
+              <AppText variant="bodySmall">{t('discover.details.reports.quote')}</AppText>
+              <AppText tone="muted" variant="metadata">
+                {interpolate(t('discover.details.reports.meta'), {
+                  max: String(REPORT_YIELD_MAX),
+                  minutes: String(details.latestReport.minutesAgo),
+                  trust: t(TRUST_KEY[details.latestReport.trust]),
+                  yield: String(details.latestReport.yield),
                 })}
               </AppText>
-            )}
-          </View>
-          <AppText variant="bodySmall">{t('discover.details.reports.quote')}</AppText>
-          <AppText tone="muted" variant="metadata">
-            {interpolate(t('discover.details.reports.meta'), {
-              max: String(REPORT_YIELD_MAX),
-              minutes: String(details.latestReport.minutesAgo),
-              trust: t(TRUST_KEY[details.latestReport.trust]),
-              yield: String(details.latestReport.yield),
-            })}
-          </AppText>
-          <AppText tone="muted" variant="metadata">
-            {t('discover.details.reports.scoring')}
-          </AppText>
-        </View>
+              <AppText tone="muted" variant="metadata">
+                {t('discover.details.reports.scoring')}
+              </AppText>
+            </View>
+          </>
+        )}
 
         {/*
           The frame's own row (node 5:23080): its 54 px bookmark tile, 10 px from the action
@@ -553,7 +565,7 @@ function DetailsView({
             />
           </Pressable>
 
-          {onNavigate ? (
+          {onNavigate && !live ? (
             <View className="flex-1">
               <AppButton
                 icon={<Feather color={colors.onAccent} name="navigation" size={20} />}

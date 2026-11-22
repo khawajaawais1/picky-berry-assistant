@@ -19,4 +19,5 @@ import { parseZones } from '../domain/zone-source';
  */
 export const testZoneSource: ZoneSource = {
   list: async ({ species }) => parseZones(payload, species),
+  demo: true,
 };

@@ -1,12 +1,14 @@
 import type {
+  CameraRef,
   FillLayerSpecification,
   LineLayerSpecification,
-  StyleSpecification,
 } from '@maplibre/maplibre-react-native';
-import { useMemo } from 'react';
-import { View } from 'react-native';
+import { useMemo, useRef } from 'react';
+import { Pressable, View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
+import { Feather } from '@/components/atoms/app-icon';
+import { layout, radii, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useTranslation } from '@/services/i18n';
 
@@ -31,20 +33,29 @@ const CAMERA_PADDING = { top: 24, right: 24, bottom: 24, left: 24 } as const;
 const mapLibre = loadMapLibre();
 
 /**
+ * The basemap: OpenFreeMap's OpenStreetMap vector tiles, which need no API key. One style per
+ * app theme, so the zones sit on a light map in light mode and a dark one in dark mode.
+ */
+const BASEMAP_STYLE = {
+  light: 'https://tiles.openfreemap.org/styles/positron',
+  dark: 'https://tiles.openfreemap.org/styles/dark',
+} as const;
+
+/** How far the picker may zoom: out to the region, in to a few streets. */
+const MIN_ZOOM = 8;
+const MAX_ZOOM = 17;
+
+/**
  * The device's map: **MapLibre React Native**, on real coordinates (ADR-031's renderer,
  * ADR-053's first use).
  *
- * **There is no basemap yet, and that is deliberate.** The PMTiles file the project will host
- * (D18) is not built, and every alternative — OpenStreetMap's tile servers, a hosted
- * provider — is a processor that receives approximate location on every tile request, which
- * is an owner decision this app does not have (ADR-031 ¶6). So the style is a single
- * background layer painted in `mapBase` plus the zone polygons: the map is spatially true
- * and visually still the design's ground, and it needs no network at all.
+ * **The basemap is OpenFreeMap** (`BASEMAP_STYLE`): OpenStreetMap vector tiles with no API key,
+ * the zones drawn over it, and the OpenStreetMap credit the tiles require. OpenFreeMap receives
+ * the map area on every tile request; ADR-031's self-hosted PMTiles would replace this URL.
  *
- * **Nothing on it is a control** — pan, zoom, rotate and pitch are off. The frame draws a
- * recentre button, and a map that can be moved away from the pilot area without a way back
- * is worse than one that stays where it was put. The interactions arrive with the recentre
- * control, not before it.
+ * **Pan and pinch-zoom are on, with the frame's recentre control** to fit the zones again, so
+ * the picker can never be left looking at an empty corner. Rotate and pitch stay off: a tilted
+ * or turned zone grid reads worse than a north-up one.
  *
  * **Every prop the native view receives is memoised on what it actually depends on.** The
  * Discover screen re-renders on every keystroke in its search field. The camera is the sharp end:
@@ -54,23 +65,8 @@ const mapLibre = loadMapLibre();
  * MapLibre the same objects instead of rebuilding them on every render.
  */
 export function ZoneMapCanvas({ label, zones }: ZoneMapCanvasProps) {
-  const { colors } = useAppTheme();
+  const { colors, scheme } = useAppTheme();
   const { t } = useTranslation();
-
-  const ground = useMemo<StyleSpecification>(
-    () => ({
-      version: 8,
-      sources: {},
-      layers: [
-        {
-          id: 'ground',
-          type: 'background',
-          paint: { 'background-color': colors.mapBase },
-        },
-      ],
-    }),
-    [colors],
-  );
 
   // The band's lower edge is what each feature carries (`zoneFeatureCollection`), so the
   // style is one `match` rather than a layer per band — and the palette comes from the same
@@ -110,6 +106,9 @@ export function ZoneMapCanvas({ label, zones }: ZoneMapCanvasProps) {
     [colors],
   );
 
+  const cameraRef = useRef<CameraRef>(null);
+  const mapStyle = BASEMAP_STYLE[scheme];
+
   const data = useMemo(() => zoneFeatureCollection(zones), [zones]);
   const framedBounds = useMemo<[number, number, number, number] | null>(() => {
     const bounds = zoneBounds(zones.map((zone) => zone.ring));
@@ -129,33 +128,88 @@ export function ZoneMapCanvas({ label, zones }: ZoneMapCanvasProps) {
 
   const { Camera, GeoJSONSource, Layer, Map: MapView } = mapLibre;
 
-  return (
-    <MapView
-      // The map is content, not decoration: it is how the screen shows the zones, so it
-      // carries a text alternative (WCAG 1.1.1, known issue 35) and the label is passed to
-      // the platform's own accessibility props.
-      accessibilityLabel={label}
-      accessibilityRole="image"
-      attribution={false}
-      doubleTapHoldZoom={false}
-      doubleTapZoom={false}
-      dragPan={false}
-      logo={false}
-      mapStyle={ground}
-      style={CANVAS_STYLE}
-      testID="zone-map-drawing"
-      touchPitch={false}
-      touchRotate={false}
-      touchZoom={false}
-    >
-      {framedBounds ? (
-        <Camera bounds={framedBounds} padding={CAMERA_PADDING} testID="zone-map-camera" />
-      ) : null}
+  const recentre = () => {
+    if (framedBounds) {
+      cameraRef.current?.fitBounds(framedBounds, { padding: CAMERA_PADDING, duration: 400 });
+    }
+  };
 
-      <GeoJSONSource data={data} id="pilot-zones" testID="zone-map-source">
-        <Layer id="zone-fill" paint={fill} source="pilot-zones" type="fill" />
-        <Layer id="zone-line" paint={line} source="pilot-zones" type="line" />
-      </GeoJSONSource>
-    </MapView>
+  return (
+    <View style={CANVAS_STYLE}>
+      <MapView
+        // The map is content, not decoration: it is how the screen shows the zones, so it
+        // carries a text alternative (WCAG 1.1.1, known issue 35) and the label is passed to
+        // the platform's own accessibility props.
+        accessibilityLabel={label}
+        accessibilityRole="image"
+        attribution={false}
+        compass={false}
+        logo={false}
+        mapStyle={mapStyle}
+        style={CANVAS_STYLE}
+        testID="zone-map-drawing"
+        touchPitch={false}
+        touchRotate={false}
+      >
+        {framedBounds ? (
+          <Camera
+            bounds={framedBounds}
+            maxZoom={MAX_ZOOM}
+            minZoom={MIN_ZOOM}
+            padding={CAMERA_PADDING}
+            ref={cameraRef}
+            testID="zone-map-camera"
+          />
+        ) : null}
+
+        <GeoJSONSource data={data} id="pilot-zones" testID="zone-map-source">
+          <Layer id="zone-fill" paint={fill} source="pilot-zones" type="fill" />
+          <Layer id="zone-line" paint={line} source="pilot-zones" type="line" />
+        </GeoJSONSource>
+      </MapView>
+
+      {/* ODbL: the OpenStreetMap credit is drawn whenever the basemap is (ADR-031 §3). */}
+      <View
+        pointerEvents="none"
+        style={{
+          backgroundColor: colors.surface,
+          borderRadius: radii.sm,
+          bottom: spacing.tight,
+          left: spacing.tight,
+          paddingHorizontal: spacing.tight,
+          position: 'absolute',
+        }}
+        testID="zone-map-attribution"
+      >
+        <AppText tone="muted" variant="mapAnnotation">
+          {t('discover.map.attribution')}
+        </AppText>
+      </View>
+
+      {framedBounds ? (
+        <Pressable
+          accessibilityLabel={t('discover.map.recentre')}
+          accessibilityRole="button"
+          hitSlop={8}
+          onPress={recentre}
+          style={{
+            alignItems: 'center',
+            backgroundColor: colors.surface,
+            borderColor: colors.border,
+            borderRadius: radii.control,
+            borderWidth: 1,
+            bottom: spacing.gap,
+            height: layout.minTouchTarget,
+            justifyContent: 'center',
+            position: 'absolute',
+            right: spacing.gap,
+            width: layout.minTouchTarget,
+          }}
+          testID="zone-map-recentre"
+        >
+          <Feather color={colors.text} name="crosshair" size={20} />
+        </Pressable>
+      ) : null}
+    </View>
   );
 }
