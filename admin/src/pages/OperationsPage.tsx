@@ -23,6 +23,7 @@ import {
 import { errorMessage } from '../lib/errors';
 import {
   formatDate,
+  formatDuration,
   formatNumber,
   formatRelative,
   titleCase,
@@ -225,8 +226,14 @@ export function OperationsPage() {
         <StatCard
           label="Queue depth"
           value={formatNumber(data.jobs.queued)}
-          hint={`${formatNumber(data.jobs.running)} running · ${formatNumber(data.jobs.overdue)} overdue`}
-          tone={data.jobs.overdue > 0 ? 'warn' : 'good'}
+          hint={`${formatNumber(data.jobs.running)} running · ${formatNumber(data.jobs.stuck)} stuck · ${formatNumber(data.jobs.overdue)} overdue`}
+          tone={
+            data.jobs.stuck > 0
+              ? 'bad'
+              : data.jobs.overdue > 0
+                ? 'warn'
+                : 'good'
+          }
         />
         <StatCard
           label="Failures · 7 d"
@@ -272,7 +279,7 @@ export function OperationsPage() {
       <div className="split split-wide">
         <Card
           title="Running now"
-          subtitle="The current worker claims. A lock older than 30 minutes is a stale-lock warning."
+          subtitle="Live worker claims. A heartbeat older than two minutes or an expired lease is stuck; the worker reaps expired leases before its next claim."
           actions={
             <Link className="text-link" to="/jobs">
               Open queue →
@@ -293,7 +300,10 @@ export function OperationsPage() {
                   <tr>
                     <th scope="col">Job</th>
                     <th scope="col">Type</th>
-                    <th scope="col">Locked</th>
+                    <th scope="col">State</th>
+                    <th scope="col">Worker</th>
+                    <th scope="col">Heartbeat</th>
+                    <th scope="col">Lease</th>
                     <th scope="col" className="numeric">
                       Attempts
                     </th>
@@ -305,8 +315,26 @@ export function OperationsPage() {
                     <tr key={job.id}>
                       <td className="mono">#{job.id}</td>
                       <td className="mono small">{job.type}</td>
-                      <td title={job.locked_at ?? undefined}>
-                        {formatRelative(job.locked_at)}
+                      <td>
+                        <Badge tone={job.stuck ? 'bad' : 'info'}>
+                          {job.stuck ? 'Stuck' : 'Running'}
+                        </Badge>
+                        {job.stuck ? (
+                          <span className="muted small block">
+                            {formatDuration(job.stuck_for_seconds ?? 0)}
+                          </span>
+                        ) : null}
+                      </td>
+                      <td className="mono small">{job.worker_id ?? '—'}</td>
+                      <td title={job.heartbeat_at ?? undefined}>
+                        {formatRelative(job.heartbeat_at)}
+                      </td>
+                      <td title={job.lease_expires_at ?? undefined}>
+                        {job.lease_expired ? (
+                          <Badge tone="bad">Expired</Badge>
+                        ) : (
+                          formatRelative(job.lease_expires_at)
+                        )}
                       </td>
                       <td className="numeric">{job.attempts}</td>
                       <td>
@@ -373,9 +401,9 @@ export function OperationsPage() {
       </div>
 
       <p className="muted small">
-        The server derives freshness, coverage and queue age from the current
-        tables. Expired-lease checks stay listed as unavailable until jobs record
-        lease expiry.
+        The server derives freshness, coverage, queue age and lease health from
+        the current tables. The worker owns claims and heartbeats; this panel
+        only reads their evidence.
       </p>
     </div>
   );

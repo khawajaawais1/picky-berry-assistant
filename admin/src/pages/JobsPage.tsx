@@ -14,7 +14,12 @@ import {
   type Tone,
 } from '../components/ui';
 import { errorMessage } from '../lib/errors';
-import { formatNumber, formatRelative, titleCase } from '../lib/format';
+import {
+  formatDuration,
+  formatNumber,
+  formatRelative,
+  titleCase,
+} from '../lib/format';
 import { useApi, useDebouncedValue } from '../lib/useApi';
 
 type StatusFilter = 'all' | JobStatus;
@@ -93,7 +98,7 @@ export function JobsPage() {
       <PageHeader
         eyebrow="Operate"
         title="Queue"
-        description="Postgres is the queue. The worker claims rows with SKIP LOCKED; this screen only reads and requeues."
+        description="Postgres is the queue. Workers claim with SKIP LOCKED; a five-minute lease and heartbeat show whether a claim is still alive."
         actions={
           <>
             <label className="toggle">
@@ -123,7 +128,11 @@ export function JobsPage() {
               onChange={(event) => setTypeInput(event.target.value)}
             />
           </div>
-          <div className="chip-row" role="group" aria-label="Filter jobs by status">
+          <div
+            className="chip-row"
+            role="group"
+            aria-label="Filter jobs by status"
+          >
             {STATUS_FILTERS.map((filter) => (
               <button
                 key={filter}
@@ -155,7 +164,14 @@ export function JobsPage() {
         <Card
           title={`${formatNumber(data.total)} ${data.total === 1 ? 'job' : 'jobs'}`}
           subtitle="Newest first. A retry keeps the original job and enqueues a copy."
-          actions={live ? <Badge tone="info">Live</Badge> : null}
+          actions={
+            <>
+              {data.stuck_count > 0 ? (
+                <Badge tone="bad">{`${data.stuck_count} stuck`}</Badge>
+              ) : null}
+              {live ? <Badge tone="info">Live</Badge> : null}
+            </>
+          }
         >
           <div className="table-wrap">
             <table>
@@ -165,6 +181,8 @@ export function JobsPage() {
                   <th scope="col">Job</th>
                   <th scope="col">Type</th>
                   <th scope="col">Status</th>
+                  <th scope="col">Lease</th>
+                  <th scope="col">Worker</th>
                   <th scope="col" className="numeric">Attempts</th>
                   <th scope="col">Created</th>
                   <th scope="col">Run at</th>
@@ -194,9 +212,53 @@ export function JobsPage() {
                       ) : null}
                     </td>
                     <td>
-                      <Badge tone={statusTone(job.status)}>
-                        {titleCase(job.status)}
+                      <Badge tone={job.stuck ? 'bad' : statusTone(job.status)}>
+                        {job.stuck ? 'Stuck' : titleCase(job.status)}
                       </Badge>
+                    </td>
+                    <td>
+                      {job.status === 'running' ? (
+                        <>
+                          <span
+                            className={job.stuck ? 'error-text small' : 'small'}
+                          >
+                            {job.stuck
+                              ? `Stuck for ${formatDuration(
+                                  job.stuck_for_seconds ?? 0,
+                                )}`
+                              : 'Lease live'}
+                          </span>
+                          <span className="muted small block">
+                            heartbeat {formatRelative(job.heartbeat_at)}
+                          </span>
+                          <span className="muted small block">
+                            lease {formatRelative(job.lease_expires_at)}
+                          </span>
+                        </>
+                      ) : job.recovery_count > 0 ? (
+                        <>
+                          <span className="small">
+                            Recovered {job.recovery_count}×
+                          </span>
+                          <span className="muted small block">
+                            last {formatRelative(job.recovered_at)}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="muted">—</span>
+                      )}
+                    </td>
+                    <td>
+                      {job.worker_id ? (
+                        <span className="mono small">{job.worker_id}</span>
+                      ) : (
+                        <span className="muted">—</span>
+                      )}
+                      {job.recovery_count > 0 && job.status === 'running' ? (
+                        <span className="muted small block">
+                          recovered {job.recovery_count}×
+                        </span>
+                      ) : null}
                     </td>
                     <td className="numeric">{job.attempts}</td>
                     <td title={job.created_at ?? undefined}>

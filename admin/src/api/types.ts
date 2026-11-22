@@ -82,6 +82,8 @@ export interface Overview {
     failed_7d: number;
     oldest_queued_at: string | null;
     overdue: number;
+    stuck: number;
+    expired_leases: number;
   };
   species: Species[];
   recent_activity: AuditEntry[];
@@ -184,6 +186,15 @@ export interface Job {
   attempts: number;
   run_at: string | null;
   locked_at: string | null;
+  worker_id: string | null;
+  heartbeat_at: string | null;
+  lease_expires_at: string | null;
+  recovered_at: string | null;
+  recovery_count: number;
+  lease_expired: boolean;
+  heartbeat_age_seconds: number | null;
+  stuck: boolean;
+  stuck_for_seconds: number | null;
   finished_at: string | null;
   last_error: string | null;
   created_at: string | null;
@@ -195,6 +206,7 @@ export interface JobsResponse {
   page_size: number;
   total: number;
   counts: Record<string, number>;
+  stuck_count: number;
 }
 
 export interface Report {

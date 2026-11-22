@@ -12,11 +12,11 @@ API contract: [`../picky-server/docs/openapi/admin.yaml`](../picky-server/docs/o
 | Screen | Purpose |
 |--------|---------|
 | Overview | zone coverage, score freshness, report/visit volume, queue depth, recent audit |
-| Operations | server-side freshness, coverage, queue-age and data-quality checks with runbook links, unavailable capabilities, and running jobs |
+| Operations | server-side freshness, coverage, queue-age, lease/stuck and data-quality checks with runbook links, unavailable capabilities, and running jobs with heartbeat and lease state |
 | Analytics | daily reports/visits/signups, jobs finished, species coverage, score distribution |
 | Zones | search by name/H3/id, filter by species, sort, open a zone |
 | Zone detail | scores with confidence and ripeness, 30-day history, stored explanation, species fit, reports, visits, jobs |
-| Queue | filter jobs, read payloads and errors, retry a finished job, optional live refresh |
+| Queue | filter jobs, read payloads and errors, inspect worker/lease/heartbeat and stuck state, retry a finished job, optional live refresh |
 | Moderation | triage reports by rating, reporter trust, age, species and zone; read-only until feature 6.5 |
 | Accounts | search accounts, see trust and activity, change a role (audited), open an account |
 | Account detail | identity, trust, active sessions, reports, visits and audit; revoke sessions with a reason |
@@ -26,7 +26,7 @@ API contract: [`../picky-server/docs/openapi/admin.yaml`](../picky-server/docs/o
 ## Requirements
 
 - Node.js 24 (the repository's CI version)
-- A running `picky-server` with a database migrated to `0008_audit_integrity.sql`
+- A running `picky-server` with a database migrated to `0009_job_leases.sql`
 - An account whose role is `admin`
 
 ## Local setup

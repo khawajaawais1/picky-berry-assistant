@@ -97,8 +97,14 @@ export function OverviewPage() {
         <StatCard
           label="Queue"
           value={`${formatNumber(data.jobs.queued)} queued`}
-          hint={`${formatNumber(data.jobs.failed_7d)} failed in 7 days${data.jobs.overdue > 0 ? ` · ${data.jobs.overdue} overdue` : ''}`}
-          tone={data.jobs.failed_7d > 0 ? 'warn' : 'good'}
+          hint={`${formatNumber(data.jobs.failed_7d)} failed in 7 days${data.jobs.stuck > 0 ? ` · ${data.jobs.stuck} stuck` : ''}${data.jobs.overdue > 0 ? ` · ${data.jobs.overdue} overdue` : ''}`}
+          tone={
+            data.jobs.stuck > 0
+              ? 'bad'
+              : data.jobs.failed_7d > 0
+                ? 'warn'
+                : 'good'
+          }
         />
       </div>
 

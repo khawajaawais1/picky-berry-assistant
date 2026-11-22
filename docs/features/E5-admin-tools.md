@@ -55,6 +55,7 @@ The panel answers three questions:
 | E5.10 | The panel builds, typechecks and has no console errors on the main routes | `npm run build`, manual smoke |
 | E5.11 | No privileged token or personal data is placed in `localStorage` | Code review; session storage is tab-scoped |
 | E5.12 | Refused `403`/`409` privileged attempts are recorded, and audit rows reject `UPDATE`/`DELETE` | API integration test; SQL trigger test |
+| E5.13 | A worker claim has a live lease and heartbeat; expired claims are reaped, and stuck jobs are visible | SQL contract tests for claim/heartbeat/complete/reap; queue API |
 
 **Not in this feature:** zone geometry authoring, moderation verdicts on reports (6.5 owns the
 validation rules), trust-score editing (ADR-009 requires a versioned, auditable rule that does not
@@ -110,7 +111,7 @@ standard error envelope. Pagination is `page` (1-based) and `page_size` (default
 | `GET /admin/operations/health` | server-side health checks with thresholds, owners, runbooks, per-species breakdowns and unavailable capabilities |
 | `GET /admin/zones?q=&species=&sort=&page=&page_size=` | paged zone list with score/report summaries |
 | `GET /admin/zones/{id}` | zone facts, geometry, scores + explanations, species fit, reports, visits, jobs |
-| `GET /admin/jobs?status=&type=&page=&page_size=` | paged jobs + status counts |
+| `GET /admin/jobs?status=&type=&page=&page_size=` | paged jobs + status counts, worker/lease/heartbeat, recovery and stuck state |
 | `POST /admin/jobs/{id}/retry` | `202` with the new or already-queued job |
 | `GET /admin/reports?species=&zone_id=&min_rating=&max_rating=&max_trust=&days=&sort=&page=&page_size=` | paged reports with reporter trust and triage filters |
 | `GET /admin/users?q=&role=&page=&page_size=` | paged accounts with trust and activity counts |
@@ -190,20 +191,29 @@ ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
   the 12-month retention decision (ADR-055). Retention is an explicit owner operation that
   disables the append-only trigger; the normal application path cannot delete rows.
 
+The `jobs` table gains `worker_id`, `heartbeat_at`, `lease_expires_at`, `recovered_at` and
+`recovery_count` in `0009_job_leases.sql`. The worker-facing claim, heartbeat, completion, failure
+and reaping functions and their exact semantics are in
+[`picky-server/docs/contracts/job-types.md`](../../picky-server/docs/contracts/job-types.md).
+
 ## 6. Logic
 
 - **Coverage** = zones with at least one current score ÷ all zones, one decimal.
 - **Freshness** = newest `zone_scores_current.computed_at`, plus the count of score rows older
   than 24 h.
 - **Queue depth** = count of `jobs` per status; "overdue" = queued and `run_at` older than 15
-  minutes. The worker's own schedule owns the run time; the panel only reports it.
+  minutes. "Stuck" = running with no heartbeat in 2 minutes or an expired lease. A claimed job
+  has a 5-minute lease; the worker heartbeats every 30 seconds and `claim_job()` reaps expired
+  claims before taking the next row. The worker's own schedule owns the run time; the panel only
+  reports it.
 - **Operations health** is computed by the API, not the browser. Coverage is checked per
   species (≥95% ok, ≥80% warn); freshness uses the oldest species' newest current score (≤26 h
-  ok, ≤48 h warn); queue age warns at 1–4 overdue jobs and fails at 5+. Stale score rows (>5%),
+  ok, ≤48 h warn); queue age warns at 1–4 overdue jobs and fails at 5+. Queue leases fail on any
+  expired lease and warn when a live lease has no heartbeat in 2 minutes. Stale score rows (>5%),
   duplicate reports (same reporter, zone, species and UTC day in 7 days), missing
   `explanation.model_version` and out-of-range numeric values are also checked. Every check
-  names an owner, a threshold and a runbook. Expired leases appear under `unavailable` until
-  `jobs` records lease expiry; ingest runs are checked only when `ingest_runs` is installed.
+  names an owner, a threshold and a runbook. Ingest runs are checked only when `ingest_runs` is
+  installed.
 - **Recompute** keeps the existing dedupe keys (`recompute_all`, `recompute:<zone>`), so repeated
   clicks do not queue a flood.
 - **Retry** uses `retry:<job id>` as its dedupe key and only accepts `done` or `failed` jobs.
@@ -269,6 +279,7 @@ and role carries a text label as well as a colour.
 | 5 | Screens: overview, zones, zone detail, jobs, reports, users, analytics, lab, audit | ✅ this branch |
 | 6 | OpenAPI contract, e2e authorisation tests, build/typecheck | ✅ this branch |
 | 6b | Testcontainers PostGIS integration suite and generated admin types | ✅ this branch |
+| 6c | Job lease/heartbeat/reaper contract and admin lease evidence | ✅ this branch |
 | 7 | Run against staging with pilot data; role/audit/retry checks; Vercel project + CORS allow-list | ⬜ next |
 | 8 | Zone geometry authoring, report verdicts (6.5), trust-rule editor, media review | ⬜ next |
 
@@ -282,16 +293,17 @@ existence.
   applies the test baseline and every API migration, and covers anonymous `401`, picker `403`
   and admin success for every admin route; no-store headers and foreign-origin CORS; moderation
   filter reads; session revocation (active/expired/already-revoked tokens, audit, idempotence);
-  failed/running/queued/missing job retry paths; role and session reasons; explicit before/after
-  evidence; recorded `403`/`409` attempts; and the append-only trigger. The container is the only
-  database the integration tests touch.
+  failed/running/queued/missing job retry paths; worker claim/heartbeat/complete fencing and
+  stale-lease recovery; role and session reasons; explicit before/after evidence; recorded
+  `403`/`409` attempts; and the append-only trigger. The container is the only database the
+  integration tests touch.
 - **Contract:** `npm run openapi:types` regenerates `admin/src/api/schema.d.ts` from
   `picky-server/docs/openapi/admin.yaml`; `npm run openapi:check` fails when the committed
 types drift, and the admin workflow runs it. New endpoints use the generated aliases. Existing
 hand-written types remain where the contract still says `additionalProperties: true`.
 - **Not yet covered:** moderation verdict transaction and trust writes (6.5 has not frozen the
-  rule), and lease/reaper/stale-ack tests (the jobs lease columns are P0.2). The suite does not
-  pretend those paths exist.
+  rule). The suite covers lease/reaper/stale-ack at the SQL contract boundary; the Python worker
+  itself is not in this repository.
 - **Query review:** every filter is parameterised; sort columns are chosen from a fixed map, never
   from the request string.
 - **Frontend:** `tsc --noEmit`, ESLint, Vitest/Testing Library and `vite build` gate the branch.
@@ -310,7 +322,7 @@ hand-written types remain where the contract still says `additionalProperties: t
 | Refresh token in `sessionStorage` is XSS-reachable | Token theft through a future XSS | CSP on the static host, no third-party scripts, `HttpOnly` cookie later |
 | Admin queries scan large tables (`reports`, `jobs`) | Slow panel on a big pilot | Indexes exist for zone/time paths; add `created_at` indexes if p95 > 500 ms |
 | Report moderation is read-only | Admins cannot resolve a bad report yet | 6.5 owns the verdict rules; the panel adds the action when the service exposes it. The integration suite covers the read-only queue until then. |
-| Jobs have no lease or heartbeat columns | A crashed worker can strand a `running` job | P0.2 owns the migration and worker contract; the suite covers the retry conflicts the current schema supports |
+| The Python worker is not in this repository | A worker deployed without the lease contract can strand a `running` job | `0009` provides tested SQL functions; `docs/contracts/job-types.md` is the coordinated contract, and the worker must adopt it with the migration |
 | Trust scores are read-only | No manual trust overrides | Deliberate: ADR-009 requires a versioned rule and an explanation; a free-number editor would violate it |
 | Panel and app drift on vocabulary | Two names for one concept | Both link to CONTEXT.md's glossary; domain terms are copied, not re-invented |
 | No SSO or finer roles | One stolen admin session is broad | Audit log, short access token, 5/min sign-in throttle; viewer/operator roles next |

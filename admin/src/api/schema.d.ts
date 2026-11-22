@@ -315,6 +315,18 @@ export interface components {
             run_at?: string;
             /** Format: date-time */
             locked_at?: string | null;
+            worker_id?: string | null;
+            /** Format: date-time */
+            heartbeat_at?: string | null;
+            /** Format: date-time */
+            lease_expires_at?: string | null;
+            /** Format: date-time */
+            recovered_at?: string | null;
+            recovery_count?: number;
+            lease_expired?: boolean;
+            heartbeat_age_seconds?: number | null;
+            stuck?: boolean;
+            stuck_for_seconds?: number | null;
             /** Format: date-time */
             finished_at?: string | null;
             last_error?: string | null;
@@ -615,6 +627,7 @@ export interface operations {
                         page_size: number;
                         total: number;
                         counts: components["schemas"]["JobCounts"];
+                        stuck_count: number;
                     };
                 };
             };
