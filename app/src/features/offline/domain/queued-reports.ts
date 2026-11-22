@@ -15,8 +15,8 @@ import type { VisitReport, YieldRating } from '@/services/report-queue';
 
 /** One queued report as the frame's card prints it. */
 export type QueuedReportRow = {
-  /** The zone's number, as the frame writes it (“Zone 14”). */
-  zoneNumber: string;
+  /** The zone's name as the tracker knew it, or `''` when the report carries none. */
+  zoneName: string;
   /** The species the report names, as the queue's own identifier. */
   speciesId: string;
   /** The day, formatted for the language. */
@@ -43,7 +43,7 @@ export function queuedReportRows(
       minutes: report.minutes,
       speciesId: report.speciesId,
       yieldRating: report.yieldRating,
-      zoneNumber: report.zoneId.replace(/^Z/, ''),
+      zoneName: report.zoneName ?? '',
     }));
 }
 

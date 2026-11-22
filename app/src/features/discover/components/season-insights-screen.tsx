@@ -10,14 +10,18 @@ import { layout, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import type { VisitsApi } from '@/features/visits';
 import { useReportQueue } from '@/hooks/use-report-queue';
-import { formatLongDate, interpolate, useTranslation, type Translation } from '@/services/i18n';
+import {
+  formatLongDate,
+  formatShortDate,
+  interpolate,
+  useTranslation,
+  type Translation,
+} from '@/services/i18n';
+import type { ReportsApi, Season } from '@/services/reports';
 
 import {
-  DEMO_HARVEST_BY_VISIT,
-  DEMO_SEASON_TOTALS,
   VISIT_HISTORY_PERIODS,
   barHeights,
-  demoHistoryRows,
   formatDecimal,
   historyCountLabelKey,
   historyFor,
@@ -25,6 +29,7 @@ import {
   historyRowMeta,
   outsideCountLabelKey,
   outsidePeriodCount,
+  syncedHistoryRows,
   visitHistoryRows,
   type VisitHistoryEntry,
   type VisitHistoryPeriod,
@@ -33,56 +38,51 @@ import { speciesLabelKey } from './species-copy';
 
 export type SeasonInsightsScreenProps = {
   onBack?: () => void;
-  /**
-   * The zone service's record of this account's visits (ADR-065), drawn under the phone's own
-   * history. Without it the screen draws the phone's history alone.
-   */
+  /** The zone service's record of this account's visits (ADR-065). */
   visitsApi?: Pick<VisitsApi, 'list'>;
+  /** The picker's reports and season figures; without it only this phone's queue is shown. */
+  reportsApi?: Pick<ReportsApi, 'mine' | 'season'>;
 };
+
+/** The chart draws the season's latest harvests, this many at most. */
+const CHART_BARS = 7;
 
 /**
  * Screen 11 · Core picker · Visits and analytics (Figma node `5:23343`).
  *
- * The picker's own season: the period chips the frame draws, the month's summary card, a small
- * chart of what each visit brought home, and the visits themselves.
- *
- * The screen tells two kinds of thing, and they are kept apart deliberately:
- *
- * - the **summary and the chart are the design's sample month** (`DEMO_SEASON_TOTALS`,
- *   `DEMO_HARVEST_BY_VISIT`). There is no analytics service, exactly as there is no zone source
- *   behind frames 06–10, and the eyebrow says so the way frame 06's own eyebrow does;
- * - the **history is the picker's own record**: it is the device's report queue read back
- *   (`src/services/report-queue.ts`), newest first, above the design's three sample visits.
- *   That is what makes screen 10's write visible instead of a promise, and it is the half of
- *   this frame the app can be strictly true about — every row it shows was saved on this phone.
- *
- * The frame's **period chips are a real choice** (ADR-043): they filter the history below them,
- * and the lines under its heading say which period is showing, how many visits it holds and how
- * many it leaves out — the app cannot total a picker's own season, but it can be exact about what
- * the list in front of them contains. One deliberate limit stays, recorded in PROJECT.md: the
- * frame's **core navigation** is absent like every other core picker screen's, because the tab
- * shell is an architecture decision of its own (PROJECT.md, open question 22).
+ * The picker's own season, all of it read from the API: the summary card and the chart are
+ * `GET /me/season`, and the history is the reports still queued on this phone followed by the
+ * ones the API holds (`GET /me/reports`). The period chips filter that history to this month or
+ * everything, and the lines under its heading say how many rows each period holds and leaves out.
+ * The screen opens on “All visits”, because screen 10 saves a report and lands here.
  */
-export function SeasonInsightsScreen({ onBack, visitsApi }: SeasonInsightsScreenProps) {
-  const { colors } = useAppTheme();
+export function SeasonInsightsScreen({ onBack, visitsApi, reportsApi }: SeasonInsightsScreenProps) {
   const { locale, t } = useTranslation();
   const { error, reports } = useReportQueue();
-  /**
-   * The screen opens on **“All visits”** rather than on the chip the frame draws selected, and the
-   * reason is the flow that lands here: screen 10 saves a report and leads to this screen, so the
-   * default has to be the period that holds the visit the picker just made. The design's own month
-   * is one press away, and the summary above still describes it (ADR-043).
-   */
   const [period, setPeriod] = useState<VisitHistoryPeriod>('all');
+  const season = useQuery({
+    queryKey: ['me', 'season'],
+    queryFn: () => reportsApi!.season(),
+    enabled: reportsApi !== undefined,
+    retry: false,
+  });
+  const synced = useQuery({
+    queryKey: ['me', 'reports'],
+    queryFn: () => reportsApi!.mine(),
+    enabled: reportsApi !== undefined,
+    retry: false,
+  });
 
+  const queuedIds = new Set(
+    reports.flatMap((report) => (report.clientId ? [report.clientId] : [])),
+  );
   const allRows: VisitHistoryEntry[] = [
     ...visitHistoryRows(reports, locale),
-    ...demoHistoryRows(locale),
+    ...syncedHistoryRows(synced.data ?? [], queuedIds, locale),
   ];
   const rows = historyFor(allRows, period);
   const outside = outsidePeriodCount(allRows, period);
   const periodName = t(historyPeriodLabelKey(period));
-  const heights = barHeights(DEMO_HARVEST_BY_VISIT.map((visit) => visit.kilograms));
 
   return (
     <Screen
@@ -102,74 +102,19 @@ export function SeasonInsightsScreen({ onBack, visitsApi }: SeasonInsightsScreen
           value={period}
         />
 
-        <View
-          className="w-full gap-cardGap rounded-lg px-section py-section"
-          style={{ backgroundColor: colors.accentMuted }}
-          testID="season-summary"
-        >
-          <AppText style={{ fontWeight: '600' }} variant="bodySmall">
-            {t('discover.season.summary')}
-          </AppText>
-
-          <View className="w-full flex-row gap-gap">
-            <SeasonMetric
-              label={t('discover.season.metric.harvested')}
-              value={`${formatDecimal(DEMO_SEASON_TOTALS.harvestedKg, locale)} kg`}
-            />
-            <SeasonMetric
-              label={t('discover.season.metric.rate')}
-              value={formatDecimal(DEMO_SEASON_TOTALS.kgPerHour, locale)}
-            />
-          </View>
-
-          <View
-            className="w-full"
-            style={{ backgroundColor: colors.border, height: 1 }}
-            testID="season-divider"
-          />
-
-          <View className="w-full flex-row gap-gap">
-            <SeasonMetric
-              label={t('discover.season.metric.zones')}
-              value={String(DEMO_SEASON_TOTALS.zonesVisited)}
-            />
-            <SeasonMetric
-              label={t('discover.season.metric.stay')}
-              value={`${formatDecimal(DEMO_SEASON_TOTALS.stayHours, locale)} h`}
-            />
-            <SeasonMetric
-              label={t('discover.season.metric.median')}
-              value={`${DEMO_SEASON_TOTALS.medianMinutes} min`}
-            />
-          </View>
-        </View>
-
-        <View
-          className="w-full gap-sm rounded-lg px-section py-section"
-          style={{ borderColor: colors.border, borderWidth: 1 }}
-          testID="season-chart"
-        >
-          <View className="w-full flex-row items-center gap-gap">
-            <AppText className="flex-1" style={{ fontWeight: '600' }} variant="body">
-              {t('discover.season.chart.title')}
-            </AppText>
-            <AppText tone="muted" variant="metadata">
-              {t('discover.season.chart.unit')}
-            </AppText>
-          </View>
-
-          <View className="w-full flex-row items-end justify-center" style={{ gap: spacing.chart }}>
-            {DEMO_HARVEST_BY_VISIT.map((visit, index) => (
-              <HarvestBar
-                date={visit.date}
-                height={heights[index] ?? 0}
-                key={visit.date}
-                label={formatDecimal(visit.kilograms, locale)}
-                testID={`season-bar-${index}`}
-              />
-            ))}
-          </View>
-        </View>
+        {season.data ? (
+          <SeasonFigures season={season.data} />
+        ) : reportsApi ? (
+          <StatusMessage
+            testID="season-summary-status"
+            tone={season.isError ? 'danger' : 'muted'}
+            variant="bodySmall"
+          >
+            {t(
+              season.isError ? 'discover.season.figures.failed' : 'discover.season.figures.loading',
+            )}
+          </StatusMessage>
+        ) : null}
 
         <View className="w-full gap-xs">
           <AppText variant="sectionHeading">{t('discover.season.history.title')}</AppText>
@@ -191,11 +136,16 @@ export function SeasonInsightsScreen({ onBack, visitsApi }: SeasonInsightsScreen
 
         <View className="w-full gap-md">
           {rows.map((row, index) => (
-            <HistoryRow index={index} key={`${row.zoneNumber}-${row.date}-${index}`} row={row} />
+            <HistoryRow index={index} key={`${row.recordedAt}-${row.status}-${index}`} row={row} />
           ))}
+          {rows.length === 0 && !synced.isLoading ? (
+            <AppText testID="season-history-empty" tone="muted" variant="bodySmall">
+              {t('discover.season.history.empty')}
+            </AppText>
+          ) : null}
         </View>
 
-        {error ? (
+        {error || synced.isError ? (
           <StatusMessage testID="season-read-failed" tone="danger" variant="bodySmall">
             {t('common.readFailed')}
           </StatusMessage>
@@ -223,6 +173,92 @@ function periodOptions(t: Translation['t']): readonly ChoiceChipOption<VisitHist
 }
 
 /** One of the summary card's five figures: the design's 27/37.8 value over its 12/16.8 label. */
+function SeasonFigures({ season }: { season: Season }) {
+  const { colors } = useAppTheme();
+  const { locale, t } = useTranslation();
+  const bars = season.harvestByReport.slice(-CHART_BARS);
+  const heights = barHeights(bars.map((bar) => bar.kilograms));
+
+  return (
+    <>
+      <View
+        className="w-full gap-cardGap rounded-lg px-section py-section"
+        style={{ backgroundColor: colors.accentMuted }}
+        testID="season-summary"
+      >
+        <AppText style={{ fontWeight: '600' }} variant="bodySmall">
+          {interpolate(t('discover.season.summary'), { year: String(season.year) })}
+        </AppText>
+
+        <View className="w-full flex-row gap-gap">
+          <SeasonMetric
+            label={t('discover.season.metric.harvested')}
+            value={`${formatDecimal(season.harvestedKg, locale)} kg`}
+          />
+          <SeasonMetric
+            label={t('discover.season.metric.rate')}
+            value={season.kgPerHour === null ? '–' : formatDecimal(season.kgPerHour, locale)}
+          />
+        </View>
+
+        <View
+          className="w-full"
+          style={{ backgroundColor: colors.border, height: 1 }}
+          testID="season-divider"
+        />
+
+        <View className="w-full flex-row gap-gap">
+          <SeasonMetric
+            label={t('discover.season.metric.zones')}
+            value={String(season.zonesVisited)}
+          />
+          <SeasonMetric
+            label={t('discover.season.metric.stay')}
+            value={`${formatDecimal(season.stayHours, locale)} h`}
+          />
+          <SeasonMetric
+            label={t('discover.season.metric.median')}
+            value={season.medianMinutes === null ? '–' : `${season.medianMinutes} min`}
+          />
+        </View>
+      </View>
+
+      <View
+        className="w-full gap-sm rounded-lg px-section py-section"
+        style={{ borderColor: colors.border, borderWidth: 1 }}
+        testID="season-chart"
+      >
+        <View className="w-full flex-row items-center gap-gap">
+          <AppText className="flex-1" style={{ fontWeight: '600' }} variant="body">
+            {t('discover.season.chart.title')}
+          </AppText>
+          <AppText tone="muted" variant="metadata">
+            {t('discover.season.chart.unit')}
+          </AppText>
+        </View>
+
+        {bars.length === 0 ? (
+          <AppText testID="season-chart-empty" tone="muted" variant="bodySmall">
+            {t('discover.season.chart.empty')}
+          </AppText>
+        ) : (
+          <View className="w-full flex-row items-end justify-center" style={{ gap: spacing.chart }}>
+            {bars.map((bar, index) => (
+              <HarvestBar
+                date={formatShortDate(bar.recordedAt, locale)}
+                height={heights[index] ?? 0}
+                key={bar.reportId}
+                label={formatDecimal(bar.kilograms, locale)}
+                testID={`season-bar-${index}`}
+              />
+            ))}
+          </View>
+        )}
+      </View>
+    </>
+  );
+}
+
 function SeasonMetric({ label, value }: { label: string; value: string }) {
   return (
     <View className="flex-1 gap-xs">
@@ -287,7 +323,7 @@ function HistoryRow({ row, index }: { row: VisitHistoryEntry; index: number }) {
         <AppText variant="cardTitle">
           {interpolate(t('discover.season.row.title'), {
             species: species ? t(species) : row.speciesId,
-            zone: row.zoneNumber,
+            zone: row.zoneName || t('discover.season.recorded.unknownZone'),
           })}
         </AppText>
         <AppText tone="muted" variant="metadata">

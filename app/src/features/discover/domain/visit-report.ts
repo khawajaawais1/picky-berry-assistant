@@ -62,6 +62,9 @@ export type ReportDraft = {
 /** The finalized visit a report belongs to, as the tracker published it. */
 export type ReportVisit = {
   zoneId: string;
+  /** The tracker's id for the visit, which the API links the report to. */
+  visitId?: string;
+  zoneName?: string;
   openedAt: number;
   endedAt: number | null;
 };
@@ -85,5 +88,7 @@ export function buildVisitReport(
     speciesId: draft.speciesId,
     yieldRating: draft.yieldRating,
     zoneId: visit.zoneId,
+    ...(visit.visitId === undefined ? {} : { visitId: visit.visitId }),
+    ...(visit.zoneName === undefined ? {} : { zoneName: visit.zoneName }),
   };
 }

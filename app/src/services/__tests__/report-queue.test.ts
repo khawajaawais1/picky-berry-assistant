@@ -4,6 +4,7 @@ import {
   REPORT_QUEUE_STORAGE_KEY,
   clearReportQueue,
   enqueueReport,
+  removeQueuedReport,
   readReportQueue,
 } from '../report-queue';
 
@@ -40,8 +41,10 @@ describe('the report queue', () => {
   it('keeps a saved report on the device, with the time it was recorded', async () => {
     const queued = await enqueueReport(REPORT);
 
-    expect(queued).toEqual([REPORT]);
-    await expect(readReportQueue()).resolves.toEqual([REPORT]);
+    // The queue gives the report its own id, which the API stores it under exactly once.
+    const kept = { ...REPORT, clientId: expect.stringMatching(/^[0-9a-f-]{36}$/) };
+    expect(queued).toEqual([kept]);
+    await expect(readReportQueue()).resolves.toEqual([kept]);
   });
 
   it('keeps the queue in the order it was filled', async () => {
@@ -90,7 +93,7 @@ describe('the report queue', () => {
       JSON.stringify([...(await readReportQueue()), { zoneId: 'Z09' }]),
     );
 
-    await expect(readReportQueue()).resolves.toEqual([REPORT]);
+    await expect(readReportQueue()).resolves.toEqual([{ ...REPORT, clientId: expect.any(String) }]);
   });
 
   it('can be emptied, which is the user’s way out and what signing out calls', async () => {
@@ -100,6 +103,15 @@ describe('the report queue', () => {
 
     await expect(readReportQueue()).resolves.toEqual([]);
     await expect(AsyncStorage.getItem(REPORT_QUEUE_STORAGE_KEY)).resolves.toBeNull();
+  });
+
+  it('takes one sent report off the queue and keeps the rest', async () => {
+    await enqueueReport({ ...REPORT, clientId: 'c-14' });
+    await enqueueReport({ ...REPORT, zoneId: 'Z09', clientId: 'c-09' });
+
+    const left = await removeQueuedReport('c-14');
+
+    expect(left.map((report) => report.zoneId)).toEqual(['Z09']);
   });
 
   it('rejects a write that fails, so a screen never claims a report was kept', async () => {

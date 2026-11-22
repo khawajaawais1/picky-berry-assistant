@@ -15,7 +15,8 @@ const report = (overrides: Partial<VisitReport> = {}): VisitReport => ({
   recordedAt: '2026-08-28T10:55:00.000Z',
   speciesId: 'lingonberry',
   yieldRating: 4,
-  zoneId: 'Z14',
+  zoneId: 'zone-14',
+  zoneName: 'Laajavuori 14',
   ...overrides,
 });
 
@@ -28,18 +29,18 @@ describe('queuedReportRows', () => {
         minutes: 52,
         speciesId: 'lingonberry',
         yieldRating: 4,
-        zoneNumber: '14',
+        zoneName: 'Laajavuori 14',
       },
     ]);
   });
 
   it('lists what is still waiting oldest first, which is the order it will be sent in', () => {
-    const older = report({ recordedAt: '2026-08-20T09:00:00.000Z', zoneId: 'Z09' });
-    const newer = report({ recordedAt: '2026-08-28T10:55:00.000Z', zoneId: 'Z14' });
+    const older = report({ recordedAt: '2026-08-20T09:00:00.000Z', zoneName: 'Laajavuori 9' });
+    const newer = report({ recordedAt: '2026-08-28T10:55:00.000Z', zoneName: 'Laajavuori 14' });
 
-    expect(queuedReportRows([newer, older], 'en').map((row) => row.zoneNumber)).toEqual([
-      '09',
-      '14',
+    expect(queuedReportRows([newer, older], 'en').map((row) => row.zoneName)).toEqual([
+      'Laajavuori 9',
+      'Laajavuori 14',
     ]);
   });
 
