@@ -1,20 +1,18 @@
-import { router, useCanGoBack } from 'expo-router';
+import { router, useCanGoBack, useLocalSearchParams } from 'expo-router';
 
-import { MarketChatScreen } from '@/features/marketplace';
-/**
- * Screen 17 · Planned marketplace · Seller chat (Figma node `5:23883`).
- *
- * The thread leads on to the order it is about (frame 18), which is the one thing on it that acts:
- * nothing sends a message, so the screen's composer claims no role and is drawn as the design draws
- * it (PROJECT.md records it).
- */
+import { appMarketApi, MarketChatScreen } from '@/features/marketplace';
+
+/** Screen 17 · Marketplace · Seller chat, on the listing it was opened from. */
 export default function MarketChatRoute() {
   const canGoBack = useCanGoBack();
+  const { listing } = useLocalSearchParams<{ listing?: string }>();
 
   return (
     <MarketChatScreen
+      listingId={listing}
+      marketApi={appMarketApi}
       onBack={canGoBack ? () => router.back() : undefined}
-      onOpenOrder={() => router.push('/marketplace-order')}
+      onOpenOrder={(id) => router.push({ pathname: '/marketplace-order', params: { listing: id } })}
     />
   );
 }

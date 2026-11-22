@@ -38,7 +38,7 @@ export function ListingCard({ listing, onPress }: ListingCardProps) {
   const { colors } = useAppTheme();
   const { locale, t } = useTranslation();
 
-  const photo = listingCardPhoto(listing.id);
+  const photo = listingCardPhoto(listing.species);
 
   const card = (
     <View

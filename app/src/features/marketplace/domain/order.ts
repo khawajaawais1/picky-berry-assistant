@@ -1,49 +1,78 @@
-import { DEMO_LISTING_ID, type MarketListing } from './listing';
+import { parseListing, type MarketListing } from './listing';
 
-/**
- * The order frames 16–18 tell one story about: the picker's request in frame 17's chat (“Could I
- * get 5 kg of blueberries this evening?”), the seller's answer (“That's €40”), the summary frame
- * 17's action opens and the total frame 18 prints.
- *
- * It is the **design's own order** — 5 kg at €8/kg, pickup, no delivery fee — and it is a demo in
- * every part that matters: nothing charges a card, nothing holds money and nothing confirms a
- * handover, which the frame's own chips (“Provider test mode”) and status message (“No real money
- * was charged”) say on the screen. Recording the order is what the app *does* here: it is the state
- * a screen draws, not a payment.
- *
- * The arithmetic is here rather than in a component because it is the one part of this feature that
- * can be wrong without looking wrong: a subtotal that lost a cent would still render.
- */
+export type OrderStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
 
+/** An order placed against a listing, as `/market/orders` serves it. Money is whole cents. */
 export type MarketOrder = {
-  listingId: string;
+  id: string;
+  role: 'buyer' | 'seller';
+  listing: MarketListing;
   kilograms: number;
-  /** Delivery in cents. Pickup is free, which is the frame's own “no delivery fee”. */
+  pricePerKgCents: number;
+  subtotalCents: number;
   deliveryCents: number;
-  /**
-   * When the picker agreed to collect it, as the thread's own words say (“I'll be there at
-   * 18:30”) and frame 18's pickup row prints. It is the order's own state rather than the
-   * listing's pickup window (frame 16 draws that as “17:00–19:00”): the window is when the seller
-   * is there, and this is when the two of them agreed on.
-   */
+  totalCents: number;
   pickupTime: string;
+  status: OrderStatus;
+  createdAt: string;
 };
 
-/** Frame 18's order: “5 kg × €8 / kg”, pickup, “€40” held, collected at 18:30. */
-export const DEMO_ORDER: MarketOrder = {
-  // The listing frames 16–18 are all about, so an order and the card it came from cannot drift.
-  listingId: DEMO_LISTING_ID,
-  kilograms: 5,
-  deliveryCents: 0,
-  pickupTime: '18:30',
-};
+const STATUSES: readonly OrderStatus[] = ['pending', 'confirmed', 'completed', 'cancelled'];
 
-/** What the berries cost, before anything is added to them. */
-export function orderSubtotalCents(order: MarketOrder, listing: MarketListing): number {
-  return order.kilograms * listing.pricePerKgCents;
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-/** What the picker would pay: the subtotal plus the delivery fee. */
-export function orderTotalCents(order: MarketOrder, listing: MarketListing): number {
-  return orderSubtotalCents(order, listing) + order.deliveryCents;
+const cents = (value: unknown): number | null =>
+  typeof value === 'number' && Number.isInteger(value) && value >= 0 ? value : null;
+
+export function parseOrder(body: unknown): MarketOrder | null {
+  if (!isRecord(body)) return null;
+  const listing = parseListing(body.listing);
+  const price = cents(body.price_cents);
+  const subtotal = cents(body.subtotal_cents);
+  const delivery = cents(body.delivery_cents);
+  const total = cents(body.total_cents);
+  if (
+    !listing ||
+    typeof body.id !== 'string' ||
+    typeof body.kilograms !== 'number' ||
+    price === null ||
+    subtotal === null ||
+    delivery === null ||
+    total === null ||
+    typeof body.pickup_time !== 'string' ||
+    !(STATUSES as readonly unknown[]).includes(body.status) ||
+    typeof body.created_at !== 'string'
+  ) {
+    return null;
+  }
+
+  return {
+    id: body.id,
+    role: body.role === 'seller' ? 'seller' : 'buyer',
+    listing,
+    kilograms: body.kilograms,
+    pricePerKgCents: price,
+    subtotalCents: subtotal,
+    deliveryCents: delivery,
+    totalCents: total,
+    pickupTime: body.pickup_time,
+    status: body.status as OrderStatus,
+    createdAt: body.created_at,
+  };
+}
+
+/** The kilograms a buyer typed ("2", "1,5"), or `null` when it is not a quantity they can order. */
+export function parseOrderKilograms(text: string, availableKg: number): number | null {
+  const match = /^\s*(\d{1,4}(?:[.,]\d{1,2})?)\s*$/.exec(text);
+  if (!match) return null;
+
+  const value = Number(match[1]!.replace(',', '.'));
+  return value >= 0.1 && value <= availableKg ? value : null;
+}
+
+/** The first time in a pickup window ("17:00–19:00" → "17:00"), or `null`. */
+export function pickupStart(window: string): string | null {
+  return /([01]\d|2[0-3]):[0-5]\d/.exec(window)?.[0] ?? null;
 }
