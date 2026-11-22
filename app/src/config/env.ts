@@ -16,7 +16,6 @@ export const PUBLIC_ENV_VARS = {
   apiBaseUrl: 'EXPO_PUBLIC_API_BASE_URL',
   appEnvironment: 'EXPO_PUBLIC_APP_ENV',
   zoneSource: 'EXPO_PUBLIC_ZONE_SOURCE',
-  mapStyleUrl: 'EXPO_PUBLIC_MAP_STYLE_URL',
 } as const;
 
 export type PublicEnvSource = Partial<Record<string, string | undefined>>;
@@ -150,7 +149,6 @@ function declaredPublicEnv(): PublicEnvSource {
     [PUBLIC_ENV_VARS.apiBaseUrl]: process.env.EXPO_PUBLIC_API_BASE_URL,
     [PUBLIC_ENV_VARS.appEnvironment]: process.env.EXPO_PUBLIC_APP_ENV,
     [PUBLIC_ENV_VARS.zoneSource]: process.env.EXPO_PUBLIC_ZONE_SOURCE,
-    [PUBLIC_ENV_VARS.mapStyleUrl]: process.env.EXPO_PUBLIC_MAP_STYLE_URL,
   };
 }
 
@@ -186,34 +184,6 @@ export function zoneSourceKind(source: PublicEnvSource = declaredPublicEnv()): Z
   const asked = source[PUBLIC_ENV_VARS.zoneSource]?.trim();
 
   return asked === 'stub' && appEnvironment(source) !== 'production' ? 'stub' : 'api';
-}
-
-/**
- * The MapLibre style the Discover map draws its basemap from, or `null` for the plain ground.
- *
- * ADR-031: the basemap is OSM-derived tiles the project hosts (a Protomaps PMTiles file behind a
- * MapLibre style), and a third-party host is an owner decision recorded before it is set here.
- * The URL is public — it ships in the bundle — so it must never carry a private key; a
- * provider's key in it must be a public, domain/app-restricted one.
- *
- * Unset, empty or not a URL the transport rules accept (https, or loopback http in development)
- * reads as no basemap: a broken style URL must not blank the map the zones are drawn on.
- */
-export function mapStyleUrl(source: PublicEnvSource = declaredPublicEnv()): string | null {
-  const raw = source[PUBLIC_ENV_VARS.mapStyleUrl];
-  if (!raw?.trim()) return null;
-
-  const url = raw.trim();
-  // A provider's style URL carries its public key as a query (`?key=…`), which the origin
-  // parser does not take, so only the part before it is checked.
-  const result = parseAbsoluteUrl(url.split(/[?#]/)[0]!);
-  if (!result || result.host.includes('@')) return null;
-  if (result.protocol === 'http') {
-    const devLoopback = appEnvironment(source) === 'development' && isLoopbackHost(result.hostname);
-    if (!devLoopback) return null;
-  }
-
-  return url;
 }
 
 /**

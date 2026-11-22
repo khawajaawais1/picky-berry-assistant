@@ -2,14 +2,12 @@ import type {
   CameraRef,
   FillLayerSpecification,
   LineLayerSpecification,
-  StyleSpecification,
 } from '@maplibre/maplibre-react-native';
 import { useMemo, useRef } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
 import { Feather } from '@/components/atoms/app-icon';
-import { mapStyleUrl } from '@/config/env';
 import { layout, radii, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useTranslation } from '@/services/i18n';
@@ -34,8 +32,14 @@ const CAMERA_PADDING = { top: 24, right: 24, bottom: 24, left: 24 } as const;
 /** The native package is absent from Expo Go; see `map-libre.ts` for why this is not an import. */
 const mapLibre = loadMapLibre();
 
-/** The basemap style this build was given (`EXPO_PUBLIC_MAP_STYLE_URL`), or none. */
-const BASEMAP_STYLE_URL = mapStyleUrl();
+/**
+ * The basemap: OpenFreeMap's OpenStreetMap vector tiles, which need no API key. One style per
+ * app theme, so the zones sit on a light map in light mode and a dark one in dark mode.
+ */
+const BASEMAP_STYLE = {
+  light: 'https://tiles.openfreemap.org/styles/positron',
+  dark: 'https://tiles.openfreemap.org/styles/dark',
+} as const;
 
 /** How far the picker may zoom: out to the region, in to a few streets. */
 const MIN_ZOOM = 8;
@@ -45,10 +49,9 @@ const MAX_ZOOM = 17;
  * The device's map: **MapLibre React Native**, on real coordinates (ADR-031's renderer,
  * ADR-053's first use).
  *
- * **The basemap is configured, not assumed.** With `EXPO_PUBLIC_MAP_STYLE_URL` set the map
- * loads that MapLibre style (ADR-031: the project's own PMTiles, or a host the owner recorded)
- * and draws the zones over it, with the OpenStreetMap attribution the tiles require. Unset, the
- * style is a single background layer painted in `mapBase`: spatially true, and no network.
+ * **The basemap is OpenFreeMap** (`BASEMAP_STYLE`): OpenStreetMap vector tiles with no API key,
+ * the zones drawn over it, and the OpenStreetMap credit the tiles require. OpenFreeMap receives
+ * the map area on every tile request; ADR-031's self-hosted PMTiles would replace this URL.
  *
  * **Pan and pinch-zoom are on, with the frame's recentre control** to fit the zones again, so
  * the picker can never be left looking at an empty corner. Rotate and pitch stay off: a tilted
@@ -62,23 +65,8 @@ const MAX_ZOOM = 17;
  * MapLibre the same objects instead of rebuilding them on every render.
  */
 export function ZoneMapCanvas({ label, zones }: ZoneMapCanvasProps) {
-  const { colors } = useAppTheme();
+  const { colors, scheme } = useAppTheme();
   const { t } = useTranslation();
-
-  const ground = useMemo<StyleSpecification>(
-    () => ({
-      version: 8,
-      sources: {},
-      layers: [
-        {
-          id: 'ground',
-          type: 'background',
-          paint: { 'background-color': colors.mapBase },
-        },
-      ],
-    }),
-    [colors],
-  );
 
   // The band's lower edge is what each feature carries (`zoneFeatureCollection`), so the
   // style is one `match` rather than a layer per band — and the palette comes from the same
@@ -119,7 +107,7 @@ export function ZoneMapCanvas({ label, zones }: ZoneMapCanvasProps) {
   );
 
   const cameraRef = useRef<CameraRef>(null);
-  const mapStyle = BASEMAP_STYLE_URL ?? ground;
+  const mapStyle = BASEMAP_STYLE[scheme];
 
   const data = useMemo(() => zoneFeatureCollection(zones), [zones]);
   const framedBounds = useMemo<[number, number, number, number] | null>(() => {
@@ -180,24 +168,23 @@ export function ZoneMapCanvas({ label, zones }: ZoneMapCanvasProps) {
         </GeoJSONSource>
       </MapView>
 
-      {BASEMAP_STYLE_URL ? (
-        <View
-          pointerEvents="none"
-          style={{
-            backgroundColor: colors.surface,
-            borderRadius: radii.sm,
-            bottom: spacing.tight,
-            left: spacing.tight,
-            paddingHorizontal: spacing.tight,
-            position: 'absolute',
-          }}
-          testID="zone-map-attribution"
-        >
-          <AppText tone="muted" variant="mapAnnotation">
-            {t('discover.map.attribution')}
-          </AppText>
-        </View>
-      ) : null}
+      {/* ODbL: the OpenStreetMap credit is drawn whenever the basemap is (ADR-031 §3). */}
+      <View
+        pointerEvents="none"
+        style={{
+          backgroundColor: colors.surface,
+          borderRadius: radii.sm,
+          bottom: spacing.tight,
+          left: spacing.tight,
+          paddingHorizontal: spacing.tight,
+          position: 'absolute',
+        }}
+        testID="zone-map-attribution"
+      >
+        <AppText tone="muted" variant="mapAnnotation">
+          {t('discover.map.attribution')}
+        </AppText>
+      </View>
 
       {framedBounds ? (
         <Pressable
