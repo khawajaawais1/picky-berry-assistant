@@ -248,6 +248,7 @@ and role carries a text label as well as a colour.
 | 4 | SPA foundation: Vite/React/TS, auth, shell, design tokens | ✅ this branch |
 | 5 | Screens: overview, zones, zone detail, jobs, reports, users, analytics, lab, audit | ✅ this branch |
 | 6 | OpenAPI contract, e2e authorisation tests, build/typecheck | ✅ this branch |
+| 6b | Testcontainers PostGIS integration suite and generated admin types | ✅ this branch |
 | 7 | Run against staging with pilot data; role/audit/retry checks; Vercel project + CORS allow-list | ⬜ next |
 | 8 | Zone geometry authoring, report verdicts (6.5), trust-rule editor, media review | ⬜ next |
 
@@ -257,8 +258,19 @@ existence.
 
 ## 10. Testing
 
-- **API e2e:** anonymous → `401`, picker → `403` for every admin route; role change conflict and
-  retry conflict are exercised when a test database is available.
+- **API integration (Testcontainers):** `npm run test:e2e` starts a pinned PostGIS container,
+  applies the test baseline and every API migration, and covers anonymous `401`, picker `403`
+  and admin success for every admin route; no-store headers and foreign-origin CORS; moderation
+  filter reads; session revocation (active/expired/already-revoked tokens, audit, idempotence);
+  and failed/running/queued/missing job retry paths. The container is the only database the
+  integration tests touch.
+- **Contract:** `npm run openapi:types` regenerates `admin/src/api/schema.d.ts` from
+  `picky-server/docs/openapi/admin.yaml`; `npm run openapi:check` fails when the committed
+types drift, and the admin workflow runs it. New endpoints use the generated aliases. Existing
+hand-written types remain where the contract still says `additionalProperties: true`.
+- **Not yet covered:** moderation verdict transaction and trust writes (6.5 has not frozen the
+  rule), and lease/reaper/stale-ack tests (the jobs lease columns are P0.2). The suite does not
+  pretend those paths exist.
 - **Query review:** every filter is parameterised; sort columns are chosen from a fixed map, never
   from the request string.
 - **Frontend:** `tsc --noEmit`, ESLint, Vitest/Testing Library and `vite build` gate the branch.
@@ -276,7 +288,8 @@ existence.
 | A new console origin is missing from `CORS_ORIGINS` | The browser blocks the panel | The API lists only explicit origins; add the deployed console origin to the environment |
 | Refresh token in `sessionStorage` is XSS-reachable | Token theft through a future XSS | CSP on the static host, no third-party scripts, `HttpOnly` cookie later |
 | Admin queries scan large tables (`reports`, `jobs`) | Slow panel on a big pilot | Indexes exist for zone/time paths; add `created_at` indexes if p95 > 500 ms |
-| Report moderation is read-only | Admins cannot resolve a bad report yet | 6.5 owns the verdict rules; the panel adds the action when the service exposes it |
+| Report moderation is read-only | Admins cannot resolve a bad report yet | 6.5 owns the verdict rules; the panel adds the action when the service exposes it. The integration suite covers the read-only queue until then. |
+| Jobs have no lease or heartbeat columns | A crashed worker can strand a `running` job | P0.2 owns the migration and worker contract; the suite covers the retry conflicts the current schema supports |
 | Trust scores are read-only | No manual trust overrides | Deliberate: ADR-009 requires a versioned rule and an explanation; a free-number editor would violate it |
 | Panel and app drift on vocabulary | Two names for one concept | Both link to CONTEXT.md's glossary; domain terms are copied, not re-invented |
 | No SSO or finer roles | One stolen admin session is broad | Audit log, short access token, 5/min sign-in throttle; viewer/operator roles next |

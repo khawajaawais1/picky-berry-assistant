@@ -56,11 +56,19 @@ npm run make-admin -- you@example.com
 npm run typecheck
 npm run lint
 npm test
+npm run openapi:check
 npm run build
 ```
 
-`npm test` runs the Vitest/Testing Library harness. `npm run build` writes a static bundle to `dist/`. `vercel.json` rewrites unknown paths to
-`index.html`, so the client-side routes work on a static host.
+`npm test` runs the Vitest/Testing Library harness. `npm run openapi:check` regenerates
+`src/api/schema.d.ts` from the server's `admin.yaml` and fails if the committed file differs;
+CI also runs it when either the admin app or the contract changes. `npm run build` writes a
+static bundle to `dist/`. `vercel.json` rewrites unknown paths to `index.html`, so the
+client-side routes work on a static host.
+
+The generated schema is committed. New endpoint types should alias it directly; the older
+hand-written interfaces remain because several response schemas are still
+`additionalProperties: true` in the contract.
 
 ## Deployment
 

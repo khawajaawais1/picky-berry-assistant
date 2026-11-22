@@ -1,3 +1,20 @@
+import type { components, paths } from './schema';
+
+// Generated from picky-server/docs/openapi/admin.yaml by `npm run openapi:types`.
+// New admin endpoints use these aliases; older hand-written interfaces above remain
+// because their responses are still `additionalProperties: true` in the contract.
+export type HealthStatus = components['schemas']['OperationsHealthCheck']['status'];
+export type OperationsBreakdown = NonNullable<
+  components['schemas']['OperationsHealthCheck']['breakdown']
+>[number];
+export type OperationsCheck = components['schemas']['OperationsHealthCheck'];
+export type OperationsUnavailable =
+  components['schemas']['OperationsHealthUnavailable'];
+export type OperationsHealth =
+  paths['/admin/operations/health']['get']['responses'][200]['content']['application/json'];
+export type RevokeSessionsResponse =
+  paths['/admin/users/{id}/revoke-sessions']['post']['responses'][200]['content']['application/json'];
+
 export type Confidence = 'high' | 'medium' | 'low';
 export type Ripeness = 'unripe' | 'ripening' | 'ripe' | 'past' | 'off_season';
 export type UserRole = 'picker' | 'buyer' | 'admin';
@@ -256,11 +273,6 @@ export interface UserDetail extends Account {
   audit: AuditEntry[];
 }
 
-export interface RevokeSessionsResponse {
-  user_id: string;
-  revoked_count: number;
-}
-
 export interface DailyCount {
   date: string;
   count: number;
@@ -314,43 +326,6 @@ export interface AuditResponse {
   page: number;
   page_size: number;
   total: number;
-}
-
-export type HealthStatus = 'ok' | 'warn' | 'fail';
-
-export interface OperationsBreakdown {
-  key: string;
-  label: string;
-  status: HealthStatus;
-  value: string;
-  detail?: string;
-}
-
-export interface OperationsCheck {
-  id: string;
-  label: string;
-  status: HealthStatus;
-  value: string;
-  threshold: string;
-  detail: string;
-  owner: string;
-  runbook: string;
-  href?: string;
-  checked_at: string;
-  breakdown?: OperationsBreakdown[];
-}
-
-export interface OperationsUnavailable {
-  id: string;
-  label: string;
-  reason: string;
-}
-
-export interface OperationsHealth {
-  generated_at: string;
-  status: HealthStatus;
-  checks: OperationsCheck[];
-  unavailable: OperationsUnavailable[];
 }
 
 export interface HistoryResponse {
