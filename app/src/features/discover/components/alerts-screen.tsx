@@ -6,24 +6,26 @@ import { AppText } from '@/components/atoms';
 import { StatusMessage } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { useDevicePosition } from '@/hooks/use-device-position';
 import type { ProfileApi } from '@/features/privacy';
-import { formatShortDate, interpolate, useTranslation } from '@/services/i18n';
+import { interpolate, useTranslation } from '@/services/i18n';
 import { appPushPort, type PushPort, type RegisterDevice } from '@/services/push';
 
-import { confidenceLabelKey, type PickerAlert } from '../domain/alert';
-import { formatDistance } from '../domain/route';
+import { confidenceLabelKey } from '../domain/alert';
+import { alertKey, type ReasoningAlert } from '../domain/reasoning-alert';
 import type { Species } from '../domain/species';
 import { SCORE_MAX } from '../domain/zone-details';
-import type { AlertsSource } from '../services/api-alerts-source';
+import type { ReasoningAlertsSource } from '../services/reasoning-alerts-source';
 import { LiveAlertPreferences } from './live-alert-preferences';
 import { SPECIES_LABEL_KEY } from './species-copy';
 import { RIPENESS_LABEL_KEY } from './zone-source-copy';
 
 export type AlertsScreenProps = {
   onBack?: () => void;
-  /** The alert feed (`GET /alerts`); without it the screen shows the preferences alone. */
-  alertsSource?: AlertsSource;
+  /**
+   * The reasoning backend's alerts (`GET /api/v1/alerts`, feature 6.7); without it the screen
+   * shows the preferences alone.
+   */
+  alertsSource?: ReasoningAlertsSource;
   accountApi?: ProfileApi;
   push?: PushPort;
   register?: RegisterDevice;
@@ -32,13 +34,16 @@ export type AlertsScreenProps = {
   onOpenZone?: (zoneId: string, species: Species) => void;
 };
 
+/** The service answers every zone it scored; the inbox draws the best of them. */
+export const ALERTS_SHOWN = 20;
+
 /**
  * Screen 12 · Core picker · Alerts and forecast (Figma node `5:23439`).
  *
- * The explainable alerts the reasoning job produced for this picker (`GET /alerts`): one card per
- * zone and berry, nearest first when the phone has a position fix, each with its score,
- * confidence, ripeness and freshest report, and a way into the zone. Below them, the picker's own
- * alert preferences, saved to their account (ADR-067).
+ * The explainable alerts the daily reasoning job produced (`GET /api/v1/alerts`, feature 6.7): one
+ * card per zone and berry, best score first, each with its score, confidence, ripeness, the rule's
+ * own sentence and a way into the zone. Below them, the picker's own alert preferences, saved to
+ * their account (ADR-067).
  */
 export function AlertsScreen({
   accountApi,
@@ -50,16 +55,10 @@ export function AlertsScreen({
   register,
 }: AlertsScreenProps) {
   const { t } = useTranslation();
-  const { fix } = useDevicePosition();
-  const position = fix ? { latitude: fix.latitude, longitude: fix.longitude } : undefined;
   const feed = useQuery({
-    // Rounded so a walking picker does not refetch on every metre.
-    queryKey: [
-      'alerts',
-      position ? Math.round(position.latitude * 100) : null,
-      position ? Math.round(position.longitude * 100) : null,
-    ],
-    queryFn: () => alertsSource!.list(position),
+    queryKey: ['reasoning-alerts'],
+    queryFn: async () =>
+      [...(await alertsSource!.list())].sort((a, b) => b.score - a.score).slice(0, ALERTS_SHOWN),
     enabled: alertsSource !== undefined,
     retry: false,
   });
@@ -73,15 +72,15 @@ export function AlertsScreen({
     >
       <View className="w-full gap-section">
         {alertsSource === undefined ? null : feed.data ? (
-          feed.data.alerts.length === 0 ? (
+          feed.data.length === 0 ? (
             <StatusMessage testID="alerts-empty" tone="muted" variant="bodySmall">
               {t('discover.alert.empty')}
             </StatusMessage>
           ) : (
-            feed.data.alerts.map((alert) => (
+            feed.data.map((alert) => (
               <AlertCard
                 alert={alert}
-                key={alert.id}
+                key={`${alert.ruleId}:${alertKey(alert)}`}
                 onOpen={onOpenZone ? () => onOpenZone(alert.zoneId, alert.species) : undefined}
               />
             ))
@@ -113,41 +112,24 @@ export function AlertsScreen({
   );
 }
 
-function AlertCard({ alert, onOpen }: { alert: PickerAlert; onOpen?: () => void }) {
+function AlertCard({ alert, onOpen }: { alert: ReasoningAlert; onOpen?: () => void }) {
   const { colors } = useAppTheme();
-  const { locale, t } = useTranslation();
+  const { t } = useTranslation();
   const species = t(SPECIES_LABEL_KEY[alert.species]);
-  const at = new Date(alert.computedAt);
-  const time = at.toLocaleTimeString(locale === 'fi' ? 'fi-FI' : 'en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 
   const card = (
     <View
       className="w-full gap-cardGap rounded-lg px-section py-section"
       style={{ backgroundColor: colors.accentMuted }}
-      testID={`alert-card-${alert.id}`}
+      testID={`alert-card-${alertKey(alert)}`}
     >
       <View className="w-full flex-row items-center gap-gap">
         <Feather color={colors.accent} name="bell" size={22} />
-        <AppText className="flex-1" style={{ fontWeight: '600' }} tone="accent" variant="metadata">
-          {interpolate(t('discover.alert.stamp'), {
-            date: formatShortDate(alert.computedAt, locale),
-            time,
-          })}
+        <AppText className="flex-1" variant="heroTitle">
+          {interpolate(t('discover.alert.headline.zone'), { species, zone: alert.zoneName })}
         </AppText>
         {onOpen ? <Feather color={colors.accent} name="chevron-right" size={20} /> : null}
       </View>
-
-      <AppText variant="heroTitle">
-        {alert.distanceMeters === null
-          ? interpolate(t('discover.alert.headline.zone'), { species, zone: alert.zoneName })
-          : interpolate(t('discover.alert.headline'), {
-              distance: formatDistance(alert.distanceMeters, locale),
-              species,
-            })}
-      </AppText>
 
       <View className="w-full flex-row flex-wrap gap-sm">
         <AlertChip
@@ -170,13 +152,9 @@ function AlertCard({ alert, onOpen }: { alert: PickerAlert; onOpen?: () => void 
         />
       </View>
 
+      {/* The rule's own explanation, as the reasoning service wrote it (English for now). */}
       <AppText tone="muted" variant="caption">
-        {alert.latestReportAt === null
-          ? interpolate(t('discover.alert.context.noReport'), { zone: alert.zoneName })
-          : interpolate(t('discover.alert.context'), {
-              date: formatShortDate(alert.latestReportAt, locale),
-              zone: alert.zoneName,
-            })}
+        {alert.sentence}
       </AppText>
     </View>
   );

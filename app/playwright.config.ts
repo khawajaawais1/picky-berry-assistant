@@ -48,6 +48,8 @@ export default defineConfig({
       // The reserved `.invalid` TLD never resolves: the export can reach no real API, and the
       // journeys that need one fake it (`e2e/fake-api.ts`).
       EXPO_PUBLIC_API_BASE_URL: 'https://picky-api.invalid',
+      // The alerts feed needs no session, so it too points nowhere: the screen says it failed.
+      EXPO_PUBLIC_REASONING_API_BASE_URL: 'https://picky-reasoning.invalid',
       // Every screen is opened on a fresh load with no session, and `/zones` needs one, so the
       // harness measures the bundled stub zones (`zoneSourceKind`, ignored in production).
       EXPO_PUBLIC_ZONE_SOURCE: 'stub',

@@ -76,12 +76,6 @@ export {
 } from './services/zone-snapshot';
 export type { ZoneInsight, ZoneInsightSource } from './domain/zone-insight';
 export { createApiZoneSource, PILOT_BBOX, ZoneSourceError } from './services/api-zone-source';
-export {
-  appAlertsSource,
-  createApiAlertsSource,
-  type AlertsSource,
-} from './services/api-alerts-source';
-export type { AlertFeed, PickerAlert } from './domain/alert';
 export { ZONE_STATES, type ZoneState } from './domain/zone';
 export { SPECIES, isSpecies, type Species } from './domain/species';
 // The one table that turns a species into its word, exported because a second feature names berries

@@ -3,7 +3,13 @@ import { testZoneSource } from '@/features/discover/services/test-zone-source';
 
 import { QueryProvider } from '@/services/query-client';
 
-import { ALERT_FEED, LIVE_ZONE, liveZoneSource, OWN_REPORTS, SEASON } from '../../test-fixtures';
+import {
+  REASONING_ALERTS,
+  LIVE_ZONE,
+  liveZoneSource,
+  OWN_REPORTS,
+  SEASON,
+} from '../../test-fixtures';
 
 /**
  * A device set to Finnish. The app is Finnish and English (PROJECT.md), so the copy of every
@@ -222,16 +228,15 @@ describe('the active visit screen on a Finnish device', () => {
 
 describe('the alerts screen on a Finnish device', () => {
   it('renders the served alert in Finnish notation', async () => {
-    await render(<AlertsScreen alertsSource={{ list: async () => ALERT_FEED }} />, {
+    await render(<AlertsScreen alertsSource={{ list: async () => REASONING_ALERTS }} />, {
       wrapper: QueryProvider,
     });
 
-    expect(await screen.findByText('Mustikka 1,8 km päässä')).toBeOnTheScreen();
+    expect(await screen.findByText('Mustikka · Laajavuori 22')).toBeOnTheScreen();
     expect(screen.getByText('POIMINTA · ENNUSTEEN PERUSTELUT')).toBeOnTheScreen();
     expect(screen.getByText('Hälytykset metsästä')).toBeOnTheScreen();
     expect(screen.getByText('71 / 100 sato')).toBeOnTheScreen();
     expect(screen.getByText('Varma tieto')).toBeOnTheScreen();
-    expect(screen.getByText('Laajavuori 22 · Viimeisin raportti 28.8.')).toBeOnTheScreen();
     expect(screen.queryByText('Alerts from the forest')).not.toBeOnTheScreen();
   });
 });

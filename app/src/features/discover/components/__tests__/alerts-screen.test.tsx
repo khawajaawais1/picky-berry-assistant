@@ -2,37 +2,42 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { QueryProvider } from '@/services/query-client';
 
-import { ALERT_FEED } from '../../test-fixtures';
+import { REASONING_ALERTS } from '../../test-fixtures';
 import { AlertsScreen } from '../alerts-screen';
 
 function renderAlerts(props: Partial<Parameters<typeof AlertsScreen>[0]> = {}) {
-  return render(<AlertsScreen alertsSource={{ list: async () => ALERT_FEED }} {...props} />, {
+  return render(<AlertsScreen alertsSource={{ list: async () => REASONING_ALERTS }} {...props} />, {
     wrapper: QueryProvider,
   });
 }
 
 describe('AlertsScreen', () => {
-  it('draws each served alert: where, how good, how sure and how fresh', async () => {
+  it('draws each served alert: where, how good, how sure, and the rule’s own sentence', async () => {
     await renderAlerts();
 
-    expect(await screen.findByText('Bilberry 1.8 km away')).toBeOnTheScreen();
+    expect(await screen.findByText('Bilberry in Laajavuori 22')).toBeOnTheScreen();
     expect(screen.getByText('CORE PICKER · FORECAST REASONING')).toBeOnTheScreen();
     expect(screen.getByText('Alerts from the forest')).toBeOnTheScreen();
     expect(screen.getByText('71 / 100 yield')).toBeOnTheScreen();
     expect(screen.getByText('High confidence')).toBeOnTheScreen();
-    expect(screen.getByText('Laajavuori 22 · Latest report 28 Aug')).toBeOnTheScreen();
+    expect(
+      screen.getByText('Ripe bilberry in zone Laajavuori 22 — yield score 71, high confidence.'),
+    ).toBeOnTheScreen();
   });
 
-  it('names the zone instead of a distance when the phone has no position', async () => {
-    const feed = {
-      ...ALERT_FEED,
-      alerts: [{ ...ALERT_FEED.alerts[0]!, distanceMeters: null, latestReportAt: null }],
-    };
+  it('draws the twenty best alerts only, best first', async () => {
+    const many = Array.from({ length: 30 }, (_, i) => ({
+      ...REASONING_ALERTS[0]!,
+      zoneId: `zone-${i}`,
+      zoneName: `Zone ${i}`,
+      score: i,
+    }));
 
-    await renderAlerts({ alertsSource: { list: async () => feed } });
+    await renderAlerts({ alertsSource: { list: async () => many } });
 
-    expect(await screen.findByText('Bilberry in Laajavuori 22')).toBeOnTheScreen();
-    expect(screen.getByText('Laajavuori 22 · No reports yet')).toBeOnTheScreen();
+    expect(await screen.findByText('Bilberry in Zone 29')).toBeOnTheScreen();
+    expect(screen.getByText('Bilberry in Zone 10')).toBeOnTheScreen();
+    expect(screen.queryByText('Bilberry in Zone 9')).not.toBeOnTheScreen();
   });
 
   it('opens the alert’s zone for the berry it is about', async () => {
@@ -45,7 +50,7 @@ describe('AlertsScreen', () => {
   });
 
   it('says when there is nothing to alert about', async () => {
-    await renderAlerts({ alertsSource: { list: async () => ({ radiusKm: 10, alerts: [] }) } });
+    await renderAlerts({ alertsSource: { list: async () => [] } });
 
     expect(await screen.findByTestId('alerts-empty')).toBeOnTheScreen();
   });
