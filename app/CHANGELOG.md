@@ -7,6 +7,41 @@ recorded in [docs/adr/](docs/adr/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-22
+
+### Added
+
+- Every picker screen reads the team API instead of the design's samples. Visit reports get an id,
+  are kept on the phone and sent to `POST /reports` after saving and whenever the app opens; the
+  sync centre's "Send now" sends them for real.
+- Visits shows the season from `GET /me/season` (harvest, kg/hour, zones, stay time, median stay,
+  harvest by report) and the history from `GET /me/reports` plus the reports still queued; the
+  period chips filter to this month.
+- Zone details offers "See all reports" (`GET /zones/:id/reports`, anonymous, with a trust label)
+  and "Navigate" for any served zone. Route to zone measures straight-line distance, heading and
+  walking time from the phone and opens the maps app for walking directions.
+- Alerts reads `GET /alerts`, filtered to the picker's position, radius and species; each alert
+  opens its zone.
+- The berry marketplace works end to end on `/market/*`: browse and search listings, a seller chat
+  that sends messages, and an order form that reserves stock. A "Berry marketplace" row on the
+  profile opens it.
+
+### Changed
+
+- In development, a `localhost` API address is reached from a phone or emulator through the Metro
+  host (or `10.0.2.2` on the Android emulator), and plain http to a LAN address is accepted.
+
+### Fixed
+
+- The map loads in Expo Go: without MapLibre's native view the zones are drawn as an SVG, with a
+  note that the street basemap needs a development build.
+
+### Removed
+
+- The first-launch demo seed, the design's sample zones, route, alert, season, downloads and
+  marketplace data, and the community-map prototype. The bundled test zones remain only behind
+  `EXPO_PUBLIC_ZONE_SOURCE=stub` for the layout harness, labelled as test data.
+
 ## [0.2.0] - 2026-11-21
 
 ### Added
