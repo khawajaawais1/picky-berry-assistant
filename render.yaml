@@ -1,16 +1,5 @@
 services:
   - type: web
-    name: picky-ml
-    runtime: docker
-    dockerfilePath: docker/ml/Dockerfile
-    dockerContext: .
-    plan: free
-    healthCheckPath: /api/v1/ml/health
-    envVars:
-      - key: PYTHONUNBUFFERED
-        value: "1"
-
-  - type: web
     name: picky-backend
     runtime: python
     rootDir: backend
