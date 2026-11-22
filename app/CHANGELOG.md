@@ -7,6 +7,27 @@ recorded in [docs/adr/](docs/adr/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-22
+
+### Added
+
+- Ripe-berry alerts arrive as notifications (feature 6.7). The app reads the reasoning backend's
+  `GET /api/v1/alerts` on start, on returning to the foreground and hourly while open, and shows
+  the rule's own sentence as the text, e.g. "Ripe bilberry in zone Ukonvuori 4 — yield score 82,
+  medium confidence." At most two a day, only scores of 70 or more that are not low confidence, and
+  the same zone and berry at most once in three days. Nothing shows until alerts are allowed.
+- Tapping an alert notification opens that zone's details for its berry, also when the tap starts
+  the app. A backend FCM push carries the same data and opens the zone the same way.
+- `EXPO_PUBLIC_REASONING_API_BASE_URL` points the app at another reasoning backend; unset, it
+  reads `https://picky-backend-cd0u.onrender.com`.
+
+### Changed
+
+- The Alerts tab reads the reasoning backend instead of the team API's `/alerts`, which no deploy
+  served. It lists the 20 best alerts with each one's sentence. Cards no longer show a time, a
+  distance or the latest report, which the backend does not send, and the list is not yet filtered
+  to the picker's berries or radius.
+
 ## [0.3.0] - 2026-11-22
 
 ### Added
