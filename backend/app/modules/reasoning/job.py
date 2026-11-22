@@ -15,7 +15,7 @@ from __future__ import annotations
 import datetime as dt
 import logging
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from app.modules.reasoning.service import Alert
 
@@ -32,6 +32,7 @@ class RunResult:
     duration_ms: int
     error: str | None = None
     run_id: str | None = None
+    alerts: list[Alert] = field(default_factory=list)  # kept for push delivery
 
 
 def _fetch_zone_rows(db_url: str, as_of: dt.date) -> list[dict]:
@@ -194,6 +195,7 @@ def run_one_rule(
             rule_id=rule.rule_id, rule_version=rule.version,
             zone_count=len({r["zone_id"] for r in scored_rows}),
             alert_count=len(alerts), status="ok", duration_ms=duration_ms,
+            alerts=alerts,
         )
         run_id = _write_run(db_url, result)
         result.run_id = run_id

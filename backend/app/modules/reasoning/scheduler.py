@@ -51,3 +51,12 @@ def _daily_job(app_state) -> None:
     results = run_reasoning(db_url, ontology_graph, rules, zone_grid)
     ok = sum(1 for r in results if r.status == "ok")
     log.info("daily reasoning job done: %d/%d rules ok", ok, len(results))
+
+    fcm_app = getattr(app_state, "fcm_app", None)
+    if fcm_app is not None:
+        try:
+            from app.modules.push.fcm import push_alerts
+            all_alerts = [a for r in results for a in r.alerts]
+            push_alerts(db_url, all_alerts, fcm_app)
+        except Exception:
+            log.exception("FCM push step failed")
