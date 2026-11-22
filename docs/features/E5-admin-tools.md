@@ -110,11 +110,13 @@ standard error envelope. Pagination is `page` (1-based) and `page_size` (default
 | `GET /admin/zones/{id}` | zone facts, geometry, scores + explanations, species fit, reports, visits, jobs |
 | `GET /admin/jobs?status=&type=&page=&page_size=` | paged jobs + status counts |
 | `POST /admin/jobs/{id}/retry` | `202` with the new or already-queued job |
-| `GET /admin/reports?species=&zone_id=&min_rating=&page=&page_size=` | paged reports with reporter trust |
+| `GET /admin/reports?species=&zone_id=&min_rating=&max_rating=&max_trust=&days=&sort=&page=&page_size=` | paged reports with reporter trust and triage filters |
 | `GET /admin/users?q=&role=&page=&page_size=` | paged accounts with trust and activity counts |
+| `GET /admin/users/{id}` | account facts, active sessions, recent reports, visits and audit |
+| `POST /admin/users/{id}/revoke-sessions` | revoke active refresh tokens (body `{ "reason": "…" }`), audited |
 | `PATCH /admin/users/{id}/role` | changed role (body `{ "role": "picker" \| "buyer" \| "admin" }`) |
 | `GET /admin/analytics?days=7\|30\|90` | daily series, species coverage, score distribution, top zones |
-| `GET /admin/audit?page=&page_size=` | paged audit entries with actor email |
+| `GET /admin/audit?q=&target_type=&days=&page=&page_size=` | paged audit entries with actor email and investigation filters |
 | `POST /admin/scores/recompute` | existing: `202` with `job_id`, `deduplicated` |
 
 Example — `GET /admin/overview`:
@@ -189,14 +191,16 @@ ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
 |-------|--------|---------------|
 | `/sign-in` | Sign in | email + password, role check, API origin, error state |
 | `/` | Overview | coverage, freshness, volumes, queue, quick actions, recent audit |
+| `/operations` | Operations | derived health checks, runbook/evidence links, running jobs, stale-lock warning |
 | `/zones` | Zones | search, species filter, sort, pagination |
 | `/zones/:id` | Zone detail | facts, geometry summary, scores + explanation, history chart, species fit, reports, visits, jobs |
 | `/jobs` | Queue | status counts, filters, live refresh, retry |
-| `/reports` | Reports | filters and reporter trust; read-only until 6.5 lands |
-| `/users` | Accounts | search, role, trust, activity, role change |
+| `/moderation` (`/reports` redirects) | Moderation | triage filters, reporter trust, detail drawer; read-only until 6.5 lands |
+| `/users` | Accounts | search, role, trust, activity, role change, account links |
+| `/users/:id` | Account detail | identity, trust, sessions, reports, visits, audit, reason-required session revoke |
 | `/analytics` | Analytics | daily trends, species coverage, score distribution, top zones |
 | `/lab` | Feature lab | request console, presets, recompute/retry actions, environment |
-| `/audit` | Audit log | who changed what, when, with request id |
+| `/audit` | Audit log | searchable who/action/target/request id, before/after detail, target links |
 
 Every data screen has loading, empty, error (with request id and retry) and permission-denied
 states. A session that is not `admin` sees the sign-in screen with the reason, never a blank
@@ -249,8 +253,9 @@ existence.
   retry conflict are exercised when a test database is available.
 - **Query review:** every filter is parameterised; sort columns are chosen from a fixed map, never
   from the request string.
-- **Frontend:** `tsc --noEmit` and `vite build` gate the branch. Route smoke is manual against a
-  database; empty states are part of the acceptance check.
+- **Frontend:** `tsc --noEmit`, ESLint, Vitest/Testing Library and `vite build` gate the branch.
+  Tests cover operations health rules and the privileged-action/drawer primitives; route smoke
+  is manual against a database, and empty states are part of the acceptance check.
 - **Data checks:** after `seed-dev-scores`, the overview's coverage should equal the seed's
   zone × species coverage; when local report rows are loaded, the reports screen and counters
   should match their count.

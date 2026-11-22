@@ -12,14 +12,16 @@ API contract: [`../picky-server/docs/openapi/admin.yaml`](../picky-server/docs/o
 | Screen | Purpose |
 |--------|---------|
 | Overview | zone coverage, score freshness, report/visit volume, queue depth, recent audit |
+| Operations | pipeline health checks, runbook links, running jobs and stale-lock evidence |
 | Analytics | daily reports/visits/signups, jobs finished, species coverage, score distribution |
 | Zones | search by name/H3/id, filter by species, sort, open a zone |
 | Zone detail | scores with confidence and ripeness, 30-day history, stored explanation, species fit, reports, visits, jobs |
 | Queue | filter jobs, read payloads and errors, retry a finished job, optional live refresh |
-| Reports | browse reports with reporter trust; read-only until feature 6.5 |
-| Accounts | search accounts, see trust and activity, change a role (audited) |
+| Moderation | triage reports by rating, reporter trust, age, species and zone; read-only until feature 6.5 |
+| Accounts | search accounts, see trust and activity, change a role (audited), open an account |
+| Account detail | identity, trust, active sessions, reports, visits and audit; revoke sessions with a reason |
 | Feature lab | send any API request with the admin token, presets, recompute/retry actions |
-| Audit log | every privileged mutation with actor, target and request id |
+| Audit log | search every privileged mutation by actor, action, target or request id; inspect before/after detail |
 
 ## Requirements
 
@@ -53,10 +55,11 @@ npm run make-admin -- you@example.com
 ```bash
 npm run typecheck
 npm run lint
+npm test
 npm run build
 ```
 
-`npm run build` writes a static bundle to `dist/`. `vercel.json` rewrites unknown paths to
+`npm test` runs the Vitest/Testing Library harness. `npm run build` writes a static bundle to `dist/`. `vercel.json` rewrites unknown paths to
 `index.html`, so the client-side routes work on a static host.
 
 ## Deployment
@@ -79,7 +82,8 @@ ever compiled into it.
   an API change and a new ADR.
 - **PII.** Emails and nicknames appear only on admin screens. No GPS track exists server-side
   (ADR-010), and none is shown here.
-- **Audit.** Recompute, job retry and role changes write `audit_log` in the same transaction.
+- **Audit.** Recompute, job retry, role changes and session revocation write `audit_log` in the
+  same transaction; the audit screen exposes the request id and recorded detail.
 - **Read-only by design.** Report verdicts and trust edits belong to features 6.5 and 6.3; the
   panel labels them as unavailable rather than inventing a rule.
 
