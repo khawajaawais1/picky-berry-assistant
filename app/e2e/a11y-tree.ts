@@ -351,8 +351,12 @@ function isActionable(role: string): boolean {
   return (ACTIONABLE_ROLES as readonly string[]).includes(role);
 }
 
-/** Roles a browser keeps out of the accessibility tree, so pairing them would invent findings. */
-const TREE_EXEMPT_ROLES = new Set(['none', 'presentation']);
+/**
+ * Roles not paired by name: `none` and `presentation` stay out of the tree, and a `status` live
+ * region takes no name from its own text (its sentence is a child of the node), so pairing it by
+ * name would report a reading as a missing control.
+ */
+const TREE_EXEMPT_ROLES = new Set(['none', 'presentation', 'status']);
 
 /** What the page and the tree each say about one `role · name` pair. */
 type Pair = {

@@ -69,6 +69,37 @@ export async function fakeAccountService(page: Page): Promise<void> {
     });
   }
 
+  // The marketplace the harness's signed-in picker can browse, talk in and order from.
+  const listing = {
+    id: '00000000-0000-4000-8000-0000000000a1',
+    title: 'Fresh bilberries',
+    description: null,
+    species: 'bilberry',
+    price_cents: 800,
+    available_kg: 20,
+    place: { area: 'Laajavuori', town: 'Jyväskylä', distance_km: null },
+    seller: { id: 'seller', name: 'Matti L.', rating: null, reviews: 0, verified: true },
+    harvested_on: '2026-08-28',
+    pickup: { place: 'Laajavuori car park', window: '17:00–19:00' },
+    status: 'active',
+    created_at: '2026-08-28T08:00:00.000Z',
+  };
+  const lingonberries = {
+    ...listing,
+    id: '00000000-0000-4000-8000-0000000000a2',
+    title: 'Wild lingonberries',
+    species: 'lingonberry',
+    place: { area: 'Palokka', town: 'Jyväskylä', distance_km: null },
+  };
+  const messages: Record<string, unknown>[] = [];
+  let order: Record<string, unknown> | null = null;
+  const thread = () => ({
+    listing_id: listing.id,
+    buyer_id: 'buyer',
+    seller_name: 'Matti L.',
+    messages,
+  });
+
   await page.route(`${FAKE_API_ORIGIN}/**`, async (route) => {
     const request = route.request();
     if (request.method() === 'OPTIONS') {
@@ -80,7 +111,55 @@ export async function fakeAccountService(page: Page): Promise<void> {
     const body = (request.postDataJSON() ?? {}) as Record<string, unknown>;
     const email = typeof body.email === 'string' ? body.email : '';
 
+    const signedIn = emailByToken.has(
+      (request.headers()['authorization'] ?? '').replace(/^Bearer /, ''),
+    );
+    if (path.startsWith('/api/v1/market/') && !signedIn) {
+      await answer(route, 401, { error: { code: 'UNAUTHORIZED', message: 'x' }, request_id: 'm' });
+      return;
+    }
+
     switch (path) {
+      case '/api/v1/market/listings':
+        await answer(route, 200, { listings: [listing, lingonberries] });
+        return;
+      case `/api/v1/market/listings/${listing.id}`:
+        await answer(route, 200, listing);
+        return;
+      case `/api/v1/market/listings/${listing.id}/messages`:
+        if (request.method() === 'POST') {
+          messages.push({
+            id: `m${messages.length + 1}`,
+            author: 'buyer',
+            mine: true,
+            body: String(body.body ?? ''),
+            read: false,
+            sent_at: '2026-08-28T14:02:00.000Z',
+          });
+          await answer(route, 201, thread());
+          return;
+        }
+        await answer(route, 200, thread());
+        return;
+      case '/api/v1/market/orders': {
+        const kilograms = Number(body.kilograms);
+        order = {
+          id: '00000000-0000-4000-8000-0000000000b1',
+          role: 'buyer',
+          listing,
+          kilograms,
+          price_cents: 800,
+          subtotal_cents: Math.round(kilograms * 800),
+          delivery_cents: 0,
+          total_cents: Math.round(kilograms * 800),
+          pickup_time: String(body.pickup_time ?? ''),
+          status: 'pending',
+          created_at: '2026-08-28T15:00:00.000Z',
+        };
+        await answer(route, 201, order);
+        return;
+      }
+
       case '/api/v1/auth/register': {
         // The service's own rule: a registration without both consent versions is refused.
         const consents = (body.consents ?? {}) as Record<string, unknown>;
@@ -156,6 +235,10 @@ export async function fakeAccountService(page: Page): Promise<void> {
         return;
       }
       default:
+        if (order !== null && path === `/api/v1/market/orders/${String(order.id)}`) {
+          await answer(route, 200, order);
+          return;
+        }
         await answer(route, 404, {
           error: { code: 'NOT_FOUND', message: 'not faked by the harness' },
           request_id: 'harness',
