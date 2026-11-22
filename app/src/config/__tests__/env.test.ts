@@ -2,9 +2,11 @@ import {
   PUBLIC_ENV_VARS,
   appEnvironment,
   isLoopbackHost,
+  isPrivateNetworkHost,
   loadConfig,
   parseApiBaseUrl,
   parseEnvironment,
+  resolveDevelopmentApiBaseUrl,
   zoneSourceKind,
 } from '../env';
 
@@ -226,5 +228,52 @@ describe('loadConfig', () => {
     if (!result.ok) throw new Error('expected configuration to be valid');
     expect(Object.keys(result.config)).toEqual(['environment', 'apiBaseUrl']);
     expect(JSON.stringify(result.config)).not.toContain('super-secret');
+  });
+});
+
+describe('local-network development hosts', () => {
+  it.each(['192.168.1.20', '10.0.2.2', '172.16.4.1', 'macbook.local'])(
+    'treats %s as a local-network host',
+    (host) => {
+      expect(isPrivateNetworkHost(host)).toBe(true);
+    },
+  );
+
+  it.each(['8.8.8.8', '172.32.0.1', 'api.example.com'])('does not treat %s as local', (host) => {
+    expect(isPrivateNetworkHost(host)).toBe(false);
+  });
+
+  it('accepts clear-text http to a LAN host in development only', () => {
+    const lan = { EXPO_PUBLIC_API_BASE_URL: 'http://192.168.1.20:3000' };
+
+    expect(loadConfig({ ...lan, EXPO_PUBLIC_APP_ENV: 'development' }).ok).toBe(true);
+    expect(loadConfig({ ...lan, EXPO_PUBLIC_APP_ENV: 'preview' }).ok).toBe(false);
+  });
+});
+
+describe('resolveDevelopmentApiBaseUrl', () => {
+  const local = { environment: 'development' as const, apiBaseUrl: 'http://localhost:3000' };
+
+  it('points a loopback URL at the Metro host on a device', () => {
+    expect(
+      resolveDevelopmentApiBaseUrl(local, {
+        platform: 'ios',
+        devServerHostUri: '192.168.1.20:8081',
+      }).apiBaseUrl,
+    ).toBe('http://192.168.1.20:3000');
+  });
+
+  it('falls back to the Android emulator host alias', () => {
+    expect(resolveDevelopmentApiBaseUrl(local, { platform: 'android' }).apiBaseUrl).toBe(
+      'http://10.0.2.2:3000',
+    );
+  });
+
+  it('leaves the web build, other environments and remote URLs alone', () => {
+    expect(resolveDevelopmentApiBaseUrl(local, { platform: 'web' })).toBe(local);
+    const preview = { ...local, environment: 'preview' as const };
+    expect(resolveDevelopmentApiBaseUrl(preview, { platform: 'android' })).toBe(preview);
+    const remote = { ...local, apiBaseUrl: 'https://api.example.com' };
+    expect(resolveDevelopmentApiBaseUrl(remote, { platform: 'android' })).toBe(remote);
   });
 });

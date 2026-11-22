@@ -201,7 +201,7 @@ export const en = {
   // package's import-time native-module lookup take the app down; the rest of the screen — the
   // card, the list and the filters — still reads the same zones.
   'discover.map.requiresDevelopmentBuild':
-    'The map isn’t available in this build. Use a development build to see it.',
+    'Street map needs a development build; zones are drawn without it.',
   // What the five colours mean. The ranges themselves are numbers rather than copy, so they
   // are written by the legend; these two lines are the words a reader needs.
   'discover.score.label': 'Yield score',

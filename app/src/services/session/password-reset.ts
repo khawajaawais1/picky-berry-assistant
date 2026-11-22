@@ -1,4 +1,5 @@
-import { loadConfig, type ConfigResult } from '@/config/env';
+import type { ConfigResult } from '@/config/env';
+import { appConfig } from '@/services/api/app-config';
 
 /**
  * The password-reset vocabulary, shared by the seam, the provider adapters and the screens that
@@ -44,7 +45,7 @@ export type PasswordResetAvailability = 'live' | 'accepted' | 'unavailable';
  * sends real email.
  */
 export function passwordResetAvailability(
-  config: ConfigResult = loadConfig(),
+  config: ConfigResult = appConfig(),
 ): PasswordResetAvailability {
   return config.ok ? 'accepted' : 'unavailable';
 }
