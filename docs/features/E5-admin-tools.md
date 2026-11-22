@@ -71,7 +71,7 @@ surface ships in English; FI/EN remains the field app's contract).
 | D2 | Zones, `zone_scores_current`, `zone_scores` | Awais / Hassan | Zone screens | `seed-dev-scores` | ✅ built |
 | D3 | `jobs` table and `JobsService.enqueue` | Hassan | Queue, recompute, retry | none needed | ✅ built |
 | D4 | `reports` / `visits` tables | Hassan | Activity reads | seed scores; insert report/visit rows for local checks | ✅ tables, ⬜ report API |
-| D5 | `audit_log` | Hassan / Salman | Audit trail | migrations `0007`, `0008` in this branch | ✅ this branch |
+| D5 | `audit_log` | Hassan / Salman | Audit trail | migrations `0010`, `0011` in this branch | ✅ this branch |
 | D6 | Live API origin + CORS for the admin origin | Sabih / Hassan | Deployed panel | local Vite proxy | ✅ `CORS_ORIGINS` allow-list |
 | D7 | Zone validation/moderation rules (6.5) | Hassan | Report verdicts, trust edits | read-only views now | ⬜ |
 
@@ -149,9 +149,9 @@ and is merged into Swagger UI at `/docs`.
 
 ## 5. Data model
 
-The audit table was added by `picky-server/migrations/0007_admin_audit.sql` and extended by
-`0008_audit_integrity.sql`. No existing business table is altered, so the ingest, scoring and app
-paths are untouched. The effective shape after `0008` is:
+The audit table was added by `picky-server/migrations/0010_admin_audit.sql` and extended by
+`0011_audit_integrity.sql`. No existing business table is altered, so the ingest, scoring and app
+paths are untouched. The effective shape after `0011` is:
 
 ```sql
 CREATE TABLE audit_log (
@@ -174,7 +174,7 @@ CREATE INDEX audit_log_created_ix ON audit_log (created_at DESC);
 ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
 ```
 
-- **Append-only:** `0008` installs a `BEFORE UPDATE OR DELETE` trigger on `audit_log` that raises
+- **Append-only:** `0011` installs a `BEFORE UPDATE OR DELETE` trigger on `audit_log` that raises
   an exception. Application code cannot rewrite or remove evidence. `TRUNCATE` remains an
   owner-only schema/test operation; an authenticated API request cannot issue it.
 - **Who writes success:** `AdminService`, inside the same transaction as the mutation it records.
