@@ -46,6 +46,19 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.alerts_source = make_alerts_source(db_url)
         log.info("alerts_source wired to DATABASE_URL")
 
+    # Optional Firebase Admin SDK for FCM push (requires firebase-admin in [job] extra).
+    _cred_json = os.getenv("FIREBASE_CREDENTIAL_JSON")
+    _cred_path = os.getenv("FIREBASE_CREDENTIAL_PATH")
+    if _cred_json or _cred_path:
+        try:
+            from app.modules.push.fcm import init_fcm_app
+            app.state.fcm_app = init_fcm_app(_cred_json, _cred_path)
+            log.info("Firebase Admin SDK initialised; push notifications enabled")
+        except ImportError:
+            log.info("firebase-admin not installed; push notifications disabled")
+        except Exception as exc:
+            log.warning("Firebase Admin SDK init failed: %s", exc)
+
     # Optional APScheduler daily job (requires apscheduler extra).
     _scheduler = None
     try:
