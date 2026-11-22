@@ -100,9 +100,9 @@ export function SignInPage() {
           </Button>
 
           <p className="hint">
-            First admin? Run{' '}
-            <code>npm run make-admin -- you@example.com</code> in{' '}
-            <code>picky-server</code>.
+            First admin? Locally, <code>npm run seed:users</code> in{' '}
+            <code>picky-server</code> creates <code>admin@picky.fi</code>; elsewhere,
+            promote an account with <code>npm run make-admin -- you@example.com</code>.
           </p>
         </form>
         <p className="muted small signin-foot">

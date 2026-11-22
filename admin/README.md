@@ -72,11 +72,38 @@ hand-written interfaces remain because several response schemas are still
 
 ## Deployment
 
-1. Build with the API origin compiled in:
-   `VITE_API_BASE_URL=https://<api-origin>/api/v1 npm run build`
-2. Publish `dist/` to the chosen static host (Vercel or Caddy on the team VM).
-3. Add the admin origin to the API's `CORS_ORIGINS` (comma-separated bare origins). The API
-   allows only that list and rejects a wildcard.
+### Vercel
+
+`vercel.json` carries the build settings (Vite, `npm ci`, `npm run build`, output `dist/`), the
+SPA rewrite and the security headers, so the project needs only three settings in the Vercel
+dashboard:
+
+1. **Root Directory:** `admin` (Project → Settings → General). The repository root is not the app.
+2. **Environment variable:** `VITE_API_BASE_URL` = the deployed `picky-server` origin plus
+   `/api/v1`, for example `https://api.example.com/api/v1`, for Production (and Preview if you
+   use previews). It is compiled into the bundle, so redeploy after changing it. The build
+   **fails on purpose** when it is missing or not `https`: without it the console would call
+   its own static domain instead of the API.
+3. **API CORS:** add the console's Vercel origin (e.g. `https://picky-admin.vercel.app`, no
+   path) to `CORS_ORIGINS` on the API and restart it. The API allows only listed origins and
+   rejects a wildcard, so preview deployments (random URLs) work only if their origin is listed
+   too.
+
+Then deploy from the dashboard, or with the CLI from `admin/`: `npx vercel` (preview) and
+`npx vercel --prod`.
+
+After deploying, sign in and open **Operations** and **Map**. "API not reachable" means
+`VITE_API_BASE_URL` or CORS is wrong; "not integrated with the API yet" means that API version
+lacks the endpoint (deploy the matching `picky-server`).
+
+`/api/*` is never rewritten to `index.html`, so a wrong API base fails visibly instead of
+returning the SPA's HTML.
+
+### Other static hosts
+
+Build with `VITE_API_BASE_URL=https://<api-origin>/api/v1 npm run build`, publish `dist/`, send
+every unknown non-`/api` path to `index.html`, copy the headers from `vercel.json`, and add the
+origin to `CORS_ORIGINS`.
 
 The bundle contains only the public API origin. No database URL, service key or JWT secret is
 ever compiled into it.
