@@ -1074,6 +1074,35 @@ th.numeric {
   flex-wrap: wrap;
 }
 
+/* Audit diff -------------------------------------------------------------- */
+
+.audit-diff {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.diff-panel {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.diff-before {
+  background: rgba(239, 68, 68, 0.06);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.diff-after {
+  background: rgba(74, 222, 128, 0.06);
+  border-color: rgba(74, 222, 128, 0.25);
+}
+
+.diff-panel .code-block {
+  margin-top: 6px;
+}
+
 /* Drawers ----------------------------------------------------------------- */
 
 .drawer-backdrop {
@@ -1915,6 +1944,10 @@ th.numeric {
 }
 
 @media (max-width: 700px) {
+  .audit-diff {
+    grid-template-columns: 1fr;
+  }
+
   .account-facts {
     grid-template-columns: 1fr 1fr;
     width: 100%;
