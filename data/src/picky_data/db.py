@@ -166,6 +166,16 @@ def _load_all(eng, out_dir: Path) -> dict[str, int]:
     return counts
 
 
+def load_zone_features(eng, as_of=None) -> int:
+    """Build and upsert zone_features rows for *as_of* (default: today Helsinki)."""
+    from .features import build_zone_features
+
+    df = build_zone_features(eng, as_of)
+    if df.empty:
+        return 0
+    return _upsert_df(eng, df, "zone_features", ["zone_id", "as_of"])
+
+
 def run_sql_checks() -> list[tuple[str, int]]:
     """Run each statement in sql/900_data_checks.sql; return (check, failing_rows)."""
     from sqlalchemy import text
