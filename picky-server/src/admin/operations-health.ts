@@ -55,6 +55,8 @@ export interface OperationsHealthInput {
     running: number;
     overdue: number;
     oldestQueuedAt: Date | string | null;
+    stuck: number;
+    expiredLeases: number;
   };
   duplicates: { groups: number; extra: number };
   required: { missingModelVersion: number };
@@ -148,14 +150,7 @@ export function buildOperationsHealth(
 ): OperationsHealth {
   const checkedAt = input.now.toISOString();
   const checks: OperationsHealthCheck[] = [];
-  const unavailable: OperationsHealthUnavailable[] = [
-    {
-      id: 'expired-leases',
-      label: 'Expired job leases',
-      reason:
-        'jobs has no lease_expires_at column yet; queue age is reported instead.',
-    },
-  ];
+  const unavailable: OperationsHealthUnavailable[] = [];
 
   const coverageBreakdown = input.species.map((species) => {
     const percent = percentage(species.zonesScored, input.zonesTotal);
@@ -301,6 +296,33 @@ export function buildOperationsHealth(
     runbook:
       'Confirm the worker process is running and can claim rows, then inspect the oldest queued payload.',
     href: '/jobs?status=queued',
+    checked_at: checkedAt,
+  });
+
+  checks.push({
+    id: 'queue-leases',
+    label: 'Queue leases',
+    status:
+      input.queue.expiredLeases > 0
+        ? 'fail'
+        : input.queue.stuck > 0
+          ? 'warn'
+          : 'ok',
+    value:
+      input.queue.expiredLeases > 0
+        ? `${numberFormat.format(input.queue.expiredLeases)} expired`
+        : `${numberFormat.format(input.queue.stuck)} stuck`,
+    threshold: '0 expired leases; heartbeat < 2 min',
+    detail:
+      input.queue.expiredLeases > 0
+        ? `${numberFormat.format(input.queue.expiredLeases)} running job(s) have an expired lease; ${numberFormat.format(input.queue.stuck)} running job(s) are stuck. The worker reaps expired leases before its next claim.`
+        : input.queue.stuck > 0
+          ? `${numberFormat.format(input.queue.stuck)} running job(s) have no heartbeat in the last 2 minutes. Their leases are still live, so the worker may be paused.`
+          : 'No running job has an expired lease or a heartbeat older than 2 minutes.',
+    owner: 'Scoring worker',
+    runbook:
+      'Check the worker process and its worker_id; claim_job() automatically requeues expired leases before claiming, and heartbeat_job() fences a worker that lost its lease.',
+    href: '/jobs?status=running',
     checked_at: checkedAt,
   });
 

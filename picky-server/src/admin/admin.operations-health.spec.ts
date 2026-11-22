@@ -48,6 +48,8 @@ describe('AdminService operations health', () => {
             running: 0,
             overdue: 0,
             oldest_queued_at: null,
+            stuck: 0,
+            expired_leases: 0,
           },
         ],
       })
@@ -108,6 +110,8 @@ describe('AdminService operations health', () => {
     expect(sql).toContain('FROM zone_scores_current');
     expect(sql).toContain('FROM species');
     expect(sql).toContain('FROM jobs');
+    expect(sql).toContain('lease_expires_at');
+    expect(sql).toContain('heartbeat_at');
     expect(sql).toContain('FROM reports');
     expect(sql).toContain("explanation->>'model_version'");
     expect(sql).toContain('FROM ingest_runs');
@@ -121,12 +125,9 @@ describe('AdminService operations health', () => {
     expect(
       health.checks.find((check) => check.id === 'ingest-runs'),
     ).toBeUndefined();
-    expect(health.unavailable).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ id: 'ingest-runs' }),
-        expect.objectContaining({ id: 'expired-leases' }),
-      ]),
-    );
+    expect(health.unavailable).toEqual([
+      expect.objectContaining({ id: 'ingest-runs' }),
+    ]);
     expect(
       (query.mock.calls as unknown[][]).some((call) =>
         String(call[0]).includes('FROM ingest_runs'),

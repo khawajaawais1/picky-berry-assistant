@@ -142,7 +142,7 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [jobs, page, page_size, total, counts]
+                required: [jobs, page, page_size, total, counts, stuck_count]
                 properties:
                   jobs:
                     type: array
@@ -151,6 +151,7 @@ paths:
                   page_size: { type: integer }
                   total: { type: integer }
                   counts: { $ref: '#/components/schemas/JobCounts' }
+                  stuck_count: { type: integer }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/Validation' }
@@ -582,6 +583,15 @@ components:
         attempts: { type: integer }
         run_at: { type: string, format: date-time }
         locked_at: { type: string, format: date-time, nullable: true }
+        worker_id: { type: string, nullable: true }
+        heartbeat_at: { type: string, format: date-time, nullable: true }
+        lease_expires_at: { type: string, format: date-time, nullable: true }
+        recovered_at: { type: string, format: date-time, nullable: true }
+        recovery_count: { type: integer }
+        lease_expired: { type: boolean }
+        heartbeat_age_seconds: { type: integer, nullable: true }
+        stuck: { type: boolean }
+        stuck_for_seconds: { type: integer, nullable: true }
         finished_at: { type: string, format: date-time, nullable: true }
         last_error: { type: string, nullable: true }
         created_at: { type: string, format: date-time }

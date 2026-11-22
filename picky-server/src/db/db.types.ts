@@ -130,6 +130,11 @@ export interface JobsTable {
   attempts: number;
   run_at: Timestamp;
   locked_at: Timestamp | null;
+  worker_id: string | null;
+  heartbeat_at: Timestamp | null;
+  lease_expires_at: Timestamp | null;
+  recovered_at: Timestamp | null;
+  recovery_count: Generated<number>;
   finished_at: Timestamp | null;
   last_error: string | null;
   created_at: Timestamp;

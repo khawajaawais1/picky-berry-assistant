@@ -88,6 +88,13 @@ The audit table is migration `0007_admin_audit.sql`, extended by `0008_audit_int
 database level with a trigger that rejects `UPDATE` and `DELETE`. The web client lives in
 [`../admin`](../admin/README.md).
 
+The job queue is lease-based as of `0009_job_leases.sql`. The worker contract is in
+[`docs/contracts/job-types.md`](./docs/contracts/job-types.md): `claim_job()` establishes a
+five-minute lease, `heartbeat_job()` extends a live lease, `complete_job()` / `fail_job()` fence a
+worker to its own claim, and `reap_stale_jobs()` requeues expired claims before the next claim.
+The admin queue exposes the lease, heartbeat, worker id, recovery count and a derived stuck state;
+operations health fails on an expired lease and warns when a live lease misses its heartbeat.
+
 ## Validation
 
 ```powershell
@@ -101,7 +108,8 @@ npm run db:check-a2
 
 `npm run test:e2e` starts a throwaway PostGIS container, applies the test baseline and every
 API migration, and covers the admin authorization matrix, moderation reads, session revocation
-and job retry failures. On Apple Silicon it uses `imresamu/postgis:17-3.5`; x86 uses
+job retry failures, the worker claim/heartbeat/complete contract and stale-lease recovery. On
+Apple Silicon it uses `imresamu/postgis:17-3.5`; x86 uses
 `postgis/postgis:17-3.5`. Set `POSTGIS_TEST_IMAGE` to pin another compatible image. The test
 baseline uses text H3 values because the PostGIS image does not ship h3-pg. Docker must be
 running; the suite never uses the developer's local database.

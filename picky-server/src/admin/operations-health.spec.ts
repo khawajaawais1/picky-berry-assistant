@@ -34,6 +34,8 @@ function input(
       running: 0,
       overdue: 0,
       oldestQueuedAt: null,
+      stuck: 0,
+      expiredLeases: 0,
     },
     duplicates: { groups: 0, extra: 0 },
     required: { missingModelVersion: 0 },
@@ -71,14 +73,13 @@ describe('buildOperationsHealth', () => {
       'freshness',
       'stale-scores',
       'queue-age',
+      'queue-leases',
       'duplicate-reports',
       'required-fields',
       'out-of-range',
       'ingest-runs',
     ]);
-    expect(health.unavailable).toEqual([
-      expect.objectContaining({ id: 'expired-leases' }),
-    ]);
+    expect(health.unavailable).toEqual([]);
     expect(health.generated_at).toBe(NOW.toISOString());
     expect(
       health.checks.every((check) => check.checked_at === NOW.toISOString()),
@@ -131,6 +132,8 @@ describe('buildOperationsHealth', () => {
           running: 1,
           overdue: 1,
           oldestQueuedAt: '2026-11-22T11:55:00.000Z',
+          stuck: 0,
+          expiredLeases: 0,
         },
       }),
     );
@@ -141,6 +144,8 @@ describe('buildOperationsHealth', () => {
           running: 0,
           overdue: 5,
           oldestQueuedAt: '2026-11-22T11:00:00.000Z',
+          stuck: 0,
+          expiredLeases: 0,
         },
       }),
     );
@@ -151,6 +156,43 @@ describe('buildOperationsHealth', () => {
     expect(fail.checks.find((check) => check.id === 'queue-age')?.status).toBe(
       'fail',
     );
+  });
+
+  it('fails on expired leases and warns when a live lease misses its heartbeat', () => {
+    const expired = buildOperationsHealth(
+      input({
+        queue: {
+          queued: 0,
+          running: 2,
+          overdue: 0,
+          oldestQueuedAt: null,
+          stuck: 1,
+          expiredLeases: 1,
+        },
+      }),
+    );
+    const lateHeartbeat = buildOperationsHealth(
+      input({
+        queue: {
+          queued: 0,
+          running: 1,
+          overdue: 0,
+          oldestQueuedAt: null,
+          stuck: 1,
+          expiredLeases: 0,
+        },
+      }),
+    );
+
+    expect(
+      expired.checks.find((check) => check.id === 'queue-leases')?.status,
+    ).toBe('fail');
+    expect(
+      expired.checks.find((check) => check.id === 'queue-leases')?.value,
+    ).toBe('1 expired');
+    expect(
+      lateHeartbeat.checks.find((check) => check.id === 'queue-leases')?.status,
+    ).toBe('warn');
   });
 
   it('fails the data-quality checks when duplicates, nulls or bad values exist', () => {
@@ -250,12 +292,9 @@ describe('buildOperationsHealth', () => {
     expect(
       health.checks.find((check) => check.id === 'ingest-runs'),
     ).toBeUndefined();
-    expect(health.unavailable).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ id: 'expired-leases' }),
-        expect.objectContaining({ id: 'ingest-runs' }),
-      ]),
-    );
+    expect(health.unavailable).toEqual([
+      expect.objectContaining({ id: 'ingest-runs' }),
+    ]);
   });
 
   it('fails coverage, freshness and stale scores on an empty score table', () => {

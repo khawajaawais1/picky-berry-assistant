@@ -28,6 +28,9 @@ const ZONE_ORDER: Record<ZoneSort, string> = {
   reports: 'reports_total DESC, z.name ASC NULLS LAST',
 };
 
+const LEASE_FALLBACK_MS = 5 * 60 * 1000;
+const STUCK_AFTER_MS = 2 * 60 * 1000;
+
 interface ZoneOverviewRow extends QueryResultRow {
   zones_total: number;
   zones_scored: number;
@@ -67,6 +70,8 @@ interface JobOverviewRow extends QueryResultRow {
   failed_7d: number;
   oldest_queued_at: Date | null;
   overdue: number;
+  stuck: number;
+  expired_leases: number;
 }
 
 interface ZoneListRow extends QueryResultRow {
@@ -158,6 +163,11 @@ interface JobRow extends QueryResultRow {
   attempts: number;
   run_at: Date;
   locked_at: Date | null;
+  worker_id: string | null;
+  heartbeat_at: Date | null;
+  lease_expires_at: Date | null;
+  recovered_at: Date | null;
+  recovery_count: number;
   finished_at: Date | null;
   last_error: string | null;
   created_at: Date;
@@ -290,6 +300,7 @@ interface DailyJobRow extends QueryResultRow {
 interface JobStatusRow extends QueryResultRow {
   status: string;
   count: number;
+  stuck: number;
 }
 
 interface OperationsOverviewRow extends QueryResultRow {
@@ -312,6 +323,8 @@ interface OperationsQueueRow extends QueryResultRow {
   running: number;
   overdue: number;
   oldest_queued_at: Date | null;
+  stuck: number;
+  expired_leases: number;
 }
 
 interface OperationsDuplicateRow extends QueryResultRow {
@@ -356,6 +369,12 @@ function asIso(value: Date | string | null): string | null {
   if (!value) return null;
   const date = value instanceof Date ? value : new Date(value);
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function asDate(value: Date | string | null): Date | null {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function asNumber(value: unknown): number | null {
@@ -439,7 +458,27 @@ export class AdminService {
                 min(run_at) FILTER (WHERE status = 'queued') AS oldest_queued_at,
                 (SELECT count(*) FROM jobs
                   WHERE status = 'queued'
-                    AND run_at < now() - interval '15 minutes')::int AS overdue
+                    AND run_at < now() - interval '15 minutes')::int AS overdue,
+                count(*) FILTER (
+                  WHERE status = 'running'
+                    AND COALESCE(
+                      lease_expires_at,
+                      locked_at + interval '5 minutes',
+                      created_at + interval '5 minutes'
+                    ) <= now()
+                )::int AS expired_leases,
+                count(*) FILTER (
+                  WHERE status = 'running'
+                    AND (
+                      COALESCE(
+                        lease_expires_at,
+                        locked_at + interval '5 minutes',
+                        created_at + interval '5 minutes'
+                      ) <= now()
+                      OR heartbeat_at IS NULL
+                      OR heartbeat_at < now() - interval '2 minutes'
+                    )
+                )::int AS stuck
          FROM jobs`,
       ),
       this.species.list(),
@@ -468,6 +507,8 @@ export class AdminService {
       jobs: {
         ...jobStats.rows[0],
         oldest_queued_at: asIso(jobStats.rows[0].oldest_queued_at),
+        stuck: Number(jobStats.rows[0].stuck),
+        expired_leases: Number(jobStats.rows[0].expired_leases),
       },
       species: species.species,
       recent_activity: recentActivity,
@@ -508,7 +549,27 @@ export class AdminService {
              count(*) FILTER (WHERE status = 'running')::int AS running,
              count(*) FILTER (WHERE status = 'queued'
                AND run_at < now() - interval '15 minutes')::int AS overdue,
-             min(run_at) FILTER (WHERE status = 'queued') AS oldest_queued_at
+             min(run_at) FILTER (WHERE status = 'queued') AS oldest_queued_at,
+             count(*) FILTER (
+               WHERE status = 'running'
+                 AND COALESCE(
+                   lease_expires_at,
+                   locked_at + interval '5 minutes',
+                   created_at + interval '5 minutes'
+                 ) <= now()
+             )::int AS expired_leases,
+             count(*) FILTER (
+               WHERE status = 'running'
+                 AND (
+                   COALESCE(
+                     lease_expires_at,
+                     locked_at + interval '5 minutes',
+                     created_at + interval '5 minutes'
+                   ) <= now()
+                   OR heartbeat_at IS NULL
+                   OR heartbeat_at < now() - interval '2 minutes'
+                 )
+             )::int AS stuck
            FROM jobs`,
       ),
       this.database.pool.query<OperationsDuplicateRow>(
@@ -586,6 +647,8 @@ export class AdminService {
         running: Number(queueRow?.running ?? 0),
         overdue: Number(queueRow?.overdue ?? 0),
         oldestQueuedAt: asIso(queueRow?.oldest_queued_at ?? null),
+        stuck: Number(queueRow?.stuck ?? 0),
+        expiredLeases: Number(queueRow?.expired_leases ?? 0),
       },
       duplicates: {
         groups: Number(duplicateRow?.duplicate_groups ?? 0),
@@ -793,7 +856,8 @@ export class AdminService {
       ),
       this.database.pool.query<JobRow>(
         `SELECT id, type, payload, dedupe_key, status, attempts, run_at,
-                locked_at, finished_at, last_error, created_at
+                locked_at, worker_id, heartbeat_at, lease_expires_at,
+                recovered_at, recovery_count, finished_at, last_error, created_at
          FROM jobs
          WHERE ($1::text IS NULL OR status = $1)
            AND ($2::text IS NULL OR type = $2)
@@ -802,7 +866,20 @@ export class AdminService {
         [status, type, query.page_size, offset],
       ),
       this.database.pool.query<JobStatusRow>(
-        `SELECT status, count(*)::int AS count FROM jobs GROUP BY status`,
+        `SELECT status, count(*)::int AS count,
+                count(*) FILTER (
+                  WHERE status = 'running'
+                    AND (
+                      COALESCE(
+                        lease_expires_at,
+                        locked_at + interval '5 minutes',
+                        created_at + interval '5 minutes'
+                      ) <= now()
+                      OR heartbeat_at IS NULL
+                      OR heartbeat_at < now() - interval '2 minutes'
+                    )
+                )::int AS stuck
+         FROM jobs GROUP BY status`,
       ),
     ]);
 
@@ -813,29 +890,20 @@ export class AdminService {
       done: 0,
       failed: 0,
     };
+    let stuckCount = 0;
     for (const row of statusRows.rows) {
       counts[row.status] = Number(row.count);
       counts.all += Number(row.count);
+      stuckCount += Number(row.stuck);
     }
 
     return {
-      jobs: rows.rows.map((job) => ({
-        id: Number(job.id),
-        type: job.type,
-        payload: job.payload,
-        dedupe_key: job.dedupe_key,
-        status: job.status,
-        attempts: Number(job.attempts),
-        run_at: asIso(job.run_at),
-        locked_at: asIso(job.locked_at),
-        finished_at: asIso(job.finished_at),
-        last_error: job.last_error,
-        created_at: asIso(job.created_at),
-      })),
+      jobs: rows.rows.map((job) => this.mapJobRow(job)),
       page: query.page,
       page_size: query.page_size,
       total: total.rows[0].total,
       counts,
+      stuck_count: stuckCount,
     };
   }
 
@@ -1579,6 +1647,65 @@ export class AdminService {
       [limit],
     );
     return rows.rows.map((row) => this.mapAuditRow(row));
+  }
+
+  private mapJobRow(
+    job: JobRow,
+    now: Date = new Date(),
+  ): Record<string, unknown> {
+    const heartbeat = asDate(job.heartbeat_at);
+    const lease = asDate(job.lease_expires_at);
+    const locked = asDate(job.locked_at);
+    const created = asDate(job.created_at);
+    const leaseDeadline =
+      lease ??
+      (locked
+        ? new Date(locked.getTime() + LEASE_FALLBACK_MS)
+        : created
+          ? new Date(created.getTime() + LEASE_FALLBACK_MS)
+          : null);
+    const running = job.status === 'running';
+    const leaseExpired =
+      running &&
+      leaseDeadline !== null &&
+      leaseDeadline.getTime() <= now.getTime();
+    const heartbeatAge =
+      heartbeat === null
+        ? null
+        : Math.max(0, Math.floor((now.getTime() - heartbeat.getTime()) / 1000));
+    const stuck =
+      running &&
+      (leaseExpired ||
+        heartbeatAge === null ||
+        heartbeatAge * 1000 > STUCK_AFTER_MS);
+    const stuckSince = heartbeat ?? locked ?? created;
+    const stuckFor =
+      stuck && stuckSince
+        ? Math.max(0, Math.floor((now.getTime() - stuckSince.getTime()) / 1000))
+        : null;
+
+    return {
+      id: Number(job.id),
+      type: job.type,
+      payload: job.payload,
+      dedupe_key: job.dedupe_key,
+      status: job.status,
+      attempts: Number(job.attempts),
+      run_at: asIso(job.run_at),
+      locked_at: asIso(job.locked_at),
+      worker_id: job.worker_id,
+      heartbeat_at: asIso(job.heartbeat_at),
+      lease_expires_at: asIso(job.lease_expires_at),
+      recovered_at: asIso(job.recovered_at),
+      recovery_count: Number(job.recovery_count ?? 0),
+      finished_at: asIso(job.finished_at),
+      last_error: job.last_error,
+      created_at: asIso(job.created_at),
+      lease_expired: leaseExpired,
+      heartbeat_age_seconds: heartbeatAge,
+      stuck,
+      stuck_for_seconds: stuckFor,
+    };
   }
 
   private mapAuditRow(row: AuditRow): Record<string, unknown> {

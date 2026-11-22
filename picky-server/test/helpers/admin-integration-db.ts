@@ -22,6 +22,7 @@ export interface AdminFixtures {
   highReportId: string;
   failedJobId: number;
   runningJobId: number;
+  staleJobId: number;
   queuedJobId: number;
 }
 
@@ -182,9 +183,21 @@ export async function resetAdminFixtures(pool: Pool): Promise<AdminFixtures> {
   );
   const runningJob = await pool.query<{ id: string }>(
     `INSERT INTO jobs
-       (type, payload, dedupe_key, status, attempts, run_at, locked_at)
+       (type, payload, dedupe_key, status, attempts, run_at, locked_at,
+        worker_id, heartbeat_at, lease_expires_at)
      VALUES
-       ('recompute_all', '{}', 'running-source', 'running', 1, now(), now())
+       ('recompute_all', '{}', 'running-source', 'running', 1, now(), now(),
+        'worker-live', now() - interval '10 seconds', now() + interval '5 minutes')
+     RETURNING id`,
+  );
+  const staleJob = await pool.query<{ id: string }>(
+    `INSERT INTO jobs
+       (type, payload, dedupe_key, status, attempts, run_at, locked_at,
+        worker_id, heartbeat_at, lease_expires_at)
+     VALUES
+       ('recompute_all', '{}', 'stale-source', 'running', 1,
+        now() - interval '1 hour', now() - interval '10 minutes',
+        'worker-stale', now() - interval '10 minutes', now() - interval '5 minutes')
      RETURNING id`,
   );
   const queuedJob = await pool.query<{ id: string }>(
@@ -212,6 +225,7 @@ export async function resetAdminFixtures(pool: Pool): Promise<AdminFixtures> {
     highReportId: HIGH_REPORT_ID,
     failedJobId: Number(failedJob.rows[0].id),
     runningJobId: Number(runningJob.rows[0].id),
+    staleJobId: Number(staleJob.rows[0].id),
     queuedJobId: Number(queuedJob.rows[0].id),
   };
 }

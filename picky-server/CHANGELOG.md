@@ -14,6 +14,10 @@ document follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   expires after one hour, and revokes every refresh token of the account.
 - Migration `0006_password_reset_tokens` allows `reset_password` email tokens.
 - `GET /api/v1/health`, matching the `/api/v1` prefix of every other route.
+- Migration `0009_job_leases` gives the job queue worker-owned leases and heartbeats, with
+  `claim_job()`, `heartbeat_job()`, `complete_job()`, `fail_job()` and `reap_stale_jobs()`.
+- `GET /api/v1/admin/jobs` reports worker id, heartbeat, lease expiry, recovery count and a derived
+  stuck state; operations health now checks expired leases and missed heartbeats.
 
 ### Changed
 

@@ -57,11 +57,21 @@ interface RetryResponse {
 
 interface JobListResponse {
   total: number;
+  stuck_count: number;
   jobs: Array<{
     id: number;
     status: string;
     attempts: number;
     last_error: string | null;
+    worker_id: string | null;
+    heartbeat_at: string | null;
+    lease_expires_at: string | null;
+    recovered_at: string | null;
+    recovery_count: number;
+    lease_expired: boolean;
+    heartbeat_age_seconds: number | null;
+    stuck: boolean;
+    stuck_for_seconds: number | null;
   }>;
 }
 
@@ -649,6 +659,223 @@ describe('Admin API against PostGIS (integration)', () => {
     });
   });
 
+  it('exposes live leases, heartbeats and stuck state in the admin queue', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/admin/jobs')
+      .query({ status: 'running' })
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    const body = response.body as JobListResponse;
+    const live = body.jobs.find((job) => job.id === fixtures.runningJobId);
+    const stale = body.jobs.find((job) => job.id === fixtures.staleJobId);
+
+    expect(body.total).toBe(2);
+    expect(body.stuck_count).toBe(1);
+    expect(live).toMatchObject({
+      status: 'running',
+      worker_id: 'worker-live',
+      lease_expired: false,
+      stuck: false,
+      recovery_count: 0,
+    });
+    expect(live?.heartbeat_age_seconds).toBeGreaterThanOrEqual(0);
+    expect(stale).toMatchObject({
+      status: 'running',
+      worker_id: 'worker-stale',
+      lease_expired: true,
+      stuck: true,
+      recovery_count: 0,
+    });
+    expect(stale?.heartbeat_age_seconds).toBeGreaterThanOrEqual(9 * 60);
+    expect(stale?.stuck_for_seconds).toBeGreaterThanOrEqual(9 * 60);
+  });
+
+  it('claims a queued job and fences heartbeats to its live owner', async () => {
+    const claimed = await database.pool.query<{
+      id: string;
+      status: string;
+      attempts: number;
+      worker_id: string;
+      heartbeat_at: Date;
+      lease_expires_at: Date;
+    }>('SELECT * FROM claim_job($1, $2)', ['worker-test', 120]);
+
+    expect(claimed.rows).toHaveLength(1);
+    expect(claimed.rows[0]).toMatchObject({
+      id: String(fixtures.queuedJobId),
+      status: 'running',
+      attempts: 1,
+      worker_id: 'worker-test',
+    });
+    expect(claimed.rows[0].heartbeat_at).toBeInstanceOf(Date);
+    expect(claimed.rows[0].lease_expires_at.getTime()).toBeGreaterThan(
+      Date.now(),
+    );
+
+    const heartbeat = await database.pool.query<{ ok: boolean }>(
+      'SELECT heartbeat_job($1, $2, $3) AS ok',
+      [fixtures.queuedJobId, 'worker-test', 120],
+    );
+    const foreign = await database.pool.query<{ ok: boolean }>(
+      'SELECT heartbeat_job($1, $2, $3) AS ok',
+      [fixtures.queuedJobId, 'worker-other', 120],
+    );
+    expect(heartbeat.rows[0].ok).toBe(true);
+    expect(foreign.rows[0].ok).toBe(false);
+
+    await database.pool.query(
+      `UPDATE jobs SET lease_expires_at = now() - interval '1 second'
+       WHERE id = $1`,
+      [fixtures.queuedJobId],
+    );
+    const expired = await database.pool.query<{ ok: boolean }>(
+      'SELECT heartbeat_job($1, $2, $3) AS ok',
+      [fixtures.queuedJobId, 'worker-test', 120],
+    );
+    expect(expired.rows[0].ok).toBe(false);
+  });
+
+  it('fences completion to the current worker and a live lease', async () => {
+    await database.pool.query('SELECT * FROM claim_job($1, $2)', [
+      'worker-complete',
+      120,
+    ]);
+
+    const foreign = await database.pool.query<{ ok: boolean }>(
+      'SELECT complete_job($1, $2) AS ok',
+      [fixtures.queuedJobId, 'worker-other'],
+    );
+    const completed = await database.pool.query<{ ok: boolean }>(
+      'SELECT complete_job($1, $2) AS ok',
+      [fixtures.queuedJobId, 'worker-complete'],
+    );
+    expect(foreign.rows[0].ok).toBe(false);
+    expect(completed.rows[0].ok).toBe(true);
+
+    const job = await database.pool.query<{
+      status: string;
+      heartbeat_at: Date | null;
+      lease_expires_at: Date | null;
+      worker_id: string | null;
+    }>(
+      `SELECT status, heartbeat_at, lease_expires_at, worker_id
+       FROM jobs WHERE id = $1`,
+      [fixtures.queuedJobId],
+    );
+    expect(job.rows[0]).toMatchObject({
+      status: 'done',
+      heartbeat_at: null,
+      lease_expires_at: null,
+      worker_id: 'worker-complete',
+    });
+  });
+
+  it('records a fenced worker failure with its error', async () => {
+    await database.pool.query('SELECT * FROM claim_job($1, $2)', [
+      'worker-fail',
+      120,
+    ]);
+
+    const foreign = await database.pool.query<{ ok: boolean }>(
+      `SELECT fail_job($1, $2, $3) AS ok`,
+      [fixtures.queuedJobId, 'worker-other', 'not mine'],
+    );
+    const failed = await database.pool.query<{ ok: boolean }>(
+      `SELECT fail_job($1, $2, $3) AS ok`,
+      [fixtures.queuedJobId, 'worker-fail', 'scorer exploded'],
+    );
+    expect(foreign.rows[0].ok).toBe(false);
+    expect(failed.rows[0].ok).toBe(true);
+
+    const job = await database.pool.query<{
+      status: string;
+      worker_id: string | null;
+      lease_expires_at: Date | null;
+      last_error: string | null;
+    }>(
+      `SELECT status, worker_id, lease_expires_at, last_error
+       FROM jobs WHERE id = $1`,
+      [fixtures.queuedJobId],
+    );
+    expect(job.rows[0]).toMatchObject({
+      status: 'failed',
+      worker_id: 'worker-fail',
+      lease_expires_at: null,
+      last_error: 'scorer exploded',
+    });
+  });
+
+  it('reaps an expired lease back to queued with recovery evidence', async () => {
+    const reaped = await database.pool.query<{
+      job_id: string;
+      result: string;
+    }>('SELECT * FROM reap_stale_jobs($1)', [10]);
+
+    expect(reaped.rows).toEqual(
+      expect.arrayContaining([
+        { job_id: String(fixtures.staleJobId), result: 'requeued' },
+      ]),
+    );
+    const job = await database.pool.query<{
+      status: string;
+      attempts: number;
+      worker_id: string | null;
+      heartbeat_at: Date | null;
+      lease_expires_at: Date | null;
+      recovered_at: Date | null;
+      recovery_count: number;
+      finished_at: Date | null;
+      last_error: string | null;
+    }>(
+      `SELECT status, attempts, worker_id, heartbeat_at, lease_expires_at,
+              recovered_at, recovery_count, finished_at, last_error
+       FROM jobs WHERE id = $1`,
+      [fixtures.staleJobId],
+    );
+    expect(job.rows[0]).toMatchObject({
+      status: 'queued',
+      attempts: 1,
+      worker_id: null,
+      heartbeat_at: null,
+      lease_expires_at: null,
+      recovery_count: 1,
+      finished_at: null,
+      last_error: 'lease expired before completion',
+    });
+    expect(job.rows[0].recovered_at).toBeInstanceOf(Date);
+  });
+
+  it('fails an expired job instead of colliding with a newer queued dedupe key', async () => {
+    await database.pool.query(
+      `INSERT INTO jobs (type, payload, dedupe_key, status, run_at)
+       VALUES ('recompute_all', '{}', 'stale-source', 'queued', now())`,
+    );
+
+    const reaped = await database.pool.query<{
+      job_id: string;
+      result: string;
+    }>('SELECT * FROM reap_stale_jobs($1)', [10]);
+    expect(reaped.rows).toEqual(
+      expect.arrayContaining([
+        { job_id: String(fixtures.staleJobId), result: 'failed' },
+      ]),
+    );
+
+    const job = await database.pool.query<{
+      status: string;
+      recovery_count: number;
+      last_error: string | null;
+    }>('SELECT status, recovery_count, last_error FROM jobs WHERE id = $1', [
+      fixtures.staleJobId,
+    ]);
+    expect(job.rows[0]).toMatchObject({
+      status: 'failed',
+      recovery_count: 1,
+      last_error:
+        'lease expired; a newer queued job with the same dedupe key exists',
+    });
+  });
+
   it('rejects direct updates and deletes against audit rows', async () => {
     const inserted = await database.pool.query<{ id: string }>(
       `INSERT INTO audit_log (action, target_type)
@@ -703,5 +930,11 @@ describe('Admin API against PostGIS (integration)', () => {
       value: '1 overdue',
     });
     expect(queueAge?.detail).toContain('1 queued');
+
+    const queueLeases = healthBody.checks.find(
+      (check) => check.id === 'queue-leases',
+    );
+    expect(queueLeases).toMatchObject({ status: 'fail', value: '1 expired' });
+    expect(queueLeases?.detail).toContain('1 running job');
   });
 });
