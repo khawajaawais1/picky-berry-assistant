@@ -218,6 +218,49 @@ export interface UsersResponse {
   total: number;
 }
 
+export interface UserSession {
+  id: string;
+  created_at: string | null;
+  expires_at: string | null;
+  user_agent: string | null;
+}
+
+export interface UserReport {
+  id: string;
+  zone_id: string;
+  zone_name: string | null;
+  zone_h3: string;
+  species: string;
+  rating: number;
+  created_at: string | null;
+}
+
+export interface UserVisit {
+  id: string;
+  zone_id: string | null;
+  zone_name: string | null;
+  zone_h3: string | null;
+  status: string;
+  manual: boolean;
+  started_at: string | null;
+  duration_s: number;
+}
+
+export interface UserDetail extends Account {
+  background_location: boolean;
+  alert_radius_km: number;
+  species_interest: string[];
+  sessions: UserSession[];
+  reports: UserReport[];
+  visits: UserVisit[];
+  audit: AuditEntry[];
+}
+
+export interface RevokeSessionsResponse {
+  user_id: string;
+  revoked_count: number;
+}
+
 export interface DailyCount {
   date: string;
   count: number;

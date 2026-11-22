@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import type { Account, UserRole, UsersResponse } from '../api/types';
 import { useAuth } from '../auth/AuthContext';
@@ -165,7 +166,9 @@ export function UsersPage() {
                   return (
                     <tr key={account.id}>
                       <td>
-                        <span className="cell-title">{account.email}</span>
+                        <Link className="cell-title" to={`/users/${account.id}`}>
+                          {account.email}
+                        </Link>
                         <span className="muted small block">
                           {account.nickname ?? 'no nickname'} · {account.lang}
                         </span>

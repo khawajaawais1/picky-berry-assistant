@@ -161,6 +161,12 @@ function pageMeta(pathname: string): { title: string; description: string } {
       description: 'Picker reports with their reporter trust.',
     };
   }
+  if (pathname.startsWith('/users/')) {
+    return {
+      title: 'Account detail',
+      description: 'Identity, sessions, activity and the audit trail.',
+    };
+  }
   if (pathname === '/users') {
     return {
       title: 'Accounts',

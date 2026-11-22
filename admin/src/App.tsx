@@ -10,6 +10,7 @@ import { OperationsPage } from './pages/OperationsPage';
 import { OverviewPage } from './pages/OverviewPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { SignInPage } from './pages/SignInPage';
+import { UserDetailPage } from './pages/UserDetailPage';
 import { UsersPage } from './pages/UsersPage';
 import { ZoneDetailPage } from './pages/ZoneDetailPage';
 import { ZonesPage } from './pages/ZonesPage';
@@ -27,6 +28,7 @@ export function App() {
           <Route path="jobs" element={<JobsPage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="users" element={<UsersPage />} />
+          <Route path="users/:id" element={<UserDetailPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="lab" element={<FeatureLabPage />} />
           <Route path="audit" element={<AuditPage />} />
