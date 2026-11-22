@@ -116,6 +116,7 @@ describe('AppController (e2e)', () => {
 
   const adminReadRoutes = [
     '/api/v1/admin/overview',
+    '/api/v1/admin/operations/health',
     '/api/v1/admin/zones',
     '/api/v1/admin/jobs',
     '/api/v1/admin/reports',

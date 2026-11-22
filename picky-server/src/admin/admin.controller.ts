@@ -27,6 +27,7 @@ import { ReportsQueryDto } from './dto/reports-query.dto';
 import { RevokeSessionsDto } from './dto/revoke-sessions.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { UsersQueryDto } from './dto/users-query.dto';
+import type { OperationsHealth } from './operations-health';
 import { ZonesQueryDto } from './dto/zones-query.dto';
 
 type AdminRequest = Request & { user: AuthUser; id?: string };
@@ -50,6 +51,12 @@ export class AdminController {
   @Header('Cache-Control', 'no-store')
   overview(): Promise<Record<string, unknown>> {
     return this.admin.overview();
+  }
+
+  @Get('operations/health')
+  @Header('Cache-Control', 'no-store')
+  operationsHealth(): Promise<OperationsHealth> {
+    return this.admin.operationsHealth();
   }
 
   @Get('zones')

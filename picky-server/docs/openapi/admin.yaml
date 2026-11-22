@@ -31,6 +31,35 @@ paths:
                 additionalProperties: true
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
+  /admin/operations/health:
+    get:
+      operationId: getAdminOperationsHealth
+      tags: [admin]
+      summary: Server-side freshness, coverage, queue and data-quality checks
+      description: Read-only snapshot. Checks name an owner and a runbook; capabilities that the current schema cannot verify are listed under `unavailable` rather than guessed.
+      responses:
+        '200':
+          description: Current operations health snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [generated_at, status, checks, unavailable]
+                properties:
+                  generated_at: { type: string, format: date-time }
+                  status: { type: string, enum: [ok, warn, fail] }
+                  checks:
+                    type: array
+                    items:
+                      { $ref: '#/components/schemas/OperationsHealthCheck' }
+                  unavailable:
+                    type: array
+                    items:
+                      {
+                        $ref: '#/components/schemas/OperationsHealthUnavailable',
+                      }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /admin/zones:
     get:
       operationId: listAdminZones
@@ -41,10 +70,20 @@ paths:
           in: query
           description: Name, H3 prefix or zone id
           schema: { type: string, maxLength: 120 }
-        - { name: species, in: query, schema: { type: string }, description: Restrict scores to one species }
+        - {
+            name: species,
+            in: query,
+            schema: { type: string },
+            description: Restrict scores to one species,
+          }
         - name: sort
           in: query
-          schema: { type: string, enum: [name, score, updated, reports], default: name }
+          schema:
+            {
+              type: string,
+              enum: [name, score, updated, reports],
+              default: name,
+            }
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
       responses:
@@ -122,7 +161,12 @@ paths:
       summary: Requeue a finished job
       description: Only `done` or `failed` jobs can be retried. A retry is deduplicated by `retry:<job id>` while it is queued.
       parameters:
-        - { name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }
+        - {
+            name: id,
+            in: path,
+            required: true,
+            schema: { type: integer, minimum: 1 },
+          }
       responses:
         '202':
           description: The new or already-queued job
@@ -147,11 +191,34 @@ paths:
       parameters:
         - { name: species, in: query, schema: { type: string } }
         - { name: zone_id, in: query, schema: { type: string, format: uuid } }
-        - { name: min_rating, in: query, schema: { type: integer, minimum: 1, maximum: 5 } }
-        - { name: max_rating, in: query, description: Triage upper bound on rating, schema: { type: integer, minimum: 1, maximum: 5 } }
-        - { name: max_trust, in: query, description: Triage upper bound on reporter trust; missing trust is treated as 0.5, schema: { type: number, minimum: 0, maximum: 1 } }
-        - { name: days, in: query, description: Only reports created in the last N days, schema: { type: integer, minimum: 1, maximum: 90 } }
-        - { name: sort, in: query, schema: { type: string, enum: [newest, oldest], default: newest } }
+        - {
+            name: min_rating,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 5 },
+          }
+        - {
+            name: max_rating,
+            in: query,
+            description: Triage upper bound on rating,
+            schema: { type: integer, minimum: 1, maximum: 5 },
+          }
+        - {
+            name: max_trust,
+            in: query,
+            description: Triage upper bound on reporter trust; missing trust is treated as 0.5,
+            schema: { type: number, minimum: 0, maximum: 1 },
+          }
+        - {
+            name: days,
+            in: query,
+            description: Only reports created in the last N days,
+            schema: { type: integer, minimum: 1, maximum: 90 },
+          }
+        - {
+            name: sort,
+            in: query,
+            schema: { type: string, enum: [newest, oldest], default: newest },
+          }
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
       responses:
@@ -178,8 +245,17 @@ paths:
       tags: [admin]
       summary: Search accounts with trust and activity
       parameters:
-        - { name: q, in: query, schema: { type: string, maxLength: 120 }, description: Email or nickname }
-        - { name: role, in: query, schema: { type: string, enum: [picker, buyer, admin] } }
+        - {
+            name: q,
+            in: query,
+            schema: { type: string, maxLength: 120 },
+            description: Email or nickname,
+          }
+        - {
+            name: role,
+            in: query,
+            schema: { type: string, enum: [picker, buyer, admin] },
+          }
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
       responses:
@@ -206,7 +282,12 @@ paths:
       tags: [admin]
       summary: One account with active sessions, activity and audit
       parameters:
-        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - {
+            name: id,
+            in: path,
+            required: true,
+            schema: { type: string, format: uuid },
+          }
       responses:
         '200':
           description: Account detail
@@ -226,7 +307,12 @@ paths:
       summary: Revoke every active refresh token for an account
       description: Requires a reason. The reason and revoked count are written to audit_log; existing access tokens expire within 15 minutes.
       parameters:
-        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - {
+            name: id,
+            in: path,
+            required: true,
+            schema: { type: string, format: uuid },
+          }
       requestBody:
         required: true
         content:
@@ -258,7 +344,12 @@ paths:
       summary: Change an account's role
       description: Refuses to remove the caller's own admin role with `409 SELF_DEMOTION_NOT_ALLOWED`.
       parameters:
-        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - {
+            name: id,
+            in: path,
+            required: true,
+            schema: { type: string, format: uuid },
+          }
       requestBody:
         required: true
         content:
@@ -291,7 +382,11 @@ paths:
       tags: [admin]
       summary: Daily series, species coverage, score distribution and top zones
       parameters:
-        - { name: days, in: query, schema: { type: integer, minimum: 1, maximum: 90, default: 30 } }
+        - {
+            name: days,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 90, default: 30 },
+          }
       responses:
         '200':
           description: Analytics payload
@@ -309,9 +404,23 @@ paths:
       tags: [admin]
       summary: Page and search the admin audit log
       parameters:
-        - { name: q, in: query, description: 'Action, actor email, target id or request id', schema: { type: string, maxLength: 120 } }
-        - { name: target_type, in: query, schema: { type: string, maxLength: 40 } }
-        - { name: days, in: query, description: Only entries created in the last N days, schema: { type: integer, minimum: 1, maximum: 365 } }
+        - {
+            name: q,
+            in: query,
+            description: 'Action, actor email, target id or request id',
+            schema: { type: string, maxLength: 120 },
+          }
+        - {
+            name: target_type,
+            in: query,
+            schema: { type: string, maxLength: 40 },
+          }
+        - {
+            name: days,
+            in: query,
+            description: Only entries created in the last N days,
+            schema: { type: integer, minimum: 1, maximum: 365 },
+          }
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
       responses:
@@ -378,6 +487,49 @@ components:
       required: true
       schema: { type: string, format: uuid }
   schemas:
+    OperationsHealthCheck:
+      type: object
+      required:
+        [
+          id,
+          label,
+          status,
+          value,
+          threshold,
+          detail,
+          owner,
+          runbook,
+          checked_at,
+        ]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        status: { type: string, enum: [ok, warn, fail] }
+        value: { type: string }
+        threshold: { type: string }
+        detail: { type: string }
+        owner: { type: string }
+        runbook: { type: string }
+        href: { type: string }
+        checked_at: { type: string, format: date-time }
+        breakdown:
+          type: array
+          items:
+            type: object
+            required: [key, label, status, value]
+            properties:
+              key: { type: string }
+              label: { type: string }
+              status: { type: string, enum: [ok, warn, fail] }
+              value: { type: string }
+              detail: { type: string }
+    OperationsHealthUnavailable:
+      type: object
+      required: [id, label, reason]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        reason: { type: string }
     EnqueueResult:
       type: object
       required: [job_id, status, deduplicated]

@@ -16,6 +16,10 @@ import { ReportsQueryDto } from './dto/reports-query.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { UsersQueryDto } from './dto/users-query.dto';
 import { ZoneSort, ZonesQueryDto } from './dto/zones-query.dto';
+import {
+  buildOperationsHealth,
+  type OperationsHealth,
+} from './operations-health';
 
 const ZONE_ORDER: Record<ZoneSort, string> = {
   name: 'z.name ASC NULLS LAST, z.h3 ASC',
@@ -273,6 +277,58 @@ interface JobStatusRow extends QueryResultRow {
   count: number;
 }
 
+interface OperationsOverviewRow extends QueryResultRow {
+  zones_total: number;
+  zones_scored: number;
+  score_rows: number;
+  stale_score_rows: number;
+  latest_score_at: Date | null;
+}
+
+interface OperationsSpeciesRow extends QueryResultRow {
+  code: string;
+  name_en: string;
+  zones_scored: number;
+  latest_score_at: Date | null;
+}
+
+interface OperationsQueueRow extends QueryResultRow {
+  queued: number;
+  running: number;
+  overdue: number;
+  oldest_queued_at: Date | null;
+}
+
+interface OperationsDuplicateRow extends QueryResultRow {
+  duplicate_groups: number;
+  extra_reports: number;
+}
+
+interface OperationsRequiredRow extends QueryResultRow {
+  missing_model_version: number;
+}
+
+interface OperationsOutOfRangeRow extends QueryResultRow {
+  report_rating: number;
+  score: number;
+  trust: number;
+  visit_duration: number;
+  alert_radius: number;
+}
+
+interface OperationsIngestAvailabilityRow extends QueryResultRow {
+  available: boolean;
+}
+
+interface OperationsIngestRunRow extends QueryResultRow {
+  source: string;
+  status: string;
+  started_at: Date | null;
+  finished_at: Date | null;
+  rows: number | null;
+  error: string | null;
+}
+
 interface TopZoneRow extends QueryResultRow {
   id: string;
   name: string | null;
@@ -401,6 +457,147 @@ export class AdminService {
       species: species.species,
       recent_activity: recentActivity,
     };
+  }
+
+  async operationsHealth(now: Date = new Date()): Promise<OperationsHealth> {
+    const [
+      overview,
+      species,
+      queue,
+      duplicates,
+      required,
+      outOfRange,
+      ingestAvailability,
+    ] = await Promise.all([
+      this.database.pool.query<OperationsOverviewRow>(
+        `SELECT
+             (SELECT count(*) FROM zones)::int AS zones_total,
+             (SELECT count(DISTINCT zone_id) FROM zone_scores_current)::int AS zones_scored,
+             (SELECT count(*) FROM zone_scores_current)::int AS score_rows,
+             (SELECT count(*) FROM zone_scores_current
+               WHERE computed_at < now() - interval '24 hours')::int AS stale_score_rows,
+             (SELECT max(computed_at) FROM zone_scores_current) AS latest_score_at`,
+      ),
+      this.database.pool.query<OperationsSpeciesRow>(
+        `SELECT s.code, s.name_en,
+                  count(DISTINCT c.zone_id)::int AS zones_scored,
+                  max(c.computed_at) AS latest_score_at
+           FROM species s
+           LEFT JOIN zone_scores_current c ON c.species = s.code
+           GROUP BY s.code, s.name_en
+           ORDER BY s.code`,
+      ),
+      this.database.pool.query<OperationsQueueRow>(
+        `SELECT
+             count(*) FILTER (WHERE status = 'queued')::int AS queued,
+             count(*) FILTER (WHERE status = 'running')::int AS running,
+             count(*) FILTER (WHERE status = 'queued'
+               AND run_at < now() - interval '15 minutes')::int AS overdue,
+             min(run_at) FILTER (WHERE status = 'queued') AS oldest_queued_at
+           FROM jobs`,
+      ),
+      this.database.pool.query<OperationsDuplicateRow>(
+        `SELECT count(*)::int AS duplicate_groups,
+                  COALESCE(sum(n - 1), 0)::int AS extra_reports
+           FROM (
+             SELECT user_id, zone_id, species,
+                    (created_at AT TIME ZONE 'UTC')::date AS report_day,
+                    count(*)::int AS n
+             FROM reports
+             WHERE user_id IS NOT NULL
+               AND created_at >= now() - interval '7 days'
+             GROUP BY user_id, zone_id, species,
+                      (created_at AT TIME ZONE 'UTC')::date
+             HAVING count(*) > 1
+           ) duplicates`,
+      ),
+      this.database.pool.query<OperationsRequiredRow>(
+        `SELECT count(*) FILTER (
+                    WHERE explanation->>'model_version' IS NULL
+                  )::int AS missing_model_version
+           FROM zone_scores_current`,
+      ),
+      this.database.pool.query<OperationsOutOfRangeRow>(
+        `SELECT
+             (SELECT count(*) FROM reports
+               WHERE rating NOT BETWEEN 1 AND 5)::int AS report_rating,
+             (SELECT count(*) FROM zone_scores_current
+               WHERE score NOT BETWEEN 0 AND 100)::int AS score,
+             (SELECT count(*) FROM user_trust
+               WHERE trust NOT BETWEEN 0 AND 1)::int AS trust,
+             (SELECT count(*) FROM visits
+               WHERE duration_s < 0)::int AS visit_duration,
+             (SELECT count(*) FROM users
+               WHERE alert_radius_km NOT BETWEEN 1 AND 100)::int AS alert_radius`,
+      ),
+      this.database.pool.query<OperationsIngestAvailabilityRow>(
+        `SELECT to_regclass('public.ingest_runs') IS NOT NULL AS available`,
+      ),
+    ]);
+
+    const ingestAvailable = Boolean(ingestAvailability.rows[0]?.available);
+    let ingestRuns: OperationsIngestRunRow[] = [];
+    if (ingestAvailable) {
+      const result = await this.database.pool.query<OperationsIngestRunRow>(
+        `SELECT DISTINCT ON (source)
+                source, status, started_at, finished_at, rows, error
+         FROM ingest_runs
+         ORDER BY source, started_at DESC`,
+      );
+      ingestRuns = result.rows;
+    }
+
+    const core = overview.rows[0];
+    const queueRow = queue.rows[0];
+    const duplicateRow = duplicates.rows[0];
+    const requiredRow = required.rows[0];
+    const rangeRow = outOfRange.rows[0];
+
+    return buildOperationsHealth({
+      now,
+      zonesTotal: Number(core?.zones_total ?? 0),
+      zonesScored: Number(core?.zones_scored ?? 0),
+      scoreRows: Number(core?.score_rows ?? 0),
+      staleScoreRows: Number(core?.stale_score_rows ?? 0),
+      latestScoreAt: asIso(core?.latest_score_at ?? null),
+      species: species.rows.map((row) => ({
+        code: row.code,
+        nameEn: row.name_en,
+        zonesScored: Number(row.zones_scored),
+        latestScoreAt: asIso(row.latest_score_at),
+      })),
+      queue: {
+        queued: Number(queueRow?.queued ?? 0),
+        running: Number(queueRow?.running ?? 0),
+        overdue: Number(queueRow?.overdue ?? 0),
+        oldestQueuedAt: asIso(queueRow?.oldest_queued_at ?? null),
+      },
+      duplicates: {
+        groups: Number(duplicateRow?.duplicate_groups ?? 0),
+        extra: Number(duplicateRow?.extra_reports ?? 0),
+      },
+      required: {
+        missingModelVersion: Number(requiredRow?.missing_model_version ?? 0),
+      },
+      outOfRange: {
+        reports: Number(rangeRow?.report_rating ?? 0),
+        scores: Number(rangeRow?.score ?? 0),
+        trust: Number(rangeRow?.trust ?? 0),
+        visitDuration: Number(rangeRow?.visit_duration ?? 0),
+        alertRadius: Number(rangeRow?.alert_radius ?? 0),
+      },
+      ingest: {
+        available: ingestAvailable,
+        runs: ingestRuns.map((run) => ({
+          source: run.source,
+          status: run.status,
+          startedAt: asIso(run.started_at),
+          finishedAt: asIso(run.finished_at),
+          rows: run.rows === null ? null : Number(run.rows),
+          error: run.error,
+        })),
+      },
+    });
   }
 
   async listZones(query: ZonesQueryDto): Promise<Record<string, unknown>> {
