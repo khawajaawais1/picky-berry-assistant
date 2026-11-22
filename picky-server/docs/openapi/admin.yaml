@@ -307,8 +307,11 @@ paths:
     get:
       operationId: listAdminAudit
       tags: [admin]
-      summary: Page the admin audit log
+      summary: Page and search the admin audit log
       parameters:
+        - { name: q, in: query, description: 'Action, actor email, target id or request id', schema: { type: string, maxLength: 120 } }
+        - { name: target_type, in: query, schema: { type: string, maxLength: 40 } }
+        - { name: days, in: query, description: Only entries created in the last N days, schema: { type: integer, minimum: 1, maximum: 365 } }
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
       responses:

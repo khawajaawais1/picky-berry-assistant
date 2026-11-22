@@ -9,8 +9,8 @@ import { DbService } from '../db/db.service';
 import { EnqueueResult, JobsService } from '../jobs/jobs.service';
 import { SpeciesService } from '../species/species.service';
 import { AnalyticsQueryDto } from './dto/analytics-query.dto';
+import { AuditQueryDto } from './dto/audit-query.dto';
 import { JobsQueryDto } from './dto/jobs-query.dto';
-import { PaginationDto } from './dto/pagination.dto';
 import { RecomputeDto } from './dto/recompute.dto';
 import { ReportsQueryDto } from './dto/reports-query.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
@@ -1129,19 +1129,37 @@ export class AdminService {
     };
   }
 
-  async listAudit(query: PaginationDto): Promise<Record<string, unknown>> {
+  async listAudit(query: AuditQueryDto): Promise<Record<string, unknown>> {
+    const q = (query.q ?? '').trim();
+    const targetType = query.target_type ?? null;
+    const since = query.days
+      ? new Date(Date.now() - query.days * 24 * 60 * 60 * 1000)
+      : null;
     const offset = (query.page - 1) * query.page_size;
+    const filter = `WHERE ($1 = ''
+                      OR a.action ILIKE '%' || $1 || '%'
+                      OR a.target_id::text ILIKE '%' || $1 || '%'
+                      OR a.request_id::text ILIKE '%' || $1 || '%'
+                      OR u.email ILIKE '%' || $1 || '%')
+                    AND ($2::text IS NULL OR a.target_type = $2)
+                    AND ($3::timestamptz IS NULL OR a.created_at >= $3)`;
+    const filterParams = [q, targetType, since];
+
     const [total, rows] = await Promise.all([
       this.database.pool.query<CountRow>(
-        'SELECT count(*)::int AS total FROM audit_log',
+        `SELECT count(*)::int AS total
+         FROM audit_log a LEFT JOIN users u ON u.id = a.actor_id
+         ${filter}`,
+        filterParams,
       ),
       this.database.pool.query<AuditRow>(
         `SELECT a.id, a.actor_id, u.email AS actor_email, a.action,
                 a.target_type, a.target_id, a.detail, a.request_id, a.created_at
          FROM audit_log a LEFT JOIN users u ON u.id = a.actor_id
+         ${filter}
          ORDER BY a.created_at DESC
-         LIMIT $1 OFFSET $2`,
-        [query.page_size, offset],
+         LIMIT $4 OFFSET $5`,
+        [...filterParams, query.page_size, offset],
       ),
     ]);
     return {

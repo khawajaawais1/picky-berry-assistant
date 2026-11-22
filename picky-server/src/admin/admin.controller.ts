@@ -20,8 +20,8 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { EnqueueResult } from '../jobs/jobs.service';
 import { AdminService } from './admin.service';
 import { AnalyticsQueryDto } from './dto/analytics-query.dto';
+import { AuditQueryDto } from './dto/audit-query.dto';
 import { JobsQueryDto } from './dto/jobs-query.dto';
-import { PaginationDto } from './dto/pagination.dto';
 import { RecomputeDto } from './dto/recompute.dto';
 import { ReportsQueryDto } from './dto/reports-query.dto';
 import { RevokeSessionsDto } from './dto/revoke-sessions.dto';
@@ -153,7 +153,7 @@ export class AdminController {
 
   @Get('audit')
   @Header('Cache-Control', 'no-store')
-  listAudit(@Query() query: PaginationDto): Promise<Record<string, unknown>> {
+  listAudit(@Query() query: AuditQueryDto): Promise<Record<string, unknown>> {
     return this.admin.listAudit(query);
   }
 
