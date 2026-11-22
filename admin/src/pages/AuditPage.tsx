@@ -298,7 +298,7 @@ export function AuditPage() {
                       <td>
                         {target.to ? (
                           <Link className="cell-title" to={target.to}>
-                            {target.label}
+                            {titleCase(target.label)}
                           </Link>
                         ) : (
                           titleCase(target.label)
