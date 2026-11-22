@@ -3,7 +3,7 @@ services:
     name: picky-backend
     runtime: python
     rootDir: backend
-    buildCommand: pip install -e ".[job]"
+    buildCommand: pip install -e ../ml && pip install -e ".[job]"
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     plan: free
     healthCheckPath: /health
