@@ -95,6 +95,12 @@ ever compiled into it.
   request id and evidence, and filters by actor, action, outcome and request id. Rejected
   `403`/`409` privileged attempts are recorded by the API; the database trigger makes audit rows
   append-only.
+- **Static-host headers.** `vercel.json` sends a strict Content-Security-Policy (scripts, styles,
+  fonts and images from the console's own origin only; `connect-src` limited to `'self'` and
+  HTTPS origins, since the API origin is fixed at build time), `frame-ancestors 'none'`,
+  `nosniff`, `no-referrer`, HSTS and a deny-all Permissions-Policy. A host other than Vercel must
+  send the same headers. The bundle has no inline scripts or styles, so the policy needs no
+  `unsafe-inline`.
 - **Read-only by design.** Report verdicts and trust edits belong to features 6.5 and 6.3; the
   panel labels them as unavailable rather than inventing a rule.
 
