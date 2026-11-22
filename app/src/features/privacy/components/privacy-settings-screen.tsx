@@ -45,6 +45,8 @@ export type PrivacySettingsScreenProps = {
    * (AGENTS.md §11.2).
    */
   onOpenSavedSpots?: () => void;
+  /** Opens the berry marketplace (feature E1); without it the row is not drawn. */
+  onOpenMarketplace?: () => void;
   /**
    * Opens frame 13's sync centre (`src/app/downloads.tsx`) — the frame's “Offline maps & sync”
    * row, whose value is the queue's own count. Without it the row is drawn as the reading it is.
@@ -122,6 +124,7 @@ export function PrivacySettingsScreen({
   onOpenAccountSecurity,
   onOpenLanguage,
   onOpenSavedSpots,
+  onOpenMarketplace,
   onOpenSync,
   onOpenTermsPrivacy,
   onSignOut,
@@ -251,6 +254,15 @@ export function PrivacySettingsScreen({
             testID="privacy-saved-spots-row"
             value={savedSpotsCount}
           />
+
+          {onOpenMarketplace ? (
+            <SettingRow
+              description={t('privacy.marketplace.subtitle')}
+              label={t('privacy.marketplace.title')}
+              onPress={onOpenMarketplace}
+              testID="privacy-marketplace-row"
+            />
+          ) : null}
 
           {/*
             The card's other row, “Default spot visibility” (ADR-067): drawn once the account's

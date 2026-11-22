@@ -932,6 +932,8 @@ export const en = {
   'market.order.status.completed': 'Collected',
   'market.order.status.cancelled': 'Cancelled',
   'discover.zoneReports.heading': 'Zone reports',
+  'privacy.marketplace.title': 'Berry marketplace',
+  'privacy.marketplace.subtitle': 'Buy and sell surplus berries nearby',
 } as const;
 
 export type TranslationKey = keyof typeof en;

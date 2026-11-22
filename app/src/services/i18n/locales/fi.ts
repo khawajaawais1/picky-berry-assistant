@@ -780,4 +780,6 @@ export const fi: Record<TranslationKey, string> = {
   'market.order.status.completed': 'Noudettu',
   'market.order.status.cancelled': 'Peruttu',
   'discover.zoneReports.heading': 'Alueen raportit',
+  'privacy.marketplace.title': 'Marjatori',
+  'privacy.marketplace.subtitle': 'Osta ja myy ylimääräisiä marjoja läheltä',
 };

@@ -447,6 +447,18 @@ describe('PrivacySettingsScreen', () => {
     expect(onOpenSavedSpots).toHaveBeenCalledTimes(1);
   });
 
+  it('opens the berry marketplace, and draws no row without that destination', async () => {
+    const onOpenMarketplace = jest.fn();
+    const { rerender } = await render(<PrivacySettingsScreen />);
+
+    expect(screen.queryByTestId('privacy-marketplace-row')).not.toBeOnTheScreen();
+
+    await rerender(<PrivacySettingsScreen onOpenMarketplace={onOpenMarketplace} />);
+    await fireEvent.press(screen.getByRole('button', { name: /^Berry marketplace/ }));
+
+    expect(onOpenMarketplace).toHaveBeenCalledTimes(1);
+  });
+
   it('opens the two screens its remaining rows name, and is a reading until the route can', async () => {
     const onOpenAccountSecurity = jest.fn();
     const onOpenTermsPrivacy = jest.fn();
