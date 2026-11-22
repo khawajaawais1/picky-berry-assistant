@@ -50,7 +50,7 @@ def zone_cooldown_active(db_url: str, user_id: str, zone_id: str, species: str) 
     with eng.connect() as conn:
         count = conn.execute(text("""
             SELECT COUNT(*) FROM push_log
-            WHERE user_id = :uid AND zone_id = :zid::uuid AND species = :sp
+            WHERE user_id = :uid AND zone_id = CAST(:zid AS uuid) AND species = :sp
               AND status = 'sent' AND sent_at >= :since
         """), {"uid": user_id, "zid": zone_id, "sp": species, "since": since}).scalar_one()
     return count > 0
@@ -72,7 +72,7 @@ def log_push(
     with eng.begin() as conn:
         conn.execute(text("""
             INSERT INTO push_log (user_id, alert_id, zone_id, species, fcm_token, status)
-            VALUES (:uid, :aid::uuid, :zid::uuid, :sp, :tok, :st)
+            VALUES (:uid, CAST(:aid AS uuid), CAST(:zid AS uuid), :sp, :tok, :st)
         """), {
             "uid": user_id, "aid": alert_id, "zid": zone_id,
             "sp": species, "tok": fcm_token, "st": status,

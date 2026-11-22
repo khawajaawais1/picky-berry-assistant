@@ -122,7 +122,7 @@ def _write_alerts(db_url: str, run_id: str, alerts: list[Alert]) -> None:
                    ripeness, suitability, ecology_verified, sentence, place,
                    zone_number, zone_iri, species_iri, name_en, name_fi)
                 VALUES
-                  (:run_id, :zone_id::uuid, :species, :rule_id, :rule_version, :score,
+                  (:run_id, CAST(:zone_id AS uuid), :species, :rule_id, :rule_version, :score,
                    :confidence, :ripeness, :suitability, :ecology_verified, :sentence,
                    :place, :zone_number, :zone_iri, :species_iri, :name_en, :name_fi)
             """), {
