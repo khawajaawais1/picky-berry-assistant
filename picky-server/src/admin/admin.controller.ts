@@ -1,55 +1,142 @@
 import {
   Body,
   Controller,
+  Get,
+  Header,
   HttpCode,
   HttpStatus,
-  NotFoundException,
+  Param,
+  ParseIntPipe,
+  ParseUUIDPipe,
+  Patch,
   Post,
-  UnprocessableEntityException,
+  Query,
+  Req,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { DbService } from '../db/db.service';
+import { Request } from 'express';
+import { AuthUser } from '../auth/auth-user.interface';
 import { Roles } from '../common/decorators/roles.decorator';
-import { JobsService } from '../jobs/jobs.service';
-import { SpeciesService } from '../species/species.service';
+import { EnqueueResult } from '../jobs/jobs.service';
+import { AdminService } from './admin.service';
+import { AnalyticsQueryDto } from './dto/analytics-query.dto';
+import { JobsQueryDto } from './dto/jobs-query.dto';
+import { PaginationDto } from './dto/pagination.dto';
 import { RecomputeDto } from './dto/recompute.dto';
+import { ReportsQueryDto } from './dto/reports-query.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
+import { UsersQueryDto } from './dto/users-query.dto';
+import { ZonesQueryDto } from './dto/zones-query.dto';
 
-@Controller('admin/scores')
+type AdminRequest = Request & { user: AuthUser; id?: string };
+
+function requestIdOf(request: AdminRequest): string {
+  const header = request.headers['x-request-id'];
+  if (typeof header === 'string' && header.length > 0) return header;
+  return request.id ?? 'unknown';
+}
+
+/**
+ * The operator surface's only door. Every route is admin-only and no-store: the data is
+ * operational, includes account emails, and must never be cached by a browser or proxy.
+ */
+@Controller('admin')
+@Roles('admin')
 export class AdminController {
-  constructor(
-    private readonly jobs: JobsService,
-    private readonly database: DbService,
-    private readonly species: SpeciesService,
-  ) {}
+  constructor(private readonly admin: AdminService) {}
 
-  @Post('recompute')
+  @Get('overview')
+  @Header('Cache-Control', 'no-store')
+  overview(): Promise<Record<string, unknown>> {
+    return this.admin.overview();
+  }
+
+  @Get('zones')
+  @Header('Cache-Control', 'no-store')
+  listZones(@Query() query: ZonesQueryDto): Promise<Record<string, unknown>> {
+    return this.admin.listZones(query);
+  }
+
+  @Get('zones/:id')
+  @Header('Cache-Control', 'no-store')
+  getZone(
+    @Param('id', new ParseUUIDPipe({ errorHttpStatusCode: 422 }))
+    zoneId: string,
+  ): Promise<Record<string, unknown>> {
+    return this.admin.getZone(zoneId);
+  }
+
+  @Get('jobs')
+  @Header('Cache-Control', 'no-store')
+  listJobs(@Query() query: JobsQueryDto): Promise<Record<string, unknown>> {
+    return this.admin.listJobs(query);
+  }
+
+  @Post('jobs/:id/retry')
   @HttpCode(HttpStatus.ACCEPTED)
+  @Header('Cache-Control', 'no-store')
   @Throttle({ default: { limit: 60, ttl: 60_000 } })
-  @Roles('admin')
-  async recompute(@Body() body: RecomputeDto = new RecomputeDto()) {
-    if (body.species && !body.zone_id) {
-      throw new UnprocessableEntityException(
-        'species can only be supplied with zone_id.',
-      );
-    }
-    if (body.zone_id) {
-      const zone = await this.database.pool.query(
-        'SELECT 1 FROM zones WHERE id = $1',
-        [body.zone_id],
-      );
-      if (!zone.rowCount) {
-        throw new NotFoundException('Zone not found.');
-      }
-      if (body.species) await this.species.validate(body.species);
-      return this.jobs.enqueue(
-        'recompute_zone_score',
-        {
-          zone_id: body.zone_id,
-          ...(body.species ? { species: body.species } : {}),
-        },
-        `recompute:${body.zone_id}`,
-      );
-    }
-    return this.jobs.enqueue('recompute_all', {}, 'recompute_all');
+  retryJob(
+    @Param('id', new ParseIntPipe({ errorHttpStatusCode: 422 }))
+    jobId: number,
+    @Req() request: AdminRequest,
+  ): Promise<Record<string, unknown>> {
+    return this.admin.retryJob(jobId, request.user.id, requestIdOf(request));
+  }
+
+  @Get('reports')
+  @Header('Cache-Control', 'no-store')
+  listReports(
+    @Query() query: ReportsQueryDto,
+  ): Promise<Record<string, unknown>> {
+    return this.admin.listReports(query);
+  }
+
+  @Get('users')
+  @Header('Cache-Control', 'no-store')
+  listUsers(@Query() query: UsersQueryDto): Promise<Record<string, unknown>> {
+    return this.admin.listUsers(query);
+  }
+
+  @Patch('users/:id/role')
+  @Header('Cache-Control', 'no-store')
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
+  updateUserRole(
+    @Param('id', new ParseUUIDPipe({ errorHttpStatusCode: 422 }))
+    userId: string,
+    @Body() body: UpdateRoleDto,
+    @Req() request: AdminRequest,
+  ): Promise<Record<string, unknown>> {
+    return this.admin.updateUserRole(
+      userId,
+      body,
+      request.user.id,
+      requestIdOf(request),
+    );
+  }
+
+  @Get('analytics')
+  @Header('Cache-Control', 'no-store')
+  analytics(
+    @Query() query: AnalyticsQueryDto,
+  ): Promise<Record<string, unknown>> {
+    return this.admin.analytics(query);
+  }
+
+  @Get('audit')
+  @Header('Cache-Control', 'no-store')
+  listAudit(@Query() query: PaginationDto): Promise<Record<string, unknown>> {
+    return this.admin.listAudit(query);
+  }
+
+  @Post('scores/recompute')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @Header('Cache-Control', 'no-store')
+  @Throttle({ default: { limit: 60, ttl: 60_000 } })
+  recompute(
+    @Body() body: RecomputeDto = new RecomputeDto(),
+    @Req() request: AdminRequest,
+  ): Promise<EnqueueResult> {
+    return this.admin.recompute(body, request.user.id, requestIdOf(request));
   }
 }

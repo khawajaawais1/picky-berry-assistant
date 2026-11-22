@@ -54,6 +54,9 @@ export function setupSwagger(app: INestApplication): void {
   const visits = load(
     readFileSync(resolve(__dirname, '../../docs/openapi/visits.yaml'), 'utf8'),
   ) as OpenAPIObject;
+  const admin = load(
+    readFileSync(resolve(__dirname, '../../docs/openapi/admin.yaml'), 'utf8'),
+  ) as OpenAPIObject;
 
   const contract: OpenAPIObject = {
     ...zones,
@@ -61,6 +64,7 @@ export function setupSwagger(app: INestApplication): void {
       ...zones.paths,
       ...auth.paths,
       ...visits.paths,
+      ...admin.paths,
     },
     components: {
       ...zones.components,
@@ -70,16 +74,25 @@ export function setupSwagger(app: INestApplication): void {
         ...zones.components?.securitySchemes,
         ...auth.components?.securitySchemes,
         ...visits.components?.securitySchemes,
+        ...admin.components?.securitySchemes,
+      },
+      parameters: {
+        ...zones.components?.parameters,
+        ...auth.components?.parameters,
+        ...visits.components?.parameters,
+        ...admin.components?.parameters,
       },
       responses: {
         ...zones.components?.responses,
         ...auth.components?.responses,
         ...visits.components?.responses,
+        ...admin.components?.responses,
       },
       schemas: {
         ...zones.components?.schemas,
         ...auth.components?.schemas,
         ...visits.components?.schemas,
+        ...admin.components?.schemas,
       },
     },
   };

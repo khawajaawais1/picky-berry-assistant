@@ -35,7 +35,7 @@ staging, which none does.
 | 6.8 | Analytics | 3 | 🟡 app season screen (design sample) · API ⬜ |
 | 6.9 | Offline mode and privacy | 3 | 🟡 app privacy/offline screens, device records only · API ⬜ |
 
-Extras: E1 marketplace with escrow · E2 video analysis & fraud checks · E3 rewards · E4 safety route back & SOS · E5 admin tools.
+Extras: E1 marketplace with escrow · E2 video analysis & fraud checks · E3 rewards · E4 safety route back & SOS · [E5 admin tools](docs/features/E5-admin-tools.md).
 
 ## Repository layout
 
@@ -46,6 +46,7 @@ picky-berry-assistant/
 ├── .env.example             ← copy to .env (never commit .env)
 ├── docker-compose.dev.yml   ← local Postgres 17 + PostGIS + h3, MinIO
 ├── app/                     ← React Native (Expo) app                       — Salman (Prottoy)
+├── admin/                   ← React admin console, feature E5 (web)         — Salman
 ├── backend/                 ← FastAPI modular monolith, 10 modules           — Hassan (+ module co-owners)
 │   └── app/modules/ingest/  ← daily ingest jobs, thin wrapper over data/     — Awais
 ├── data/                    ← data pipelines: zones, weather, NDVI, basemap  — Awais
@@ -61,6 +62,7 @@ picky-berry-assistant/
 | Folder | Status |
 |--------|--------|
 | `app/` | ✅ Expo app: every v1 design screen, 120 suites / 1195 tests, layout + accessibility + native bundle + coverage + secret-scan CI; MapLibre draws the pilot stub's zones — a basemap and the zone service are next ([`app/README.md`](app/README.md)) |
+| `admin/` | 🟡 E5 operator console: admin API in `picky-server` plus a React SPA for coverage, zones, queue, reports, accounts, analytics and an API lab; not yet run against pilot data ([`admin/README.md`](admin/README.md)) |
 | `data/` | ✅ Pipelines for 6.2 + 28 tests; 50 stub zones committed; the real backfill and bucket upload are not run |
 | `docker/` | 🟡 Postgres 17 + PostGIS + h3 image and dev compose defined; no CI build |
 | `ml/` | ✅ v1 models + `berry_ml` package + reference API, 24 tests — see [ml/API.md](ml/API.md) for wiring it into the backend |

@@ -1,0 +1,49 @@
+name: admin
+
+on:
+  pull_request:
+    paths: ["admin/**", ".github/workflows/admin.yml"]
+  push:
+    branches: [main]
+    paths: ["admin/**", ".github/workflows/admin.yml"]
+  workflow_dispatch:
+
+# Verification only: this workflow never deploys or publishes.
+permissions:
+  contents: read
+
+concurrency:
+  group: admin-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: admin
+
+jobs:
+  verify:
+    name: Typecheck, lint, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build

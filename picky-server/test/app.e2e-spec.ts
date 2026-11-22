@@ -68,12 +68,49 @@ describe('AppController (e2e)', () => {
     return request(app.getHttpServer()).get('/api/v1/species').expect(401);
   });
 
-  it('rejects a picker on the admin recompute route', async () => {
+  const adminReadRoutes = [
+    '/api/v1/admin/overview',
+    '/api/v1/admin/zones',
+    '/api/v1/admin/jobs',
+    '/api/v1/admin/reports',
+    '/api/v1/admin/users',
+    '/api/v1/admin/analytics',
+    '/api/v1/admin/audit',
+  ];
+
+  it('protects every admin read route from anonymous requests', async () => {
+    for (const route of adminReadRoutes) {
+      await request(app.getHttpServer()).get(route).expect(401);
+    }
+  });
+
+  it('rejects a picker on every admin route', async () => {
     const token = app.get(JwtService).sign({
       sub: '00000000-0000-4000-8000-000000000001',
       role: 'picker',
     });
-    await request(app.getHttpServer())
+    const server = app.getHttpServer();
+
+    for (const route of adminReadRoutes) {
+      await request(server)
+        .get(route)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(403);
+    }
+    await request(server)
+      .get('/api/v1/admin/zones/00000000-0000-4000-8000-000000000002')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(403);
+    await request(server)
+      .post('/api/v1/admin/jobs/1/retry')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(403);
+    await request(server)
+      .patch('/api/v1/admin/users/00000000-0000-4000-8000-000000000001/role')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ role: 'admin' })
+      .expect(403);
+    await request(server)
       .post('/api/v1/admin/scores/recompute')
       .set('Authorization', `Bearer ${token}`)
       .send({})

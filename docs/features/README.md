@@ -37,7 +37,7 @@ deep dive is still the gate before the service behind a screen is built.
 | E2 | Video analysis & fraud checks | media pipeline + job queue; `reports.flags` | 4 | ⬜ |
 | E3 | Rewards, tiers, badge | trust + visit/report history stored | 4 | ⬜ |
 | E4 | Safety: route back & SOS | phone keeps the GPS track locally → offline route back | 4 | ⬜ |
-| E5 | Admin & verification tools | `admin` role, `/admin/*`, `audit_log` | 4 | ⬜ |
+| E5 | Admin & verification tools | `admin` role, `/admin/*`, `audit_log` | 3–4 | 🟡 [panel + admin API](E5-admin-tools.md) on `feature/salman/admin-panel`; zone authoring, moderation and trust edits next |
 
 ## Future developments — not in the course scope
 

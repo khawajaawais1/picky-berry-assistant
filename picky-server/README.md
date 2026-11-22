@@ -58,6 +58,17 @@ The link points at `APP_PUBLIC_URL/reset-password?token=…`. External mail deli
 included: console mail mode (`MAIL_MODE=console`) records that a verification or reset message
 was requested and deliberately does not log tokens, links or email addresses.
 
+## Admin API (feature E5)
+
+Every route under `/api/v1/admin/*` requires an `admin` role and answers `Cache-Control: no-store`.
+Reads cover the dashboard, zones, jobs, reports, accounts, analytics and the audit log; writes
+cover score recomputation, retrying a finished job and changing another account's role. Each write
+records one `audit_log` row with the actor and the request id. The contract is
+[`docs/openapi/admin.yaml`](./docs/openapi/admin.yaml) and is merged into Swagger UI at `/docs`.
+
+The audit table is migration `0007_admin_audit.sql`; run `npm run db:migrate` before using the
+console. The web client lives in [`../admin`](../admin/README.md).
+
 ## Validation
 
 ```powershell

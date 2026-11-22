@@ -1,0 +1,451 @@
+openapi: 3.0.3
+info:
+  title: Picky Admin API
+  version: 1.0.0
+  description: |
+    The operator surface's API. Every route requires a Bearer access token whose `role` claim is
+    `admin`; a picker or buyer token gets `403` and an absent token gets `401`. Responses are
+    `Cache-Control: no-store` because they contain operational data and account emails.
+
+    Mutating routes write one row to `audit_log` with the caller, the target and the request id.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+tags:
+  - name: admin
+    description: Admin-only monitoring and operation endpoints.
+paths:
+  /admin/overview:
+    get:
+      operationId: adminOverview
+      tags: [admin]
+      summary: Coverage, freshness and volume counters for the dashboard
+      responses:
+        '200':
+          description: Current counts read from the database
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /admin/zones:
+    get:
+      operationId: listAdminZones
+      tags: [admin]
+      summary: Search and page zones with score and report summaries
+      parameters:
+        - name: q
+          in: query
+          description: Name, H3 prefix or zone id
+          schema: { type: string, maxLength: 120 }
+        - { name: species, in: query, schema: { type: string }, description: Restrict scores to one species }
+        - name: sort
+          in: query
+          schema: { type: string, enum: [name, score, updated, reports], default: name }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: One page of zones
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [zones, page, page_size, total]
+                properties:
+                  zones:
+                    type: array
+                    items: { $ref: '#/components/schemas/AdminZoneSummary' }
+                  page: { type: integer }
+                  page_size: { type: integer }
+                  total: { type: integer }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/Validation' }
+  /admin/zones/{id}:
+    get:
+      operationId: getAdminZone
+      tags: [admin]
+      summary: One zone with scores, explanations, reports, visits and jobs
+      parameters:
+        - $ref: '#/components/parameters/ZoneId'
+      responses:
+        '200':
+          description: Zone detail
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Validation' }
+  /admin/jobs:
+    get:
+      operationId: listAdminJobs
+      tags: [admin]
+      summary: Page the job queue and read status counts
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [queued, running, done, failed] }
+        - { name: type, in: query, schema: { type: string, maxLength: 80 } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Jobs and counts
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [jobs, page, page_size, total, counts]
+                properties:
+                  jobs:
+                    type: array
+                    items: { $ref: '#/components/schemas/AdminJob' }
+                  page: { type: integer }
+                  page_size: { type: integer }
+                  total: { type: integer }
+                  counts: { $ref: '#/components/schemas/JobCounts' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/Validation' }
+  /admin/jobs/{id}/retry:
+    post:
+      operationId: retryAdminJob
+      tags: [admin]
+      summary: Requeue a finished job
+      description: Only `done` or `failed` jobs can be retried. A retry is deduplicated by `retry:<job id>` while it is queued.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        '202':
+          description: The new or already-queued job
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnqueueResult'
+                  - type: object
+                    properties:
+                      source_job_id: { type: integer }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Validation' }
+  /admin/reports:
+    get:
+      operationId: listAdminReports
+      tags: [admin]
+      summary: Browse reports with reporter trust
+      parameters:
+        - { name: species, in: query, schema: { type: string } }
+        - { name: zone_id, in: query, schema: { type: string, format: uuid } }
+        - { name: min_rating, in: query, schema: { type: integer, minimum: 1, maximum: 5 } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: One page of reports
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [reports, page, page_size, total]
+                properties:
+                  reports:
+                    type: array
+                    items: { $ref: '#/components/schemas/AdminReport' }
+                  page: { type: integer }
+                  page_size: { type: integer }
+                  total: { type: integer }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/Validation' }
+  /admin/users:
+    get:
+      operationId: listAdminUsers
+      tags: [admin]
+      summary: Search accounts with trust and activity
+      parameters:
+        - { name: q, in: query, schema: { type: string, maxLength: 120 }, description: Email or nickname }
+        - { name: role, in: query, schema: { type: string, enum: [picker, buyer, admin] } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: One page of accounts
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [users, page, page_size, total]
+                properties:
+                  users:
+                    type: array
+                    items: { $ref: '#/components/schemas/AdminUser' }
+                  page: { type: integer }
+                  page_size: { type: integer }
+                  total: { type: integer }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/Validation' }
+  /admin/users/{id}/role:
+    patch:
+      operationId: updateAdminUserRole
+      tags: [admin]
+      summary: Change an account's role
+      description: Refuses to remove the caller's own admin role with `409 SELF_DEMOTION_NOT_ALLOWED`.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role: { type: string, enum: [picker, buyer, admin] }
+      responses:
+        '200':
+          description: The updated account
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, email, role]
+                properties:
+                  id: { type: string, format: uuid }
+                  email: { type: string, format: email }
+                  role: { type: string, enum: [picker, buyer, admin] }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Validation' }
+  /admin/analytics:
+    get:
+      operationId: getAdminAnalytics
+      tags: [admin]
+      summary: Daily series, species coverage, score distribution and top zones
+      parameters:
+        - { name: days, in: query, schema: { type: integer, minimum: 1, maximum: 90, default: 30 } }
+      responses:
+        '200':
+          description: Analytics payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/Validation' }
+  /admin/audit:
+    get:
+      operationId: listAdminAudit
+      tags: [admin]
+      summary: Page the admin audit log
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: One page of audit entries
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [entries, page, page_size, total]
+                properties:
+                  entries:
+                    type: array
+                    items: { $ref: '#/components/schemas/AuditEntry' }
+                  page: { type: integer }
+                  page_size: { type: integer }
+                  total: { type: integer }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/Validation' }
+  /admin/scores/recompute:
+    post:
+      operationId: recomputeAdminScores
+      tags: [admin]
+      summary: Enqueue a score recomputation
+      description: With no body, enqueues `recompute_all`; with `zone_id`, enqueues `recompute_zone_score`. Repeats are deduplicated while a job is queued.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                zone_id: { type: string, format: uuid }
+                species: { type: string, description: Only with zone_id }
+      responses:
+        '202':
+          description: The queued job
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EnqueueResult' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Validation' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    PageSize:
+      name: page_size
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+    ZoneId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  schemas:
+    EnqueueResult:
+      type: object
+      required: [job_id, status, deduplicated]
+      properties:
+        job_id: { type: integer }
+        status: { type: string, enum: [queued] }
+        deduplicated: { type: boolean }
+    JobCounts:
+      type: object
+      required: [all, queued, running, done, failed]
+      properties:
+        all: { type: integer }
+        queued: { type: integer }
+        running: { type: integer }
+        done: { type: integer }
+        failed: { type: integer }
+    AdminJob:
+      type: object
+      required: [id, type, status, attempts, created_at]
+      properties:
+        id: { type: integer }
+        type: { type: string }
+        payload: { type: object, additionalProperties: true }
+        dedupe_key: { type: string, nullable: true }
+        status: { type: string, enum: [queued, running, done, failed] }
+        attempts: { type: integer }
+        run_at: { type: string, format: date-time }
+        locked_at: { type: string, format: date-time, nullable: true }
+        finished_at: { type: string, format: date-time, nullable: true }
+        last_error: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+    AdminZoneSummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        h3: { type: string }
+        name: { type: string, nullable: true }
+        forest_type: { type: string, nullable: true }
+        area_km2: { type: number, nullable: true }
+        centroid: { $ref: '#/components/schemas/Centroid' }
+        species_scored: { type: integer }
+        best_score: { type: integer, nullable: true }
+        latest_computed_at: { type: string, format: date-time, nullable: true }
+        reports_total: { type: integer }
+    Centroid:
+      type: object
+      nullable: true
+      properties:
+        lat: { type: number }
+        lng: { type: number }
+    AdminReport:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        zone_id: { type: string, format: uuid }
+        zone_name: { type: string, nullable: true }
+        zone_h3: { type: string }
+        species: { type: string }
+        rating: { type: integer }
+        user_id: { type: string, format: uuid, nullable: true }
+        user_email: { type: string, nullable: true }
+        user_nickname: { type: string, nullable: true }
+        user_deleted: { type: boolean }
+        trust: { type: number }
+        created_at: { type: string, format: date-time }
+    AdminUser:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        nickname: { type: string, nullable: true }
+        role: { type: string, enum: [picker, buyer, admin] }
+        lang: { type: string, enum: [fi, en] }
+        trust: { type: number }
+        reports_total: { type: integer }
+        visits_total: { type: integer }
+        email_verified_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+        last_sign_in: { type: string, format: date-time, nullable: true }
+    AuditEntry:
+      type: object
+      properties:
+        id: { type: integer }
+        actor_id: { type: string, format: uuid, nullable: true }
+        actor_email: { type: string, nullable: true }
+        action: { type: string }
+        target_type: { type: string }
+        target_id: { type: string, nullable: true }
+        detail: { type: object, additionalProperties: true }
+        request_id: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+    Problem:
+      type: object
+      required: [error, request_id]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: { type: object, additionalProperties: true }
+        request_id: { type: string }
+  responses:
+    Unauthorized:
+      description: Missing or invalid access token
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Forbidden:
+      description: The token's role is not admin
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    NotFound:
+      description: The target does not exist
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Conflict:
+      description: The action conflicts with the target's current state
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Validation:
+      description: A query or body value is invalid
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Problem' }
