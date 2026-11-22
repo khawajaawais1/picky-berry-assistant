@@ -33,8 +33,7 @@ is not permitted to create extensions. Then run:
 npm run db:migrate
 npm run seed:zones   # committed 50-zone stub, for local development only
 npm run seed:scores
-npm run seed:users
-npm run make-admin -- picker@example.com
+npm run seed:users   # creates admin@picky.fi and picker@example.com
 npm run start:dev
 ```
 
@@ -42,8 +41,10 @@ npm run start:dev
 `zone_species`; it is a development fixture, not the data engineer's verified
 baseline, and refuses to run in production. The other seed commands create a
 current score row per zone/species and the development accounts. Set
-`DEV_PICKER_PASSWORD` in `.env` before `seed:users`; the picker signs in with
-that password.
+`DEV_PICKER_PASSWORD` and `DEV_ADMIN_PASSWORD` in `.env` before `seed:users`. The
+default operator account is `admin@picky.fi` (override with `DEV_ADMIN_EMAIL`) and
+signs in to the admin console with `DEV_ADMIN_PASSWORD`; the picker signs in with
+`DEV_PICKER_PASSWORD`. Reseeding resets both passwords.
 
 The local example enables `DEV_AUTH_BYPASS`; never use it in production. The API
 refuses to start in production when this bypass is enabled. Set
