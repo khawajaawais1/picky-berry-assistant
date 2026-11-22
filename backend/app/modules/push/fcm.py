@@ -159,7 +159,8 @@ def push_alerts(db_url: str, alerts: list[Alert], fcm_app=None) -> dict[str, int
         )
 
         try:
-            response = messaging.send_multicast(message, app=fcm_app)
+            # send_multicast was removed in firebase-admin 7; this is its replacement (>= 6.2).
+            response = messaging.send_each_for_multicast(message, app=fcm_app)
             # Log per-token outcome and tally.
             for d, resp in zip(eligible_devices, response.responses):
                 status = "sent" if resp.success else "failed"
@@ -171,7 +172,7 @@ def push_alerts(db_url: str, alerts: list[Alert], fcm_app=None) -> dict[str, int
                 log.warning("FCM: %d/%d failures for %s zone %s",
                             response.failure_count, len(tokens), alert.species, alert.zone_id)
         except Exception:
-            log.exception("FCM send_multicast failed for %s zone %s", alert.species, alert.zone_id)
+            log.exception("FCM send_each_for_multicast failed for %s zone %s", alert.species, alert.zone_id)
             for d in eligible_devices:
                 log_push(db_url, d["user_id"], None, alert.zone_id, alert.species,
                          d["fcm_token"], "failed")
