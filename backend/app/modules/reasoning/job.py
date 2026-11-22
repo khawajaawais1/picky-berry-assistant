@@ -108,32 +108,45 @@ def _write_run(db_url: str, result: RunResult) -> str:
 
 
 def _write_alerts(db_url: str, run_id: str, alerts: list[Alert]) -> None:
-    """Insert alert rows linked to a alert_rules_log run."""
+    """Insert alert rows linked to a alert_rules_log run.
+
+    Uses SQLAlchemy executemany (one param dict per row) in batches so a 10k-row
+    run finishes in seconds instead of hitting pooler timeouts.
+    """
     if not alerts:
         return
     from sqlalchemy import create_engine, text
 
+    sql = text("""
+        INSERT INTO alerts
+          (run_id, zone_id, species, rule_id, rule_version, score, confidence,
+           ripeness, suitability, ecology_verified, sentence, place,
+           zone_number, zone_iri, species_iri, name_en, name_fi)
+        VALUES
+          (:run_id, CAST(:zone_id AS uuid), :species, :rule_id, :rule_version, :score,
+           :confidence, :ripeness, :suitability, :ecology_verified, :sentence,
+           :place, :zone_number, :zone_iri, :species_iri, :name_en, :name_fi)
+    """)
+
+    params = [
+        {
+            "run_id": run_id, "zone_id": a.zone_id, "species": a.species,
+            "rule_id": a.rule_id, "rule_version": a.rule_version,
+            "score": a.score, "confidence": a.confidence, "ripeness": a.ripeness,
+            "suitability": a.suitability, "ecology_verified": a.ecology_verified,
+            "sentence": a.sentence, "place": a.place,
+            "zone_number": a.zone_number, "zone_iri": a.zone_iri,
+            "species_iri": a.species_iri, "name_en": a.name_en, "name_fi": a.name_fi,
+        }
+        for a in alerts
+    ]
+
+    BATCH = 500
     eng = create_engine(db_url, future=True)
     with eng.begin() as conn:
-        for a in alerts:
-            conn.execute(text("""
-                INSERT INTO alerts
-                  (run_id, zone_id, species, rule_id, rule_version, score, confidence,
-                   ripeness, suitability, ecology_verified, sentence, place,
-                   zone_number, zone_iri, species_iri, name_en, name_fi)
-                VALUES
-                  (:run_id, CAST(:zone_id AS uuid), :species, :rule_id, :rule_version, :score,
-                   :confidence, :ripeness, :suitability, :ecology_verified, :sentence,
-                   :place, :zone_number, :zone_iri, :species_iri, :name_en, :name_fi)
-            """), {
-                "run_id": run_id, "zone_id": a.zone_id, "species": a.species,
-                "rule_id": a.rule_id, "rule_version": a.rule_version,
-                "score": a.score, "confidence": a.confidence, "ripeness": a.ripeness,
-                "suitability": a.suitability, "ecology_verified": a.ecology_verified,
-                "sentence": a.sentence, "place": a.place,
-                "zone_number": a.zone_number, "zone_iri": a.zone_iri,
-                "species_iri": a.species_iri, "name_en": a.name_en, "name_fi": a.name_fi,
-            })
+        for i in range(0, len(params), BATCH):
+            conn.execute(sql, params[i:i + BATCH])
+    log.info("wrote %d alert rows for run %s", len(params), run_id)
 
 
 def make_alerts_source(db_url: str):
