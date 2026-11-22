@@ -74,25 +74,37 @@ hand-written interfaces remain because several response schemas are still
 
 ### Vercel
 
-`vercel.json` carries the build settings (Vite, `npm ci`, `npm run build`, output `dist/`), the
-SPA rewrite and the security headers, so the project needs only three settings in the Vercel
-dashboard:
+The console deploys to production **automatically when a change to `admin/` is merged into
+`main`**. `vercel.json` carries everything that can live in the repository:
 
-1. **Root Directory:** `admin` (Project → Settings → General). The repository root is not the app.
-2. **Environment variable:** `VITE_API_BASE_URL` = the deployed `picky-server` origin plus
-   `/api/v1`, for example `https://api.example.com/api/v1`, for Production (and Preview if you
-   use previews). It is compiled into the bundle, so redeploy after changing it. The build
-   **fails on purpose** when it is missing or not `https`: without it the console would call
-   its own static domain instead of the API.
-3. **API CORS:** add the console's Vercel origin (e.g. `https://picky-admin.vercel.app`, no
-   path) to `CORS_ORIGINS` on the API and restart it. The API allows only listed origins and
-   rejects a wildcard, so preview deployments (random URLs) work only if their origin is listed
-   too.
+- build settings (Vite, `npm ci`, `npm run build`, output `dist/`), the SPA rewrite and the
+  security headers;
+- `git.deploymentEnabled`: only `main` deploys; other branches and pull requests do not;
+- `ignoreCommand`: the build is skipped when nothing under `admin/` changed since the last
+  deployment (`VERCEL_GIT_PREVIOUS_SHA`), so a server-only or docs-only merge does not redeploy.
+  If that commit is not in Vercel's clone, the command errors and the build runs anyway.
 
-Then deploy from the dashboard, or with the CLI from `admin/`: `npx vercel` (preview) and
-`npx vercel --prod`.
+One-time setup in the Vercel dashboard (needs someone who can install the Vercel GitHub app on
+`khawajaawais1/picky-berry-assistant`):
 
-After deploying, sign in and open **Operations** and **Map**. "API not reachable" means
+1. **Add New → Project → Import** the repository.
+2. **Root Directory:** `admin`. Framework and commands are read from `vercel.json`.
+3. **Production Branch:** `main` (Project → Settings → Git; it is the default).
+4. **Environment variable** (Production): `VITE_API_BASE_URL` = the deployed `picky-server`
+   origin plus `/api/v1`, for example `https://api.example.com/api/v1`. It is compiled into the
+   bundle, so redeploy after changing it. The build **fails on purpose** when it is missing or
+   not `https`: without it the console would call its own static domain instead of the API.
+5. **API CORS:** add the console's production origin (e.g. `https://picky-admin.vercel.app`,
+   no path) to `CORS_ORIGINS` on the API and restart it. The API allows only listed origins and
+   rejects a wildcard.
+
+Vercel deploys as soon as the merge lands; it does not wait for GitHub Actions. Branch
+protection on `main` (required `admin` / `server` checks) is what keeps a failing change from
+reaching production.
+
+To deploy by hand from `admin/`: `npx vercel --prod`.
+
+After a deploy, sign in and open **Operations** and **Map**. "API not reachable" means
 `VITE_API_BASE_URL` or CORS is wrong; "not integrated with the API yet" means that API version
 lacks the endpoint (deploy the matching `picky-server`).
 
