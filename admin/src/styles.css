@@ -818,6 +818,140 @@ th.numeric {
   margin-top: 14px;
 }
 
+/* Operations -------------------------------------------------------------- */
+
+.ops-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(700px 180px at 85% 0%, rgba(185, 140, 255, 0.12), transparent 70%),
+    var(--panel);
+}
+
+.ops-hero h2 {
+  margin-top: 2px;
+  font-size: 1.3rem;
+  letter-spacing: -0.02em;
+}
+
+.ops-hero-copy {
+  max-width: 74ch;
+  margin-top: 5px;
+  color: var(--text-soft);
+  font-size: 0.88rem;
+}
+
+.ops-hero-meta {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.ops-hero-ok {
+  border-color: rgba(99, 224, 174, 0.28);
+}
+
+.ops-hero-warn {
+  border-color: rgba(255, 196, 107, 0.35);
+}
+
+.ops-hero-fail {
+  border-color: rgba(255, 135, 150, 0.38);
+}
+
+.ops-check-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.ops-check {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-left-width: 3px;
+  border-radius: 10px;
+  background: #120f19;
+}
+
+.ops-check-ok {
+  border-left-color: var(--good);
+}
+
+.ops-check-warn {
+  border-left-color: var(--warn);
+}
+
+.ops-check-fail {
+  border-left-color: var(--bad);
+}
+
+.ops-check-status {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ops-check-value {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--text-soft);
+}
+
+.ops-check-body h3 {
+  font-size: 0.9rem;
+}
+
+.ops-check-body p {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 0.81rem;
+}
+
+.ops-check-runbook {
+  max-width: 86ch;
+}
+
+.ops-check-runbook strong {
+  color: var(--text-soft);
+  font-weight: 600;
+}
+
+.ops-check-foot {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 6px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.ops-runbook {
+  display: flex;
+  margin: 0;
+  padding-left: 18px;
+  flex-direction: column;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.ops-runbook strong {
+  color: var(--text-soft);
+  font-weight: 600;
+}
+
 /* States ------------------------------------------------------------------ */
 
 .state-card {
@@ -1610,6 +1744,23 @@ th.numeric {
 }
 
 @media (max-width: 700px) {
+  .ops-check {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .ops-check-foot {
+    align-items: flex-start;
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+    white-space: normal;
+  }
+
+  .ops-hero-meta {
+    align-items: flex-start;
+  }
+
   .topbar {
     flex-direction: column;
     align-items: flex-start;

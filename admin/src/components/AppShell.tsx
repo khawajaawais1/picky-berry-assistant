@@ -6,6 +6,7 @@ import { Button } from './ui';
 
 type IconName =
   | 'overview'
+  | 'operations'
   | 'analytics'
   | 'zones'
   | 'jobs'
@@ -21,6 +22,11 @@ const ICONS: Record<IconName, ReactNode> = {
       <rect x="14" y="3" width="7" height="7" rx="1.5" />
       <rect x="3" y="14" width="7" height="7" rx="1.5" />
       <rect x="14" y="14" width="7" height="7" rx="1.5" />
+    </>
+  ),
+  operations: (
+    <>
+      <path d="M3 12h4l2.5-6 4 12 2.5-6H21" />
     </>
   ),
   analytics: (
@@ -96,6 +102,7 @@ const NAV = [
     label: 'Monitor',
     items: [
       { to: '/', label: 'Overview', icon: 'overview' as const, end: true },
+      { to: '/operations', label: 'Operations', icon: 'operations' as const },
       { to: '/analytics', label: 'Analytics', icon: 'analytics' as const },
     ],
   },
@@ -122,6 +129,12 @@ function pageMeta(pathname: string): { title: string; description: string } {
     return {
       title: 'Overview',
       description: 'What the service is doing right now.',
+    };
+  }
+  if (pathname === '/operations') {
+    return {
+      title: 'Operations',
+      description: 'Pipeline health, freshness and the next operator action.',
     };
   }
   if (pathname === '/zones') {

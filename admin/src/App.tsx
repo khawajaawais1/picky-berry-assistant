@@ -6,6 +6,7 @@ import { AuditPage } from './pages/AuditPage';
 import { FeatureLabPage } from './pages/FeatureLabPage';
 import { JobsPage } from './pages/JobsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { OperationsPage } from './pages/OperationsPage';
 import { OverviewPage } from './pages/OverviewPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { SignInPage } from './pages/SignInPage';
@@ -20,6 +21,7 @@ export function App() {
       <Route element={<RequireAdmin />}>
         <Route element={<AppShell />}>
           <Route index element={<OverviewPage />} />
+          <Route path="operations" element={<OperationsPage />} />
           <Route path="zones" element={<ZonesPage />} />
           <Route path="zones/:id" element={<ZoneDetailPage />} />
           <Route path="jobs" element={<JobsPage />} />
