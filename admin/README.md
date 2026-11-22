@@ -72,11 +72,53 @@ hand-written interfaces remain because several response schemas are still
 
 ## Deployment
 
-1. Build with the API origin compiled in:
-   `VITE_API_BASE_URL=https://<api-origin>/api/v1 npm run build`
-2. Publish `dist/` to the chosen static host (Vercel or Caddy on the team VM).
-3. Add the admin origin to the API's `CORS_ORIGINS` (comma-separated bare origins). The API
-   allows only that list and rejects a wildcard.
+### Vercel
+
+The console deploys to production **automatically when a change to `admin/` is merged into
+`main`**. `vercel.json` carries everything that can live in the repository:
+
+- build settings (Vite, `npm ci`, `npm run build`, output `dist/`), the SPA rewrite and the
+  security headers;
+- `git.deploymentEnabled`: only `main` deploys; other branches and pull requests do not;
+- `ignoreCommand`: the build is skipped when nothing under `admin/` changed since the last
+  deployment (`VERCEL_GIT_PREVIOUS_SHA`), so a server-only or docs-only merge does not redeploy.
+  If that commit is not in Vercel's clone, the command errors and the build runs anyway.
+
+One-time setup in the Vercel dashboard (needs someone who can install the Vercel GitHub app on
+`khawajaawais1/picky-berry-assistant`):
+
+1. **Add New → Project → Import** the repository.
+2. **Root Directory:** `admin`. Framework and commands are read from `vercel.json`.
+3. **Production Branch:** `main` (Project → Settings → Git; it is the default).
+4. **API origin:** `.env.production` sets `VITE_API_BASE_URL` to the deployed `picky-server`,
+   `https://picky-berry-assistant.vercel.app/api/v1`. To point elsewhere, set
+   `VITE_API_BASE_URL` in Vercel (Production); the dashboard value wins. It is compiled into the
+   bundle, so redeploy after changing it. The build **fails on purpose** when it is missing or
+   not `https`: without it the console would call its own static domain instead of the API.
+   A local `npm run build` also uses this file, so `vite preview` talks to production; use
+   `npm run dev` (proxy to `localhost:3000`) for local work.
+5. **API CORS:** add the console's production origin (e.g. `https://picky-admin.vercel.app`,
+   no path) to `CORS_ORIGINS` on the API and restart it. The API allows only listed origins and
+   rejects a wildcard.
+
+Vercel deploys as soon as the merge lands; it does not wait for GitHub Actions. Branch
+protection on `main` (required `admin` / `server` checks) is what keeps a failing change from
+reaching production.
+
+To deploy by hand from `admin/`: `npx vercel --prod`.
+
+After a deploy, sign in and open **Operations** and **Map**. "API not reachable" means
+`VITE_API_BASE_URL` or CORS is wrong; "not integrated with the API yet" means that API version
+lacks the endpoint (deploy the matching `picky-server`).
+
+`/api/*` is never rewritten to `index.html`, so a wrong API base fails visibly instead of
+returning the SPA's HTML.
+
+### Other static hosts
+
+Build with `VITE_API_BASE_URL=https://<api-origin>/api/v1 npm run build`, publish `dist/`, send
+every unknown non-`/api` path to `index.html`, copy the headers from `vercel.json`, and add the
+origin to `CORS_ORIGINS`.
 
 The bundle contains only the public API origin. No database URL, service key or JWT secret is
 ever compiled into it.
@@ -95,6 +137,12 @@ ever compiled into it.
   request id and evidence, and filters by actor, action, outcome and request id. Rejected
   `403`/`409` privileged attempts are recorded by the API; the database trigger makes audit rows
   append-only.
+- **Static-host headers.** `vercel.json` sends a strict Content-Security-Policy (scripts, styles,
+  fonts and images from the console's own origin only; `connect-src` limited to `'self'` and
+  HTTPS origins, since the API origin is fixed at build time), `frame-ancestors 'none'`,
+  `nosniff`, `no-referrer`, HSTS and a deny-all Permissions-Policy. A host other than Vercel must
+  send the same headers. The bundle has no inline scripts or styles, so the policy needs no
+  `unsafe-inline`.
 - **Read-only by design.** Report verdicts and trust edits belong to features 6.5 and 6.3; the
   panel labels them as unavailable rather than inventing a rule.
 

@@ -109,6 +109,7 @@ standard error envelope. Pagination is `page` (1-based) and `page_size` (default
 |---------------|---------|
 | `GET /admin/overview` | coverage, freshness, users/reports/visits/jobs counters, species, recent audit |
 | `GET /admin/operations/health` | server-side health checks with thresholds, owners, runbooks, per-species breakdowns and unavailable capabilities |
+| `GET /admin/map?species=` | every zone as a map spot (centroid, best score, report count), bounds, `truncated` above 10,000 |
 | `GET /admin/zones?q=&species=&sort=&page=&page_size=` | paged zone list with score/report summaries |
 | `GET /admin/zones/{id}` | zone facts, geometry, scores + explanations, species fit, reports, visits, jobs |
 | `GET /admin/jobs?status=&type=&page=&page_size=` | paged jobs + status counts, worker/lease/heartbeat, recovery and stuck state |
@@ -228,6 +229,7 @@ and reaping functions and their exact semantics are in
 | `/sign-in` | Sign in | email + password, role check, API origin, error state |
 | `/` | Overview | coverage, freshness, volumes, queue, quick actions, recent audit |
 | `/operations` | Operations | server-side health checks with per-species detail, runbook/evidence links, unavailable capabilities and running jobs |
+| `/map` | Map | every spot on an OpenStreetMap basemap, coloured by best score, species filter, click-through to the zone |
 | `/zones` | Zones | search, species filter, sort, pagination |
 | `/zones/:id` | Zone detail | facts, geometry summary, scores + explanation, history chart, species fit, reports, visits, jobs |
 | `/jobs` | Queue | status counts, filters, live refresh, retry |
@@ -238,8 +240,8 @@ and reaping functions and their exact semantics are in
 | `/lab` | Feature lab | request console, presets, recompute/retry actions, environment |
 | `/audit` | Audit log | searchable who/action/target/request id, before/after detail, target links |
 
-Every data screen has loading, empty, error (with request id and retry) and permission-denied
-states. A session that is not `admin` sees the sign-in screen with the reason, never a blank
+Every data screen has loading, empty, error (with request id and retry), permission-denied and
+"API not available" states; no screen shows demo or placeholder data in place of an API answer. A session that is not `admin` sees the sign-in screen with the reason, never a blank
 shell. Layout: a fixed left rail, a sticky top bar, and one scrolling content column; below
 900 px the rail becomes a horizontal nav. Colour is never the only signal — every score, status
 and role carries a text label as well as a colour.
@@ -280,7 +282,8 @@ and role carries a text label as well as a colour.
 | 6 | OpenAPI contract, e2e authorisation tests, build/typecheck | ✅ this branch |
 | 6b | Testcontainers PostGIS integration suite and generated admin types | ✅ this branch |
 | 6c | Job lease/heartbeat/reaper contract and admin lease evidence | ✅ this branch |
-| 7 | Run against staging with pilot data; role/audit/retry checks; Vercel project + CORS allow-list | ⬜ next |
+| 6d | Security headers + CSP for the static host; admin unit tests and server e2e gated in CI; route smoke against a seeded database | ✅ `feature/salman/admin-completion` |
+| 7 | Run against staging with pilot data; role/audit/retry checks; Vercel project + CORS allow-list | ⬜ next (needs staging access) |
 | 8 | Zone geometry authoring, report verdicts (6.5), trust-rule editor, media review | ⬜ next |
 
 The panel is deliberately built against the tables that exist. Report moderation and trust edits
@@ -309,7 +312,10 @@ hand-written types remain where the contract still says `additionalProperties: t
 - **Frontend:** `tsc --noEmit`, ESLint, Vitest/Testing Library and `vite build` gate the branch.
   Server tests cover the operations-health builder, thresholds and SQL availability path;
   frontend tests cover the privileged-action/drawer primitives. Route smoke is manual against a
-  database, and empty states are part of the acceptance check.
+  database, and empty states are part of the acceptance check. Last smoke (22 Nov 2026): the
+  production build, served with the `vercel.json` headers, against the integration fixtures —
+  every route in §7 rendered with data, a zone recompute landed in the audit log, there were no
+  console errors or CSP violations, and `localStorage` stayed empty (E5.10, E5.11).
 - **Data checks:** after `seed-dev-scores`, the overview's coverage should equal the seed's
   zone × species coverage; when local report rows are loaded, the reports screen and counters
   should match their count.
@@ -319,7 +325,7 @@ hand-written types remain where the contract still says `additionalProperties: t
 | Risk | Impact | Mitigation |
 |------|--------|------------|
 | A new console origin is missing from `CORS_ORIGINS` | The browser blocks the panel | The API lists only explicit origins; add the deployed console origin to the environment |
-| Refresh token in `sessionStorage` is XSS-reachable | Token theft through a future XSS | CSP on the static host, no third-party scripts, `HttpOnly` cookie later |
+| Refresh token in `sessionStorage` is XSS-reachable | Token theft through a future XSS | Strict CSP and `frame-ancestors 'none'` in `admin/vercel.json` (no `unsafe-inline`), no third-party scripts, `HttpOnly` cookie later |
 | Admin queries scan large tables (`reports`, `jobs`) | Slow panel on a big pilot | Indexes exist for zone/time paths; add `created_at` indexes if p95 > 500 ms |
 | Report moderation is read-only | Admins cannot resolve a bad report yet | 6.5 owns the verdict rules; the panel adds the action when the service exposes it. The integration suite covers the read-only queue until then. |
 | The Python worker is not in this repository | A worker deployed without the lease contract can strand a `running` job | `0009` provides tested SQL functions; `docs/contracts/job-types.md` is the coordinated contract, and the worker must adopt it with the migration |

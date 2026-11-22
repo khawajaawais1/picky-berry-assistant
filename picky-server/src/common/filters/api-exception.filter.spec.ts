@@ -1,6 +1,7 @@
 import {
   ArgumentsHost,
   ForbiddenException,
+  NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
@@ -90,6 +91,67 @@ describe('ApiExceptionFilter', () => {
         message: 'Terms and privacy policy consent are required.',
       },
       request_id: 'request-456',
+    });
+  });
+
+  function hostFor(request: Record<string, unknown>) {
+    const response = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      getHeader: jest.fn().mockReturnValue('request-404'),
+    };
+    const host = {
+      switchToHttp: () => ({
+        getRequest: () => ({
+          id: 'request-404',
+          header: jest.fn().mockReturnValue('request-404'),
+          ...request,
+        }),
+        getResponse: () => response,
+      }),
+    } as unknown as ArgumentsHost;
+    return { host, response };
+  }
+
+  it('marks a request to a route the API does not serve as ROUTE_NOT_FOUND', async () => {
+    const { host, response } = hostFor({
+      method: 'GET',
+      url: '/api/v1/admin/map?x=1',
+      originalUrl: '/api/v1/admin/map?x=1',
+    });
+    const filter = new ApiExceptionFilter(logger, audit);
+
+    await filter.catch(
+      new NotFoundException('Cannot GET /api/v1/admin/map?x=1'),
+      host,
+    );
+
+    expect(response.status).toHaveBeenCalledWith(404);
+    expect(response.json).toHaveBeenCalledWith({
+      error: {
+        code: 'ROUTE_NOT_FOUND',
+        message: 'This API endpoint is not available on this server.',
+      },
+      request_id: 'request-404',
+    });
+  });
+
+  it('keeps NOT_FOUND for a missing record on a route that exists', async () => {
+    const { host, response } = hostFor({
+      method: 'GET',
+      url: '/api/v1/admin/zones/00000000-0000-4000-8000-000000000000',
+      originalUrl: '/api/v1/admin/zones/00000000-0000-4000-8000-000000000000',
+    });
+    const filter = new ApiExceptionFilter(logger, audit);
+
+    await filter.catch(new NotFoundException('Zone not found.'), host);
+
+    expect(response.json).toHaveBeenCalledWith({
+      error: {
+        code: 'NOT_FOUND',
+        message: 'The requested resource was not found.',
+      },
+      request_id: 'request-404',
     });
   });
 

@@ -22,7 +22,7 @@ defaults:
 
 jobs:
   verify:
-    name: Typecheck, lint, build
+    name: Typecheck, lint, test, build
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -44,6 +44,9 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      - name: Unit tests
+        run: npm test
 
       - name: Generated admin types are current
         run: npm run openapi:check

@@ -1106,6 +1106,11 @@ th.numeric {
   border-style: dashed;
 }
 
+.state-unavailable {
+  border-color: rgba(255, 196, 107, 0.4);
+  background: rgba(255, 196, 107, 0.05);
+}
+
 .spinner {
   width: 22px;
   height: 22px;
@@ -2114,4 +2119,44 @@ th.numeric {
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* Map */
+.map-canvas {
+  height: min(70vh, 640px);
+  min-height: 360px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.map-canvas[hidden] {
+  display: none;
+}
+
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  color: var(--text-soft);
+  font-size: 0.85rem;
+}
+
+.map-band-good {
+  background: var(--good);
+}
+.map-band-warn {
+  background: var(--warn);
+}
+.map-band-bad {
+  background: var(--bad);
+}
+.map-band-none {
+  background: var(--muted);
+}
+
+.map-canvas .leaflet-tooltip {
+  color: #1b1724;
 }

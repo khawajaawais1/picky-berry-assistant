@@ -143,7 +143,7 @@ export function JobsPage() {
               >
                 {titleCase(filter)}
                 <span className="chip-count">
-                  {formatNumber(data?.counts[filter] ?? 0)}
+                  {data ? formatNumber(data.counts[filter] ?? 0) : '—'}
                 </span>
               </button>
             ))}

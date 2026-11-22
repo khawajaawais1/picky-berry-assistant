@@ -7,7 +7,7 @@ import {
   type ButtonHTMLAttributes,
   type ReactNode,
 } from 'react';
-import type { ApiError } from '../api/client';
+import { isApiUnavailable, type ApiError } from '../api/client';
 import { formatNumber, titleCase } from '../lib/format';
 
 export type Tone = 'neutral' | 'good' | 'warn' | 'bad' | 'info' | 'accent';
@@ -158,6 +158,9 @@ export function ErrorState({
   error: ApiError;
   onRetry?: () => void;
 }) {
+  if (isApiUnavailable(error)) {
+    return <ApiUnavailable error={error} onRetry={onRetry} />;
+  }
   const title =
     error.status === 403
       ? 'The API refused this request'
@@ -172,6 +175,44 @@ export function ErrorState({
         {error.code}
         {error.requestId ? ` · request ${error.requestId}` : ''}
       </p>
+      {onRetry ? <Button onClick={onRetry}>Retry</Button> : null}
+    </div>
+  );
+}
+
+/**
+ * Shown instead of data when the API, or the endpoint a screen needs, is not running or
+ * not integrated yet. The console never substitutes demo values.
+ */
+export function ApiUnavailable({
+  error,
+  feature,
+  onRetry,
+}: {
+  error?: ApiError;
+  feature?: string;
+  onRetry?: () => void;
+}) {
+  const unreachable = error?.code === 'API_UNREACHABLE';
+  return (
+    <div className="state-card state-unavailable" role="status">
+      <Badge tone="warn">API not available</Badge>
+      <p className="state-title">
+        {unreachable
+          ? 'The API is not reachable'
+          : `${feature ?? 'This view'} is not integrated with the API yet`}
+      </p>
+      <p>
+        {unreachable
+          ? 'Start picky-server or check VITE_API_BASE_URL. Nothing is shown until real data arrives.'
+          : 'The server does not expose the endpoint this view needs. No demo data is shown in its place.'}
+      </p>
+      {error ? (
+        <p className="mono small muted">
+          {error.code}
+          {error.requestId ? ` · request ${error.requestId}` : ''}
+        </p>
+      ) : null}
       {onRetry ? <Button onClick={onRetry}>Retry</Button> : null}
     </div>
   );

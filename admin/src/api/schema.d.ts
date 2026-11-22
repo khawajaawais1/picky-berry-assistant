@@ -41,6 +41,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/map": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Every zone as a map spot (centroid, best score, report count)
+         * @description Not limited to a bounding box, unlike the public /zones endpoint: the console shows the whole pilot area at once. At most 10,000 spots are returned; `truncated` is true when more exist.
+         */
+        get: operations["getAdminMap"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/zones": {
         parameters: {
             query?: never;
@@ -261,6 +281,35 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AdminMapSpot: {
+            /** Format: uuid */
+            id: string;
+            h3: string;
+            name: string | null;
+            forest_type: string | null;
+            lat: number;
+            lng: number;
+            best_score: number | null;
+            species_scored: number;
+            reports_total: number;
+            /** Format: date-time */
+            latest_computed_at: string | null;
+        };
+        AdminMap: {
+            /** Format: date-time */
+            generated_at: string;
+            species: string | null;
+            total: number;
+            truncated: boolean;
+            /** @description Null when no spot matches */
+            bounds: {
+                min_lat: number;
+                min_lng: number;
+                max_lat: number;
+                max_lng: number;
+            } | null;
+            spots: components["schemas"]["AdminMapSpot"][];
+        };
         OperationsHealthCheck: {
             id: string;
             label: string;
@@ -535,6 +584,32 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
+        };
+    };
+    getAdminMap: {
+        parameters: {
+            query?: {
+                /** @description Only zones with a current score for this species */
+                species?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description All spots with a centroid */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminMap"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["Validation"];
         };
     };
     listAdminZones: {

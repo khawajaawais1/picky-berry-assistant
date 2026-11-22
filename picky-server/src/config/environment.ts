@@ -13,6 +13,11 @@ const schema = Joi.object({
   ACCESS_TOKEN_TTL_S: Joi.number().integer().min(60).default(900),
   REFRESH_TOKEN_TTL_DAYS: Joi.number().integer().min(1).default(30),
   DEV_PICKER_PASSWORD: Joi.string().min(10).max(128),
+  DEV_ADMIN_EMAIL: Joi.string()
+    .email({ tlds: false })
+    .lowercase()
+    .default('admin@picky.fi'),
+  DEV_ADMIN_PASSWORD: Joi.string().min(10).max(128),
   MAIL_MODE: Joi.string().valid('console').default('console'),
   APP_PUBLIC_URL: Joi.string().uri().default('http://localhost:3000'),
   CORS_ORIGINS: Joi.string().default(DEFAULT_CORS_ORIGINS.join(',')),

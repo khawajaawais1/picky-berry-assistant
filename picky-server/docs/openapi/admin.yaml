@@ -60,6 +60,29 @@ paths:
                       }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
+  /admin/map:
+    get:
+      operationId: getAdminMap
+      tags: [admin]
+      summary: Every zone as a map spot (centroid, best score, report count)
+      description: >-
+        Not limited to a bounding box, unlike the public /zones endpoint: the console
+        shows the whole pilot area at once. At most 10,000 spots are returned;
+        `truncated` is true when more exist.
+      parameters:
+        - name: species
+          in: query
+          description: Only zones with a current score for this species
+          schema: { type: string, maxLength: 40 }
+      responses:
+        '200':
+          description: All spots with a centroid
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminMap' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/Validation' }
   /admin/zones:
     get:
       operationId: listAdminZones
@@ -512,6 +535,46 @@ components:
       required: true
       schema: { type: string, format: uuid }
   schemas:
+    AdminMapSpot:
+      type: object
+      additionalProperties: false
+      required:
+        [id, h3, name, forest_type, lat, lng, best_score, species_scored,
+         reports_total, latest_computed_at]
+      properties:
+        id: { type: string, format: uuid }
+        h3: { type: string }
+        name: { type: string, nullable: true }
+        forest_type: { type: string, nullable: true }
+        lat: { type: number }
+        lng: { type: number }
+        best_score: { type: integer, nullable: true, minimum: 0, maximum: 100 }
+        species_scored: { type: integer, minimum: 0 }
+        reports_total: { type: integer, minimum: 0 }
+        latest_computed_at: { type: string, format: date-time, nullable: true }
+    AdminMap:
+      type: object
+      additionalProperties: false
+      required: [generated_at, species, total, truncated, bounds, spots]
+      properties:
+        generated_at: { type: string, format: date-time }
+        species: { type: string, nullable: true }
+        total: { type: integer, minimum: 0 }
+        truncated: { type: boolean }
+        bounds:
+          type: object
+          nullable: true
+          description: Null when no spot matches
+          additionalProperties: false
+          required: [min_lat, min_lng, max_lat, max_lng]
+          properties:
+            min_lat: { type: number }
+            min_lng: { type: number }
+            max_lat: { type: number }
+            max_lng: { type: number }
+        spots:
+          type: array
+          items: { $ref: '#/components/schemas/AdminMapSpot' }
     OperationsHealthCheck:
       type: object
       required:

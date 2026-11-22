@@ -9,6 +9,7 @@ type IconName =
   | 'operations'
   | 'analytics'
   | 'zones'
+  | 'map'
   | 'jobs'
   | 'reports'
   | 'users'
@@ -40,6 +41,12 @@ const ICONS: Record<IconName, ReactNode> = {
     <>
       <path d="M12 2.5l8.5 5v9l-8.5 5-8.5-5v-9z" />
       <circle cx="12" cy="12" r="2.5" />
+    </>
+  ),
+  map: (
+    <>
+      <path d="M9 4.5l-5 2v13l5-2 6 2 5-2v-13l-5 2z" />
+      <path d="M9 4.5v13M15 6.5v13" />
     </>
   ),
   jobs: (
@@ -109,6 +116,7 @@ const NAV = [
   {
     label: 'Operate',
     items: [
+      { to: '/map', label: 'Map', icon: 'map' as const },
       { to: '/zones', label: 'Zones', icon: 'zones' as const },
       { to: '/jobs', label: 'Queue', icon: 'jobs' as const },
       { to: '/moderation', label: 'Moderation', icon: 'reports' as const },
@@ -135,6 +143,12 @@ function pageMeta(pathname: string): { title: string; description: string } {
     return {
       title: 'Operations',
       description: 'Pipeline health, freshness and the next operator action.',
+    };
+  }
+  if (pathname === '/map') {
+    return {
+      title: 'Map',
+      description: 'Every spot in the pilot area, coloured by its best current score.',
     };
   }
   if (pathname === '/zones') {

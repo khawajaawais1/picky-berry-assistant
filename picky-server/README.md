@@ -33,8 +33,7 @@ is not permitted to create extensions. Then run:
 npm run db:migrate
 npm run seed:zones   # committed 50-zone stub, for local development only
 npm run seed:scores
-npm run seed:users
-npm run make-admin -- picker@example.com
+npm run seed:users   # creates admin@picky.fi and picker@example.com
 npm run start:dev
 ```
 
@@ -42,8 +41,10 @@ npm run start:dev
 `zone_species`; it is a development fixture, not the data engineer's verified
 baseline, and refuses to run in production. The other seed commands create a
 current score row per zone/species and the development accounts. Set
-`DEV_PICKER_PASSWORD` in `.env` before `seed:users`; the picker signs in with
-that password.
+`DEV_PICKER_PASSWORD` and `DEV_ADMIN_PASSWORD` in `.env` before `seed:users`. The
+default operator account is `admin@picky.fi` (override with `DEV_ADMIN_EMAIL`) and
+signs in to the admin console with `DEV_ADMIN_PASSWORD`; the picker signs in with
+`DEV_PICKER_PASSWORD`. Reseeding resets both passwords.
 
 The local example enables `DEV_AUTH_BYPASS`; never use it in production. The API
 refuses to start in production when this bypass is enabled. Set
@@ -94,6 +95,47 @@ five-minute lease, `heartbeat_job()` extends a live lease, `complete_job()` / `f
 worker to its own claim, and `reap_stale_jobs()` requeues expired claims before the next claim.
 The admin queue exposes the lease, heartbeat, worker id, recovery count and a derived stuck state;
 operations health fails on an expired lease and warns when a live lease misses its heartbeat.
+
+## Deploying to Vercel
+
+Vercel runs this API as a serverless function with zero configuration: it detects NestJS from
+`src/main.ts`; no `vercel.json` is needed. The deployed API is
+`https://picky-berry-assistant.vercel.app` (Swagger at `/docs`).
+
+One-time project setup:
+
+1. **Add New → Project → Import** the repository; **Root Directory:** `picky-server`.
+2. **Environment variables** (Production):
+
+   | Variable | Value |
+   |----------|-------|
+   | `NODE_ENV` | `production` |
+   | `DATABASE_URL` | the Postgres URL; use the provider's **pooled** (PgBouncer) URL |
+   | `DB_SSL` | `require` |
+   | `DB_POOL_MAX` | `2` — every function instance opens its own pool |
+   | `JWT_SECRET` | 32+ random characters (`openssl rand -hex 32`) |
+   | `CORS_ORIGINS` | the admin console's origin, e.g. `https://picky-admin.vercel.app` |
+   | `APP_PUBLIC_URL` | the app's public origin (used in emails) |
+
+   `DEV_AUTH_BYPASS` must be unset or `false`; the API refuses to start in production with it
+   on. Without `CORS_ORIGINS` the API allows only the localhost development origins, so the
+   deployed console is blocked.
+3. **Migrations are not run by Vercel.** Before the first deploy, and whenever a migration is
+   added, run them once against the production database from a machine that can reach it:
+   `DATABASE_URL=<production url> DB_SSL=require npm run db:migrate`. A database that already
+   ran `0007_admin_audit` / `0008_audit_integrity` needs those `pgmigrations` rows renamed to
+   `0010_admin_audit` / `0011_audit_integrity` first.
+4. **First admin:** `seed:users` refuses to run in production. Register an account, then
+   `DATABASE_URL=<production url> DB_SSL=require npm run make-admin -- <email>`.
+
+After a deploy: `GET /api/v1/health` answers `200`, `/docs` shows the contract, and an unauthenticated
+`GET /api/v1/admin/overview` answers `401` (a `404` means an old build without the admin API).
+Then set the console's API origin (`admin/.env.production` or `VITE_API_BASE_URL` in the console
+project) to `https://<this deployment>/api/v1`.
+
+Serverless limits worth knowing: request throttling is kept in memory, so limits apply per
+function instance rather than globally; and `/docs` is skipped, without failing the API, if the
+OpenAPI files are missing from the bundle.
 
 ## Validation
 

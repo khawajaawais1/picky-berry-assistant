@@ -123,9 +123,19 @@ export class ApiExceptionFilter implements ExceptionFilter {
             details?: unknown;
           })
         : undefined;
-    const code = this.errorCode(status, body?.error);
-    const message =
-      status >= 500
+    // Express's unmatched-route 404 reaches us as Nest's `Cannot <METHOD> <url>`. Give it
+    // its own code so a client can tell "this API is not deployed here" from "this record
+    // does not exist".
+    const routeMissing =
+      status === 404 &&
+      body?.message ===
+        `Cannot ${request.method} ${request.originalUrl ?? request.url}`;
+    const code = routeMissing
+      ? 'ROUTE_NOT_FOUND'
+      : this.errorCode(status, body?.error);
+    const message = routeMissing
+      ? 'This API endpoint is not available on this server.'
+      : status >= 500
         ? 'An unexpected error occurred.'
         : this.errorMessage(status, body?.message);
     const responseRequestId = response.getHeader('x-request-id');

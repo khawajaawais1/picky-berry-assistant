@@ -8,6 +8,8 @@ export type OperationsBreakdown = NonNullable<
   components['schemas']['OperationsHealthCheck']['breakdown']
 >[number];
 export type OperationsCheck = components['schemas']['OperationsHealthCheck'];
+export type AdminMap = components['schemas']['AdminMap'];
+export type AdminMapSpot = components['schemas']['AdminMapSpot'];
 export type OperationsUnavailable =
   components['schemas']['OperationsHealthUnavailable'];
 export type OperationsHealth =

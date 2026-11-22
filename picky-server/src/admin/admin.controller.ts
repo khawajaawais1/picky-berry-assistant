@@ -18,10 +18,12 @@ import { Request } from 'express';
 import { AuthUser } from '../auth/auth-user.interface';
 import { Roles } from '../common/decorators/roles.decorator';
 import { EnqueueResult } from '../jobs/jobs.service';
+import { AdminMap, AdminMapService } from './admin-map.service';
 import { AdminService } from './admin.service';
 import { AnalyticsQueryDto } from './dto/analytics-query.dto';
 import { AuditQueryDto } from './dto/audit-query.dto';
 import { JobsQueryDto } from './dto/jobs-query.dto';
+import { MapQueryDto } from './dto/map-query.dto';
 import { RecomputeDto } from './dto/recompute.dto';
 import { ReportsQueryDto } from './dto/reports-query.dto';
 import { RevokeSessionsDto } from './dto/revoke-sessions.dto';
@@ -56,7 +58,10 @@ function requestMetaOf(request: AdminRequest): {
 @Controller('admin')
 @Roles('admin')
 export class AdminController {
-  constructor(private readonly admin: AdminService) {}
+  constructor(
+    private readonly admin: AdminService,
+    private readonly adminMap: AdminMapService,
+  ) {}
 
   @Get('overview')
   @Header('Cache-Control', 'no-store')
@@ -68,6 +73,12 @@ export class AdminController {
   @Header('Cache-Control', 'no-store')
   operationsHealth(): Promise<OperationsHealth> {
     return this.admin.operationsHealth();
+  }
+
+  @Get('map')
+  @Header('Cache-Control', 'no-store')
+  map(@Query() query: MapQueryDto): Promise<AdminMap> {
+    return this.adminMap.spots(query);
   }
 
   @Get('zones')
