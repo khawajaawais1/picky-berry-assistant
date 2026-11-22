@@ -8,6 +8,7 @@ today" and "not wired yet" are different facts, and a client should not confuse 
 
 from __future__ import annotations
 
+import datetime as dt
 import os
 from collections.abc import Callable
 from pathlib import Path
@@ -69,8 +70,16 @@ def list_species(request: Request) -> list[dict[str, Any]]:
 
 
 @router.post("/reasoning/run", status_code=202, tags=["ops"])
-def trigger_reasoning_run(request: Request, background_tasks: BackgroundTasks) -> dict[str, str]:
-    """Kick off a reasoning run now (ops/testing). Production runs via APScheduler."""
+def trigger_reasoning_run(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    as_of: dt.date | None = None,
+) -> dict[str, str]:
+    """Kick off a reasoning run now (ops/testing). Production runs via APScheduler.
+
+    Pass ?as_of=YYYY-MM-DD to simulate a past or future date (useful for testing
+    outside berry season, e.g. ?as_of=2026-08-15).
+    """
     db_url = os.environ.get("DATABASE_URL")
     if not db_url:
         raise HTTPException(status_code=503, detail="DATABASE_URL not set")
@@ -81,14 +90,14 @@ def trigger_reasoning_run(request: Request, background_tasks: BackgroundTasks) -
         raise HTTPException(status_code=503, detail="ZoneGrid not loaded")
     if ontology_graph is None or rules is None:
         raise HTTPException(status_code=503, detail="ontology not loaded")
-    background_tasks.add_task(_run_job_background, db_url, ontology_graph, rules, zone_grid)
-    return {"status": "accepted"}
+    background_tasks.add_task(_run_job_background, db_url, ontology_graph, rules, zone_grid, as_of)
+    return {"status": "accepted", "as_of": str(as_of or "today")}
 
 
-def _run_job_background(db_url: str, ontology_graph, rules: list, zone_grid) -> None:
+def _run_job_background(db_url: str, ontology_graph, rules: list, zone_grid, as_of) -> None:
     from app.modules.reasoning.job import run_reasoning
 
-    run_reasoning(db_url, ontology_graph, rules, zone_grid)
+    run_reasoning(db_url, ontology_graph, rules, zone_grid, as_of=as_of)
 
 
 @router.get("/context.jsonld")
