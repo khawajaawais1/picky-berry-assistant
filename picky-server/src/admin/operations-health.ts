@@ -182,7 +182,7 @@ export function buildOperationsHealth(
     detail:
       input.zonesTotal === 0
         ? 'No zones are configured, so no species can be covered.'
-        : `${numberFormat.format(input.zonesScored)} of ${numberFormat.format(input.zonesTotal)} zones have a current score.`,
+        : `${numberFormat.format(input.zonesScored)} of ${numberFormat.format(input.zonesTotal)} zones have at least one current score; each species is checked separately.`,
     owner: 'Data + scoring',
     runbook:
       'Check the latest ingest and recompute jobs, then retry failed work and confirm a new current score.',
@@ -209,6 +209,20 @@ export function buildOperationsHealth(
     freshnessBreakdown.length > 0
       ? worstStatus(freshnessBreakdown.map((item) => item.status))
       : freshnessStatus(overallFreshnessHours);
+  const stalestSpecies = input.species.reduce<OperationsHealthSpecies | null>(
+    (oldest, species) => {
+      if (!oldest) return species;
+      const hours = ageHours(species.latestScoreAt, input.now);
+      const oldestHours = ageHours(oldest.latestScoreAt, input.now);
+      if (hours === null) return species;
+      if (oldestHours === null) return oldest;
+      return hours > oldestHours ? species : oldest;
+    },
+    null,
+  );
+  const stalestHours = stalestSpecies
+    ? ageHours(stalestSpecies.latestScoreAt, input.now)
+    : null;
 
   checks.push({
     id: 'freshness',
@@ -219,7 +233,11 @@ export function buildOperationsHealth(
     detail:
       overallFreshnessHours === null
         ? 'No current score has ever been computed.'
-        : `Newest current score is ${formatAge(input.latestScoreAt, input.now)} old.`,
+        : freshnessBreakdown.length > 0
+          ? stalestSpecies && stalestHours !== null
+            ? `Oldest species' newest score is ${formatAge(stalestSpecies.latestScoreAt, input.now)} old.`
+            : 'At least one species has no current score; the breakdown names it.'
+          : `Newest current score is ${formatAge(input.latestScoreAt, input.now)} old.`,
     owner: 'Scoring worker',
     runbook:
       'Check the daily recompute job and the worker heartbeat, then recompute the affected species.',

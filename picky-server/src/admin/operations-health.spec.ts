@@ -116,6 +116,7 @@ describe('buildOperationsHealth', () => {
       coverage?.breakdown?.find((item) => item.key === 'lingonberry')?.status,
     ).toBe('warn');
     expect(freshness?.status).toBe('fail');
+    expect(freshness?.detail).toContain('3 days');
     expect(
       freshness?.breakdown?.find((item) => item.key === 'lingonberry')?.status,
     ).toBe('fail');
