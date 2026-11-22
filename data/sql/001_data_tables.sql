@@ -117,3 +117,31 @@ SELECT DISTINCT ON (zone_id) zone_id, period_start, ndvi_mean, ndvi_anomaly
 FROM ndvi_obs
 WHERE ndvi_anomaly IS NOT NULL
 ORDER BY zone_id, period_start DESC;
+
+-- D-ZF – Zone features: assembled ML input per zone × date -------------------------
+-- Combines zone static attributes, IDW-weighted weather, and latest NDVI anomaly.
+-- Built daily by `picky-data zone-features`; consumed by the predict_yield job
+-- (ml/berry_ml ZoneGrid.score_points) and future XGBoost models.
+-- centroid lat/lon are denormalised here so the ML job never joins back to zones.
+CREATE TABLE IF NOT EXISTS zone_features (
+  zone_id         uuid REFERENCES zones ON DELETE CASCADE,
+  as_of           date NOT NULL,
+  -- centroid (from zones.centroid, denormalised for fast ML reads)
+  lat             real NOT NULL,
+  lon             real NOT NULL,
+  -- zone static (from zones)
+  forest_fraction real,
+  mire_fraction   real,
+  fertility_class smallint,
+  -- weather on as_of (IDW-weighted across reporting stations, NULL when no data)
+  gdd_since_apr1  real,
+  -- 7-day rolling window ending on as_of (NULL when < 1 day of weather available)
+  tmean_7d        real,
+  precip_7d       real,
+  -- latest NDVI composite anomaly vs 2021–2025 baseline (0.0 when no observation)
+  ndvi_anomaly    real NOT NULL DEFAULT 0.0,
+  ndvi_mean       real,
+  built_at        timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (zone_id, as_of)
+);
+CREATE INDEX IF NOT EXISTS zone_features_as_of_ix ON zone_features (as_of DESC);
