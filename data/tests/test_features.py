@@ -9,27 +9,10 @@ from __future__ import annotations
 import datetime as dt
 from unittest.mock import MagicMock, patch
 
-import numpy as np
 import pandas as pd
 import pytest
 
 from picky_data.features import REQUIRED_COLS, build_zone_features
-
-
-def _mock_engine(rows: list[dict]) -> MagicMock:
-    """Return a mock engine whose connect() yields rows as a DataFrame via read_sql."""
-    df = pd.DataFrame(rows)
-    eng = MagicMock()
-    conn_ctx = eng.connect.return_value.__enter__.return_value
-
-    def fake_read_sql(sql, conn, params=None):
-        return df.copy()
-
-    with patch("picky_data.features.pd.read_sql", side_effect=fake_read_sql):
-        pass  # just define the patch; apply it per test via context manager
-
-    return eng, df
-
 
 # ---------------------------------------------------------------------------
 # helpers
@@ -113,7 +96,7 @@ def test_default_date_is_today_helsinki():
     with patch("picky_data.features.pd.read_sql", side_effect=capture_read_sql):
         build_zone_features(MagicMock())
 
-    today = dt.datetime.now(dt.timezone.utc).date()  # loose check
+    today = dt.datetime.now(dt.UTC).date()  # loose check
     assert captured["as_of"] is not None
     # the returned date string must be a valid ISO date close to today
     parsed = dt.date.fromisoformat(captured["as_of"])
