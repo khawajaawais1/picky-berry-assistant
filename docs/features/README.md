@@ -20,14 +20,14 @@ deep dive is still the gate before the service behind a screen is built.
 | ID | Feature | Backend module(s) | App screens | Lead · co-owners | Sprint | Deep dive | Status |
 |----|---------|-------------------|-------------|------------------|--------|-----------|--------|
 | 6.1 | Accounts and roles (picker, admin; buyer reserved) | `accounts` | Login / register, consent | Hassan · Salman, Sabih | 1–2 | — | 🟡 app screens (stand-in session) · API ⬜ |
-| 6.2 | Live site map with yield score & confidence | `zones`, `prediction`, `ingest` | Map home, zone sheet, near me | Awais, Hassan, Salman, Remon · Asmer, Sabih | 1–2 | [6.2-live-site-map.md](6.2-live-site-map.md) | 📝 deep dive · 🟡 app screens on the zone stub · data 🟡 · API ⬜ |
-| 6.3 | GPS visit detection (arrive / pick / leave) | `visits` | Active visit | Salman · Hassan | 2 | — | 🟡 app tracker + screen (no zone list, so no caller) · API ⬜ |
+| 6.2 | Live site map with yield score & confidence | `zones`, `prediction`, `ingest` | Map home, zone sheet, near me | Awais, Hassan, Salman, Remon · Asmer, Sabih | 1–2 | [6.2-live-site-map.md](6.2-live-site-map.md) | ✅ app (map-first, live location, API wired) · data 🟡 · API ✅ (endpoints + contracts) |
+| 6.3 | GPS visit detection (arrive / pick / leave) | `visits` | Active visit | Salman · Hassan | 2 | — | ✅ app tracker (foreground, outbox, API wired) · API ✅ |
 | 6.4 | Feedback (rating, amount, photo) | `feedback`, `media` | Feedback | Hassan · Salman, Sabih, Remon (YOLO) | 2 | — | 🟡 app feedback screen + device queue (no transport) · API ⬜ |
 | 6.5 | Validation and trust weighting | `trust` | — (shows in scores) | Hassan · Remon | 2 | — | ⬜ |
 | 6.6 | Yield prediction (phenology baseline → XGBoost) | `prediction`, `ingest` | Zone sheet (why) | Remon · Awais | 2–3 | — | ⬜ |
-| 6.7 | Reasoning and explainable push alerts | `reasoning` | Alerts inbox | Asmer · Sabih (FCM), Hassan | 3 | [6.7-reasoning-push-alerts.md](6.7-reasoning-push-alerts.md) | ✅ backend deployed (Render) · DB migrated · 74 tests · FCM pending Firebase cred · app deep-link pending (Salman) |
+| 6.7 | Reasoning and explainable push alerts | `reasoning` | Alerts inbox | Asmer · Sabih (FCM), Hassan | 3 | [6.7-reasoning-push-alerts.md](6.7-reasoning-push-alerts.md) | ✅ backend deployed (Render) · DB migrated · 74 tests · FCM creds uploaded (Android) · app deep-link wired · iOS skipped |
 | 6.8 | Analytics (median stay time, trends) | `analytics` | My stats, admin page | Hassan · Sayeem | 3 | — | 🟡 app season screen (design sample) · API ⬜ |
-| 6.9 | Offline mode and privacy (GDPR) | `accounts`, all | Profile & privacy, offline area | Salman · Hassan | 3 | — | 🟡 app privacy/offline screens, device records only · API ⬜ |
+| 6.9 | Offline mode and privacy (GDPR) | `accounts`, all | Profile & privacy, offline area | Salman · Hassan | 3 | — | 🟡 app privacy/offline screens + SQLite/Drizzle outbox · API ⬜ (export/delete pending) |
 
 ## Desired extras — after core is stable (architecture doc §16 hooks)
 
