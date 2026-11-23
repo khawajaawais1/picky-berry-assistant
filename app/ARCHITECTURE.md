@@ -346,7 +346,10 @@ names one more provider, still planned:
   platform's native token through `expo-notifications` (`src/services/push/`), only once the
   picker has allowed alerts, and hands it to `POST /me/devices`. The service sends nothing yet,
   and a build without its Firebase or APNs configuration gets no token.
-- **Protomaps / OpenStreetMap** — the PMTiles basemap the project hosts (ADR-031).
+- **OpenFreeMap / OpenStreetMap** — screen 06's current online vector style and required attribution;
+  ADR-031's final shape replaces it with the project's self-hosted Protomaps PMTiles. Tile requests
+  disclose the viewed area to the current host, so that replacement remains a deployment/privacy
+  requirement rather than a cosmetic optimisation (ADR-070).
 - **FMI** and **Sentinel-2 (Copernicus)** — weather and NDVI, consumed by `../data/`, never
   by the app.
 - **S3-compatible object storage** (MinIO in development) — photos, tiles, models; the app

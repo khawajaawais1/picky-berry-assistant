@@ -7,6 +7,18 @@ recorded in [docs/adr/](docs/adr/).
 
 ## [Unreleased]
 
+### Added
+
+- The Discover map can show the picker's consented foreground position and follow it after the
+  picker presses the location control. Map and visit tracking share one native watch; no raw fix is
+  stored, sent or logged.
+
+### Changed
+
+- Discover is now an edge-to-edge MapLibre screen with floating search, berry layers, map controls,
+  score legend and selected-zone card. Tapping a zone highlights it and updates the card, while
+  native pan, pinch and eased camera movement keep the map responsive.
+
 ## [0.4.0] - 2026-11-22
 
 ### Added

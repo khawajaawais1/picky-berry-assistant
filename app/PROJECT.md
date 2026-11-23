@@ -1782,6 +1782,10 @@ mobile app` (78 files) plus a `docs:` follow-up, together with the design-token
   on the web export, five yield-score bands with low confidence faded, no basemap or tile host,
   every gesture off until the recentre control exists. The card, the list and frames 08–09 keep
   the design's drawing and sample.
+- 2026-11-23 — **Discover became map-first** (ADR-070): the native map fills the destination above
+  core navigation, its controls and selected-zone card float over it, a zone tap updates that card,
+  and a consented foreground fix is drawn and manually followed. Discover and the visit tracker fan
+  one native GPS watch out to both consumers; no fix is stored, sent or logged.
 
 ## Known issues and limitations
 
@@ -1840,32 +1844,22 @@ mobile app` (78 files) plus a `docs:` follow-up, together with the design-token
     Frames 06–14 all draw the same tab bar (Discover, Visits, Alerts, Profile) with one item
     current, and since 2026-10-10 one app shell renders it over those nine screens, each mapped
     to the route that exists (`src/app/(app)/_layout.tsx`, ADR-022). What the owner has not yet
-    answered is the shape inside it — one stack or four (open question 22). Screen 06 is now
-    complete apart from one control: its search field, its species chips (the frame's three plus
-    the pilot's crowberry), its map/list
-    toggle, the zone list behind it and its download glyph are built and really filter (the map
-    draws only the zones the two controls leave, the list holds the same ones, and a line says
-    how many are left). What is **not** built is its **recentre control**, because the map does
-    not pan or follow the device, so there is nothing to recentre — it arrives with the position
-    capture and the pannable map, not before (AGENTS.md §11.2). What that wording left out, and a
-    reading of the code on 2026-10-12 found: even with a position source and a map that pans, the
-    control has nowhere to recentre _to_ — the drawing's paths are the frame's own 342×300
-    coordinates, not latitude and longitude (ADR-021), so a real fix has no honest place on it.
-    As of 2026-10-22 the map **has** geographic coordinates ([ADR-053](docs/adr/ADR-053-the-discover-map-is-real-geography.md)):
-    screen 06 renders the pilot stub's 50 rings with MapLibre React Native on the device and the
-    same rings as an SVG on the web export, through a `ZoneSource` port. The recentre control is
-    still not drawn, now because every map gesture is deliberately off until the control exists —
-    a map that can be dragged away from the pilot area with no way back is worse than one that
-    stays put. Three things remain open on this screen: no basemap (known issue 30), the card and
-    list still read `DEMO_ZONES` while the map reads the source (issue 14), and the two filters
-    narrow the card/list rather than the map.
+    answered is the shape inside it — one stack or four (open question 22). Screen 06 is now the
+    map-first destination ADR-070 records: MapLibre fills the space above core navigation; search,
+    berry score layers, map/list, downloads, legend and the selected-zone card float over it; pan,
+    pinch and double-tap zoom are native; fit-zones always returns from an empty corner; and a zone
+    tap updates the card by stable id. With recorded consent, the existing foreground position seam
+    draws the newest fix and follows it only after the picker presses the location control; a manual
+    pan exits follow mode. Without consent the control leads to Privacy settings; after a platform
+    refusal or failure it opens the phone's app settings. Nothing adds background capture or stores,
+    sends or logs a raw fix.
 
-13. **The map's five score bands reach a sighted user through colour, and the map prints no
-    figure per zone.** The legend names the five ranges in words and says what the faded treatment
-    means, but a colour-blind user cannot separate the bands by hue, and a sighted user cannot read a
-    zone's exact score from the map at all — the list and the card carry the numbers. A score label
-    on tap (and a second, non-colour signal) is the fix when the design draws one; the map carries a
-    text alternative naming what it shows, not fifty accessible zone names.
+13. **The map's five score bands still use colour, with two non-colour readings.** The floating
+    legend names all five numeric ranges and says what the faded confidence treatment means. A zone
+    tap now strengthens that ring and updates the floating card with the exact score and confidence;
+    list view remains the zone-by-zone reading. The map carries one text alternative rather than
+    hundreds of accessible zone names, so a screen-reader user reaches the same values through the
+    controls and list rather than by exploring polygons.
 
 14. **Screen 06 reads one zone source; screens 08–09 still read the sample.**
     Since 2026-10-22 the 50 pilot zones arrive through `ZoneSource` from the data team's stub
@@ -2147,12 +2141,12 @@ rest. Recorded as a question rather than decided in code.
     who signs out and back in may expect their plan), and what signs a user out besides this
     control — the session's expiry (open question 25).
 
-30. **The real basemap is decided and deliberately not built; screen 06 now ships without one.**
+30. **The intended self-hosted basemap is still not built; screen 06 currently uses OpenFreeMap.**
     [ADR-031](docs/adr/ADR-031-a-real-basemap-osm-derived-tiles-we-host.md) records the shape —
     OSM-derived vector tiles hosted by this project (Protomaps PMTiles), rendered by MapLibre React
-    Native. Since 2026-10-22 the map screen is real geography over the pilot stub's rings with a
-    background-only style: no tile source, no network, no attribution owed (ADR-053). That closes
-    the "no zone geometry to draw" half of this issue for screen 06; the basemap itself still waits
+    Native. Screen 06 now draws its rings over OpenFreeMap's OSM-derived vector style and includes
+    the required attribution. That host receives viewport tile requests and is not ADR-031's final
+    self-hosted answer; ADR-070 deliberately changes no provider. The final basemap still waits
     on the **tile host** (a PMTiles file
     on object storage plus whatever refreshes it, whose region is the backend's open question 16);
     and a **verified answer for the offline region** frame 13 draws — hosting the tiles ourselves
@@ -2349,6 +2343,7 @@ rest. Recorded as a question rather than decided in code.
 | [ADR-067](docs/adr/ADR-067-the-account-holds-its-preferences-and-push-registration.md) | The account holds its preferences: frame 12's card reads and saves the radius and species, quiet hours is not offered, the push switch is the platform's permission and the phone registers its native token; frame 14 draws the spot visibility chips, a Language screen sets the account's language the app then speaks, and the nickname is editable | Accepted (2026-11-21; supersedes ADR-043's sample card where the service is connected and ADR-017's no in-app picker) |
 | [ADR-068](docs/adr/ADR-068-registration-records-the-notice-version.md) | Registration records the version of the notice the consent row's link opens (`device-notice-2026-11-21`) as both the terms and privacy policy versions, which `POST /auth/register` requires; background location is never claimed | Accepted (2026-11-21; amends ADR-065) |
 | [ADR-069](docs/adr/ADR-069-a-version-tag-releases-the-app.md) | A `vMAJOR.MINOR.PATCH` tag on `main` releases the app: the tag must match `app.json`, `package.json` and a CHANGELOG section prepared by `npm run release:prepare`; EAS builds the AAB, a sideload APK and (when enabled) iOS with remote auto-incremented build numbers; a GitHub Release carries the notes and Android files and links iOS; store submission is behind a switch | Accepted (2026-11-21; amends ADR-008) |
+| [ADR-070](docs/adr/ADR-070-the-discover-map-becomes-the-screen.md) | Discover becomes a full-screen MapLibre surface with floating controls and a selected-zone card; the existing consent-gated foreground fix is drawn and manually followed, map and visit consumers share one native watch, and no Google Maps provider, background permission, stored trail or location log is added | Accepted (2026-11-23; supersedes ADR-053 decision 6 and the frame-06 page layout; extends ADR-045/056/063/066) |
 
 ## Deployment
 
