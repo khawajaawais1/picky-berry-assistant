@@ -186,7 +186,7 @@ jobs:
         with:
           node-version: "24"
 
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           pattern: eas-build-*
           path: ${{ runner.temp }}/builds
@@ -251,7 +251,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: eas-build-${{ matrix.platform }}-production
           path: ${{ runner.temp }}/build
