@@ -59,6 +59,7 @@ export function createVisitsApi({ client }: { client: ApiClient }): VisitsApi {
       method: 'POST',
       path: '/visits',
       body,
+      idempotencyKey: body.client_id,
       parse: parseVisitRecord,
     });
 
