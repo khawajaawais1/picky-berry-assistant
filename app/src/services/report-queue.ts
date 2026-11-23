@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { randomUUID } from 'expo-crypto';
 
@@ -77,7 +78,7 @@ export type VisitReport = {
  * A report is validated where it enters storage, not where it is typed: this is the boundary,
  * and a stored entry the app could not have produced would be one it cannot later explain.
  */
-function validateReport(report: VisitReport): void {
+export function validateReport(report: VisitReport): void {
   if (typeof report.zoneId !== 'string' || report.zoneId === '') {
     throw new RangeError('a report needs the zone its visit was in');
   }
@@ -206,26 +207,48 @@ function newClientId(): string {
 export async function enqueueReport(report: VisitReport): Promise<VisitReport[]> {
   validateReport(report);
 
-  const queued = [
-    ...(await readReportQueue()),
-    { ...report, clientId: report.clientId ?? newClientId() },
-  ];
-
-  await AsyncStorage.setItem(REPORT_QUEUE_STORAGE_KEY, JSON.stringify(queued));
-
-  return queued;
+  // The durable SQLite outbox owns report storage (feature 6.9). Web has no native SQLite, so
+  // it keeps the AsyncStorage fallback; the unit suite exercises that path too.
+  try {
+    if (Platform.OS === 'web') throw new Error('no native SQLite on web');
+    const { openReportDatabase, enqueueReportOutbox } = await import('./report-outbox');
+    const db = openReportDatabase();
+    return await enqueueReportOutbox(db, report);
+  } catch {
+    const queued = [
+      ...(await readReportQueue()),
+      { ...report, clientId: report.clientId ?? newClientId() },
+    ];
+    await AsyncStorage.setItem(REPORT_QUEUE_STORAGE_KEY, JSON.stringify(queued));
+    return queued;
+  }
 }
 
 /** Deletes the whole queue: the user's way out, and what signing out calls. */
 export async function clearReportQueue(): Promise<void> {
-  await AsyncStorage.removeItem(REPORT_QUEUE_STORAGE_KEY);
+  // The durable SQLite outbox owns report storage (feature 6.9).
+  try {
+    if (Platform.OS === 'web') throw new Error('no native SQLite on web');
+    const { openReportDatabase, clearReportOutbox } = await import('./report-outbox');
+    const db = openReportDatabase();
+    await clearReportOutbox(db);
+  } catch {
+    await AsyncStorage.removeItem(REPORT_QUEUE_STORAGE_KEY);
+  }
 }
 
 /** Takes one report off the queue once the API has it (or has refused it for good). */
 export async function removeQueuedReport(clientId: string): Promise<VisitReport[]> {
-  const remaining = (await readReportQueue()).filter((report) => report.clientId !== clientId);
+  // The durable SQLite outbox owns report storage (feature 6.9).
+  try {
+    if (Platform.OS === 'web') throw new Error('no native SQLite on web');
+    const { openReportDatabase, removeQueuedReportOutbox } = await import('./report-outbox');
+    const db = openReportDatabase();
+    return await removeQueuedReportOutbox(db, clientId);
+  } catch {
+    const remaining = (await readReportQueue()).filter((report) => report.clientId !== clientId);
 
-  await AsyncStorage.setItem(REPORT_QUEUE_STORAGE_KEY, JSON.stringify(remaining));
-
-  return remaining;
+    await AsyncStorage.setItem(REPORT_QUEUE_STORAGE_KEY, JSON.stringify(remaining));
+    return remaining;
+  }
 }

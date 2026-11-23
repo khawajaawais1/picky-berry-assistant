@@ -39,6 +39,11 @@ module.exports = {
     // design (`src/components/prototype/`, `src/features/onboarding/components/prototype/`); the
     // winning variant is rewritten with tests, and the rest is deleted.
     '!src/**/prototype/**',
+    // Native-only: expo-sqlite cannot run under Jest (no native module), so the SQLite/Drizzle
+    // report outbox (feature 6.9) is verified on a device rather than in the unit suite. The
+    // AsyncStorage fallback in report-queue.ts is what the unit suite exercises (see
+    // `src/services/__tests__/report-queue.test.ts`).
+    '!src/services/report-outbox/**',
   ],
   // The floor is a ratchet, not a target: it starts at what the suite measured and is raised
   // by `npm run coverage:ratchet` after coverage improves, never lowered. CI runs
