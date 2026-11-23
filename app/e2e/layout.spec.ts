@@ -272,11 +272,9 @@ const SCREENS: readonly Screen[] = [
     copy: [
       // ADR-070 makes the map the screen: its heading is the map's text alternative, while the
       // visible copy lives in floating controls, the legend and the selected-zone card.
-      {
-        what: 'the last-updated line',
-        key: 'discover.map.updated',
-        values: { date: { en: '3 August 2026', fi: '3.8.2026' } },
-      },
+      // The freshness line is conditional on the zones carrying a timestamp and on there being
+      // at least one matching zone; it is measured on the zone-details screen instead, where the
+      // same line is unconditional for a source zone.
       { what: 'the legend’s heading', key: 'discover.score.label' },
       { what: 'the legend’s low-confidence line', key: 'discover.score.lowConfidence' },
       // The card reads the ZoneSource's first zone now: its own name and the berry the chips
