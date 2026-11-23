@@ -8,9 +8,8 @@ import type { ZoneConfidence, ZoneRipeness } from '../domain/zone-source';
  * views of one zone cannot name its confidence or its ripeness differently.
  *
  * The confidence keys are screen 07's, which already names the three levels in both languages.
- * The ripeness words are the map screen's own (`discover.ripeness.*`): screen 07 says “Ripe
- * now” over a zone it has a full reading for, while a list row only has the payload's four
- * states and needs a word for the two the details screen never draws (`unripe`, `past`).
+ * The ripeness words are the map screen's own (`discover.ripeness.*`), shared by the card, list
+ * and details screen so all five API states have one word in each language.
  */
 export const CONFIDENCE_LABEL_KEY: Record<ZoneConfidence, TranslationKey> = {
   high: 'discover.details.confidence.high',
@@ -23,4 +22,5 @@ export const RIPENESS_LABEL_KEY: Record<ZoneRipeness, TranslationKey> = {
   ripening: 'discover.ripeness.ripening',
   ripe: 'discover.ripeness.ripe',
   past: 'discover.ripeness.past',
+  off_season: 'discover.ripeness.offSeason',
 };

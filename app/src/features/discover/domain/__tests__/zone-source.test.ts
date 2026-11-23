@@ -207,6 +207,13 @@ describe('parseZones', () => {
       expect(zone && zoneSpecies(zone, 'bilberry')).toEqual(['bilberry']);
     });
 
+    it('keeps the off-season state the zones API serves', () => {
+      const [zone] = parseZones(collection(served({ ripeness: 'off_season' })), 'bilberry');
+
+      expect(zone).toMatchObject({ ripeness: 'off_season' });
+      expect(zone?.scores.bilberry).toMatchObject({ ripeness: 'off_season' });
+    });
+
     it('drops a feature scored for a different species than the one asked about', () => {
       expect(parseZones(collection(served({ species: 'lingonberry' })), 'bilberry')).toEqual([]);
     });

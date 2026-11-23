@@ -31,7 +31,7 @@ import { scoreBand } from './zone-score-band';
 export const ZONE_CONFIDENCE = ['low', 'medium', 'high'] as const;
 export type ZoneConfidence = (typeof ZONE_CONFIDENCE)[number];
 
-export const ZONE_RIPENESS = ['unripe', 'ripening', 'ripe', 'past'] as const;
+export const ZONE_RIPENESS = ['unripe', 'ripening', 'ripe', 'past', 'off_season'] as const;
 export type ZoneRipeness = (typeof ZONE_RIPENESS)[number];
 
 /** `[longitude, latitude]`, in GeoJSON's order, as the file writes it. */
