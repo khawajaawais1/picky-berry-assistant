@@ -5,7 +5,7 @@ import { useVisitPresence as publicUseVisitPresence } from '@/features/visits';
 import { CONSENT_STORAGE_KEY } from '@/services/privacy-consent';
 import type { PositionFix, PositionHandlers, PositionSource } from '@/services/location';
 
-import type { ZonePolygon } from '../../domain/zone-containment';
+import type { ZonePolygon, ZoneResolution } from '../../domain/zone-containment';
 import { useVisitPresence } from '../use-visit-presence';
 
 /**
@@ -142,6 +142,25 @@ describe('useVisitPresence', () => {
     });
     expect(view.result.current.events.map((event) => event.type)).toEqual(['visit-opened']);
     expect(view.result.current.zone).toEqual(Z14);
+  });
+
+  it('checks each fix against no more than the 20 nearest foreground geofences', async () => {
+    await AsyncStorage.setItem(CONSENT_STORAGE_KEY, CONSENT_ON);
+    const device = fakeSource();
+    const zones = Array.from({ length: 25 }, (_, index) => ({ ...Z14, id: `Z${index}` }));
+    const candidateCounts: number[] = [];
+    const resolve: ZoneResolution = (candidates) => {
+      candidateCounts.push(candidates.length);
+      return candidates[0]!;
+    };
+    await renderHook(() =>
+      useVisitPresence({ policy: POLICY, resolve, source: device.source, zones }),
+    );
+    await waitFor(() => expect(device.fixes).not.toBeNull());
+
+    await deliver(device, fix(Z14.ring[0]!, START));
+
+    expect(candidateCounts).toEqual([20]);
   });
 
   it('closes the segment when the picker walks out, and keeps the visit resumable', async () => {

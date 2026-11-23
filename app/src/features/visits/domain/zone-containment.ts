@@ -24,6 +24,13 @@ export type ZoneRing = readonly Point[];
 
 export type ZonePolygon = { id: string; ring: ZoneRing };
 
+/** The foreground set from the MVP visit plan: enough nearby cells without scanning the pilot. */
+export const GEOFENCE_ZONE_LIMIT = 20;
+/** Rebuild the foreground set after this much movement from its in-memory anchor. */
+export const GEOFENCE_REFRESH_METERS = 2_000;
+
+const EARTH_RADIUS_METERS = 6_371_008.8;
+
 /**
  * How a position that lies inside more than one zone resolves to one of them. Called
  * with every candidate that contains the point, in the order they were given, and
@@ -49,17 +56,26 @@ const MIN_RING_VERTICES = 3;
 const ON_SEGMENT_EPSILON = 1e-12;
 
 function isOnSegment(point: Point, from: Point, to: Point): boolean {
+  const latitudeLength = to.latitude - from.latitude;
+  const longitudeLength = to.longitude - from.longitude;
+  const lengthSquared = latitudeLength ** 2 + longitudeLength ** 2;
+  if (lengthSquared === 0) {
+    return (
+      Math.abs(point.latitude - from.latitude) <= ON_SEGMENT_EPSILON &&
+      Math.abs(point.longitude - from.longitude) <= ON_SEGMENT_EPSILON
+    );
+  }
+
   const cross =
-    (to.latitude - from.latitude) * (point.longitude - from.longitude) -
-    (to.longitude - from.longitude) * (point.latitude - from.latitude);
+    latitudeLength * (point.longitude - from.longitude) -
+    longitudeLength * (point.latitude - from.latitude);
   if (Math.abs(cross) > ON_SEGMENT_EPSILON) return false;
 
   const dot =
-    (point.latitude - from.latitude) * (to.latitude - from.latitude) +
-    (point.longitude - from.longitude) * (to.longitude - from.longitude);
+    (point.latitude - from.latitude) * latitudeLength +
+    (point.longitude - from.longitude) * longitudeLength;
   if (dot < 0) return false;
 
-  const lengthSquared = (to.latitude - from.latitude) ** 2 + (to.longitude - from.longitude) ** 2;
   return dot <= lengthSquared;
 }
 
@@ -102,4 +118,79 @@ export function findContainingZone(
 ): ZonePolygon | null {
   const candidates = zones.filter((zone) => isPointInPolygon(point, zone.ring));
   return candidates.length === 0 ? null : resolve(candidates);
+}
+
+function radians(degrees: number): number {
+  return (degrees * Math.PI) / 180;
+}
+
+/** Great-circle distance, used only on-device to decide when and where to refresh the set. */
+function distanceMeters(from: Point, to: Point): number {
+  const latitudeDelta = radians(to.latitude - from.latitude);
+  const longitudeDelta = radians(to.longitude - from.longitude);
+  const fromLatitude = radians(from.latitude);
+  const toLatitude = radians(to.latitude);
+  const haversine =
+    Math.sin(latitudeDelta / 2) ** 2 +
+    Math.cos(fromLatitude) * Math.cos(toLatitude) * Math.sin(longitudeDelta / 2) ** 2;
+
+  return 2 * EARTH_RADIUS_METERS * Math.asin(Math.min(1, Math.sqrt(haversine)));
+}
+
+function ringCentre(ring: ZoneRing): Point | null {
+  const first = ring[0];
+  const last = ring[ring.length - 1];
+  const vertices =
+    ring.length > 1 &&
+    first !== undefined &&
+    last !== undefined &&
+    first.latitude === last.latitude &&
+    first.longitude === last.longitude
+      ? ring.slice(0, -1)
+      : ring;
+  if (vertices.length < MIN_RING_VERTICES) return null;
+
+  const total = vertices.reduce(
+    (sum, vertex) => ({
+      latitude: sum.latitude + vertex.latitude,
+      longitude: sum.longitude + vertex.longitude,
+    }),
+    { latitude: 0, longitude: 0 },
+  );
+  return {
+    latitude: total.latitude / vertices.length,
+    longitude: total.longitude / vertices.length,
+  };
+}
+
+/**
+ * The polygons the foreground tracker checks, nearest first. Selection happens on the phone from
+ * `GET /zones` geometry: no live coordinate is sent to `/zones/near`, persisted or logged.
+ * A polygon that contains the anchor ranks first even when an unusual shape has a distant centre.
+ */
+export function nearestZonePolygons(
+  origin: Point,
+  zones: readonly ZonePolygon[],
+): readonly ZonePolygon[] {
+  return zones
+    .flatMap((zone, index) => {
+      const centre = ringCentre(zone.ring);
+      return centre === null
+        ? []
+        : [
+            {
+              distance: isPointInPolygon(origin, zone.ring) ? 0 : distanceMeters(origin, centre),
+              index,
+              zone,
+            },
+          ];
+    })
+    .sort((left, right) => left.distance - right.distance || left.index - right.index)
+    .slice(0, GEOFENCE_ZONE_LIMIT)
+    .map(({ zone }) => zone);
+}
+
+/** Whether a new fix has crossed the plan's two-kilometre refresh boundary. */
+export function shouldRefreshGeofenceSet(anchor: Point, next: Point): boolean {
+  return distanceMeters(anchor, next) >= GEOFENCE_REFRESH_METERS;
 }

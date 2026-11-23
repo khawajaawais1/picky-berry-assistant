@@ -11,7 +11,7 @@ suite.
 | --- | ------------------------ | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ----------- |
 | 0   | Transport                | (all)                                                                                              | nothing; new `src/services/api/`                            | Done        |
 | 1   | Auth and session         | `POST /auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`, `/auth/verify-email`        | stand-in session port, in-memory store → secure store      | Done        |
-| 2   | Zones                    | `GET /zones` (bbox + species), `/zones/near`                                                       | `testZoneSource` behind the `ZoneSource` port               | Done        |
+| 2   | Zones                    | `GET /zones` (bbox + species); `/zones/near` remains server-only under the no-live-coordinate rule | `testZoneSource` behind the `ZoneSource` port               | Done        |
 | 3   | Zone details             | `GET /zones/{id}`, `/zones/{id}/explanation`, `/zones/{id}/history`, `GET /species`                | screen 07's sample outlook and reports                      | Done        |
 | 4   | Visits                   | `POST /visits` (idempotent `client_id`), `GET /visits`                                             | local-only visit lifecycle; outbox flush                    | Done        |
 | 5   | Account and privacy      | `GET/PATCH/DELETE /me`, `PATCH /me/privacy`, `POST /me/export`, `POST /me/devices`                 | privacy screens' local state, your-data export              | Done        |
@@ -31,8 +31,17 @@ suite.
 5. Resolved by [ADR-068](../adr/ADR-068-registration-records-the-notice-version.md): the API refuses empty consents (`422 CONSENT_REQUIRED`), so registration records the device notice's version (`device-notice-2026-11-21`) as both versions until real terms exist.
 6. Resolved by [ADR-066](../adr/ADR-066-the-tracker-is-mounted-over-the-zone-service.md): the app
    shell mounts the visit tracker over the zone service's zones, and finalized visits post to
-   `POST /visits`. Open and unsent visits do not survive the process ending.
+   `POST /visits`. Finalized unsent visits survive in the durable outbox; an open visit does not.
 7. **Not built in phase 5, each for a stated reason:** `PATCH /me` (nickname, alert radius,
    species interest, language) and `PATCH /me/privacy` (privacy level) have no control in any
    frame, so drawing one is a design decision. `background_location` stays false (ADR-056).
    `POST /me/devices` needs an FCM token, and the app has no push notifications set up yet.
+8. Resolved: the zones API's fifth ripeness state, `off_season`, is accepted at both mobile
+   validation boundaries and has Finnish and English copy; it no longer drops an otherwise valid
+   zone from the map.
+9. Resolved: visit writes send `client_id` as the documented `Idempotency-Key`, and the API's CORS
+   preflight allows that header. The transport exposes only this UUID header rather than arbitrary
+   caller-controlled header overrides.
+10. Resolved without transmitting position: visit tracking selects the 20 nearest polygons locally
+    from `GET /zones` and rebuilds the set after 2 km. It does not call `/zones/near`, because doing
+    so would put the foreground fix in a request query and violate the app's no-live-coordinate rule.
