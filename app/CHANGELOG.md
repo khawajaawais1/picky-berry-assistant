@@ -7,6 +7,8 @@ recorded in [docs/adr/](docs/adr/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-23
+
 ### Added
 
 - The Discover map can show the picker's consented foreground position and follow it after the
