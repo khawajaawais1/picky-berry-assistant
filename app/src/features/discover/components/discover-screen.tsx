@@ -1,11 +1,15 @@
 import { Feather } from '@/components/atoms/app-icon';
 import { useDeferredValue, useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/atoms';
 import { StatusMessage, TextAction } from '@/components/molecules';
 import { Screen } from '@/components/templates';
+import { layout, radii, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { useDevicePosition, type DevicePositionStatus } from '@/hooks/use-device-position';
+import type { PositionSource } from '@/services/location';
 import { formatLongDate, interpolate, useTranslation } from '@/services/i18n';
 
 import type { Species } from '../domain/species';
@@ -16,7 +20,7 @@ import { MapListToggle, type ZoneView } from './map-list-toggle';
 import { SpeciesChips } from './species-chips';
 import { ZoneCard } from './zone-card';
 import { ZoneList } from './zone-list';
-import { ZoneMap } from './zone-map';
+import { ZoneMap, type ZoneMapProps } from './zone-map';
 import { ZoneScoreLegend } from './zone-score-legend';
 import { ZoneSearchField } from './zone-search-field';
 
@@ -27,6 +31,8 @@ export type DiscoverScreenProps = {
    * out when the route has nowhere to send it.
    */
   onOpenDownloads?: () => void;
+  /** Opens the place where foreground location consent can be reviewed. */
+  onOpenLocationSettings?: (status: DevicePositionStatus) => void;
   /**
    * Opens frame 07 for the card's zone, under the berry whose score the card is reading — or
    * nothing.
@@ -36,6 +42,8 @@ export type DiscoverScreenProps = {
    * the card stays a reading and claims no role.
    */
   onOpenZone?: (zone: Zone, species: Species) => void;
+  /** The foreground position seam; tests can supply a device-free source. */
+  positionSource?: PositionSource;
   /**
    * Where the screen's zones come from. Defaults to the bundled pilot stub; a test, or a
    * future composition root that has a real service, supplies its own through the port.
@@ -44,50 +52,25 @@ export type DiscoverScreenProps = {
 };
 
 /**
- * Screen 06 · Core picker · Discover map (Figma node 5:22942).
+ * Discover is the field map (ADR-070), not a document containing one. MapLibre fills the
+ * destination above core navigation; search, berry score layers, status, legend and the selected
+ * zone card float over it. List view remains the text-first reading of the same answer.
  *
- * The app's first core-picker screen: the design's search field and species chips, the map of
- * nearby zones the two controls narrow, the legend that names what its colours mean, a card
- * for the first zone left, and the frame's row for switching to a list of the same zones or
- * straight through to what is downloaded.
+ * **One dataset.** The screen asks `ZoneSource` once for the chosen berry. Search narrows those
+ * zones by name; a source press selects one by stable id; the map, card and list all read that same
+ * result. A timestamp is the oldest score timestamp in that result, never the network read time.
  *
- * **One dataset.** The screen asks the `ZoneSource` **once** and hands that answer to the map,
- * the card and the list (ADR-053; this closes the gap known issue 14 recorded while the card
- * and filters still read `DEMO_ZONES`). What the two controls do is narrow that one answer:
- *
- * - the **search field** filters the zones by name (`filterZones`);
- * - the **species chips** ask the source for that berry's score, one chip at a time, which is
- *   why pressing a chip changes the numbers and the map's colours rather than the zone count.
- *
- * The map is real geography: MapLibre on the device, the same rings projected into an SVG on
- * the web export. It shows the data team's 50 stub zones around Laajavuori and says so (“test
- * data”), as does the card's caption.
- *
- * Three things the frame draws and this screen deliberately does not, all recorded in
- * PROJECT.md:
- *
- * - its **recentre control** — the map does not pan or follow the device, so there is nothing
- *   to recentre (the frame's own position marker is part of the composition and says so);
- * - its **sliders glyph** inside the field — a filter sheet this app does not have, where the
- *   species chips sit directly below the field and are the filter;
- * - the **core navigation** — that is the app shell's, mounted over this screen (ADR-022).
- *
- * The card opens screen 07 again (2026-10-24): that screen now asks the same port for the same
- * zone and berry, so the press lands on the figures the card was showing. The list rows stay
- * readings — the card is the frame's own element with a chevron, and a row that opened a zone
- * would need the same treatment on another day.
- *
- * The frame draws no freshness line; the app adds one below the map whenever the answer carries
- * timestamps (the plan's “last updated” label, §2.4). It prints the **oldest** score timestamp
- * on the answer, never the read's own time, so a restored cache shows the age of what it holds
- * and a zone without a timestamp drops the line rather than letting the others speak for it.
- *
- * The OS status bar and home indicator the frame draws belong to the device.
+ * **One foreground position seam.** `useDevicePosition` remains behind the stored consent and
+ * platform permission. The newest fix is handed to the map in memory and forgotten when the
+ * consumer leaves; it is never stored, sent or logged. The source shares its native watch with the
+ * shell's visit tracker rather than starting a second GPS subscription.
  */
 export function DiscoverScreen({
   onBack,
   onOpenDownloads,
+  onOpenLocationSettings,
   onOpenZone,
+  positionSource,
   zoneSource,
 }: DiscoverScreenProps) {
   const { colors } = useAppTheme();
@@ -96,6 +79,7 @@ export function DiscoverScreen({
   const [query, setQuery] = useState('');
   const [species, setSpecies] = useState<readonly Species[]>([]);
   const [view, setView] = useState<ZoneView>('map');
+  const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
 
   // The chips choose the **score layer**, one berry at a time: the frame draws one chip lit,
   // and a score belongs to one species. Selecting another chip replaces the choice; pressing
@@ -116,7 +100,7 @@ export function DiscoverScreen({
   const filter = useMemo<ZoneFilter>(() => ({ query: deferredQuery }), [deferredQuery]);
   const matches = useMemo(() => filterZones(zones, filter), [filter, zones]);
   const filtering = isFilterActive(filter);
-  const cardZone = matches[0];
+  const cardZone = matches.find((zone) => zone.id === selectedZoneId) ?? matches[0];
 
   const toggleSpecies = (candidate: Species) =>
     setSpecies((chosen) => (chosen.includes(candidate) ? [] : [candidate]));
@@ -133,6 +117,136 @@ export function DiscoverScreen({
         : matches.length === 0 && !filtering
           ? t('discover.map.empty')
           : null;
+
+  if (view === 'map') {
+    const mapCount =
+      matches.length === 0
+        ? null
+        : interpolate(
+            demo
+              ? t(matches.length === 1 ? 'discover.map.countOne' : 'discover.map.count')
+              : t(matches.length === 1 ? 'discover.map.countOne.live' : 'discover.map.count.live'),
+            { count: String(matches.length) },
+          );
+
+    return (
+      <View
+        style={[styles.mapScreen, { backgroundColor: colors.mapBase }]}
+        testID="discover-map-screen"
+      >
+        <LiveZoneMap
+          demo={demo}
+          fullscreen
+          onOpenLocationSettings={onOpenLocationSettings}
+          onRetry={retry}
+          onSelectZone={setSelectedZoneId}
+          positionSource={positionSource}
+          selectedZoneId={cardZone?.id}
+          status={status}
+          zones={matches}
+        />
+
+        <SafeAreaView
+          edges={['top']}
+          pointerEvents="box-none"
+          style={styles.overlays}
+          testID="discover-map-overlays"
+        >
+          <View pointerEvents="box-none" style={styles.topControls}>
+            <View style={styles.searchRow}>
+              {onBack ? (
+                <Pressable
+                  accessibilityLabel={t('common.back')}
+                  accessibilityRole="button"
+                  onPress={onBack}
+                  style={[
+                    styles.roundControl,
+                    { backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                >
+                  <Feather color={colors.text} name="arrow-left" size={22} />
+                </Pressable>
+              ) : null}
+              <View style={styles.searchField}>
+                <ZoneSearchField onChangeText={setQuery} value={query} />
+              </View>
+              <MapListToggle
+                floating
+                onChange={setView}
+                onOpenDownloads={onOpenDownloads}
+                view={view}
+              />
+            </View>
+
+            <View
+              style={[
+                styles.floatingPanel,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
+            >
+              <SpeciesChips
+                onToggle={toggleSpecies}
+                scrollable={Platform.OS !== 'web'}
+                selected={species}
+              />
+            </View>
+
+            {filtering || mapCount ? (
+              <View
+                pointerEvents="none"
+                style={[
+                  styles.mapStatus,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
+              >
+                <AppText tone="muted" variant="mapAnnotation">
+                  {filtering
+                    ? matches.length === 0
+                      ? t('discover.filter.none')
+                      : interpolate(
+                          matches.length === 1
+                            ? t('discover.filter.matchOne')
+                            : t('discover.filter.matches'),
+                          { count: String(matches.length) },
+                        )
+                    : mapCount}
+                </AppText>
+              </View>
+            ) : null}
+          </View>
+        </SafeAreaView>
+
+        <View pointerEvents="box-none" style={styles.bottomControls}>
+          <View
+            pointerEvents="none"
+            style={[
+              styles.legendPanel,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+            ]}
+          >
+            <ZoneScoreLegend />
+            {updatedAt && matches.length > 0 ? (
+              <AppText testID="discover-updated" tone="muted" variant="metadata">
+                {interpolate(t('discover.map.updated'), {
+                  date: formatLongDate(updatedAt, locale),
+                })}
+              </AppText>
+            ) : null}
+          </View>
+
+          {cardZone ? (
+            <ZoneCard
+              demo={demo}
+              floating
+              onOpen={onOpenZone ? () => onOpenZone(cardZone, scoreSpecies) : undefined}
+              species={scoreSpecies}
+              zone={cardZone}
+            />
+          ) : null}
+        </View>
+      </View>
+    );
+  }
 
   return (
     <Screen
@@ -164,48 +278,91 @@ export function DiscoverScreen({
           </StatusMessage>
         ) : null}
 
-        {view === 'map' ? (
-          <>
-            <View className="w-full gap-tight">
-              <ZoneMap demo={demo} onRetry={retry} status={status} zones={matches} />
-              {updatedAt && matches.length > 0 ? (
-                <AppText testID="discover-updated" tone="muted" variant="metadata">
-                  {interpolate(t('discover.map.updated'), {
-                    date: formatLongDate(updatedAt, locale),
-                  })}
-                </AppText>
-              ) : null}
-            </View>
-            <ZoneScoreLegend />
-            {cardZone ? (
-              <ZoneCard
-                demo={demo}
-                onOpen={onOpenZone ? () => onOpenZone(cardZone, scoreSpecies) : undefined}
-                species={scoreSpecies}
-                zone={cardZone}
-              />
-            ) : null}
-          </>
-        ) : (
-          <>
-            {listStatus ? (
-              <StatusMessage testID="zone-list-status" tone="muted" variant="bodySmall">
-                {listStatus}
-              </StatusMessage>
-            ) : null}
-            {status === 'error' ? (
-              <TextAction
-                label={t('discover.map.retry')}
-                onPress={retry}
-                testID="zone-list-retry"
-              />
-            ) : null}
-            <ZoneList species={scoreSpecies} zones={matches} />
-          </>
-        )}
+        {listStatus ? (
+          <StatusMessage testID="zone-list-status" tone="muted" variant="bodySmall">
+            {listStatus}
+          </StatusMessage>
+        ) : null}
+        {status === 'error' ? (
+          <TextAction label={t('discover.map.retry')} onPress={retry} testID="zone-list-retry" />
+        ) : null}
+        <ZoneList species={scoreSpecies} zones={matches} />
 
         <MapListToggle onChange={setView} onOpenDownloads={onOpenDownloads} view={view} />
       </View>
     </Screen>
   );
 }
+
+type LiveZoneMapProps = Omit<ZoneMapProps, 'position' | 'positionStatus'> & {
+  positionSource: PositionSource | undefined;
+};
+
+/** Mounting the map is the ask for a foreground fix; list view unmounts it and drops its consumer. */
+function LiveZoneMap({ positionSource, ...props }: LiveZoneMapProps) {
+  const position = useDevicePosition(positionSource ? { source: positionSource } : {});
+
+  return <ZoneMap {...props} position={position.fix} positionStatus={position.status} />;
+}
+
+const styles = StyleSheet.create({
+  mapScreen: {
+    flex: 1,
+    overflow: 'hidden',
+  },
+  overlays: {
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  topControls: {
+    gap: spacing.sm,
+    paddingHorizontal: spacing.gap,
+    paddingTop: spacing.sm,
+  },
+  searchRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  searchField: {
+    flex: 1,
+  },
+  roundControl: {
+    alignItems: 'center',
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    height: layout.searchHeight,
+    justifyContent: 'center',
+    width: layout.searchHeight,
+  },
+  floatingPanel: {
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    paddingHorizontal: spacing.gap,
+    paddingVertical: spacing.sm,
+  },
+  mapStatus: {
+    alignSelf: 'flex-start',
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    paddingHorizontal: spacing.gap,
+    paddingVertical: spacing.xs,
+  },
+  bottomControls: {
+    bottom: spacing.gap,
+    gap: spacing.sm,
+    left: spacing.gap,
+    position: 'absolute',
+    right: spacing.gap,
+  },
+  legendPanel: {
+    borderRadius: radii.control,
+    borderWidth: 1,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.gap,
+    paddingVertical: spacing.sm,
+  },
+});

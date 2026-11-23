@@ -183,6 +183,9 @@ export const en = {
   'discover.map.count.live': '{count} zones',
   'discover.map.countOne.live': '{count} zone',
   'discover.map.recentre': 'Recentre the map on the zones',
+  'discover.map.myLocation': 'Centre map on my location',
+  'discover.map.locationSettings': 'Review location privacy',
+  'discover.map.fixLocationAccess': 'Fix location access',
   // ODbL attribution, drawn whenever a basemap is (ADR-031 §3).
   'discover.map.attribution': '© OpenStreetMap contributors',
   'discover.map.updated': 'Last updated {date}',

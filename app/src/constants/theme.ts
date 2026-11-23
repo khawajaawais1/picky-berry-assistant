@@ -385,6 +385,12 @@ export const layout = {
   messageBubbleMaxWidth: '82%',
 } as const;
 
+/** Motion durations for spatial transitions; map movement is long enough to preserve orientation. */
+export const motion = {
+  mapFit: 400,
+  mapFollow: 550,
+} as const;
+
 /**
  * Type metrics measured from the design file. The design is set in Inter; this app
  * still renders the platform font until Inter is loaded (see PROJECT.md).

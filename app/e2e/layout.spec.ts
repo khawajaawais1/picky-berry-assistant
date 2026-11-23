@@ -268,18 +268,10 @@ const SCREENS: readonly Screen[] = [
     name: '06 · Core picker · Discover map',
     path: '/discover',
     shell: true,
-    anchor: 'discover.eyebrow',
+    anchor: 'discover.score.label',
     copy: [
-      { what: 'the eyebrow', key: 'discover.eyebrow' },
-      { what: 'the screen title', key: 'discover.title' },
-      // The map's own words. Screen 06's map is the pilot's real zones now (ADR-053), not the
-      // frame's drawing, so the frame's lake name and scale line are gone — the real map has
-      // no lake layer and no tile scale — and the three state words are replaced by the five
-      // band legend's two lines. Every one of them is a single line on the screen.
-      { what: 'the place name on the map', key: 'discover.map.place' },
-      // The app's own line under the map: the payload's oldest timestamp, printed in the
-      // language's date form. The frame draws no freshness line, so one line is the app's own
-      // limit rather than the design's.
+      // ADR-070 makes the map the screen: its heading is the map's text alternative, while the
+      // visible copy lives in floating controls, the legend and the selected-zone card.
       {
         what: 'the last-updated line',
         key: 'discover.map.updated',
@@ -303,10 +295,8 @@ const SCREENS: readonly Screen[] = [
       },
       { what: 'the confidence chip', key: 'discover.details.confidence.medium' },
       { what: 'the zone card’s status line', key: 'discover.ripeness.past' },
-      // The frame's two filter controls (nodes `5:22955` and `5:22959`) and the row under the
-      // card (node `5:23008`). The field's promise is one line in a 250x21 slot, each chip is
-      // one line inside its 36 px pill, and the row's three pieces are drawn on one 342x20
-      // line — which is what the Finnish has to fit in as well.
+      // The floating score-layer controls remain visible text. The map/list and download actions
+      // are icon controls with accessible names, so there is no visible action copy to measure.
       // `discover.search.placeholder` is deliberately absent: it is the field's placeholder,
       // which React Native Web renders as an attribute rather than as text, so this probe —
       // which reads what a page renders as copy — cannot see it. A placeholder is also the one
@@ -315,8 +305,6 @@ const SCREENS: readonly Screen[] = [
       { what: 'the first species chip', key: 'report.species.lingonberry', maxLines: 1 },
       { what: 'the second species chip', key: 'report.species.bilberry', maxLines: 1 },
       { what: 'the third species chip', key: 'report.species.cloudberry', maxLines: 1 },
-      { what: 'the map/list row’s state', key: 'discover.view.mapStatus', maxLines: 1 },
-      { what: 'the map/list row’s action', key: 'discover.view.showList', maxLines: 1 },
     ],
   },
   {

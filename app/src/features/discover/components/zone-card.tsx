@@ -16,6 +16,8 @@ import { CONFIDENCE_LABEL_KEY, RIPENESS_LABEL_KEY } from './zone-source-copy';
 export type ZoneCardProps = {
   /** Whether the zone is the bundled stand-in; only then does the caption say “test data”. */
   demo?: boolean;
+  /** Denser map-overlay treatment; the document reading keeps the original frame spacing. */
+  floating?: boolean;
   /** The zone the screen is about: the first one the two controls left. */
   zone: Zone;
   /** The berry whose score the card is reading, i.e. the one the chips asked the source for. */
@@ -49,12 +51,18 @@ export type ZoneCardProps = {
  * card hands it the zone and the berry whose score it is showing instead of opening another
  * zone's figures.
  */
-export function ZoneCard({ demo = false, onOpen, species, zone }: ZoneCardProps) {
+export function ZoneCard({ demo = false, floating = false, onOpen, species, zone }: ZoneCardProps) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
 
   const card = (
-    <Card style={{ gap: spacing.cardGap, padding: spacing.section }} testID="zone-card">
+    <Card
+      style={{
+        gap: floating ? spacing.sm : spacing.cardGap,
+        padding: floating ? spacing.gap : spacing.section,
+      }}
+      testID="zone-card"
+    >
       <View className="w-full flex-row items-center gap-gap">
         <View className="flex-1 gap-tight">
           <AppText variant="cardHeading">
@@ -79,10 +87,16 @@ export function ZoneCard({ demo = false, onOpen, species, zone }: ZoneCardProps)
         ) : null}
       </View>
 
-      <View className="w-full flex-row flex-wrap gap-gap">
+      <View
+        className="w-full flex-row flex-wrap items-center"
+        style={{ gap: floating ? spacing.sm : spacing.gap }}
+      >
         <View
-          className="h-chip flex-row items-center rounded-pill px-gap"
-          style={{ backgroundColor: colors.accent }}
+          className="h-chip flex-row items-center rounded-pill"
+          style={{
+            backgroundColor: colors.accent,
+            paddingHorizontal: floating ? spacing.sm : spacing.gap,
+          }}
         >
           <AppText style={{ color: colors.onAccent, fontWeight: '600' }} variant="label">
             {interpolate(t('discover.list.yield'), {
@@ -92,18 +106,28 @@ export function ZoneCard({ demo = false, onOpen, species, zone }: ZoneCardProps)
           </AppText>
         </View>
         <View
-          className="h-chip flex-row items-center rounded-pill px-gap"
-          style={{ backgroundColor: colors.successMuted }}
+          className="h-chip flex-row items-center rounded-pill"
+          style={{
+            backgroundColor: colors.successMuted,
+            paddingHorizontal: floating ? spacing.sm : spacing.gap,
+          }}
         >
           <AppText style={{ color: colors.success, fontWeight: '600' }} variant="label">
             {t(CONFIDENCE_LABEL_KEY[zone.confidence])}
           </AppText>
         </View>
+        {floating ? (
+          <AppText tone="muted" variant="metadata">
+            {t(RIPENESS_LABEL_KEY[zone.ripeness])}
+          </AppText>
+        ) : null}
       </View>
 
-      <AppText tone="muted" variant="metadata">
-        {t(RIPENESS_LABEL_KEY[zone.ripeness])}
-      </AppText>
+      {!floating ? (
+        <AppText tone="muted" variant="metadata">
+          {t(RIPENESS_LABEL_KEY[zone.ripeness])}
+        </AppText>
+      ) : null}
     </Card>
   );
 

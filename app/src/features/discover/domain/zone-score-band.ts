@@ -48,5 +48,5 @@ export function scoreBand(score: number): ZoneScoreBand {
  * reads as “plenty” never looks as certain as one the app actually is certain about.
  * The legend names the treatment in words.
  */
-export const ZONE_LOW_CONFIDENCE_OPACITY = 0.4;
-export const ZONE_CONFIDENT_OPACITY = 0.85;
+export const ZONE_LOW_CONFIDENCE_OPACITY = 0.24;
+export const ZONE_CONFIDENT_OPACITY = 0.62;

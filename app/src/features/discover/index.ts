@@ -13,9 +13,9 @@
  * (`domain/season-insights.ts`), the rule that reads the phone's reports back under one zone's
  * name (`domain/zone-reports.ts`) and the components that draw them.
  *
- * What the screens deliberately do not have yet — a zone source behind the demo composition, the
- * place index a search would grow into, and the recentre control that needs a map which moves —
- * is recorded in PROJECT.md rather than invented here.
+ * The zone source, full-screen map, selected-zone card and foreground location controls are built;
+ * the place index a name search would grow into and the final self-hosted tile source remain in
+ * PROJECT.md rather than being invented here.
  */
 export { ActiveVisitScreen, type ActiveVisitScreenProps } from './components/active-visit-screen';
 export { AlertsScreen, type AlertsScreenProps } from './components/alerts-screen';

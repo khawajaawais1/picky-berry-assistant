@@ -154,8 +154,8 @@ const LEDGER: readonly LedgerEntry[] = [
   },
   {
     file: 'src/features/discover/components/map-list-toggle.tsx',
-    offers: { pressable: 2, role: 2 },
-    why: 'Map/list toggle and the sync-centre button; the second is drawn only when a caller supplies a destination, and the recentre control is absent entirely (ADR-044).',
+    offers: { pressable: 4, role: 4 },
+    why: 'Map/list toggle and the sync-centre button; the second is drawn only when a caller supplies a destination. On the map they are compact named icon controls; list view keeps the explanatory text row (ADR-070).',
   },
   {
     file: 'src/features/discover/components/post-visit-feedback-screen.tsx',
@@ -194,8 +194,8 @@ const LEDGER: readonly LedgerEntry[] = [
   },
   {
     file: 'src/features/discover/components/discover-screen.tsx',
-    offers: { textAction: 1 },
-    why: 'The list view’s retry after a failed read, wired to the same `useZones` refetch the map offers; every other control on the screen is a shared component with its own entry (frontend review, 2026-10-25).',
+    offers: { pressable: 1, role: 1, textAction: 1 },
+    why: 'The optional floating back control exists only when the caller supplies a destination, and list view’s retry is wired to the same `useZones` refetch the map offers; every other control is a shared component with its own entry (ADR-070).',
   },
   {
     file: 'src/features/discover/components/zone-map.tsx',
@@ -234,8 +234,8 @@ const LEDGER: readonly LedgerEntry[] = [
   },
   {
     file: 'src/features/discover/components/zone-map-canvas.native.tsx',
-    offers: { pressable: 1, role: 2 },
-    why: 'The MapLibre map claims `image` — the text alternative WCAG 1.1.1 asks of the screen’s primary presentation of the zones (known issue 35, corrected). It pans and zooms, so it draws the frame’s recentre button, which fits the camera back to the zones the picker can otherwise lose.',
+    offers: { pressable: 2, role: 3 },
+    why: 'The MapLibre map is a named image and keeps two named 44 px controls beside it: foreground location/follow when a fix or settings destination exists, and fit-zones when rings exist. Manual panning exits follow mode (ADR-070).',
   },
   {
     file: 'src/features/field-test/components/field-test-screen.tsx',

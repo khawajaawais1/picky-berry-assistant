@@ -1,6 +1,9 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
-import { layout, radii, themes } from '@/constants/theme';
+import { layout, radii, spacing, themes } from '@/constants/theme';
+import type { PositionFix, PositionHandlers, PositionSource } from '@/services/location';
+import { recordPrivacyConsent } from '@/services/privacy-consent';
 import { QueryProvider } from '@/services/query-client';
 
 import type { Species } from '../../domain/species';
@@ -76,6 +79,27 @@ function sourceOf(zones: readonly Zone[]): ZoneSource & { list: jest.Mock } {
   };
 }
 
+function livePositionSource() {
+  let handlers: PositionHandlers | null = null;
+  const stop = jest.fn();
+  const source: PositionSource = {
+    requestAvailability: jest.fn(async () => 'granted'),
+    watch: jest.fn((next) => {
+      handlers = next;
+      return stop;
+    }),
+  };
+
+  return {
+    source,
+    stop,
+    send(fix: PositionFix) {
+      if (handlers === null) throw new Error('the position watch has not started');
+      handlers.onFix(fix);
+    },
+  };
+}
+
 async function renderScreen(props: Partial<DiscoverScreenProps> = {}) {
   return render(<DiscoverScreen zoneSource={sourceOf(ZONES)} {...props} />, {
     wrapper: QueryProvider,
@@ -95,14 +119,20 @@ async function openList() {
 }
 
 describe('DiscoverScreen', () => {
-  it('renders the frame’s header and its blocks', async () => {
+  afterEach(async () => {
+    await AsyncStorage.clear();
+  });
+
+  it('makes the map the screen and floats its controls over it', async () => {
     await renderScreen();
     await screen.findByText('3 zones');
 
-    expect(screen.getByText('CORE PICKER')).toBeOnTheScreen();
-    expect(screen.getByText('Discover nearby')).toBeOnTheScreen();
+    expect(screen.getByTestId('discover-map-screen')).toHaveStyle({ flex: 1 });
+    expect(screen.getByTestId('discover-map-overlays')).toBeOnTheScreen();
+    expect(screen.queryByTestId('screen-scroll')).not.toBeOnTheScreen();
     expect(screen.getByTestId('zone-search-field')).toBeOnTheScreen();
     expect(screen.getByTestId('species-chips')).toBeOnTheScreen();
+    expect(screen.getByTestId('species-chips').props.horizontal).toBe(true);
     // The design's chips are 36 px tall; 4 px of hit slop on each side is the 44 px target.
     expect(screen.getByRole('button', { name: 'Lingonberry' }).props.hitSlop).toMatchObject({
       bottom: 4,
@@ -111,6 +141,10 @@ describe('DiscoverScreen', () => {
     expect(screen.getByTestId('zone-map')).toBeOnTheScreen();
     expect(screen.getByTestId('zone-score-legend')).toBeOnTheScreen();
     expect(screen.getByTestId('zone-card')).toBeOnTheScreen();
+    expect(screen.getByTestId('zone-card')).toHaveStyle({
+      gap: spacing.sm,
+      padding: spacing.gap,
+    });
     expect(screen.getByTestId('map-list-toggle')).toBeOnTheScreen();
   });
 
@@ -120,7 +154,6 @@ describe('DiscoverScreen', () => {
     });
     await screen.findByText('3 zones · test data');
 
-    expect(screen.getByText('CORE PICKER · SEASON DEMO / 28 AUG')).toBeOnTheScreen();
     expect(screen.getByText('Pilot area · test data')).toBeOnTheScreen();
   });
 
@@ -214,7 +247,6 @@ describe('DiscoverScreen', () => {
     expect(screen.getByText('1 zone matches')).toBeOnTheScreen();
     // The map's count is the same answer, which is the point: the map no longer shows the
     // whole pilot area while the count line describes a subset.
-    expect(screen.getByText('1 zone')).toBeOnTheScreen();
     expect(screen.getByText('Kilimajärvi 1 · Bilberry')).toBeOnTheScreen();
 
     await openList();
@@ -233,7 +265,6 @@ describe('DiscoverScreen', () => {
     // “Laajavuori 1” names zone 1 and is contained in zone 12; both are places the picker
     // named, and hiding the second would be the filter guessing at intent.
     expect(screen.getByText('2 zones match')).toBeOnTheScreen();
-    expect(screen.getByText('2 zones')).toBeOnTheScreen();
   });
 
   it('says so when the search names a place that is not here, and keeps the legend', async () => {
@@ -371,6 +402,69 @@ describe('DiscoverScreen', () => {
     );
   });
 
+  it('selects a zone on the map and opens that selected zone from the floating card', async () => {
+    const onOpenZone = jest.fn();
+    await renderScreen({ onOpenZone });
+    await screen.findByText('3 zones');
+
+    await fireEvent(screen.getByTestId('zone-map-source'), 'press', {
+      nativeEvent: { features: [{ id: 'b' }] },
+    });
+
+    expect(screen.getByText('Laajavuori 12 · Bilberry')).toBeOnTheScreen();
+    expect(screen.getByText('81 / 100 yield')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Open zone Laajavuori 12 details' }));
+    expect(onOpenZone).toHaveBeenCalledWith(expect.objectContaining({ id: 'b' }), 'bilberry');
+  });
+
+  it('shows the consent-gated live position and follows it only after the picker asks', async () => {
+    await recordPrivacyConsent(true, new Date('2026-08-03T07:00:00.000Z'));
+    const live = livePositionSource();
+    await renderScreen({ positionSource: live.source });
+    await screen.findByText('3 zones');
+    await waitFor(() => expect(live.source.watch).toHaveBeenCalledTimes(1));
+
+    await act(async () => {
+      live.send({
+        accuracyMeters: 12,
+        at: 1_786_000_000_000,
+        latitude: 62.24,
+        longitude: 25.76,
+      });
+    });
+
+    expect(screen.getByTestId('zone-map-user-location-source').props.data).toMatchObject({
+      geometry: { coordinates: [25.76, 62.24], type: 'Point' },
+      type: 'Feature',
+    });
+
+    const locate = screen.getByRole('button', { name: 'Centre map on my location' });
+    expect(locate.props.accessibilityState).toMatchObject({ selected: false });
+
+    await fireEvent.press(locate);
+    expect(locate.props.accessibilityState).toMatchObject({ selected: true });
+
+    await fireEvent(screen.getByTestId('zone-map-drawing'), 'regionWillChange', {
+      nativeEvent: { userInteraction: true },
+    });
+    expect(locate.props.accessibilityState).toMatchObject({ selected: false });
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Show zone list' }));
+    expect(live.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers Privacy settings instead of reading position without consent', async () => {
+    const onOpenLocationSettings = jest.fn();
+    await renderScreen({ onOpenLocationSettings });
+    await screen.findByText('3 zones');
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Review location privacy' }));
+
+    expect(onOpenLocationSettings).toHaveBeenCalledWith('off');
+    expect(screen.queryByTestId('zone-map-user-location-source')).not.toBeOnTheScreen();
+  });
+
   it('leaves the card a reading where the route supplies no destination', async () => {
     await renderScreen();
     await screen.findByText('3 zones');
@@ -392,7 +486,7 @@ describe('DiscoverScreen', () => {
     await renderScreen();
     await screen.findByText('3 zones');
 
-    expect(screen.getByText('Map selected')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Show zone list' })).toBeOnTheScreen();
     await openList();
     expect(screen.getByText('Zone list')).toBeOnTheScreen();
     expect(screen.queryByTestId('zone-map')).not.toBeOnTheScreen();

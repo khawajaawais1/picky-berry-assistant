@@ -125,8 +125,8 @@ describe('ZoneMap', () => {
   it('draws the OpenFreeMap basemap for the theme, with the OpenStreetMap credit', async () => {
     await render(<ZoneMap status="ready" zones={[zone()]} />);
 
-    expect(screen.getByTestId('zone-map-drawing').props.mapStyle).toMatch(
-      /^https:\/\/tiles\.openfreemap\.org\/styles\/(positron|dark)$/,
+    expect(screen.getByTestId('zone-map-drawing').props.mapStyle).toBe(
+      'https://tiles.openfreemap.org/styles/liberty',
     );
     expect(screen.getByTestId('zone-map-attribution')).toHaveTextContent(
       '© OpenStreetMap contributors',
@@ -151,6 +151,76 @@ describe('ZoneMap', () => {
       id: 'b',
       properties: { band: ZONE_SCORE_BANDS[0]!.min, lowConfidence: true, score: 12 },
     });
+  });
+
+  it('marks the selected zone and reports a zone press by its stable id', async () => {
+    const onSelectZone = jest.fn();
+    const zones = [zone({ id: 'a' }), zone({ id: 'b', name: 'Laajavuori 2' })];
+
+    await render(
+      <ZoneMap onSelectZone={onSelectZone} selectedZoneId="b" status="ready" zones={zones} />,
+    );
+
+    const data = screen.getByTestId('zone-map-source').props.data;
+    expect(data.features[0].properties.selected).toBe(false);
+    expect(data.features[1].properties.selected).toBe(true);
+
+    await fireEvent(screen.getByTestId('zone-map-source'), 'press', {
+      nativeEvent: { features: [{ id: 'b' }] },
+    });
+    expect(onSelectZone).toHaveBeenCalledWith('b');
+  });
+
+  it('draws the current position and lets a manual pan leave follow mode', async () => {
+    const view = await render(
+      <ZoneMap
+        position={{
+          accuracyMeters: 12,
+          at: 1_786_000_000_000,
+          latitude: 62.24,
+          longitude: 25.76,
+        }}
+        positionStatus="tracking"
+        status="ready"
+        zones={[zone()]}
+      />,
+    );
+
+    expect(screen.getByTestId('zone-map-user-location-source').props.data).toMatchObject({
+      geometry: { coordinates: [25.76, 62.24], type: 'Point' },
+    });
+    const locate = screen.getByRole('button', { name: 'Centre map on my location' });
+
+    await fireEvent.press(locate);
+    expect(locate.props.accessibilityState).toMatchObject({ selected: true });
+
+    await fireEvent(screen.getByTestId('zone-map-drawing'), 'regionWillChange', {
+      nativeEvent: { userInteraction: true },
+    });
+    expect(locate.props.accessibilityState).toMatchObject({ selected: false });
+
+    await fireEvent.press(locate);
+    const onOpenLocationSettings = jest.fn();
+    await view.rerender(
+      <ZoneMap
+        onOpenLocationSettings={onOpenLocationSettings}
+        position={null}
+        positionStatus="failed"
+        status="ready"
+        zones={[zone()]}
+      />,
+    );
+    const fixAccess = screen.getByRole('button', { name: 'Fix location access' });
+    expect(fixAccess.props.accessibilityState).toMatchObject({ selected: false });
+    await fireEvent.press(fixAccess);
+    expect(onOpenLocationSettings).toHaveBeenCalledWith('failed');
+  });
+
+  it('fills its parent instead of becoming a rounded card on the map-first screen', async () => {
+    await render(<ZoneMap fullscreen status="ready" zones={[zone()]} />);
+
+    expect(screen.getByTestId('zone-map')).toHaveStyle({ flex: 1 });
+    expect(screen.getByTestId('zone-map')).not.toHaveStyle({ borderRadius: radii.lg });
   });
 
   it('keeps the height the screen gives it', async () => {

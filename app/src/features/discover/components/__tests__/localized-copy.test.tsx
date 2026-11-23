@@ -3,13 +3,7 @@ import { testZoneSource } from '@/features/discover/services/test-zone-source';
 
 import { QueryProvider } from '@/services/query-client';
 
-import {
-  REASONING_ALERTS,
-  LIVE_ZONE,
-  liveZoneSource,
-  OWN_REPORTS,
-  SEASON,
-} from '../../test-fixtures';
+import { REASONING_ALERTS, liveZoneSource, OWN_REPORTS, SEASON } from '../../test-fixtures';
 
 /**
  * A device set to Finnish. The app is Finnish and English (PROJECT.md), so the copy of every
@@ -61,10 +55,11 @@ const VISIT = {
 
 describe('the discover screen on a Finnish device', () => {
   it('renders the screen, the map’s labels and the source card in Finnish', async () => {
-    await render(<DiscoverScreen zoneSource={testZoneSource} />, { wrapper: QueryProvider });
+    await render(
+      <DiscoverScreen onOpenLocationSettings={jest.fn()} zoneSource={testZoneSource} />,
+      { wrapper: QueryProvider },
+    );
 
-    expect(screen.getByText('POIMINTA · KAUSIDEMO / 28.8.')).toBeOnTheScreen();
-    expect(screen.getByText('Löydä lähialueet')).toBeOnTheScreen();
     // The real map's own words: what the colours mean, what the fade means, where the pilot
     // area is, and that its zones are the data team's test data.
     expect(screen.getByText('Sadon pisteet')).toBeOnTheScreen();
@@ -90,8 +85,8 @@ describe('the discover screen on a Finnish device', () => {
     expect(screen.getByRole('button', { name: 'Puolukka' })).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Mustikka' })).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Lakka' })).toBeOnTheScreen();
-    expect(screen.getByText('Kartta valittuna')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Näytä alueluettelo' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Keskitä kartta sijaintiini' })).toBeOnTheScreen();
 
     expect(screen.queryByText('Discover nearby')).not.toBeOnTheScreen();
     expect(screen.queryByText('Zone 14 · Lingonberry')).not.toBeOnTheScreen();
@@ -107,7 +102,6 @@ describe('the discover screen on a Finnish device', () => {
     // “1 zones match”, and Finnish agrees with the number here. It is copy the picker reads
     // exactly when a filter has just narrowed the map, so it has to be translated.
     expect(screen.getByText('1 alue vastaa hakua')).toBeOnTheScreen();
-    expect(screen.getByText('1 alue · testiaineisto')).toBeOnTheScreen();
 
     await fireEvent.changeText(screen.getByLabelText('Hae paikkaa tai aluetta'), 'Kilimajärvi');
 

@@ -1,7 +1,7 @@
-import { Pressable, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
-import { layout } from '@/constants/theme';
+import { layout, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useTranslation } from '@/services/i18n';
 
@@ -15,6 +15,8 @@ const CHIP_HIT_SLOP = {
 };
 
 export type SpeciesChipsProps = {
+  /** Keeps the map overlay to one line; the document/list reading continues to wrap. */
+  scrollable?: boolean;
   /** The chips that are on, as identifiers: the filter compares species, never words. */
   selected: readonly Species[];
   onToggle: (species: Species) => void;
@@ -41,9 +43,57 @@ export type SpeciesChipsProps = {
  * The row wraps like the design's other chip rows: at the largest system text size three
  * labels no longer fit the content column, and the screen does not scroll sideways (ADR-019).
  */
-export function SpeciesChips({ selected, onToggle }: SpeciesChipsProps) {
+export function SpeciesChips({ scrollable = false, selected, onToggle }: SpeciesChipsProps) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
+
+  const chips = SPECIES.map((species) => {
+    const on = selected.includes(species);
+    const label = t(SPECIES_LABEL_KEY[species]);
+
+    return (
+      <Pressable
+        accessibilityLabel={label}
+        accessibilityRole="button"
+        accessibilityState={{ selected: on }}
+        aria-pressed={on}
+        className="h-chip flex-row items-center rounded-pill px-gap"
+        hitSlop={CHIP_HIT_SLOP}
+        key={species}
+        onPress={() => onToggle(species)}
+        style={{
+          backgroundColor: on ? colors.accent : colors.surface,
+          borderColor: on ? colors.accent : colors.border,
+          // The design's chips carry a 1 px stroke in either state.
+          borderWidth: 1,
+        }}
+        testID={`species-chip-${species}`}
+      >
+        <AppText
+          style={{ color: on ? colors.onAccent : colors.textMuted, fontWeight: '600' }}
+          variant="label"
+        >
+          {label}
+        </AppText>
+      </Pressable>
+    );
+  });
+
+  if (scrollable) {
+    return (
+      <ScrollView
+        accessibilityLabel={t('discover.species.filter')}
+        contentContainerStyle={{ flexDirection: 'row', gap: spacing.gap }}
+        horizontal
+        role="group"
+        showsHorizontalScrollIndicator={false}
+        style={{ width: '100%' }}
+        testID="species-chips"
+      >
+        {chips}
+      </ScrollView>
+    );
+  }
 
   return (
     <View
@@ -52,37 +102,7 @@ export function SpeciesChips({ selected, onToggle }: SpeciesChipsProps) {
       role="group"
       testID="species-chips"
     >
-      {SPECIES.map((species) => {
-        const on = selected.includes(species);
-        const label = t(SPECIES_LABEL_KEY[species]);
-
-        return (
-          <Pressable
-            accessibilityLabel={label}
-            accessibilityRole="button"
-            accessibilityState={{ selected: on }}
-            aria-pressed={on}
-            className="h-chip flex-row items-center rounded-pill px-gap"
-            hitSlop={CHIP_HIT_SLOP}
-            key={species}
-            onPress={() => onToggle(species)}
-            style={{
-              backgroundColor: on ? colors.accent : colors.surface,
-              borderColor: on ? colors.accent : colors.border,
-              // The design's chips carry a 1 px stroke in either state.
-              borderWidth: 1,
-            }}
-            testID={`species-chip-${species}`}
-          >
-            <AppText
-              style={{ color: on ? colors.onAccent : colors.textMuted, fontWeight: '600' }}
-              variant="label"
-            >
-              {label}
-            </AppText>
-          </Pressable>
-        );
-      })}
+      {chips}
     </View>
   );
 }
