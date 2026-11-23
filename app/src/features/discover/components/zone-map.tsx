@@ -1,10 +1,12 @@
-import { View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
 import { StatusMessage, TextAction } from '@/components/molecules';
 import { layout, radii, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { interpolate, useTranslation } from '@/services/i18n';
+import type { DevicePositionStatus } from '@/hooks/use-device-position';
+import type { PositionFix } from '@/services/location';
 
 import type { ZonesStatus } from '../hooks/use-zones';
 import type { Zone } from '../domain/zone-source';
@@ -13,6 +15,8 @@ import { ZoneMapCanvas } from './zone-map-canvas';
 export type ZoneMapProps = {
   /** Whether the zones are the bundled stand-in; only then does the label say “test data”. */
   demo?: boolean;
+  /** Fills the available screen instead of drawing the original rounded 300 px card. */
+  fullscreen?: boolean;
   /** The height the screen gives it: the design's 300 on frame 06. */
   height?: number;
   /**
@@ -20,6 +24,11 @@ export type ZoneMapProps = {
    * action: a control that cannot act claims no role (AGENTS.md §11.2).
    */
   onRetry?: () => void;
+  onOpenLocationSettings?: (status: DevicePositionStatus) => void;
+  onSelectZone?: (zoneId: string) => void;
+  position?: PositionFix | null;
+  positionStatus?: DevicePositionStatus;
+  selectedZoneId?: string | null;
   /** Why there may be no polygons — the screen asks the source once and passes the answer. */
   status: ZonesStatus;
   /** The zones the screen's controls left: the map draws exactly what the list would show. */
@@ -27,35 +36,27 @@ export type ZoneMapProps = {
 };
 
 /**
- * Screen 06's map, as the app can now be true about it: **a MapLibre map of the pilot's real
- * zones**, not the design's drawing (ADR-053; the drawing remains on frames 08 and 09).
- *
- * It is presentational on purpose. The screen owns the one `useZones` call and hands the same
- * answer to this map, the card and the list, so the three cannot describe different data — the
- * gap known issue 14 recorded while the card and filters still read the design's sample.
- *
- * Three things this component is careful about:
- *
- * - **Why there are no polygons.** A map that draws nothing is indistinguishable from a
- *   source that failed, so loading, empty and failed each get their own line. The map never
- *   pretends an error is an empty world.
- * - **Nothing on it is a control.** The native canvas turns every gesture off, because the
- *   frame's recentre control does not exist yet and a map the picker can move away from
- *   with no way back is worse than one that stays put (AGENTS.md §11.2).
- * - **Colour is not the only signal.** Each zone's score is also a number in the legend's
- *   bands, and the legend says in words what the colours and the fade mean. The map itself
- *   carries a text alternative naming what it shows; the zone-by-zone reading is the list
- *   the screen's toggle opens.
+ * MapLibre over the source's real zone rings (ADR-053), either at a caller-supplied card height or
+ * filling Discover (ADR-070). Loading, empty and failed remain distinct; the map never presents a
+ * failed source as an empty world. The canvas carries one text alternative, while the legend,
+ * selected-zone card and list state every score without relying on polygon colour alone.
  */
 export function ZoneMap({
   demo = false,
+  fullscreen = false,
   height = layout.mapHeight,
+  onOpenLocationSettings,
   onRetry,
+  onSelectZone,
+  position,
+  positionStatus,
+  selectedZoneId,
   status,
   zones,
 }: ZoneMapProps) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
+  const window = useWindowDimensions();
 
   const hasZones = status === 'ready' && zones.length > 0;
   const statusLine =
@@ -70,14 +71,25 @@ export function ZoneMap({
       className="w-full overflow-hidden"
       style={{
         backgroundColor: colors.mapBase,
-        borderRadius: radii.lg,
-        height,
+        borderRadius: fullscreen ? 0 : radii.lg,
+        flex: fullscreen ? 1 : undefined,
+        height: fullscreen ? undefined : height,
       }}
       testID="zone-map"
     >
       <View style={{ flex: 1 }}>
         {hasZones ? (
-          <ZoneMapCanvas height={height} label={t('discover.map.label')} zones={zones} />
+          <ZoneMapCanvas
+            fullscreen={fullscreen}
+            height={fullscreen ? window.height : height}
+            label={t('discover.map.label')}
+            onOpenLocationSettings={onOpenLocationSettings}
+            onSelectZone={onSelectZone}
+            position={position}
+            positionStatus={positionStatus}
+            selectedZoneId={selectedZoneId}
+            zones={zones}
+          />
         ) : (
           <View className="flex-1 items-center justify-center gap-gap px-section">
             <StatusMessage testID="zone-map-status" tone="muted" variant="bodySmall">
@@ -94,7 +106,7 @@ export function ZoneMap({
         )}
       </View>
 
-      {hasZones ? (
+      {hasZones && !fullscreen ? (
         <View
           // A reading over the map, not a control: the place this pilot area is in and how
           // many zones are on it. `pointerEvents="none"` keeps it from swallowing a tap.

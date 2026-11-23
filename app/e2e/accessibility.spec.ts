@@ -839,10 +839,14 @@ test.describe('the discover map in the built web app', () => {
         .not.toBe('');
 
       expect(snapshot).toContain('- img "Map of nearby berry zones"');
-      // The name is a text alternative, not a replacement: the places and zones the frame draws
-      // are still the screen's own text, and nothing about them was hidden to make room for it.
-      // The stub's own map names its test area; the route's map names the live pilot area.
-      expect(snapshot).toContain(route === '/discover' ? 'Laajavuori' : 'Jyväskylä');
+      // The full-screen Discover overlays are siblings of the drawing (ADR-070), while the route's
+      // fixed-height map still owns its place label. In both cases the text alternative supplements
+      // visible zone copy rather than replacing it.
+      if (route === '/discover') {
+        await expect(page.getByText('Laajavuori 1 · Bilberry')).toBeVisible();
+      } else {
+        expect(snapshot).toContain('Jyväskylä');
+      }
       expect(snapshot).not.toContain('- img\n');
     });
   }

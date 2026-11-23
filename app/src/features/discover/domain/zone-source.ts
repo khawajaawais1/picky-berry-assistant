@@ -276,9 +276,10 @@ export function parseZones(payload: unknown, species: Species): readonly Zone[] 
  */
 export function zoneFeatureCollection(
   zones: readonly Zone[],
+  selectedZoneId?: string | null,
 ): FeatureCollection<
   Polygon,
-  { band: number; lowConfidence: boolean; name: string; score: number }
+  { band: number; lowConfidence: boolean; name: string; score: number; selected: boolean }
 > {
   return {
     type: 'FeatureCollection',
@@ -291,6 +292,7 @@ export function zoneFeatureCollection(
         lowConfidence: zone.confidence === 'low',
         name: zone.name,
         score: zone.score,
+        selected: zone.id === selectedZoneId,
       },
     })),
   };

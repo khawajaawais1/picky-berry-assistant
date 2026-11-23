@@ -1,14 +1,18 @@
 import type {
   CameraRef,
+  CircleLayerSpecification,
   FillLayerSpecification,
   LineLayerSpecification,
+  PressEventWithFeatures,
+  ViewStateChangeEvent,
 } from '@maplibre/maplibre-react-native';
-import { useMemo, useRef } from 'react';
-import { Pressable, View } from 'react-native';
+import type { Feature, Point } from 'geojson';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Pressable, View, type NativeSyntheticEvent } from 'react-native';
 
 import { AppText } from '@/components/atoms';
 import { Feather } from '@/components/atoms/app-icon';
-import { layout, radii, spacing } from '@/constants/theme';
+import { layout, motion, radii, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useTranslation } from '@/services/i18n';
 
@@ -29,18 +33,15 @@ const CANVAS_STYLE = { flex: 1 } as const;
 
 /** Space kept around the framed zones, in screen pixels. */
 const CAMERA_PADDING = { top: 24, right: 24, bottom: 24, left: 24 } as const;
+/** The map's floating search and selected-zone sheet need geographic content kept clear. */
+const FULLSCREEN_CAMERA_PADDING = { top: 160, right: 56, bottom: 220, left: 24 } as const;
 
 /** The native package is absent from Expo Go; see `map-libre.ts` for why this is not an import. */
 const mapLibre = loadMapLibre();
 
-/**
- * The basemap: OpenFreeMap's OpenStreetMap vector tiles, which need no API key. One style per
- * app theme, so the zones sit on a light map in light mode and a dark one in dark mode.
- */
-const BASEMAP_STYLE = {
-  light: 'https://tiles.openfreemap.org/styles/positron',
-  dark: 'https://tiles.openfreemap.org/styles/dark',
-} as const;
+/** OpenFreeMap's outdoor-readable OSM style; UI overlays still follow the app's colour scheme. */
+const BASEMAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
+const SELECTED_ZONE_OPACITY = 0.92;
 
 /** How far the picker may zoom: out to the region, in to a few streets. */
 const MIN_ZOOM = 8;
@@ -102,9 +103,19 @@ function SvgFallback(props: ZoneMapCanvasProps) {
   );
 }
 
-function MapLibreCanvas({ label, zones }: ZoneMapCanvasProps) {
-  const { colors, scheme } = useAppTheme();
+function MapLibreCanvas({
+  fullscreen = false,
+  label,
+  onOpenLocationSettings,
+  onSelectZone,
+  position,
+  positionStatus = 'off',
+  selectedZoneId,
+  zones,
+}: ZoneMapCanvasProps) {
+  const { colors } = useAppTheme();
   const { t } = useTranslation();
+  const [followingPosition, setFollowingPosition] = useState(false);
 
   // The band's lower edge is what each feature carries (`zoneFeatureCollection`), so the
   // style is one `match` rather than a layer per band — and the palette comes from the same
@@ -122,6 +133,8 @@ function MapLibreCanvas({ label, zones }: ZoneMapCanvasProps) {
         ],
         'fill-opacity': [
           'case',
+          ['get', 'selected'],
+          SELECTED_ZONE_OPACITY,
           ['get', 'lowConfidence'],
           ZONE_LOW_CONFIDENCE_OPACITY,
           ZONE_CONFIDENT_OPACITY,
@@ -139,30 +152,100 @@ function MapLibreCanvas({ label, zones }: ZoneMapCanvasProps) {
           ...ZONE_SCORE_BANDS.flatMap((band) => [band.min, colors[band.line]]),
           colors.mapScoreLowestLine,
         ],
-        'line-width': 1.5,
+        'line-opacity': ['case', ['get', 'selected'], 1, 0.78],
+        'line-width': ['case', ['get', 'selected'], 3, 1],
       }) as unknown as NonNullable<LineLayerSpecification['paint']>,
     [colors],
   );
 
   const cameraRef = useRef<CameraRef>(null);
-  const mapStyle = BASEMAP_STYLE[scheme];
+  const cameraPadding = fullscreen ? FULLSCREEN_CAMERA_PADDING : CAMERA_PADDING;
+  const isFollowingPosition = followingPosition && position != null;
 
-  const data = useMemo(() => zoneFeatureCollection(zones), [zones]);
+  const data = useMemo(() => zoneFeatureCollection(zones, selectedZoneId), [selectedZoneId, zones]);
+  const positionData = useMemo<Feature<Point> | null>(
+    () =>
+      position
+        ? {
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [position.longitude, position.latitude] },
+            properties: {},
+          }
+        : null,
+    [position],
+  );
+  const positionPaint = useMemo(
+    () =>
+      ({
+        'circle-color': colors.accent,
+        'circle-radius': 8,
+        'circle-stroke-color': colors.surface,
+        'circle-stroke-width': 3,
+      }) as NonNullable<CircleLayerSpecification['paint']>,
+    [colors],
+  );
   const framedBounds = useMemo<[number, number, number, number] | null>(() => {
     const bounds = zoneBounds(zones.map((zone) => zone.ring));
 
     return bounds === null ? null : [bounds[0], bounds[1], bounds[2], bounds[3]];
   }, [zones]);
 
+  const recentre = useCallback(() => {
+    setFollowingPosition(false);
+    if (framedBounds) {
+      const camera = cameraRef.current;
+      if (typeof camera?.fitBounds === 'function') {
+        camera.fitBounds(framedBounds, {
+          padding: cameraPadding,
+          duration: motion.mapFit,
+        });
+      }
+    }
+  }, [cameraPadding, framedBounds]);
+
+  const followPosition = useCallback(() => {
+    if (position === null || position === undefined) {
+      onOpenLocationSettings?.(positionStatus);
+      return;
+    }
+    setFollowingPosition(true);
+  }, [onOpenLocationSettings, position, positionStatus]);
+
+  useEffect(() => {
+    if (!isFollowingPosition || !position) return;
+    const camera = cameraRef.current;
+    if (typeof camera?.easeTo === 'function') {
+      camera.easeTo({
+        center: [position.longitude, position.latitude],
+        duration: motion.mapFollow,
+        padding: cameraPadding,
+        zoom: 14,
+      });
+    }
+  }, [cameraPadding, isFollowingPosition, position]);
+
+  const leaveFollowMode = useCallback((event: NativeSyntheticEvent<ViewStateChangeEvent>) => {
+    if (event.nativeEvent.userInteraction) setFollowingPosition(false);
+  }, []);
+
+  const selectZone = useCallback(
+    (event: NativeSyntheticEvent<PressEventWithFeatures>) => {
+      const id = event.nativeEvent.features[0]?.id;
+      if (typeof id === 'string' || typeof id === 'number') onSelectZone?.(String(id));
+    },
+    [onSelectZone],
+  );
+
+  const settledWithoutFix = !['requesting', 'tracking', 'waiting'].includes(positionStatus);
+  const canLocate = Boolean(position || (settledWithoutFix && onOpenLocationSettings));
+  const needsPlatformAccess = ['denied', 'failed', 'unavailable'].includes(positionStatus);
+  const locateLabel = position
+    ? t('discover.map.myLocation')
+    : t(needsPlatformAccess ? 'discover.map.fixLocationAccess' : 'discover.map.locationSettings');
+
   if (mapLibre === null) return null;
 
   const { Camera, GeoJSONSource, Layer, Map: MapView } = mapLibre;
-
-  const recentre = () => {
-    if (framedBounds) {
-      cameraRef.current?.fitBounds(framedBounds, { padding: CAMERA_PADDING, duration: 400 });
-    }
-  };
 
   return (
     <View style={CANVAS_STYLE}>
@@ -175,7 +258,8 @@ function MapLibreCanvas({ label, zones }: ZoneMapCanvasProps) {
         attribution={false}
         compass={false}
         logo={false}
-        mapStyle={mapStyle}
+        mapStyle={BASEMAP_STYLE}
+        onRegionWillChange={leaveFollowMode}
         style={CANVAS_STYLE}
         testID="zone-map-drawing"
         touchPitch={false}
@@ -186,16 +270,31 @@ function MapLibreCanvas({ label, zones }: ZoneMapCanvasProps) {
             bounds={framedBounds}
             maxZoom={MAX_ZOOM}
             minZoom={MIN_ZOOM}
-            padding={CAMERA_PADDING}
+            padding={cameraPadding}
             ref={cameraRef}
             testID="zone-map-camera"
           />
         ) : null}
 
-        <GeoJSONSource data={data} id="pilot-zones" testID="zone-map-source">
+        <GeoJSONSource data={data} id="pilot-zones" onPress={selectZone} testID="zone-map-source">
           <Layer id="zone-fill" paint={fill} source="pilot-zones" type="fill" />
           <Layer id="zone-line" paint={line} source="pilot-zones" type="line" />
         </GeoJSONSource>
+
+        {positionData ? (
+          <GeoJSONSource
+            data={positionData}
+            id="user-location"
+            testID="zone-map-user-location-source"
+          >
+            <Layer
+              id="user-location-dot"
+              paint={positionPaint}
+              source="user-location"
+              type="circle"
+            />
+          </GeoJSONSource>
+        ) : null}
       </MapView>
 
       {/* ODbL: the OpenStreetMap credit is drawn whenever the basemap is (ADR-031 §3). */}
@@ -204,10 +303,11 @@ function MapLibreCanvas({ label, zones }: ZoneMapCanvasProps) {
         style={{
           backgroundColor: colors.surface,
           borderRadius: radii.sm,
-          bottom: spacing.tight,
+          bottom: fullscreen ? undefined : spacing.tight,
           left: spacing.tight,
           paddingHorizontal: spacing.tight,
           position: 'absolute',
+          top: fullscreen ? '52%' : undefined,
         }}
         testID="zone-map-attribution"
       >
@@ -216,30 +316,58 @@ function MapLibreCanvas({ label, zones }: ZoneMapCanvasProps) {
         </AppText>
       </View>
 
-      {framedBounds ? (
-        <Pressable
-          accessibilityLabel={t('discover.map.recentre')}
-          accessibilityRole="button"
-          hitSlop={8}
-          onPress={recentre}
-          style={{
-            alignItems: 'center',
-            backgroundColor: colors.surface,
-            borderColor: colors.border,
-            borderRadius: radii.control,
-            borderWidth: 1,
-            bottom: spacing.gap,
-            height: layout.minTouchTarget,
-            justifyContent: 'center',
-            position: 'absolute',
-            right: spacing.gap,
-            width: layout.minTouchTarget,
-          }}
-          testID="zone-map-recentre"
-        >
-          <Feather color={colors.text} name="crosshair" size={20} />
-        </Pressable>
-      ) : null}
+      <View
+        pointerEvents="box-none"
+        style={{ gap: spacing.sm, position: 'absolute', right: spacing.gap, top: '44%' }}
+      >
+        {canLocate ? (
+          <Pressable
+            accessibilityLabel={locateLabel}
+            accessibilityRole="button"
+            accessibilityState={{ selected: isFollowingPosition }}
+            aria-pressed={isFollowingPosition}
+            onPress={followPosition}
+            style={{
+              alignItems: 'center',
+              backgroundColor: isFollowingPosition ? colors.accent : colors.surface,
+              borderColor: isFollowingPosition ? colors.accent : colors.border,
+              borderRadius: radii.pill,
+              borderWidth: 1,
+              height: layout.minTouchTarget,
+              justifyContent: 'center',
+              width: layout.minTouchTarget,
+            }}
+            testID="zone-map-my-location"
+          >
+            <Feather
+              color={isFollowingPosition ? colors.onAccent : colors.text}
+              name="navigation"
+              size={20}
+            />
+          </Pressable>
+        ) : null}
+
+        {framedBounds ? (
+          <Pressable
+            accessibilityLabel={t('discover.map.recentre')}
+            accessibilityRole="button"
+            onPress={recentre}
+            style={{
+              alignItems: 'center',
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              borderRadius: radii.pill,
+              borderWidth: 1,
+              height: layout.minTouchTarget,
+              justifyContent: 'center',
+              width: layout.minTouchTarget,
+            }}
+            testID="zone-map-recentre"
+          >
+            <Feather color={colors.text} name="maximize" size={20} />
+          </Pressable>
+        ) : null}
+      </View>
     </View>
   );
 }

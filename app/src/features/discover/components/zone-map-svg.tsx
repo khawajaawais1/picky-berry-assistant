@@ -27,12 +27,22 @@ const DESIGN_WIDTH = 342;
  * projection is local equirectangular (`zone-map-projection.ts`), which is accurate at the
  * pilot's scale and is what keeps a square on the ground square on the screen.
  */
-export function ZoneMapSvg({ height, label, zones }: ZoneMapCanvasProps) {
+export function ZoneMapSvg({
+  fullscreen = false,
+  height,
+  label,
+  selectedZoneId,
+  zones,
+}: ZoneMapCanvasProps) {
   const { colors } = useAppTheme();
   const [width, setWidth] = useState(DESIGN_WIDTH);
+  const [availableHeight, setAvailableHeight] = useState(height);
 
-  const onLayout = (event: LayoutChangeEvent) =>
+  const onLayout = (event: LayoutChangeEvent) => {
     setWidth(Math.max(event.nativeEvent.layout.width, 1));
+    if (fullscreen) setAvailableHeight(Math.max(event.nativeEvent.layout.height, 1));
+  };
+  const drawingHeight = fullscreen ? availableHeight : height;
 
   // The screen re-renders on every keystroke in its search field. When the search leaves the
   // same zones and the box has not changed, the paths are the same strings, so building them
@@ -41,13 +51,17 @@ export function ZoneMapSvg({ height, label, zones }: ZoneMapCanvasProps) {
     () =>
       projectRings(
         zones.map((zone) => zone.ring),
-        { width, height, padding: 12 },
+        { width, height: drawingHeight, padding: 12 },
       ),
-    [height, width, zones],
+    [drawingHeight, width, zones],
   );
 
   return (
-    <View onLayout={onLayout} style={{ height }} testID="zone-map-canvas">
+    <View
+      onLayout={onLayout}
+      style={fullscreen ? { flex: 1 } : { height }}
+      testID="zone-map-canvas"
+    >
       <Svg
         // Content, not decoration — the same decision the drawn map made (known issue 35).
         // `aria-label` is the spelling the browser reads; `accessibilityLabel` is the
@@ -55,9 +69,9 @@ export function ZoneMapSvg({ height, label, zones }: ZoneMapCanvasProps) {
         accessibilityLabel={label}
         accessibilityRole="image"
         aria-label={label}
-        height={height}
+        height={drawingHeight}
         testID="zone-map-drawing"
-        viewBox={`0 0 ${width} ${height}`}
+        viewBox={`0 0 ${width} ${drawingHeight}`}
         width="100%"
       >
         {zones.map((zone, index) => {
@@ -68,12 +82,16 @@ export function ZoneMapSvg({ height, label, zones }: ZoneMapCanvasProps) {
               d={paths[index]!}
               fill={colors[band.fill]}
               fillOpacity={
-                zone.confidence === 'low' ? ZONE_LOW_CONFIDENCE_OPACITY : ZONE_CONFIDENT_OPACITY
+                zone.id === selectedZoneId
+                  ? 0.92
+                  : zone.confidence === 'low'
+                    ? ZONE_LOW_CONFIDENCE_OPACITY
+                    : ZONE_CONFIDENT_OPACITY
               }
               key={zone.id}
               stroke={colors[band.line]}
               strokeLinejoin="round"
-              strokeWidth={1.5}
+              strokeWidth={zone.id === selectedZoneId ? 3 : 1.5}
             />
           );
         })}

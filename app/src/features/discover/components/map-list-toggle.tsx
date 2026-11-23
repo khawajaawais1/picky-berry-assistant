@@ -2,7 +2,7 @@ import { Feather } from '@/components/atoms/app-icon';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
-import { layout } from '@/constants/theme';
+import { layout, radii, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useTranslation } from '@/services/i18n';
 
@@ -10,6 +10,8 @@ import { useTranslation } from '@/services/i18n';
 export type ZoneView = 'map' | 'list';
 
 export type MapListToggleProps = {
+  /** Compact icon controls for the map overlay; the list keeps the explanatory text row. */
+  floating?: boolean;
   view: ZoneView;
   onChange: (view: ZoneView) => void;
   /**
@@ -49,12 +51,56 @@ const styles = StyleSheet.create({
  * the name of a button would read the state as the instruction. The download glyph beside it
  * is a control of its own, named for where it leads.
  */
-export function MapListToggle({ view, onChange, onOpenDownloads }: MapListToggleProps) {
+export function MapListToggle({
+  floating = false,
+  view,
+  onChange,
+  onOpenDownloads,
+}: MapListToggleProps) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
 
   const showingMap = view === 'map';
   const action = t(showingMap ? 'discover.view.showList' : 'discover.view.showMap');
+
+  if (floating) {
+    const control = {
+      alignItems: 'center' as const,
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: radii.pill,
+      borderWidth: 1,
+      height: layout.searchHeight,
+      justifyContent: 'center' as const,
+      width: layout.searchHeight,
+    };
+
+    return (
+      <View className="flex-row" style={{ gap: spacing.sm }} testID="map-list-toggle">
+        <Pressable
+          accessibilityLabel={action}
+          accessibilityRole="button"
+          onPress={() => onChange(showingMap ? 'list' : 'map')}
+          style={control}
+          testID="map-list-toggle-view"
+        >
+          <Feather color={colors.text} name={showingMap ? 'list' : 'map'} size={LIST_GLYPH} />
+        </Pressable>
+
+        {onOpenDownloads ? (
+          <Pressable
+            accessibilityLabel={t('discover.downloads')}
+            accessibilityRole="button"
+            onPress={onOpenDownloads}
+            style={control}
+            testID="map-list-toggle-downloads"
+          >
+            <Feather color={colors.text} name="download" size={DOWNLOAD_GLYPH} />
+          </Pressable>
+        ) : null}
+      </View>
+    );
+  }
 
   return (
     <View

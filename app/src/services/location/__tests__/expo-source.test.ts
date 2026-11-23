@@ -100,6 +100,19 @@ describe('the device position source', () => {
     );
   });
 
+  it('shares one in-flight foreground permission request between simultaneous consumers', async () => {
+    let answer: (value: Location.LocationPermissionResponse) => void = () => undefined;
+    request.mockReturnValue(new Promise((resolve) => (answer = resolve)));
+    const source = createDevicePositionSource();
+
+    const first = source.requestAvailability();
+    const second = source.requestAvailability();
+
+    expect(request).toHaveBeenCalledTimes(1);
+    answer(permission(PermissionStatus.GRANTED));
+    await expect(Promise.all([first, second])).resolves.toEqual(['granted', 'granted']);
+  });
+
   it('watches in the foreground at the decided budget, hands each fix over as the app’s own shape, and stops when told', async () => {
     const remove = jest.fn();
     watch.mockResolvedValue({ remove } as unknown as Location.LocationSubscription);
@@ -196,5 +209,29 @@ describe('the device position source', () => {
     watch.mock.calls[0]![1](position({}));
 
     expect(onFix).not.toHaveBeenCalled();
+  });
+
+  it('shares one platform watch between simultaneous foreground consumers', async () => {
+    const remove = jest.fn();
+    watch.mockResolvedValue({ remove } as unknown as Location.LocationSubscription);
+    const source = createDevicePositionSource();
+    const firstFix = jest.fn();
+    const secondFix = jest.fn();
+
+    const stopFirst = source.watch({ onFailure: jest.fn(), onFix: firstFix });
+    const stopSecond = source.watch({ onFailure: jest.fn(), onFix: secondFix });
+
+    expect(watch).toHaveBeenCalledTimes(1);
+    watch.mock.calls[0]![1](position({ latitude: 62.25 }));
+    expect(firstFix).toHaveBeenCalledTimes(1);
+    expect(secondFix).toHaveBeenCalledTimes(1);
+
+    stopFirst();
+    await Promise.resolve();
+    expect(remove).not.toHaveBeenCalled();
+
+    stopSecond();
+    await Promise.resolve();
+    expect(remove).toHaveBeenCalledTimes(1);
   });
 });

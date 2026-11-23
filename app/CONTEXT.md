@@ -85,14 +85,12 @@ place: a zone drawn as an H3 cell is still a **Zone**.
 _Avoid_: hexagon, tile, grid, polygon (the stored shape, not the identity)
 
 **Basemap**:
-The real geographic map: OpenStreetMap-derived vector tiles (Protomaps PMTiles, built by the
-`data/` pipeline) **the project hosts itself**, drawn by MapLibre React Native, with real zone
-geometry on it
-([ADR-031](docs/adr/ADR-031-a-real-basemap-osm-derived-tiles-we-host.md)). It does not exist in the
-app yet — there is no tile host, so the map paints a ground colour and the zone polygons. Screen 06
-is real geography over the pilot stub's rings through a `ZoneSource` port
-([ADR-053](docs/adr/ADR-053-the-discover-map-is-real-geography.md)); frames 08–09 still draw the
-design's map. “The drawn map” now means only that drawing, not the app's whole map surface.
+The real geographic map: OpenStreetMap-derived vector tiles drawn by MapLibre React Native, with
+real zone geometry on it. ADR-031's final shape is Protomaps PMTiles **the project hosts itself**;
+that file and host do not exist yet. Screen 06 currently reads OpenFreeMap's vector style as a
+temporary online basemap and includes OSM attribution, while drawing the zone service's rings
+through `ZoneSource` (ADR-053, ADR-070). Frames 08–09 still draw the design's map. “The drawn map”
+now means only that drawing, not the app's whole map surface.
 _Avoid_: OSM, OpenStreetMap (that is the data's source, not the surface), tile server, Google Maps
 
 ## Species

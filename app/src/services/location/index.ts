@@ -26,10 +26,10 @@
  * the app is in the background”; the copy that ships says what this seam does instead — tracking
  * while the app is open ([ADR-047](../../../docs/adr/ADR-047-the-consent-says-what-the-app-does.md))
  * — and retention for position-derived records is 12 months (ADR-014). Neither is in this seam
- * yet, deliberately: **no watch runs in the app today** — there
- * is nothing that can use a fix while the map has no geography and no zone service returns rings
- * (PROJECT.md, known issues 12, 14, 30) — so the app reads nothing at all, and the least it can
- * collect is nothing. What background capture would require (the platform's “always” permission
+ * yet, deliberately. The foreground watch now has two consumers: visit detection in the shell and
+ * Discover's live-position dot (ADR-066, ADR-070). They share one native subscription, and each
+ * fix still replaces the last in memory rather than becoming a trail. What background capture
+ * would require (the platform's “always” permission
  * and Android's foreground service, each with a store declaration) and what may be persisted from
  * a visit are the owner's decisions, recorded as the slots of ADR-047 §2 rather than assumed here.
  */

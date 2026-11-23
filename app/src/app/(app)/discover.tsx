@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { Linking } from 'react-native';
 
 import { appZoneSource, DiscoverScreen } from '@/features/discover';
 
@@ -24,6 +25,13 @@ export default function DiscoverRoute() {
     <DiscoverScreen
       zoneSource={appZoneSource}
       onOpenDownloads={() => router.push('/downloads')}
+      onOpenLocationSettings={(status) => {
+        if (status === 'off') {
+          router.push('/privacy-settings');
+        } else {
+          void Linking.openSettings();
+        }
+      }}
       onOpenZone={(zone, species) =>
         router.push({ pathname: '/zone-details', params: { species, zone: zone.id } })
       }

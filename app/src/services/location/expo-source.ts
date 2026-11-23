@@ -14,8 +14,10 @@ import type { PositionAvailability, PositionFix, PositionSource } from './types'
  * background task API is never used — background location is a separate permission with its own
  * store declarations on both platforms, and it is not decided (PROJECT.md, open questions).
  *
- * What it never does: log a fix, keep one, or send one anywhere. A fix is handed to the caller and
- * forgotten here (SECURITY.md §11, ADR-045).
+ * What it never does: log a fix, keep one, or send one anywhere. A fix is handed to current
+ * consumers and forgotten here (SECURITY.md §11, ADR-045). When Discover and the visit tracker are
+ * both mounted, one native watch fans out to both and stops after the final consumer leaves
+ * (ADR-070), avoiding duplicate GPS work without retaining a history.
  */
 
 /**
@@ -75,50 +77,85 @@ function availabilityOf(response: { status: string }): PositionAvailability {
 }
 
 export function createDevicePositionSource(): PositionSource {
+  const watchers = new Set<Parameters<PositionSource['watch']>[0]>();
+  let requestingAvailability: Promise<PositionAvailability> | null = null;
+  let subscription: Location.LocationSubscription | null = null;
+  let starting: Promise<Location.LocationSubscription> | null = null;
+  let generation = 0;
+
+  const broadcastFix = (location: Location.LocationObject) => {
+    const fix = toPositionFix(location);
+    for (const watcher of watchers) watcher.onFix(fix);
+  };
+
+  const broadcastFailure = () => {
+    for (const watcher of watchers) watcher.onFailure();
+  };
+
+  const startWatch = () => {
+    if (subscription !== null || starting !== null) return;
+
+    const startedFor = ++generation;
+    starting = Location.watchPositionAsync(
+      {
+        accuracy: POSITION_WATCH_BUDGET.accuracy,
+        distanceInterval: POSITION_WATCH_BUDGET.distanceIntervalMeters,
+        timeInterval: POSITION_WATCH_BUDGET.timeIntervalMs,
+      },
+      (location) => {
+        if (startedFor === generation) broadcastFix(location);
+      },
+      () => {
+        if (startedFor === generation) broadcastFailure();
+      },
+    );
+    starting
+      .then((created) => {
+        if (startedFor !== generation || watchers.size === 0) {
+          created.remove();
+          return;
+        }
+        subscription = created;
+      })
+      .catch(() => {
+        if (startedFor === generation && watchers.size > 0) broadcastFailure();
+      })
+      .finally(() => {
+        if (startedFor === generation) starting = null;
+      });
+  };
+
   return {
-    async requestAvailability() {
-      return availabilityOf(await Location.requestForegroundPermissionsAsync());
+    requestAvailability() {
+      if (requestingAvailability === null) {
+        requestingAvailability = Location.requestForegroundPermissionsAsync()
+          .then(availabilityOf)
+          .finally(() => {
+            requestingAvailability = null;
+          });
+      }
+      return requestingAvailability;
     },
 
     watch({ onFailure, onFix }) {
+      const watcher = { onFailure, onFix };
       let stopped = false;
-      let subscription: Location.LocationSubscription | null = null;
-
-      Location.watchPositionAsync(
-        // The budget is the app's own choice, decided 2026-10-24 (ADR-063): high accuracy, a 50 m
-        // distance filter and a 60 s ceiling, foreground only. The constants are named so a future
-        // field measurement has one place to change rather than a literal buried in this call.
-        {
-          accuracy: POSITION_WATCH_BUDGET.accuracy,
-          distanceInterval: POSITION_WATCH_BUDGET.distanceIntervalMeters,
-          timeInterval: POSITION_WATCH_BUDGET.timeIntervalMs,
-        },
-        (location) => {
-          if (!stopped) onFix(toPositionFix(location));
-        },
-        // The platform's own error channel. Its message is deliberately not printed: it can carry
-        // a device's details, and nothing in this app logs a position or a location error.
-        () => {
-          if (!stopped) onFailure();
-        },
-      )
-        .then((created) => {
-          if (stopped) {
-            // The caller stopped before the platform finished subscribing — the promise resolves
-            // after the stop — so the subscription is removed as soon as it exists.
-            created.remove();
-            return;
-          }
-          subscription = created;
-        })
-        .catch(() => {
-          if (!stopped) onFailure();
-        });
+      watchers.add(watcher);
+      startWatch();
 
       return () => {
+        if (stopped) return;
         stopped = true;
-        subscription?.remove();
-        subscription = null;
+        watchers.delete(watcher);
+
+        if (watchers.size === 0) {
+          generation += 1;
+          subscription?.remove();
+          subscription = null;
+          // A pending subscription is removed by the generation check when it resolves. Clearing
+          // this handle lets a later, genuinely new consumer start its own foreground watch.
+          starting = null;
+        }
       };
     },
   };
