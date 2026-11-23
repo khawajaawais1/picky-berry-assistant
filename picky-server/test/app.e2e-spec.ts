@@ -81,14 +81,21 @@ describe('AppController (e2e)', () => {
   it('answers preflight only for a configured origin', async () => {
     const server = app.getHttpServer();
     const allowed = await request(server)
-      .options('/api/v1/admin/overview')
+      .options('/api/v1/visits')
       .set('Origin', 'http://localhost:5173')
-      .set('Access-Control-Request-Method', 'GET')
+      .set('Access-Control-Request-Method', 'POST')
+      .set(
+        'Access-Control-Request-Headers',
+        'Authorization, Content-Type, Idempotency-Key',
+      )
       .expect(204);
     expect(allowed.headers['access-control-allow-origin']).toBe(
       'http://localhost:5173',
     );
-    expect(allowed.headers['access-control-allow-methods']).toContain('GET');
+    expect(allowed.headers['access-control-allow-methods']).toContain('POST');
+    expect(allowed.headers['access-control-allow-headers']).toContain(
+      'Idempotency-Key',
+    );
 
     const denied = await request(server)
       .options('/api/v1/admin/overview')
@@ -110,8 +117,12 @@ describe('AppController (e2e)', () => {
       .expect(422);
   });
 
-  it('protects API routes without a bearer token', () => {
-    return request(app.getHttpServer()).get('/api/v1/species').expect(401);
+  it('protects the species, zones and visits routes without a bearer token', async () => {
+    const server = app.getHttpServer();
+
+    await request(server).get('/api/v1/species').expect(401);
+    await request(server).get('/api/v1/zones').expect(401);
+    await request(server).post('/api/v1/visits').send({}).expect(401);
   });
 
   const adminReadRoutes = [

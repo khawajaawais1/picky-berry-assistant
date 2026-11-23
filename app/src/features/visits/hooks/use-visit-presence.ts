@@ -1,5 +1,5 @@
 import { randomUUID } from 'expo-crypto';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { useDevicePosition, type DevicePositionStatus } from '@/hooks/use-device-position';
 import type { PositionFix, PositionSource } from '@/services/location';
@@ -18,6 +18,9 @@ import {
 } from '../domain/visit-lifecycle';
 import {
   findContainingZone,
+  nearestZonePolygons,
+  shouldRefreshGeofenceSet,
+  type Point,
   type ZonePolygon,
   type ZoneResolution,
 } from '../domain/zone-containment';
@@ -29,12 +32,9 @@ import {
  * tracker makes of them (`applyPresence`). Nothing here reads a clock or a device: it is wiring, and
  * every rule it applies is a pure function with its own tests.
  *
- * **What it needs that the app does not have.** A **zone list** — real polygons from the zone
- * service, which does not exist yet (PROJECT.md, known issue 14; ADR-036 is still Proposed). So this
- * hook has no caller in a screen today, and it deliberately ships **no** zone list of its own: a
- * scripted list in the app would be invented geography, the same thing the demo-disclosure rule
- * keeps off the map. The lists its tests drive are fixtures, and the day the service answers, a
- * caller passes what it returned.
+ * The caller supplies the authoritative polygons from `GET /zones` (ADR-066). From those, this hook
+ * keeps the plan's 20 nearest foreground geofences and rebuilds that in-memory set after 2 km of
+ * movement. Selection is local: no live coordinate is sent to `/zones/near`, persisted or logged.
  *
  * What the returned state means:
  *
@@ -114,6 +114,12 @@ export function useVisitPresence({
     state: VisitTrackerState;
     zone: ZonePolygon | null;
   }>({ events: [], state: createVisitTrackerState(), zone: null });
+  const geofenceSet = useRef<{
+    /** Exact only while tracking, in memory, and never persisted, logged or sent. */
+    anchor: Point;
+    source: readonly ZonePolygon[];
+    zones: readonly ZonePolygon[];
+  } | null>(null);
   /**
    * The zone whose visit the picker ended by hand, while the picker is still inside it.
    *
@@ -123,9 +129,24 @@ export function useVisitPresence({
    */
   const endedZone = useRef<string | null>(null);
 
+  const zonesFor = (next: PositionFix): readonly ZonePolygon[] => {
+    const held = geofenceSet.current;
+    if (held !== null && held.source === zones && !shouldRefreshGeofenceSet(held.anchor, next)) {
+      return held.zones;
+    }
+
+    const selected = nearestZonePolygons(next, zones);
+    geofenceSet.current = {
+      anchor: { latitude: next.latitude, longitude: next.longitude },
+      source: zones,
+      zones: selected,
+    };
+    return selected;
+  };
+
   const handleFix = (next: PositionFix): void => {
     const held = tracker.current;
-    const zone = findContainingZone(next, zones, resolve);
+    const zone = findContainingZone(next, zonesFor(next), resolve);
 
     if (endedZone.current !== null) {
       if (zone?.id === endedZone.current) return;
@@ -194,6 +215,10 @@ export function useVisitPresence({
   };
 
   const { status } = useDevicePosition({ onFix: handleFix, source });
+
+  useEffect(() => {
+    if (status !== 'tracking') geofenceSet.current = null;
+  }, [status]);
 
   return {
     ...snapshot,

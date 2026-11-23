@@ -217,13 +217,14 @@ export const en = {
   // picker reading the card knows the numbers are the data team's stub and not reports.
   'discover.card.source': 'Pilot area · test data',
   'discover.card.source.live': 'Pilot area',
-  // The four words a source zone's season can be in — the card's third line and the list
+  // The five states a source zone's ripeness can be in — the card's third line and the list
   // rows' chip. The details screen keeps its own two ("Ripe now"), which describe a zone it
   // has a full reading for.
   'discover.ripeness.unripe': 'Not ripe yet',
   'discover.ripeness.ripening': 'Ripening now',
   'discover.ripeness.ripe': 'Ripe now',
   'discover.ripeness.past': 'Season over',
+  'discover.ripeness.offSeason': 'Outside the picking season',
   // The card's accessible name once it leads somewhere. It says where the card goes rather
   // than reading out every value on it, which is what a screen reader would otherwise
   // announce as one button (frame 06's card opens frame 07's zone details).
@@ -273,7 +274,7 @@ export const en = {
   'discover.details.confidence.medium': 'Medium confidence',
   'discover.details.confidence.low': 'Low confidence',
   'discover.details.reportsThisWeek': '{count} reports this week',
-  // The season words are the map screen's four (`discover.ripeness.*`), shared with the card
+  // The season words are the map screen's five (`discover.ripeness.*`), shared with the card
   // and the rows, so the details screen cannot name a season differently from the map.
   'discover.details.forecastDisclaimer': 'A forecast of conditions, not a guaranteed harvest.',
   // Said before the blocks no source supplies, so a picker reading a source zone's real score

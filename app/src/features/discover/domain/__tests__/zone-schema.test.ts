@@ -57,6 +57,16 @@ describe('parseZoneList', () => {
     expect(zone?.scores).toEqual({ cloudberry: ZONE.scores.lingonberry });
   });
 
+  it('accepts the API contract’s off-season ripeness state', () => {
+    const offSeason = {
+      ...ZONE,
+      ripeness: 'off_season',
+      scores: { bilberry: { ...ZONE.scores.bilberry, ripeness: 'off_season' } },
+    };
+
+    expect(parseZoneList([offSeason])).toEqual([offSeason]);
+  });
+
   it('does not carry a field the port never promised', () => {
     // `stub` and `forest_type` are the GeoJSON file's words; an adapter that echoes them
     // onto a zone would let a component depend on something the contract does not include.

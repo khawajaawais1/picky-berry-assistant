@@ -91,6 +91,43 @@ describe('createApiClient', () => {
       });
     });
 
+    it('sends an idempotency key without exposing arbitrary header overrides', async () => {
+      const fetchImpl = fetchAnswering({ status: 201, body: {} });
+      const client = createApiClient({ baseUrl: BASE, fetchImpl });
+
+      await client.request({
+        method: 'POST',
+        path: '/visits',
+        body: {},
+        auth: false,
+        idempotencyKey: '4cd7a7d4-e6da-4d4c-bdbf-d0997c5ac60d',
+        parse: anything,
+      });
+
+      expect(fetchImpl.mock.calls[0]![1].headers).toEqual({
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'Idempotency-Key': '4cd7a7d4-e6da-4d4c-bdbf-d0997c5ac60d',
+      });
+    });
+
+    it('refuses a non-UUID idempotency key before it can become a header', async () => {
+      const fetchImpl = fetchAnswering();
+      const client = createApiClient({ baseUrl: BASE, fetchImpl });
+
+      await expect(
+        client.request({
+          method: 'POST',
+          path: '/visits',
+          body: {},
+          auth: false,
+          idempotencyKey: 'bad\r\nX-Injected: true',
+          parse: anything,
+        }),
+      ).rejects.toThrow(RangeError);
+      expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
     it('refuses a path that is not absolute, so a caller cannot reach another host', async () => {
       const client = createApiClient({ baseUrl: BASE, fetchImpl: fetchAnswering() });
 

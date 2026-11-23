@@ -1,6 +1,10 @@
 import {
+  GEOFENCE_REFRESH_METERS,
+  GEOFENCE_ZONE_LIMIT,
   findContainingZone,
   isPointInPolygon,
+  nearestZonePolygons,
+  shouldRefreshGeofenceSet,
   type Point,
   type ZonePolygon,
   type ZoneResolution,
@@ -17,6 +21,14 @@ const square = (): Point[] => [
 const point = (latitude: number, longitude: number): Point => ({ latitude, longitude });
 
 const zone = (id: string, ring: Point[]): ZonePolygon => ({ id, ring });
+
+const squareAround = (latitude: number, longitude: number, halfSpan = 0.001): Point[] => [
+  point(latitude - halfSpan, longitude - halfSpan),
+  point(latitude - halfSpan, longitude + halfSpan),
+  point(latitude + halfSpan, longitude + halfSpan),
+  point(latitude + halfSpan, longitude - halfSpan),
+  point(latitude - halfSpan, longitude - halfSpan),
+];
 
 /** North–south extent of a ring, so “the smaller one” needs no geometry import. */
 const ringSpan = (ring: readonly Point[]): number =>
@@ -44,6 +56,13 @@ describe('isPointInPolygon', () => {
 
   it('does not require the ring to repeat its first point', () => {
     expect(isPointInPolygon(point(5, 5), square())).toBe(true);
+  });
+
+  it('does not mistake the zero-length closing segment for every point in the world', () => {
+    const closed = [...square(), square()[0]!];
+
+    expect(isPointInPolygon(point(5, 5), closed)).toBe(true);
+    expect(isPointInPolygon(point(50, 50), closed)).toBe(false);
   });
 
   it('ignores winding order', () => {
@@ -154,5 +173,47 @@ describe('findContainingZone', () => {
 
       expect(findContainingZone(point(5, 5), [degenerate, outer], firstSent)?.id).toBe('outer');
     });
+  });
+});
+
+describe('the foreground geofence set', () => {
+  it('selects at most the 20 nearest zone polygons in distance order', () => {
+    const zones = Array.from({ length: 25 }, (_, index) =>
+      zone(`zone-${index}`, squareAround(0, index * 0.01)),
+    );
+
+    const selected = nearestZonePolygons(point(0, 0), zones);
+
+    expect(GEOFENCE_ZONE_LIMIT).toBe(20);
+    expect(selected).toHaveLength(20);
+    expect(selected.map((candidate) => candidate.id)).toEqual(
+      Array.from({ length: 20 }, (_, index) => `zone-${index}`),
+    );
+  });
+
+  it('keeps a containing zone ahead of a polygon whose centroid is nearer', () => {
+    const containing = zone('containing', [
+      point(-0.001, -0.001),
+      point(-0.001, 0.1),
+      point(0.001, 0.1),
+      point(0.001, -0.001),
+    ]);
+    const nearby = zone('nearby', squareAround(0.002, 0));
+
+    expect(nearestZonePolygons(point(0, 0), [nearby, containing])[0]?.id).toBe('containing');
+  });
+
+  it('drops a degenerate ring instead of inventing a centre for it', () => {
+    const valid = zone('valid', squareAround(1, 1));
+
+    expect(nearestZonePolygons(point(0, 0), [zone('degenerate', []), valid])).toEqual([valid]);
+  });
+
+  it('refreshes only after the device has moved two kilometres from the set anchor', () => {
+    const anchor = point(62.24, 25.76);
+
+    expect(GEOFENCE_REFRESH_METERS).toBe(2_000);
+    expect(shouldRefreshGeofenceSet(anchor, point(62.257, 25.76))).toBe(false);
+    expect(shouldRefreshGeofenceSet(anchor, point(62.259, 25.76))).toBe(true);
   });
 });

@@ -62,6 +62,7 @@ describe('createVisitsApi', () => {
       const [url, init] = fetchImpl.mock.calls[0]!;
       expect(url).toBe(`${BASE}/api/v1/visits`);
       expect(init.method).toBe('POST');
+      expect(init.headers).toHaveProperty('Idempotency-Key', ID);
       expect(JSON.parse(init.body!)).toEqual({
         client_id: ID,
         zone_id: ZONE,
@@ -125,6 +126,7 @@ describe('createVisitsApi', () => {
       };
 
       expect((await visits.send(payload)).kind).toBe('recorded');
+      expect(fetchImpl.mock.calls[0]![1].headers).toHaveProperty('Idempotency-Key', ID);
       expect(JSON.parse(fetchImpl.mock.calls[0]![1].body!)).toEqual(payload);
     });
   });

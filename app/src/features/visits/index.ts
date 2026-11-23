@@ -3,18 +3,18 @@
  *
  * Everything else in this folder is an implementation detail. The domain is pure
  * and deterministic: a caller feeds it presence samples (from a location source)
- * and consumes visits and events. No GPS, storage or network lives here yet, which
- * is why the first slice can be verified without a device or a backend.
+ * and consumes visits and events. Device, storage and network stay behind adapters, so the
+ * lifecycle and geofence-set rules remain verifiable without a device or a backend.
  *
  * What changed on 2026-10-12: the position an app can read is now real
  * (`src/services/location`, behind a port and the picker's consent, ADR-045),
  * `presenceSamplesFor` is the rule that joins it to this domain — a containment
  * answer in, the tracker's samples out, with what was left closed before what was
  * entered is opened — and `useVisitPresence` is the whole chain in one hook: fixes
- * in, visits and events out. It still has **no caller in a screen**, and it ships no
- * zone list of its own: containment needs real rings, nothing returns a zone yet
- * (PROJECT.md, known issue 14), and a scripted list in the app would be invented
- * geography (ADR-046).
+ * in, visits and events out. ADR-066 now mounts that hook over the zone service's
+ * rings and sends finalized visits through the durable outbox. The foreground
+ * geofence set is selected locally (20 nearest, refreshed after 2 km), so a live
+ * coordinate never leaves the device.
  */
 export {
   DEFAULT_VISIT_POLICY,

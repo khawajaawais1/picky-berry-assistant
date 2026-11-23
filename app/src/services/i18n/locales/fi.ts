@@ -186,6 +186,7 @@ export const fi: Record<TranslationKey, string> = {
   'discover.ripeness.ripening': 'Kypsymässä nyt',
   'discover.ripeness.ripe': 'Kypsä nyt',
   'discover.ripeness.past': 'Kausi ohi',
+  'discover.ripeness.offSeason': 'Poimintakauden ulkopuolella',
   'discover.card.open': 'Avaa alueen {zone} tiedot',
 
   // Frame 06's two controls above the map. “Alueluettelo” is the map/list row's own word for
@@ -222,7 +223,7 @@ export const fi: Record<TranslationKey, string> = {
   'discover.details.confidence.medium': 'Kohtalainen varmuus',
   'discover.details.confidence.low': 'Vähäinen varmuus',
   'discover.details.reportsThisWeek': '{count} havaintoa tällä viikolla',
-  // Vuodenajan sanat ovat kartan neljä (`discover.ripeness.*`), samat kuin kortilla ja riveillä.
+  // Vuodenajan sanat ovat kartan viisi (`discover.ripeness.*`), samat kuin kortilla ja riveillä.
   'discover.details.forecastDisclaimer': 'Ennuste olosuhteista, ei taattu sato.',
   // Sanotaan ennen niitä osioita, joille ei ole lähdettä: lähdealueen oikean pisteen alla
   // lukija tietää, mihin sovelluksen oma tieto päättyy.

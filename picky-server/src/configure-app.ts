@@ -19,7 +19,7 @@ export function configureApp(app: INestApplication): void {
   app.enableCors({
     origin: parseCorsOrigins(process.env.CORS_ORIGINS),
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Authorization', 'Content-Type'],
+    allowedHeaders: ['Authorization', 'Content-Type', 'Idempotency-Key'],
     maxAge: 600,
   });
   app.setGlobalPrefix(API_PREFIX);

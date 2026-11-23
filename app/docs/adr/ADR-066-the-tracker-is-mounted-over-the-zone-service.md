@@ -25,7 +25,9 @@ The submission path was built and tested with nothing feeding it.
    runs while the shell is open and draws nothing.
 2. **The gates are unchanged.** Position is read only under the picker's consent record and the
    platform's foreground permission (ADR-045). There is no background capture (ADR-056).
-3. **The zones are the zone service's**: the same answer the map reads, as tracker polygons.
+3. **The zones are the zone service's**: the same answer the map reads, as tracker polygons. The
+   phone selects the nearest 20 and rebuilds that foreground set after moving 2 km. This happens
+   locally from the downloaded geometry; the live fix is not sent to `/zones/near`.
 4. **A visit finalizes on the next fix after its grace window.** There is no ticker (ADR-063). The
    fix is the time evidence, so `useVisitPresence` calls `finalizeExpired` at each fix's instant.
 5. **Each finalized visit is posted once** through `useVisitSync`. Only the visit's start, end,
@@ -43,6 +45,8 @@ The submission path was built and tested with nothing feeding it.
 
 - With consent given and permission granted, the app watches position whenever the shell is open,
   not only on one screen. The watch's cadence and battery budget are ADR-063's.
+- The foreground containment cost is bounded to 20 polygons per fix. Its exact refresh anchor lives
+  only in memory while tracking and is never persisted, logged or sent.
 - A visit the picker walks out of finalizes on the next fix or the next return to the foreground,
   whichever comes first.
 - **Amended 2026-11-21:** finished visits are kept in a durable outbox

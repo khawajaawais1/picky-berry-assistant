@@ -83,12 +83,16 @@ export type ApiResult<T> = { ok: true; status: number; data: T } | { ok: false; 
 
 export type QueryValue = string | number | boolean | undefined;
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export type ApiRequest<T> = {
   method: ApiMethod;
   /** Absolute, starting with a single `/`, without the `/api/v1` prefix. */
   path: string;
   query?: Readonly<Record<string, QueryValue>>;
   body?: unknown;
+  /** A write's client-generated UUID, sent through the API's dedicated replay-safe header. */
+  idempotencyKey?: string;
   /** Whether to send the bearer credential. Defaults to `true`: the API's default is secured. */
   auth?: boolean;
   /**
@@ -171,6 +175,9 @@ export function createApiClient({
   ): Promise<ApiResponse | null> {
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (token !== null) headers.Authorization = `Bearer ${token}`;
+    if (request.idempotencyKey !== undefined) {
+      headers['Idempotency-Key'] = request.idempotencyKey;
+    }
 
     const init: Parameters<ApiFetch>[1] = { method: request.method, headers };
     if (request.body !== undefined) {
@@ -189,6 +196,9 @@ export function createApiClient({
     async request<T>(request: ApiRequest<T>): Promise<ApiResult<T>> {
       if (!request.path.startsWith('/') || request.path.startsWith('//')) {
         throw new RangeError('an API path is absolute and names no host');
+      }
+      if (request.idempotencyKey !== undefined && !UUID.test(request.idempotencyKey)) {
+        throw new RangeError('an idempotency key is a UUID');
       }
 
       if (request.bearer !== undefined) {

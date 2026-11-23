@@ -17,6 +17,35 @@ describe('getVisitRejectReason', () => {
   });
 
   describe('VisitsService', () => {
+    it('refuses an idempotency header that does not match the visit identifier', async () => {
+      const connect = jest.fn();
+      const service = new VisitsService(
+        { pool: { connect } } as unknown as DbService,
+        { enqueue: jest.fn() } as unknown as JobsService,
+      );
+
+      await expect(
+        service.create(
+          '00000000-0000-4000-8000-000000000001',
+          {
+            client_id: '00000000-0000-4000-8000-000000000002',
+            zone_id: '00000000-0000-4000-8000-000000000003',
+            started_at: '2026-11-17T10:00:00.000Z',
+            ended_at: '2026-11-17T11:00:00.000Z',
+            manual: false,
+          },
+          '00000000-0000-4000-8000-000000000004',
+        ),
+      ).rejects.toMatchObject({
+        response: {
+          error: 'IDEMPOTENCY_KEY_MISMATCH',
+          message: 'Idempotency-Key must equal client_id.',
+        },
+        status: 422,
+      });
+      expect(connect).not.toHaveBeenCalled();
+    });
+
     it('records an accepted visit and enqueues its zone once in the transaction', async () => {
       const zoneId = '00000000-0000-4000-8000-000000000002';
       const visitId = '00000000-0000-4000-8000-000000000003';
