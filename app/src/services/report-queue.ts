@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { randomUUID } from 'expo-crypto';
 
@@ -206,8 +207,10 @@ function newClientId(): string {
 export async function enqueueReport(report: VisitReport): Promise<VisitReport[]> {
   validateReport(report);
 
-  // The durable SQLite outbox owns report storage (feature 6.9).
+  // The durable SQLite outbox owns report storage (feature 6.9). Web has no native SQLite, so
+  // it keeps the AsyncStorage fallback; the unit suite exercises that path too.
   try {
+    if (Platform.OS === 'web') throw new Error('no native SQLite on web');
     const { openReportDatabase, enqueueReportOutbox } = await import('./report-outbox');
     const db = openReportDatabase();
     return await enqueueReportOutbox(db, report);
@@ -225,6 +228,7 @@ export async function enqueueReport(report: VisitReport): Promise<VisitReport[]>
 export async function clearReportQueue(): Promise<void> {
   // The durable SQLite outbox owns report storage (feature 6.9).
   try {
+    if (Platform.OS === 'web') throw new Error('no native SQLite on web');
     const { openReportDatabase, clearReportOutbox } = await import('./report-outbox');
     const db = openReportDatabase();
     await clearReportOutbox(db);
@@ -237,6 +241,7 @@ export async function clearReportQueue(): Promise<void> {
 export async function removeQueuedReport(clientId: string): Promise<VisitReport[]> {
   // The durable SQLite outbox owns report storage (feature 6.9).
   try {
+    if (Platform.OS === 'web') throw new Error('no native SQLite on web');
     const { openReportDatabase, removeQueuedReportOutbox } = await import('./report-outbox');
     const db = openReportDatabase();
     return await removeQueuedReportOutbox(db, clientId);
