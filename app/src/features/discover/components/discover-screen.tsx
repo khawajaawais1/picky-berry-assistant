@@ -1,4 +1,5 @@
 import { Feather } from '@/components/atoms/app-icon';
+import { BlurView } from 'expo-blur';
 import { useDeferredValue, useMemo, useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -73,7 +74,8 @@ export function DiscoverScreen({
   positionSource,
   zoneSource,
 }: DiscoverScreenProps) {
-  const { colors } = useAppTheme();
+  const theme = useAppTheme();
+  const colors = theme.colors;
   const { locale, t } = useTranslation();
 
   const [query, setQuery] = useState('');
@@ -153,7 +155,11 @@ export function DiscoverScreen({
           testID="discover-map-overlays"
         >
           <View pointerEvents="box-none" style={styles.topControls}>
-            <View style={styles.searchRow}>
+            <BlurView
+              intensity={70}
+              style={[styles.searchRow, { borderColor: colors.border, overflow: 'hidden' }]}
+              tint={theme.scheme === 'dark' ? 'dark' : 'light'}
+            >
               {onBack ? (
                 <Pressable
                   accessibilityLabel={t('common.back')}
@@ -161,7 +167,7 @@ export function DiscoverScreen({
                   onPress={onBack}
                   style={[
                     styles.roundControl,
-                    { backgroundColor: colors.surface, borderColor: colors.border },
+                    { backgroundColor: 'transparent', borderColor: colors.border },
                   ]}
                 >
                   <Feather color={colors.text} name="arrow-left" size={22} />
@@ -176,28 +182,26 @@ export function DiscoverScreen({
                 onOpenDownloads={onOpenDownloads}
                 view={view}
               />
-            </View>
+            </BlurView>
 
-            <View
-              style={[
-                styles.floatingPanel,
-                { backgroundColor: colors.surface, borderColor: colors.border },
-              ]}
+            <BlurView
+              intensity={70}
+              style={[styles.floatingPanel, { borderColor: colors.border, overflow: 'hidden' }]}
+              tint={theme.scheme === 'dark' ? 'dark' : 'light'}
             >
               <SpeciesChips
                 onToggle={toggleSpecies}
                 scrollable={Platform.OS !== 'web'}
                 selected={species}
               />
-            </View>
+            </BlurView>
 
             {filtering || mapCount ? (
-              <View
+              <BlurView
+                intensity={70}
                 pointerEvents="none"
-                style={[
-                  styles.mapStatus,
-                  { backgroundColor: colors.surface, borderColor: colors.border },
-                ]}
+                style={[styles.mapStatus, { borderColor: colors.border, overflow: 'hidden' }]}
+                tint={theme.scheme === 'dark' ? 'dark' : 'light'}
               >
                 <AppText tone="muted" variant="mapAnnotation">
                   {filtering
@@ -211,18 +215,17 @@ export function DiscoverScreen({
                         )
                     : mapCount}
                 </AppText>
-              </View>
+              </BlurView>
             ) : null}
           </View>
         </SafeAreaView>
 
         <View pointerEvents="box-none" style={styles.bottomControls}>
-          <View
+          <BlurView
+            intensity={70}
             pointerEvents="none"
-            style={[
-              styles.legendPanel,
-              { backgroundColor: colors.surface, borderColor: colors.border },
-            ]}
+            style={[styles.legendPanel, { borderColor: colors.border, overflow: 'hidden' }]}
+            tint={theme.scheme === 'dark' ? 'dark' : 'light'}
           >
             <ZoneScoreLegend />
             {updatedAt && matches.length > 0 ? (
@@ -232,7 +235,7 @@ export function DiscoverScreen({
                 })}
               </AppText>
             ) : null}
-          </View>
+          </BlurView>
 
           {cardZone ? (
             <ZoneCard

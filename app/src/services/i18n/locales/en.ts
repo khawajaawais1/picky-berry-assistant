@@ -614,6 +614,12 @@ export const en = {
   // has no picker to open (ADR-017), so each catalogue names its own language.
   'privacy.language.title': 'Language',
   'privacy.language.value': 'English',
+  'privacy.theme.title': 'Appearance',
+  'privacy.theme.description': 'Light, dark, or follow the device.',
+  'privacy.theme.toggle': 'Change appearance',
+  'privacy.theme.system': 'System',
+  'privacy.theme.light': 'Light',
+  'privacy.theme.dark': 'Dark',
   'privacy.languageScreen.eyebrow': 'ACCOUNT / OFFLINE · LANGUAGE',
   'privacy.languageScreen.intro':
     'The language Picky speaks. It is saved to your account, so the next phone you sign in on speaks it too.',

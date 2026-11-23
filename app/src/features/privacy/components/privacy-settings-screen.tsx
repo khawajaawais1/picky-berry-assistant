@@ -1,5 +1,5 @@
 import { Feather } from '@/components/atoms/app-icon';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, Switch, View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
@@ -13,12 +13,18 @@ import {
 } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { layout, spacing } from '@/constants/theme';
-import { useAppTheme } from '@/hooks/use-app-theme';
+import { useAppTheme, useColorSchemeName } from '@/hooks/use-app-theme';
 import { usePrivacyConsent } from '@/hooks/use-privacy-consent';
 import { useReportQueue } from '@/hooks/use-report-queue';
 import { useSavedZones } from '@/hooks/use-saved-zones';
 import { useSession } from '@/hooks/use-session';
 import { interpolate, useTranslation } from '@/services/i18n';
+import {
+  currentThemePreference,
+  loadThemePreference,
+  setThemePreference,
+  type ThemePreference,
+} from '@/services/theme-preference';
 
 import { profileInitials } from '../domain/profile';
 import { useAccountProfile, type ProfileApi } from '../hooks/use-account-profile';
@@ -131,10 +137,16 @@ export function PrivacySettingsScreen({
 }: PrivacySettingsScreenProps) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
+  const [themePreference, setThemePreferenceState] =
+    useState<ThemePreference>(currentThemePreference());
   const { consent, error, loading, record } = usePrivacyConsent();
   const { error: queueError, loading: queueLoading, reports } = useReportQueue();
   const { error: zonesError, loading: zonesLoading, zones } = useSavedZones();
   const { error: sessionError, loading: sessionLoading, session } = useSession();
+
+  useEffect(() => {
+    void loadThemePreference().then(setThemePreferenceState);
+  }, []);
 
   const consentLabel = t('privacy.visitTracking');
   const syncLabel = t('privacy.sync.title');
@@ -366,6 +378,56 @@ export function PrivacySettingsScreen({
             testID="privacy-language-row"
             value={t('privacy.language.value')}
           />
+
+          {/*
+            The picker's own colour scheme: system (default), light, or dark. Stored on this
+            device only; the OS setting stays the source of truth until the picker chooses.
+          */}
+          <View
+            className="w-full flex-row items-center gap-gap py-setting"
+            style={{ minHeight: layout.minTouchTarget }}
+            testID="privacy-theme-row"
+          >
+            <View className="flex-1 gap-tight">
+              <AppText variant="cardTitle">{t('privacy.theme.title')}</AppText>
+              <AppText tone="muted" variant="caption">
+                {t('privacy.theme.description')}
+              </AppText>
+            </View>
+            <Pressable
+              accessibilityLabel={t('privacy.theme.toggle')}
+              accessibilityRole="button"
+              onPress={() => {
+                const next: ThemePreference =
+                  themePreference === 'system'
+                    ? 'light'
+                    : themePreference === 'light'
+                      ? 'dark'
+                      : 'system';
+                setThemePreferenceState(next);
+                void setThemePreference(next);
+              }}
+              style={{
+                alignItems: 'center',
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                borderRadius: 999,
+                borderWidth: 1,
+                justifyContent: 'center',
+                minHeight: 36,
+                minWidth: 72,
+                paddingHorizontal: 12,
+              }}
+            >
+              <AppText variant="rowValue">
+                {themePreference === 'system'
+                  ? t('privacy.theme.system')
+                  : themePreference === 'light'
+                    ? t('privacy.theme.light')
+                    : t('privacy.theme.dark')}
+              </AppText>
+            </Pressable>
+          </View>
 
           {/*
             The frame's “Terms & privacy” row (node 5:23688), its last in the group — the notice
