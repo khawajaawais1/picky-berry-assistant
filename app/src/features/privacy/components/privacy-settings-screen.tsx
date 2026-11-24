@@ -397,6 +397,7 @@ export function PrivacySettingsScreen({
             <Pressable
               accessibilityLabel={t('privacy.theme.toggle')}
               accessibilityRole="button"
+              accessibilityState={{ selected: themePreference !== 'system' }}
               onPress={() => {
                 const next: ThemePreference =
                   themePreference === 'system'
