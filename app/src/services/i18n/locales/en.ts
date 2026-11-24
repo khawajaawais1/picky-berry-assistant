@@ -616,7 +616,6 @@ export const en = {
   'privacy.language.value': 'English',
   'privacy.theme.title': 'Appearance',
   'privacy.theme.description': 'Light, dark, or follow the device.',
-  'privacy.theme.toggle': 'Change appearance',
   'privacy.theme.system': 'System',
   'privacy.theme.light': 'Light',
   'privacy.theme.dark': 'Dark',
