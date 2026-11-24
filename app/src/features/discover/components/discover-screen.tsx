@@ -157,7 +157,7 @@ export function DiscoverScreen({
           <View pointerEvents="box-none" style={styles.topControls}>
             <BlurView
               intensity={70}
-              style={[styles.searchRow, { borderColor: colors.border, overflow: 'hidden' }]}
+              style={[styles.searchRow, { backgroundColor: `${colors.surface}CC`, borderColor: colors.border, overflow: 'hidden' }]}
               tint={theme.scheme === 'dark' ? 'dark' : 'light'}
             >
               {onBack ? (
@@ -186,7 +186,7 @@ export function DiscoverScreen({
 
             <BlurView
               intensity={70}
-              style={[styles.floatingPanel, { borderColor: colors.border, overflow: 'hidden' }]}
+              style={[styles.floatingPanel, { backgroundColor: `${colors.surface}CC`, borderColor: colors.border, overflow: 'hidden' }]}
               tint={theme.scheme === 'dark' ? 'dark' : 'light'}
             >
               <SpeciesChips
@@ -200,7 +200,7 @@ export function DiscoverScreen({
               <BlurView
                 intensity={70}
                 pointerEvents="none"
-                style={[styles.mapStatus, { borderColor: colors.border, overflow: 'hidden' }]}
+                style={[styles.mapStatus, { backgroundColor: `${colors.surface}CC`, borderColor: colors.border, overflow: 'hidden' }]}
                 tint={theme.scheme === 'dark' ? 'dark' : 'light'}
               >
                 <AppText tone="muted" variant="mapAnnotation">
@@ -224,7 +224,7 @@ export function DiscoverScreen({
           <BlurView
             intensity={70}
             pointerEvents="none"
-            style={[styles.legendPanel, { borderColor: colors.border, overflow: 'hidden' }]}
+            style={[styles.legendPanel, { backgroundColor: `${colors.surface}CC`, borderColor: colors.border, overflow: 'hidden' }]}
             tint={theme.scheme === 'dark' ? 'dark' : 'light'}
           >
             <ZoneScoreLegend />
