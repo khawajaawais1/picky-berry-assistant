@@ -384,50 +384,29 @@ export function PrivacySettingsScreen({
             device only; the OS setting stays the source of truth until the picker chooses.
           */}
           <View
-            className="w-full flex-row items-center gap-gap py-setting"
+            className="w-full gap-gap py-setting"
             style={{ minHeight: layout.minTouchTarget }}
             testID="privacy-theme-row"
           >
-            <View className="flex-1 gap-tight">
+            <View className="gap-tight">
               <AppText variant="cardTitle">{t('privacy.theme.title')}</AppText>
               <AppText tone="muted" variant="caption">
                 {t('privacy.theme.description')}
               </AppText>
             </View>
-            <Pressable
-              accessibilityLabel={t('privacy.theme.toggle')}
-              accessibilityRole="button"
-              accessibilityState={{ selected: themePreference !== 'system' }}
-              onPress={() => {
-                const next: ThemePreference =
-                  themePreference === 'system'
-                    ? 'light'
-                    : themePreference === 'light'
-                      ? 'dark'
-                      : 'system';
+            <ChoiceChips<ThemePreference>
+              label={t('privacy.theme.title')}
+              onChange={(next) => {
                 setThemePreferenceState(next);
                 void setThemePreference(next);
               }}
-              style={{
-                alignItems: 'center',
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-                borderRadius: 999,
-                borderWidth: 1,
-                justifyContent: 'center',
-                minHeight: 36,
-                minWidth: 72,
-                paddingHorizontal: 12,
-              }}
-            >
-              <AppText variant="rowValue">
-                {themePreference === 'system'
-                  ? t('privacy.theme.system')
-                  : themePreference === 'light'
-                    ? t('privacy.theme.light')
-                    : t('privacy.theme.dark')}
-              </AppText>
-            </Pressable>
+              options={[
+                { label: t('privacy.theme.system'), value: 'system' },
+                { label: t('privacy.theme.light'), value: 'light' },
+                { label: t('privacy.theme.dark'), value: 'dark' },
+              ]}
+              value={themePreference}
+            />
           </View>
 
           {/*
