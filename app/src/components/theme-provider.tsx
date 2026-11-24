@@ -1,21 +1,30 @@
-import { useMemo, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import { Appearance } from 'react-native';
 
 import { resolveColorScheme, themes, type ColorSchemeName } from '@/constants/theme';
 import { AppThemeContext } from '@/hooks/use-app-theme';
+import {
+  loadThemePreference,
+  resolvedScheme,
+  subscribeThemePreference,
+} from '@/services/theme-preference';
 
 export type AppThemeProviderProps = {
   children: React.ReactNode;
 };
 
-/** The system's answer, watched for the whole tree rather than by each consumer. */
+/** The system's answer and the picker's override, watched for the whole tree. */
 const subscribe = (onChange: () => void) => {
-  const subscription = Appearance.addChangeListener(() => onChange());
+  const appearance = Appearance.addChangeListener(() => onChange());
+  const preference = subscribeThemePreference(() => onChange());
 
-  return () => subscription.remove();
+  return () => {
+    appearance.remove();
+    preference();
+  };
 };
 
-const getSnapshot = (): ColorSchemeName => resolveColorScheme(Appearance.getColorScheme());
+const getSnapshot = (): ColorSchemeName => resolvedScheme(Appearance.getColorScheme());
 
 /**
  * What the server rendered — and what the first hydrated render must agree with.
@@ -39,6 +48,11 @@ const getServerSnapshot = (): ColorSchemeName => 'light';
 export function AppThemeProvider({ children }: AppThemeProviderProps) {
   const scheme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const theme = useMemo(() => themes[scheme], [scheme]);
+
+  // Hydrate the picker's stored choice once on mount; notify() re-renders the tree.
+  useEffect(() => {
+    void loadThemePreference();
+  }, []);
 
   return <AppThemeContext.Provider value={theme}>{children}</AppThemeContext.Provider>;
 }

@@ -517,6 +517,12 @@ export const fi: Record<TranslationKey, string> = {
   // The row names the language the app is in, so this catalogue says its own name.
   'privacy.language.title': 'Kieli',
   'privacy.language.value': 'Suomi',
+  'privacy.theme.title': 'Ulkoasu',
+  'privacy.theme.description': 'Vaalea, tumma tai laitteen mukaan.',
+  'privacy.theme.toggle': 'Vaihda ulkoasua',
+  'privacy.theme.system': 'Järjestelmä',
+  'privacy.theme.light': 'Vaalea',
+  'privacy.theme.dark': 'Tumma',
   'privacy.languageScreen.eyebrow': 'TILI / OFFLINE · KIELI',
   'privacy.languageScreen.intro':
     'Kieli, jota Picky puhuu. Se tallentuu tiliisi, joten seuraavakin puhelin, jolla kirjaudut, puhuu sitä.',
