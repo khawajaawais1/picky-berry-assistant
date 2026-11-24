@@ -360,7 +360,9 @@ describe('PrivacySettingsScreen', () => {
     // so neither claims a role (AGENTS.md §11.2).
     expect(screen.queryByRole('button', { name: 'Picker' })).not.toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Buyer' })).not.toBeOnTheScreen();
-    expect(screen.queryAllByRole('radio')).toHaveLength(0);
+    expect(within(screen.getByTestId('privacy-use-as-card')).queryAllByRole('radio')).toHaveLength(
+      0,
+    );
   });
 
   it('counts the picker’s plan on the frame’s own saved-spots row', async () => {

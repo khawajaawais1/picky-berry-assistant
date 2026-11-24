@@ -324,7 +324,7 @@ const LEDGER: readonly LedgerEntry[] = [
   },
   {
     file: 'src/features/privacy/components/privacy-settings-screen.tsx',
-    offers: { chips: 1, pressable: 2, role: 2, switch: 1 },
+    offers: { chips: 2, pressable: 1, role: 1, switch: 1 },
     why: 'The visit-tracking switch writes the consent record, the setting rows are controls only where their route supplies a destination (the language row opens the Language screen, ADR-067), and signing out is the shared `SignOutAction`, which confirms the deletion first (frontend review, 2026-10-25). The spot visibility chips save `privacy_level` and are drawn only once the account’s level has been read; their note says nothing is shared yet (ADR-067).',
   },
   {

@@ -551,6 +551,11 @@ const SCREENS: readonly Screen[] = [
       // language, so the value is the catalogue's own word for itself (ADR-017).
       { what: 'the language row label', key: 'privacy.language.title', maxLines: 1 },
       { what: 'the language row’s value', key: 'privacy.language.value', maxLines: 1 },
+      // The app-drawn appearance row (no frame): the picker's own colour scheme, defaulting
+      // to the device's. The value is the current choice.
+      { what: 'the appearance row label', key: 'privacy.theme.title', maxLines: 1 },
+      { what: 'the appearance row’s description', key: 'privacy.theme.description', maxLines: 1 },
+      { what: 'the appearance row’s value', key: 'privacy.theme.system', maxLines: 1 },
       // The frame's last control, centred over the column (342x20, node 5:23691).
       { what: 'the sign-out action', key: 'privacy.signOut', maxLines: 1 },
       // The account row's copy is deliberately absent: it is drawn from the session the app is

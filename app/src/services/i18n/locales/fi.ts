@@ -519,7 +519,6 @@ export const fi: Record<TranslationKey, string> = {
   'privacy.language.value': 'Suomi',
   'privacy.theme.title': 'Ulkoasu',
   'privacy.theme.description': 'Vaalea, tumma tai laitteen mukaan.',
-  'privacy.theme.toggle': 'Vaihda ulkoasua',
   'privacy.theme.system': 'Järjestelmä',
   'privacy.theme.light': 'Vaalea',
   'privacy.theme.dark': 'Tumma',
