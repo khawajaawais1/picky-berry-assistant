@@ -1104,6 +1104,12 @@ async function expectTreeReadable(page: Page, step: string): Promise<void> {
   await expect(page.getByRole('status').filter({ hasText: '…' })).toHaveCount(0, {
     timeout: 10_000,
   });
-  expect((await controlsOn(page)).length).toBeGreaterThan(0);
+  // The floor is waited for, not sampled: the root route paints a themed empty frame while it
+  // reads the device's session and only then draws onboarding (or redirects to the map), so the
+  // first frame of `/` legitimately holds no control. Every other screen can resolve its own
+  // async first frame for the same reason. A screen that never exposes a control still fails.
+  await expect
+    .poll(async () => (await controlsOn(page)).length, { timeout: 10_000 })
+    .toBeGreaterThan(0);
   expect(await readPage(page, step)).toEqual([]);
 }

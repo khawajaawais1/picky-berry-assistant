@@ -70,6 +70,12 @@ export {
 } from './components/welcome-screen';
 
 /**
+ * The cold-start gate: a picker whose device still holds a session lands on the map instead of
+ * the welcome screen (ADR-006's secure store is what survives the process).
+ */
+export { SessionRestore, type SessionRestoreProps } from './components/session-restore';
+
+/**
  * PROTOTYPE — throwaway scaffolding for a design question, exported because a route may only
  * import from a feature's public API: three readings of a sign-in screen with no design frame yet,
  * mounted on `/create-account` behind `?variant=`
