@@ -40,8 +40,10 @@ describe('AlertPreferencesScreen', () => {
     expect(screen.getByText('Alert preferences')).toBeOnTheScreen();
     expect(await screen.findByRole('radio', { name: '10 km' })).toBeChecked();
     expect(screen.getByRole('radio', { name: '3 km' })).not.toBeChecked();
-    expect(screen.getByRole('button', { name: 'Bilberry' })).toBeSelected();
-    expect(screen.getByRole('button', { name: 'Cloudberry' })).not.toBeSelected();
+    // The species list is one multi-select filter, read as a checkbox group: the account's
+    // berry is checked and the one it does not hold is not.
+    expect(screen.getByRole('checkbox', { name: 'Bilberry' })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'Cloudberry' })).not.toBeChecked();
   });
 
   it('draws a radius the account holds even when the screen does not offer it', async () => {
@@ -70,13 +72,13 @@ describe('AlertPreferencesScreen', () => {
     const api = fakeAccountApi(accountProfile({ speciesInterest: ['bilberry', 'rowan'] }));
     await render(<AlertPreferencesScreen accountApi={api} />);
 
-    await fireEvent.press(await screen.findByRole('button', { name: 'Cloudberry' }));
+    await fireEvent.press(await screen.findByRole('checkbox', { name: 'Cloudberry' }));
     expect(api.updateProfile).toHaveBeenLastCalledWith({
       speciesInterest: ['bilberry', 'rowan', 'cloudberry'],
     });
 
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Cloudberry' })).toBeSelected());
-    await fireEvent.press(screen.getByRole('button', { name: 'Bilberry' }));
+    await waitFor(() => expect(screen.getByRole('checkbox', { name: 'Cloudberry' })).toBeChecked());
+    await fireEvent.press(screen.getByRole('checkbox', { name: 'Bilberry' }));
     expect(api.updateProfile).toHaveBeenLastCalledWith({
       speciesInterest: ['rowan', 'cloudberry'],
     });

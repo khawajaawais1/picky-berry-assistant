@@ -1,11 +1,10 @@
 import { Feather } from '@/components/atoms/app-icon';
-import { BlurView } from 'expo-blur';
 import { useDeferredValue, useMemo, useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/atoms';
-import { StatusMessage, TextAction } from '@/components/molecules';
+import { GlassSurface, StatusMessage, TextAction } from '@/components/molecules';
 import { Screen } from '@/components/templates';
 import { layout, radii, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -13,10 +12,11 @@ import { useDevicePosition, type DevicePositionStatus } from '@/hooks/use-device
 import type { PositionSource } from '@/services/location';
 import { formatLongDate, interpolate, useTranslation } from '@/services/i18n';
 
-import type { Species } from '../domain/species';
+import { SPECIES, type Species } from '../domain/species';
 import { filterZones, isFilterActive, type ZoneFilter } from '../domain/zone-filter';
+import { mergeZoneAnswers } from '../domain/zone-layers';
 import { PILOT_ZONE_SPECIES, type Zone, type ZoneSource } from '../domain/zone-source';
-import { useZones } from '../hooks/use-zones';
+import { oldestUpdatedAt, useZoneAnswers } from '../hooks/use-zones';
 import { MapListToggle, type ZoneView } from './map-list-toggle';
 import { SpeciesChips } from './species-chips';
 import { ZoneCard } from './zone-card';
@@ -38,7 +38,7 @@ export type DiscoverScreenProps = {
    * Opens frame 07 for the card's zone, under the berry whose score the card is reading — or
    * nothing.
    *
-   * The screen hands over the zone it drew and the score layer the chips chose, so the screen
+   * The screen hands over the zone it drew and the berry whose score it printed, so the screen
    * that opens reads the same record rather than another zone's figures. Without a destination
    * the card stays a reading and claims no role.
    */
@@ -57,9 +57,12 @@ export type DiscoverScreenProps = {
  * destination above core navigation; search, berry score layers, status, legend and the selected
  * zone card float over it. List view remains the text-first reading of the same answer.
  *
- * **One dataset.** The screen asks `ZoneSource` once for the chosen berry. Search narrows those
- * zones by name; a source press selects one by stable id; the map, card and list all read that same
- * result. A timestamp is the oldest score timestamp in that result, never the network read time.
+ * **One dataset, one ring per zone.** The screen asks `ZoneSource` once for each lit berry and
+ * merges the answers (`zone-layers.ts`): a zone both berries score is drawn once, carrying its
+ * best selected score, and the berry that produced it is kept so the card and the list name the
+ * layer they print. Search narrows those zones by name; a source press selects one by stable id;
+ * the map, card and list all read that same merged result. A timestamp is the oldest score
+ * timestamp in that result, never the network read time.
  *
  * **One foreground position seam.** `useDevicePosition` remains behind the stored consent and
  * platform permission. The newest fix is handed to the map in memory and forgotten when the
@@ -74,21 +77,30 @@ export function DiscoverScreen({
   positionSource,
   zoneSource,
 }: DiscoverScreenProps) {
-  const theme = useAppTheme();
-  const colors = theme.colors;
+  const { colors } = useAppTheme();
   const { locale, t } = useTranslation();
 
   const [query, setQuery] = useState('');
-  const [species, setSpecies] = useState<readonly Species[]>([]);
+  // Every berry is on when the screen opens: the unfiltered answer is what a picker should see
+  // first, and the chips narrow it. The screen never lets the set become empty, because a map
+  // with no score layer would have to invent one.
+  const [species, setSpecies] = useState<readonly Species[]>(SPECIES);
   const [view, setView] = useState<ZoneView>('map');
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
 
-  // The chips choose the **score layer**, one berry at a time: the frame draws one chip lit,
-  // and a score belongs to one species. Selecting another chip replaces the choice; pressing
-  // the lit one clears it, which falls back to the pilot's berry rather than to “all berries”
-  // — a single zone carries one score per berry, not one for a set of them.
-  const scoreSpecies = species[0] ?? PILOT_ZONE_SPECIES;
-  const { retry, status, updatedAt, zones } = useZones(zoneSource, scoreSpecies);
+  const selection = species.length > 0 ? species : SPECIES;
+  const answers = useZoneAnswers(zoneSource, selection);
+  // One ring per zone, carrying its best selected berry's score; the berry that produced it is
+  // kept beside it so the card and the list can name the layer they print (`zone-layers.ts`).
+  const { layer, zones } = useMemo(
+    () => mergeZoneAnswers(answers.zones, selection),
+    [answers.zones, selection],
+  );
+  // Data outranks a failed refresh, exactly as the single-berry hook had it: the zones already
+  // read stay on the map, and only an answer with no data at all is the error the screen names.
+  const status = zones.length > 0 ? 'ready' : answers.status;
+  const updatedAt = oldestUpdatedAt(zones);
+  const retry = answers.retry;
   // Only the bundled stand-in carries the demo disclosure; the zone service's answer is live.
   const demo = zoneSource.demo === true;
 
@@ -103,9 +115,23 @@ export function DiscoverScreen({
   const matches = useMemo(() => filterZones(zones, filter), [filter, zones]);
   const filtering = isFilterActive(filter);
   const cardZone = matches.find((zone) => zone.id === selectedZoneId) ?? matches[0];
+  // The berry whose score the card is printing. The merge keeps it per zone, so selecting a
+  // zone on the map cannot relabel it with another berry's figures.
+  const cardSpecies = cardZone
+    ? (layer.get(cardZone.id) ?? selection[0] ?? PILOT_ZONE_SPECIES)
+    : PILOT_ZONE_SPECIES;
 
   const toggleSpecies = (candidate: Species) =>
-    setSpecies((chosen) => (chosen.includes(candidate) ? [] : [candidate]));
+    setSpecies((chosen) => {
+      if (!chosen.includes(candidate)) {
+        // Add in the domain's own order, so the merge's first-seen order is stable.
+        return SPECIES.filter((berry) => berry === candidate || chosen.includes(berry));
+      }
+
+      // The last lit chip stays lit: an empty selection has no score layer, and the screen
+      // would have to choose one for the picker.
+      return chosen.length === 1 ? chosen : chosen.filter((berry) => berry !== candidate);
+    });
 
   // The list view has no map above it to say why it is empty, so it says so itself: loading
   // and failed are not an empty world, and an unfiltered empty answer is not a failed search.
@@ -155,74 +181,47 @@ export function DiscoverScreen({
           testID="discover-map-overlays"
         >
           <View pointerEvents="box-none" style={styles.topControls}>
-            <BlurView
-              intensity={70}
-              style={[
-                styles.searchRow,
-                {
-                  backgroundColor: `${colors.surface}CC`,
-                  borderColor: colors.border,
-                  overflow: 'hidden',
-                },
-              ]}
-              tint={theme.scheme === 'dark' ? 'dark' : 'light'}
-            >
+            {/*
+              No frosted band across the top: each control carries its own glass, so the map
+              shows between the search field, the buttons and the berry chips (owner's call,
+              2026-11-25).
+            */}
+            <View pointerEvents="box-none" style={styles.searchRow}>
               {onBack ? (
                 <Pressable
                   accessibilityLabel={t('common.back')}
                   accessibilityRole="button"
                   onPress={onBack}
-                  style={[
-                    styles.roundControl,
-                    { backgroundColor: 'transparent', borderColor: colors.border },
-                  ]}
+                  style={[styles.roundControl, { borderColor: colors.border, overflow: 'hidden' }]}
                 >
+                  <GlassSurface style={StyleSheet.absoluteFill} />
                   <Feather color={colors.text} name="arrow-left" size={22} />
                 </Pressable>
               ) : null}
-              <View style={styles.searchField}>
-                <ZoneSearchField onChangeText={setQuery} value={query} />
-              </View>
+              <GlassSurface
+                style={[styles.searchField, { borderColor: colors.border, borderWidth: 1 }]}
+              >
+                <ZoneSearchField glass onChangeText={setQuery} value={query} />
+              </GlassSurface>
               <MapListToggle
                 floating
                 onChange={setView}
                 onOpenDownloads={onOpenDownloads}
                 view={view}
               />
-            </BlurView>
+            </View>
 
-            <BlurView
-              intensity={70}
-              style={[
-                styles.floatingPanel,
-                {
-                  backgroundColor: `${colors.surface}CC`,
-                  borderColor: colors.border,
-                  overflow: 'hidden',
-                },
-              ]}
-              tint={theme.scheme === 'dark' ? 'dark' : 'light'}
-            >
-              <SpeciesChips
-                onToggle={toggleSpecies}
-                scrollable={Platform.OS !== 'web'}
-                selected={species}
-              />
-            </BlurView>
+            <SpeciesChips
+              glass
+              onToggle={toggleSpecies}
+              scrollable={Platform.OS !== 'web'}
+              selected={species}
+            />
 
             {filtering || mapCount ? (
-              <BlurView
-                intensity={70}
+              <GlassSurface
                 pointerEvents="none"
-                style={[
-                  styles.mapStatus,
-                  {
-                    backgroundColor: `${colors.surface}CC`,
-                    borderColor: colors.border,
-                    overflow: 'hidden',
-                  },
-                ]}
-                tint={theme.scheme === 'dark' ? 'dark' : 'light'}
+                style={[styles.mapStatus, { borderColor: colors.border, borderWidth: 1 }]}
               >
                 <AppText tone="muted" variant="mapAnnotation">
                   {filtering
@@ -236,24 +235,15 @@ export function DiscoverScreen({
                         )
                     : mapCount}
                 </AppText>
-              </BlurView>
+              </GlassSurface>
             ) : null}
           </View>
         </SafeAreaView>
 
         <View pointerEvents="box-none" style={styles.bottomControls}>
-          <BlurView
-            intensity={70}
+          <GlassSurface
             pointerEvents="none"
-            style={[
-              styles.legendPanel,
-              {
-                backgroundColor: `${colors.surface}CC`,
-                borderColor: colors.border,
-                overflow: 'hidden',
-              },
-            ]}
-            tint={theme.scheme === 'dark' ? 'dark' : 'light'}
+            style={[styles.legendPanel, { borderColor: colors.border, borderWidth: 1 }]}
           >
             <ZoneScoreLegend />
             {updatedAt && matches.length > 0 ? (
@@ -263,14 +253,14 @@ export function DiscoverScreen({
                 })}
               </AppText>
             ) : null}
-          </BlurView>
+          </GlassSurface>
 
           {cardZone ? (
             <ZoneCard
               demo={demo}
               floating
-              onOpen={onOpenZone ? () => onOpenZone(cardZone, scoreSpecies) : undefined}
-              species={scoreSpecies}
+              onOpen={onOpenZone ? () => onOpenZone(cardZone, cardSpecies) : undefined}
+              species={cardSpecies}
               zone={cardZone}
             />
           ) : null}
@@ -317,7 +307,10 @@ export function DiscoverScreen({
         {status === 'error' ? (
           <TextAction label={t('discover.map.retry')} onPress={retry} testID="zone-list-retry" />
         ) : null}
-        <ZoneList species={scoreSpecies} zones={matches} />
+        <ZoneList
+          species={(zone) => layer.get(zone.id) ?? selection[0] ?? PILOT_ZONE_SPECIES}
+          zones={matches}
+        />
 
         <MapListToggle onChange={setView} onOpenDownloads={onOpenDownloads} view={view} />
       </View>
@@ -359,6 +352,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   searchField: {
+    borderRadius: radii.control,
     flex: 1,
   },
   roundControl: {
@@ -368,12 +362,6 @@ const styles = StyleSheet.create({
     height: layout.searchHeight,
     justifyContent: 'center',
     width: layout.searchHeight,
-  },
-  floatingPanel: {
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    paddingHorizontal: spacing.gap,
-    paddingVertical: spacing.sm,
   },
   mapStatus: {
     alignSelf: 'flex-start',

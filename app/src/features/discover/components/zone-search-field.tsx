@@ -9,6 +9,11 @@ export type ZoneSearchFieldProps = {
   /** What stands in the field, exactly as the picker typed it. The filter reads it. */
   value: string;
   onChangeText: (value: string) => void;
+  /**
+   * True when the field sits on a frosted surface (`GlassSurface`) over the map: the field's
+   * own opaque box is dropped so the glass behind it is the field's background.
+   */
+  glass?: boolean;
 };
 
 /** The frame's magnifier glyph, measured behind the field's left inset (node `5:24122`). */
@@ -30,7 +35,7 @@ const GLYPH_SIZE = 22;
  * one, and it has to survive the moment the picker starts typing, which is when the
  * placeholder disappears).
  */
-export function ZoneSearchField({ value, onChangeText }: ZoneSearchFieldProps) {
+export function ZoneSearchField({ glass = false, value, onChangeText }: ZoneSearchFieldProps) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
 
@@ -45,6 +50,7 @@ export function ZoneSearchField({ value, onChangeText }: ZoneSearchFieldProps) {
       placeholder={hint}
       // The field filters as it is typed, so the keyboard's own key says what happens.
       returnKeyType="search"
+      surface={glass ? 'clear' : 'plain'}
       testID="zone-search-field"
       value={value}
     />

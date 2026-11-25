@@ -335,7 +335,9 @@ that they are test data. **The card and the list read the same source** since 20
 ([ADR-057](adr/ADR-057-screen-06-reads-one-zone-source.md)): the card names the first zone the
 search left, prints that zone's score for the chosen berry, its confidence and its ripeness, under
 the caption “Pilot area · test data”; the list rows do the same for every zone kept. The species
-chips choose the **score layer**, one berry at a time, and the field filters by the zone's name.
+chips are one **multi-select filter**: every berry is on when the screen opens, and a zone both
+berries score is drawn once with its best selected score, named under the berry that produced it.
+The field filters by the zone's name.
 Two things the frame draws are gone with the sample and recorded in PROJECT.md: the card's walking
 distance and report age (nothing supplies them). Its **chevron into screen 07 is back** since
 2026-10-24 ([ADR-058](adr/ADR-058-screen-07-reads-the-zone-source.md)): the card hands the zone id
@@ -346,9 +348,10 @@ the frame does not draw** (2026-10-24): under the map, “Last updated 3 August 
 asks. It is the data's instant, so a cached answer keeps the age of what it holds; an answer with
 an undated zone prints no line.
 Five departures belong to this screen, all recorded in PROJECT.md. The frame paints its first
-chip as chosen while drawing every zone on its map; the app opens with **no chip chosen**, because
-a chip painted chosen while nothing has been filtered away would claim a filter that is not in
-effect. The frame's **recentre control is not drawn** — every map gesture is off until the control
+chip as chosen while drawing every zone on its map; the app opens with **all four chips chosen** —
+the unfiltered answer — and each press removes a berry, so a lit chip always names a layer the map
+is drawing. The last lit chip stays lit, because an empty selection has no score layer to draw. The
+frame's **recentre control is not drawn** — every map gesture is off until the control
 exists — and its **sliders glyph inside the field is not drawn**, because the filter it would open
 is the chip row sitting directly beneath the field. Its OS status bar and home indicator belong to
 the device, and its **core navigation** is the app shell (ADR-022).

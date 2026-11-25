@@ -21,9 +21,11 @@ import type { SessionStore } from './store';
  *   expiry: the credential's truth, not a lifetime of the app's own.
  * - **Refresh is single-flight.** The server revokes the whole token family when a refresh token
  *   is reused, so concurrent callers share one `/auth/refresh` rather than racing two.
- * - **Offline is not signed out.** A refresh that cannot reach the server rejects `current()`
- *   and keeps the stored pair, so `useSession` reports "could not find out". A refresh the
- *   server refuses drops the session (ADR-006: cleared on a refresh failure).
+ * - **Offline is not signed out.** A refresh that cannot reach the server keeps the stored pair
+ *   and `current()` answers the session the device already holds, so a picker who opens the app
+ *   without a signal stays signed in (the refresh token is still valid; only the access token
+ *   is stale). A refresh the server refuses drops the session (ADR-006: cleared on a refresh
+ *   failure).
  */
 
 /** Refresh this long before expiry, so the app never sends a token the server is about to refuse. */
@@ -253,7 +255,17 @@ export function createApiSessionPort({
     },
 
     async current() {
-      return (await fresh())?.session ?? null;
+      try {
+        return (await fresh())?.session ?? null;
+      } catch (error) {
+        if (!(error instanceof SessionUnreachableError)) throw error;
+
+        // The refresh could not be asked, so the device still holds a session it has not been
+        // told to drop: the refresh token outlives the access token, and the app's other reads
+        // already send the stale token while offline (`tokens.accessToken`). Answering the held
+        // session here is what keeps a cold start without a signal from looking like a sign-out.
+        return (await read())?.session ?? null;
+      }
     },
 
     async signOut() {

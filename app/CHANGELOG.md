@@ -7,6 +7,26 @@ recorded in [docs/adr/](docs/adr/).
 
 ## [Unreleased]
 
+### Added
+
+- Reopening the app keeps a signed-in picker signed in: the root route reads the device's secure
+  store and sends a held session to Discover instead of onboarding, painting a themed empty frame
+  while the store is being read rather than flashing the welcome screen.
+
+### Changed
+
+- Discover's frosted glass is now one surface per control — the search field, the back and
+  map/download buttons, the status line, the legend and each berry chip — instead of a panel across
+  the top, so the map stays visible between them.
+- The berry chips are one multi-select filter: all four start on, pressing one narrows the map, and
+  a zone is drawn once with its best selected score and that berry's name. The last lit chip cannot
+  be turned off, because an empty selection has no score layer to draw.
+
+### Fixed
+
+- A refresh that cannot reach the server no longer signs the picker out. Offline is not a sign-out:
+  the device keeps the session it already holds, and only a refresh the server refuses ends it.
+
 ## [0.5.1] - 2026-11-25
 
 ### Added

@@ -4,6 +4,7 @@ export { Chip, type ChipProps, type ChipTone } from './chip';
 export { ChoiceChips, type ChoiceChipOption, type ChoiceChipsProps } from './choice-chips';
 export { FieldAction, type FieldActionProps } from './field-action';
 export { FormField, type FormFieldProps } from './form-field';
+export { GlassSurface, type GlassSurfaceProps } from './glass-surface';
 export { InfoRow, type InfoRowProps } from './info-row';
 export { SignOutAction, type SignOutActionProps } from './sign-out-action';
 export { StatusMessage, type StatusMessageProps } from './status-message';

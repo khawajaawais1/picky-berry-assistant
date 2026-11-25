@@ -9,8 +9,11 @@ import { ZoneSourceRow } from './zone-source-row';
 export type ZoneListProps = {
   /** The zones to list, already narrowed by the screen's search: this component filters nothing. */
   zones: readonly Zone[];
-  /** The berry whose score each row prints. */
-  species: Species;
+  /**
+   * The berry whose score each row prints, or a reader for it when the rows come from several
+   * berries at once (the map's multi-select). A constant keeps the saved plan's call unchanged.
+   */
+  species: Species | ((zone: Zone) => Species);
 };
 
 /**
@@ -38,7 +41,7 @@ export function ZoneList({ species, zones }: ZoneListProps) {
         <ZoneSourceRow
           key={zone.id}
           rowTestID={`zone-list-row-${zone.id}`}
-          species={species}
+          species={typeof species === 'function' ? species(zone) : species}
           zone={zone}
         />
       ))}
