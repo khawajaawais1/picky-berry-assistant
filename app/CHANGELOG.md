@@ -7,6 +7,8 @@ recorded in [docs/adr/](docs/adr/).
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-11-25
+
 ### Added
 
 - Reopening the app keeps a signed-in picker signed in: the root route reads the device's secure
