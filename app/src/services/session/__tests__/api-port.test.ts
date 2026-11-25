@@ -288,19 +288,21 @@ describe('createApiSessionPort', () => {
         h.advance(900_000);
         h.answer(answer);
 
-        await expect(h.port.current()).rejects.toThrow();
+        // The picker is still signed in, so the screen that asks who they are gets an answer.
+        expect(await h.port.current()).toMatchObject({ accountId: EMAIL });
         expect(await h.store.read()).toContain('refresh-1');
       },
     );
 
-    it('rejects, and keeps the session, when the refresh cannot reach the server', async () => {
-      // Offline is "the app could not find out", never "nobody is signed in" (use-session.ts).
+    it('answers the held session, and keeps it, when the refresh cannot reach the server', async () => {
+      // Offline is not "nobody is signed in": a cold start with no signal must open the app the
+      // picker was already signed in to, not onboarding.
       const h = harness({ status: 200, body: authSession() });
       await h.port.signIn({ email: EMAIL, password: PASSWORD });
       h.advance(900_000);
       h.answer('offline');
 
-      await expect(h.port.current()).rejects.toThrow();
+      expect(await h.port.current()).toMatchObject({ accountId: EMAIL });
       expect(await h.store.read()).toContain('refresh-1');
     });
 
