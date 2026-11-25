@@ -1,6 +1,7 @@
-import { Pressable, ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
+import { GlassSurface } from '@/components/molecules';
 import { layout, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useTranslation } from '@/services/i18n';
@@ -17,33 +18,45 @@ const CHIP_HIT_SLOP = {
 export type SpeciesChipsProps = {
   /** Keeps the map overlay to one line; the document/list reading continues to wrap. */
   scrollable?: boolean;
+  /**
+   * True over the map: each chip is its own frosted pill, so the map shows between them rather
+   * than through one large panel behind the row.
+   */
+  glass?: boolean;
   /** The chips that are on, as identifiers: the filter compares species, never words. */
   selected: readonly Species[];
   onToggle: (species: Species) => void;
 };
 
 /**
- * Frame 06's species chips (node 5:22959): 36 px pills, the chosen one filled with the accent
+ * Frame 06's species chips (node 5:22959): 36 px pills, the chosen ones filled with the accent
  * colour and the others on the surface behind the palette's border — the metrics the design's
- * chips carry on every screen. The frame draws three berries (lingonberry, bilberry,
- * cloudberry); the pilot's fourth, crowberry, is the domain list's, so the row renders one
- * chip more than the frame without changing the order of the design's three.
+ * chips carry on every screen, with the unlit chip's surface replaced by glass where the row sits
+ * over the map. The frame draws three berries (lingonberry, bilberry, cloudberry); the pilot's
+ * fourth, crowberry, is the domain list's, so the row renders one chip more than the frame
+ * without changing the order of the design's three.
  *
- * **One score layer is shown at a time.** A zone carries one score per berry, so the screen keeps
- * at most one chip pressed and clears it on the second press. These are therefore **toggle
- * buttons**, not checkboxes: a checkbox announces a multi-select the score source cannot answer.
- * The pressed state is stated twice on purpose — `accessibilityState.selected` for iOS and
- * Android, `aria-pressed` for the web target, which writes no state from the Pressable on its own
- * (measured in the built export; frontend review, 2026-10-25).
+ * **The chips are one multi-select filter, and every berry starts on.** A zone carries a score
+ * per berry, so the screen can show every zone the source scores for any selected berry; the
+ * chips narrow that set. All four being on is the unfiltered answer, which is what a picker
+ * sees first — the frame's first-chip accent was a single layer, and the app's answer is the
+ * wider one. Pressing a lit chip removes its berry; the last one cannot be removed, because an
+ * empty filter has no score layer to draw (the screen would have to invent one).
  *
- * The frame paints its first chip as chosen while drawing every zone on its map. The app opens
- * with no chip on instead, because a chip painted chosen while nothing has been filtered away
- * would claim a filter that is not in effect (docs/design-source.md).
+ * The multi-select is a **checkbox group**, not four independent buttons: assistive technology
+ * reads each chip's checked state, and the web target gets the same state through `aria-checked`
+ * (react-native-web writes none from `accessibilityState` alone; measured in the built export,
+ * frontend review 2026-10-25).
  *
  * The row wraps like the design's other chip rows: at the largest system text size three
  * labels no longer fit the content column, and the screen does not scroll sideways (ADR-019).
  */
-export function SpeciesChips({ scrollable = false, selected, onToggle }: SpeciesChipsProps) {
+export function SpeciesChips({
+  glass = false,
+  scrollable = false,
+  selected,
+  onToggle,
+}: SpeciesChipsProps) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
 
@@ -54,21 +67,25 @@ export function SpeciesChips({ scrollable = false, selected, onToggle }: Species
     return (
       <Pressable
         accessibilityLabel={label}
-        accessibilityRole="button"
-        accessibilityState={{ selected: on }}
-        aria-pressed={on}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: on }}
+        aria-checked={on}
         className="h-chip flex-row items-center rounded-pill px-gap"
         hitSlop={CHIP_HIT_SLOP}
         key={species}
         onPress={() => onToggle(species)}
         style={{
-          backgroundColor: on ? colors.accent : colors.surface,
+          // A lit chip is the accent fill; an unlit one on the map is glass, and in the
+          // document reading it is the design's surface.
+          backgroundColor: on ? colors.accent : glass ? 'transparent' : colors.surface,
           borderColor: on ? colors.accent : colors.border,
           // The design's chips carry a 1 px stroke in either state.
           borderWidth: 1,
+          overflow: 'hidden',
         }}
         testID={`species-chip-${species}`}
       >
+        {!on && glass ? <GlassSurface style={StyleSheet.absoluteFill} /> : null}
         <AppText
           style={{ color: on ? colors.onAccent : colors.textMuted, fontWeight: '600' }}
           variant="label"

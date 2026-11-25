@@ -25,8 +25,8 @@ import { zonesQueryKey } from '../services/zone-cache';
  *   rather than a loading line in a place with no signal.
  * - **the retry policy is none.** A failed read is said so at once; three retries with
  *   backoff would leave the map blank for seconds before the screen could tell the picker
- *   what happened. The screen offers an explicit `retry` instead: pressing a different chip is
- *   not one, because the berry already on screen keeps the same query key.
+ *   what happened. The screen offers an explicit `retry` instead: turning a chip off is not
+ *   one, because the berries already on screen keep their own query keys.
  *
  * A refresh that fails does not take the previous answer with it: the data a query already
  * held is still the last thing the app read, and the map keeps drawing it. That is the
@@ -138,8 +138,9 @@ export function useZones(source: ZoneSource, species: Species): ZonesState {
 }
 
 /**
- * The answers a saved plan needs: one per berry its record holds, under the same query keys the
- * map uses.
+ * Several berries' answers at once: the map's multi-select asks for every lit chip, and a saved
+ * plan asks for one per berry its record holds — all under the same query keys the single-berry
+ * hook uses.
  *
  * A saved zone is read from **its own berry's** answer, not from the chip the map last had lit:
  * a zone service may score only the species it was asked about, so a plan mixing berries cannot
@@ -159,6 +160,12 @@ export function useZones(source: ZoneSource, species: Species): ZonesState {
 export type ZoneAnswersState = {
   status: ZonesStatus;
   zones: ReadonlyMap<Species, readonly Zone[]>;
+  /**
+   * Asks every needed berry's question again. The map's retry after a failed read, and the plan's
+   * after a failed resolve: a control that could not re-read would leave the screen stuck on the
+   * failure it names.
+   */
+  retry: () => void;
 };
 
 export function useZoneAnswers(
@@ -168,6 +175,9 @@ export function useZoneAnswers(
   const species = [...new Set(speciesList)];
   const answers = useQueries({ queries: species.map((berry) => zonesQuery(source, berry)) });
   const zones = new Map<Species, readonly Zone[]>();
+  const retry = () => {
+    for (const answer of answers) void answer.refetch();
+  };
 
   let waiting = false;
   let failed = false;
@@ -184,5 +194,5 @@ export function useZoneAnswers(
     else waiting = true;
   });
 
-  return { status: waiting ? 'loading' : failed ? 'error' : 'ready', zones };
+  return { status: waiting ? 'loading' : failed ? 'error' : 'ready', zones, retry };
 }

@@ -20,6 +20,12 @@ export type AppTextInputProps = TextInputProps & {
    * frame's height would cut it off (ADR-019).
    */
   height?: number;
+  /**
+   * `plain` draws the design's own surface box. `clear` leaves the box transparent, with no
+   * stroke, so a frosted surface behind it (`GlassSurface`) shows through instead of being
+   * covered by a second, opaque fill.
+   */
+  surface?: 'plain' | 'clear';
 };
 
 /**
@@ -35,18 +41,20 @@ export function AppTextInput({
   height = layout.actionHeight,
   leading,
   style,
+  surface = 'plain',
   testID,
   ...rest
 }: AppTextInputProps) {
   const { colors } = useAppTheme();
+  const clear = surface === 'clear';
 
   return (
     <View
       className="w-full flex-row items-center gap-sm rounded-control px-field py-field"
       style={{
-        backgroundColor: colors.surface,
+        backgroundColor: clear ? 'transparent' : colors.surface,
         borderColor: colors.border,
-        borderWidth: 1,
+        borderWidth: clear ? 0 : 1,
         minHeight: height,
       }}
       testID={testID}

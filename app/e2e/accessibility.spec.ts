@@ -843,7 +843,7 @@ test.describe('the discover map in the built web app', () => {
       // fixed-height map still owns its place label. In both cases the text alternative supplements
       // visible zone copy rather than replacing it.
       if (route === '/discover') {
-        await expect(page.getByText('Laajavuori 1 · Bilberry')).toBeVisible();
+        await expect(page.getByText('Laajavuori 1 · Lingonberry')).toBeVisible();
       } else {
         expect(snapshot).toContain('Jyväskylä');
       }

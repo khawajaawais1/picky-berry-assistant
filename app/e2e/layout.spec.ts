@@ -277,22 +277,22 @@ const SCREENS: readonly Screen[] = [
       // same line is unconditional for a source zone.
       { what: 'the legend’s heading', key: 'discover.score.label' },
       { what: 'the legend’s low-confidence line', key: 'discover.score.lowConfidence' },
-      // The card reads the ZoneSource's first zone now: its own name and the berry the chips
-      // asked for are values, and every other line is a fact the payload carries. The score,
-      // confidence and ripeness are the stub's, so the run measures the sentences around them.
+      // The card reads the ZoneSource's first zone now: its own name and the berry whose best
+      // score it prints are values, and every other line is a fact the payload carries. Every
+      // berry starts selected, so the stub's lingonberry score (70) is the card's layer.
       {
         what: 'the zone card’s title',
         key: 'discover.card.zoneTitle',
-        values: { species: { key: 'report.species.bilberry' }, zone: 'Laajavuori 1' },
+        values: { species: { key: 'report.species.lingonberry' }, zone: 'Laajavuori 1' },
       },
       { what: 'the zone card’s source line', key: 'discover.card.source' },
       {
         what: 'the yield chip',
         key: 'discover.list.yield',
-        values: { max: '100', score: '53' },
+        values: { max: '100', score: '70' },
       },
       { what: 'the confidence chip', key: 'discover.details.confidence.medium' },
-      { what: 'the zone card’s status line', key: 'discover.ripeness.past' },
+      { what: 'the zone card’s status line', key: 'discover.ripeness.ripe' },
       // The floating score-layer controls remain visible text. The map/list and download actions
       // are icon controls with accessible names, so there is no visible action copy to measure.
       // `discover.search.placeholder` is deliberately absent: it is the field's placeholder,

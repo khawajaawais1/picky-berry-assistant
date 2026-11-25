@@ -106,10 +106,23 @@ async function renderScreen(props: Partial<DiscoverScreenProps> = {}) {
   });
 }
 
-/** A source that fails once and answers the next read, which is what a retry is for. */
+/**
+ * A source whose first round — one read per selected berry — all fail, and whose retry answers.
+ * A single rejection would leave the other berries' answers standing, which is a different state
+ * (data outranks a failed refresh) from the total failure the retry control is for.
+ */
 function flakySource(): ZoneSource & { list: jest.Mock } {
   const source = sourceOf(ZONES);
-  source.list.mockRejectedValueOnce(new Error('no docs'));
+  let calls = 0;
+  source.list.mockImplementation(async ({ species }: { species: Species }) => {
+    calls += 1;
+    if (calls <= 4) throw new Error('no docs');
+
+    return ZONES.flatMap((candidate) => {
+      const score = candidate.scores[species];
+      return score ? [{ ...candidate, ...score }] : [];
+    });
+  });
 
   return source;
 }
@@ -134,10 +147,17 @@ describe('DiscoverScreen', () => {
     expect(screen.getByTestId('species-chips')).toBeOnTheScreen();
     expect(screen.getByTestId('species-chips').props.horizontal).toBe(true);
     // The design's chips are 36 px tall; 4 px of hit slop on each side is the 44 px target.
-    expect(screen.getByRole('button', { name: 'Lingonberry' }).props.hitSlop).toMatchObject({
+    expect(screen.getByRole('checkbox', { name: 'Lingonberry' }).props.hitSlop).toMatchObject({
       bottom: 4,
       top: 4,
     });
+    // Every berry is on when the map opens: the chips narrow the answer, they do not choose a
+    // single score layer any more.
+    for (const berry of ['Lingonberry', 'Bilberry', 'Cloudberry', 'Crowberry']) {
+      expect(screen.getByRole('checkbox', { name: berry }).props.accessibilityState).toMatchObject({
+        checked: true,
+      });
+    }
     expect(screen.getByTestId('zone-map')).toBeOnTheScreen();
     expect(screen.getByTestId('zone-score-legend')).toBeOnTheScreen();
     expect(screen.getByTestId('zone-card')).toBeOnTheScreen();
@@ -214,15 +234,17 @@ describe('DiscoverScreen', () => {
     }
   });
 
-  it('draws the card from the source’s first zone, not the design’s sample', async () => {
+  it('draws the card from the source’s first zone, under its best selected berry', async () => {
     await renderScreen();
     await screen.findByText('3 zones');
 
-    expect(screen.getByText('Laajavuori 1 · Bilberry')).toBeOnTheScreen();
+    // Every berry starts on, and the zone's best score among them is lingonberry's 70 — so the
+    // card names lingonberry, not the source's own default berry.
+    expect(screen.getByText('Laajavuori 1 · Lingonberry')).toBeOnTheScreen();
     expect(screen.getByText('Pilot area')).toBeOnTheScreen();
-    expect(screen.getByText('53 / 100 yield')).toBeOnTheScreen();
-    expect(screen.getByText('Medium confidence')).toBeOnTheScreen();
-    expect(screen.getByText('Season over')).toBeOnTheScreen();
+    expect(screen.getByText('70 / 100 yield')).toBeOnTheScreen();
+    expect(screen.getByText('High confidence')).toBeOnTheScreen();
+    expect(screen.getByText('Ripe now')).toBeOnTheScreen();
 
     // The demo card's values are gone from this screen with the sample they described.
     expect(screen.queryByText('Zone 14 · Lingonberry')).not.toBeOnTheScreen();
@@ -281,55 +303,77 @@ describe('DiscoverScreen', () => {
     expect(screen.getByText('No zones to show')).toBeOnTheScreen();
   });
 
-  it('switches the scores with a chip, because a zone has one score per berry', async () => {
+  it('narrows the layers with a chip, and adds it back without a second read', async () => {
     const source = sourceOf(ZONES);
     await render(<DiscoverScreen zoneSource={source} />, { wrapper: QueryProvider });
-    await screen.findByText('53 / 100 yield');
+    await screen.findByText('70 / 100 yield');
 
-    const lingonberry = screen.getByRole('button', { name: 'Lingonberry' });
-    expect(lingonberry.props.accessibilityState).toMatchObject({ selected: false });
+    // Every berry starts on, so the first read asks for all four layers.
+    for (const berry of ['lingonberry', 'bilberry', 'cloudberry', 'crowberry']) {
+      expect(source.list).toHaveBeenCalledWith({ species: berry });
+    }
+
+    const lingonberry = screen.getByRole('checkbox', { name: 'Lingonberry' });
+    expect(lingonberry.props.accessibilityState).toMatchObject({ checked: true });
 
     await fireEvent.press(lingonberry);
 
-    // The card now reads the berry the chip asked for — the same zone, its other score, and the
-    // chip's pressed state says which layer is on (frontend review, 2026-10-25).
-    expect(lingonberry.props.accessibilityState).toMatchObject({ selected: true });
-    expect(await screen.findByText('Laajavuori 1 · Lingonberry')).toBeOnTheScreen();
-    expect(screen.getByText('70 / 100 yield')).toBeOnTheScreen();
-    expect(screen.getByText('High confidence')).toBeOnTheScreen();
-    expect(screen.getByText('Ripe now')).toBeOnTheScreen();
-    expect(source.list).toHaveBeenLastCalledWith({ species: 'lingonberry' });
+    // With lingonberry off, the card falls back to the zone's best remaining layer.
+    expect(lingonberry.props.accessibilityState).toMatchObject({ checked: false });
+    expect(await screen.findByText('Laajavuori 1 · Bilberry')).toBeOnTheScreen();
+    expect(screen.getByText('53 / 100 yield')).toBeOnTheScreen();
+    expect(screen.getByText('Medium confidence')).toBeOnTheScreen();
+    expect(screen.getByText('Season over')).toBeOnTheScreen();
+    // The answer was already in the cache: turning a layer off is not a new read.
+    expect(source.list).toHaveBeenCalledTimes(4);
 
-    await fireEvent.press(screen.getByRole('button', { name: 'Lingonberry' }));
+    await fireEvent.press(screen.getByRole('checkbox', { name: 'Lingonberry' }));
 
-    // Pressing the lit chip clears it, and the screen falls back to the pilot's berry rather
-    // than inventing a combined score. Its answer is still inside the cache's fresh window, so
-    // the screen reads it back instead of asking the source a third time.
-    expect(await screen.findByText('53 / 100 yield')).toBeOnTheScreen();
-    expect(source.list).toHaveBeenCalledTimes(2);
+    expect(await screen.findByText('70 / 100 yield')).toBeOnTheScreen();
+    expect(source.list).toHaveBeenCalledTimes(4);
   });
 
-  it('leaves nothing when the chosen berry has no zones, and says why', async () => {
+  it('keeps the last lit chip lit, because an empty selection has no layer to draw', async () => {
     await renderScreen();
     await screen.findByText('3 zones');
 
-    await fireEvent.press(screen.getByRole('button', { name: 'Crowberry' }));
+    for (const berry of ['Lingonberry', 'Bilberry', 'Cloudberry']) {
+      await fireEvent.press(screen.getByRole('checkbox', { name: berry }));
+    }
+
+    // Crowberry is the only berry left on, and pressing it again must not empty the map.
+    const crowberry = screen.getByRole('checkbox', { name: 'Crowberry' });
+    await fireEvent.press(crowberry);
+
+    expect(crowberry.props.accessibilityState).toMatchObject({ checked: true });
+    expect(await screen.findByText('No zones to show')).toBeOnTheScreen();
+  });
+
+  it('leaves nothing when the chosen berries have no zones, and says why', async () => {
+    await renderScreen();
+    await screen.findByText('3 zones');
+
+    for (const berry of ['Lingonberry', 'Bilberry', 'Cloudberry']) {
+      await fireEvent.press(screen.getByRole('checkbox', { name: berry }));
+    }
 
     expect(await screen.findByText('No zones to show')).toBeOnTheScreen();
     expect(screen.queryByTestId('zone-card')).not.toBeOnTheScreen();
   });
 
-  it('lists the same zones, with the score the chips chose and the season’s word', async () => {
+  it('lists the same zones, each under the berry whose score it prints', async () => {
     await renderScreen();
     await screen.findByText('3 zones');
 
     await openList();
 
     expect(screen.getByTestId('zone-list')).toBeOnTheScreen();
-    expect(screen.getByText('Laajavuori 1 · Bilberry')).toBeOnTheScreen();
-    expect(screen.getByText('53 / 100 yield')).toBeOnTheScreen();
-    expect(screen.getByText('Season over')).toBeOnTheScreen();
-    expect(screen.getByText('Ripe now')).toBeOnTheScreen();
+    // Zone 1's best selected score is lingonberry's; zone 12's is bilberry's. The rows name the
+    // berry they print, so a multi-select answer cannot relabel a score.
+    expect(screen.getByText('Laajavuori 1 · Lingonberry')).toBeOnTheScreen();
+    expect(screen.getByText('Laajavuori 12 · Bilberry')).toBeOnTheScreen();
+    expect(screen.getByText('70 / 100 yield')).toBeOnTheScreen();
+    expect(screen.getAllByText('Ripe now').length).toBeGreaterThan(0);
     expect(screen.getByTestId('zone-list-row-b')).toBeOnTheScreen();
     expect(screen.getByTestId('zone-list-row-c')).toBeOnTheScreen();
   });
@@ -362,7 +406,7 @@ describe('DiscoverScreen', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
 
     expect(await screen.findByText('3 zones')).toBeOnTheScreen();
-    expect(flaky.list).toHaveBeenCalledTimes(2);
+    expect(flaky.list).toHaveBeenCalledTimes(8);
   });
 
   it('retries a failed read from the list too', async () => {
@@ -378,7 +422,7 @@ describe('DiscoverScreen', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
 
     expect(await screen.findByTestId('zone-list-row-a')).toBeOnTheScreen();
-    expect(flaky.list).toHaveBeenCalledTimes(2);
+    expect(flaky.list).toHaveBeenCalledTimes(8);
   });
 
   it('opens the zone the card is reading, under the berry whose score it prints', async () => {
@@ -388,18 +432,18 @@ describe('DiscoverScreen', () => {
 
     await fireEvent.press(screen.getByRole('button', { name: 'Open zone Laajavuori 1 details' }));
 
-    // The screen hands over the zone it drew and the berry the chips asked for, so the screen
-    // it opens reads the same record rather than another zone's figures.
-    expect(onOpenZone).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'a' }), 'bilberry');
-
-    await fireEvent.press(screen.getByRole('button', { name: 'Lingonberry' }));
-    await screen.findByText('70 / 100 yield');
-    await fireEvent.press(screen.getByRole('button', { name: 'Open zone Laajavuori 1 details' }));
-
+    // The screen hands over the zone it drew and the berry whose score it printed, so the
+    // screen it opens reads the same record rather than another berry's figures.
     expect(onOpenZone).toHaveBeenLastCalledWith(
       expect.objectContaining({ id: 'a' }),
       'lingonberry',
     );
+
+    await fireEvent.press(screen.getByRole('checkbox', { name: 'Lingonberry' }));
+    await screen.findByText('53 / 100 yield');
+    await fireEvent.press(screen.getByRole('button', { name: 'Open zone Laajavuori 1 details' }));
+
+    expect(onOpenZone).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'a' }), 'bilberry');
   });
 
   it('selects a zone on the map and opens that selected zone from the floating card', async () => {
@@ -476,9 +520,10 @@ describe('DiscoverScreen', () => {
 
     await openList();
 
-    // The view toggle and the four score-layer toggles are controls here (no back, no download
-    // glyph in this render); the zone card itself is a reading.
-    expect(screen.getAllByRole('button')).toHaveLength(5);
+    // The view toggle is the only button here (no back, no download glyph in this render); the
+    // berry chips are checkboxes now, and the zone card itself is a reading.
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+    expect(screen.getAllByRole('checkbox')).toHaveLength(4);
     expect(screen.queryByRole('button', { name: /Open zone/ })).not.toBeOnTheScreen();
   });
 

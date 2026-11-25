@@ -2,6 +2,7 @@ import { Feather } from '@/components/atoms/app-icon';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
+import { GlassSurface } from '@/components/molecules';
 import { layout, radii, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useTranslation } from '@/services/i18n';
@@ -66,12 +67,12 @@ export function MapListToggle({
   if (floating) {
     const control = {
       alignItems: 'center' as const,
-      backgroundColor: colors.surface,
       borderColor: colors.border,
       borderRadius: radii.pill,
       borderWidth: 1,
       height: layout.searchHeight,
       justifyContent: 'center' as const,
+      overflow: 'hidden' as const,
       width: layout.searchHeight,
     };
 
@@ -84,6 +85,8 @@ export function MapListToggle({
           style={control}
           testID="map-list-toggle-view"
         >
+          {/* The map controls are frosted individually so the map shows between them. */}
+          <GlassSurface style={StyleSheet.absoluteFill} />
           <Feather color={colors.text} name={showingMap ? 'list' : 'map'} size={LIST_GLYPH} />
         </Pressable>
 
@@ -95,6 +98,7 @@ export function MapListToggle({
             style={control}
             testID="map-list-toggle-downloads"
           >
+            <GlassSurface style={StyleSheet.absoluteFill} />
             <Feather color={colors.text} name="download" size={DOWNLOAD_GLYPH} />
           </Pressable>
         ) : null}
