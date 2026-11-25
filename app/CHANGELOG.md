@@ -7,6 +7,22 @@ recorded in [docs/adr/](docs/adr/).
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-11-25
+
+### Added
+
+- Appearance (light/dark/system) toggle in profile settings, persisted on this device.
+
+### Changed
+
+- Discover map overlays (search, berry layers, status, legend) now use frosted glass panels with a
+  translucent fallback for older WebViews.
+
+### Fixed
+
+- Theme toggle is now a three-option chip group (System/Light/Dark) instead of a cycle button,
+  with an accessible selected state.
+
 ## [0.5.0] - 2026-11-23
 
 ### Added
