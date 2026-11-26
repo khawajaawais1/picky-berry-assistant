@@ -84,9 +84,11 @@ export type ThemeColors = {
   mapZoneRipeningLabel: string;
   /**
    * The five yield-score bands the real map paints (`ZONE_SCORE_BANDS`): a sequential
-   * green scale, darker as the score rises, so the map reads as one quantity rather than
-   * five unrelated categories. The `…Line` token is each band's boundary, a darker step of
-   * the same hue. App-side: the design draws three zone *states*, not a score scale.
+   * yellow-to-green scale, deeper as the score rises, so the map reads as one quantity rather
+   * than five unrelated categories. The low end is a straw yellow, not a pale green: a pale
+   * green vanished into the basemap and its forests. Every band is kept ΔE ≥ 20 from `mapBase`
+   * and ≥ 15 from its neighbour (`map-score-palette.test.ts`). The `…Line` token is each band's
+   * boundary, a stronger step of the same hue. App-side: the design draws three zone *states*, not a score scale.
    */
   mapScoreLowest: string;
   mapScoreLowestLine: string;
@@ -141,16 +143,16 @@ const lightColors: ThemeColors = {
   mapLakeLabel: '#35596A',
   mapZoneRecentLabel: '#44506B',
   mapZoneRipeningLabel: '#6B4A1E',
-  mapScoreLowest: '#DDE5D8',
-  mapScoreLowestLine: '#A9B8A2',
-  mapScoreLow: '#C8DCBE',
-  mapScoreLowLine: '#8FA985',
-  mapScoreMid: '#A9CE9E',
-  mapScoreMidLine: '#6E9562',
-  mapScoreHigh: '#7CB47B',
-  mapScoreHighLine: '#477C4C',
-  mapScoreHighest: '#4E8F5B',
-  mapScoreHighestLine: '#2C5F38',
+  mapScoreLowest: '#F1DB7E',
+  mapScoreLowestLine: '#B39A33',
+  mapScoreLow: '#C9DD7A',
+  mapScoreLowLine: '#8FA23F',
+  mapScoreMid: '#86C26C',
+  mapScoreMidLine: '#4E8A3D',
+  mapScoreHigh: '#3F9A58',
+  mapScoreHighLine: '#24683A',
+  mapScoreHighest: '#1B6B3F',
+  mapScoreHighestLine: '#0B4426',
 };
 
 /**
@@ -189,16 +191,16 @@ const darkColors: ThemeColors = {
   mapLakeLabel: '#9CC3CB',
   mapZoneRecentLabel: '#B3BBE0',
   mapZoneRipeningLabel: '#E7C27D',
-  mapScoreLowest: '#2E3A32',
-  mapScoreLowestLine: '#4C5D50',
-  mapScoreLow: '#33513C',
-  mapScoreLowLine: '#547B5E',
-  mapScoreMid: '#3E6B49',
-  mapScoreMidLine: '#61996D',
-  mapScoreHigh: '#5C9B68',
-  mapScoreHighLine: '#84BE8D',
-  mapScoreHighest: '#86C893',
-  mapScoreHighestLine: '#B5E1BC',
+  mapScoreLowest: '#7A6A2C',
+  mapScoreLowestLine: '#A8944A',
+  mapScoreLow: '#6E8A36',
+  mapScoreLowLine: '#95B356',
+  mapScoreMid: '#4FA458',
+  mapScoreMidLine: '#79C47E',
+  mapScoreHigh: '#7FCB86',
+  mapScoreHighLine: '#AEE3B2',
+  mapScoreHighest: '#C3EDBD',
+  mapScoreHighestLine: '#E6F8E2',
 };
 
 export const themes: Record<ColorSchemeName, Theme> = {
