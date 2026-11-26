@@ -307,7 +307,9 @@ describe('DiscoverScreen', () => {
     // The legend stays: it names the colours the map paints with, and the map is still the
     // map the picker is looking at.
     expect(screen.getByTestId('zone-score-legend')).toBeOnTheScreen();
-    expect(screen.getByText('No zones to show')).toBeOnTheScreen();
+    // The search line above already says it; the map does not say it a second time, and must
+    // not claim the area has no scored zones when it is the search that left none.
+    expect(screen.queryByTestId('zone-map-status')).not.toBeOnTheScreen();
   });
 
   it('narrows the layers with a chip, and adds it back without a second read', async () => {
@@ -353,7 +355,7 @@ describe('DiscoverScreen', () => {
     await fireEvent.press(crowberry);
 
     expect(crowberry.props.accessibilityState).toMatchObject({ checked: true });
-    expect(await screen.findByText('No zones to show')).toBeOnTheScreen();
+    expect(await screen.findByText('No scored zones around Jyväskylä yet')).toBeOnTheScreen();
   });
 
   it('leaves nothing when the chosen berries have no zones, and says why', async () => {
@@ -364,7 +366,7 @@ describe('DiscoverScreen', () => {
       await fireEvent.press(screen.getByRole('checkbox', { name: berry }));
     }
 
-    expect(await screen.findByText('No zones to show')).toBeOnTheScreen();
+    expect(await screen.findByText('No scored zones around Jyväskylä yet')).toBeOnTheScreen();
     expect(screen.queryByTestId('zone-card')).not.toBeOnTheScreen();
   });
 

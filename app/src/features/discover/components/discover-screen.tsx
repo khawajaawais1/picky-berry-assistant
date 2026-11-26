@@ -164,6 +164,7 @@ export function DiscoverScreen({
       >
         <LiveZoneMap
           demo={demo}
+          filtered={filtering}
           fullscreen
           onOpenLocationSettings={onOpenLocationSettings}
           onRetry={retry}

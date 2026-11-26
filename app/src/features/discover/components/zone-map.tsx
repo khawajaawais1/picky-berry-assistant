@@ -17,6 +17,11 @@ const NO_ZONES: readonly Zone[] = [];
 export type ZoneMapProps = {
   /** Whether the zones are the bundled stand-in; only then does the label say “test data”. */
   demo?: boolean;
+  /**
+   * Whether a search left these zones. An empty filtered answer is the search line's to state;
+   * the map must not call the area empty when it is the search that left nothing.
+   */
+  filtered?: boolean;
   /** Fills the available screen instead of drawing the original rounded 300 px card. */
   fullscreen?: boolean;
   /** The height the screen gives it: the design's 300 on frame 06. */
@@ -45,6 +50,7 @@ export type ZoneMapProps = {
  */
 export function ZoneMap({
   demo = false,
+  filtered = false,
   fullscreen = false,
   height = layout.mapHeight,
   onOpenLocationSettings,
@@ -64,12 +70,16 @@ export function ZoneMap({
   // A build with a street basemap keeps it on screen whatever the zones' state, and lays the
   // reason there are none over it; the SVG fallback has nothing to draw without zones.
   const drawsMap = hasZones || ZONE_MAP_HAS_BASEMAP;
+  const empty = status === 'ready';
   const statusLine =
     status === 'loading'
       ? t('discover.map.loading')
       : status === 'error'
         ? t('discover.map.unavailable')
-        : t('discover.map.empty');
+        : interpolate(t('discover.map.empty'), {
+            place: t(demo ? 'discover.map.place' : 'discover.map.place.live'),
+          });
+  const showsStatus = !hasZones && !(empty && filtered);
 
   return (
     <View
@@ -97,7 +107,7 @@ export function ZoneMap({
           />
         ) : null}
 
-        {hasZones ? null : (
+        {showsStatus ? (
           <View
             // Over the basemap this is a card in the middle of the map; without one it is the
             // whole canvas. `box-none` lets a pan on the basemap pass around the card.
@@ -126,6 +136,16 @@ export function ZoneMap({
               <StatusMessage testID="zone-map-status" tone="muted" variant="bodySmall">
                 {statusLine}
               </StatusMessage>
+              {empty ? (
+                <AppText
+                  style={{ textAlign: 'center' }}
+                  testID="zone-map-status-hint"
+                  tone="muted"
+                  variant="metadata"
+                >
+                  {t('discover.map.emptyHint')}
+                </AppText>
+              ) : null}
               {status === 'error' && onRetry ? (
                 <TextAction
                   label={t('discover.map.retry')}
@@ -135,7 +155,7 @@ export function ZoneMap({
               ) : null}
             </View>
           </View>
-        )}
+        ) : null}
       </View>
 
       {hasZones && !fullscreen ? (

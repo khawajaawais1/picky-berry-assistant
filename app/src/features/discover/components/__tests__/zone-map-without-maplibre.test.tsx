@@ -51,7 +51,9 @@ describe('ZoneMap without MapLibre', () => {
   it('says why there is no map when it has neither zones nor a basemap to draw', async () => {
     await render(<ZoneMap status="ready" zones={[]} />);
 
-    expect(screen.getByTestId('zone-map-status')).toHaveTextContent('No zones to show');
+    expect(screen.getByTestId('zone-map-status')).toHaveTextContent(
+      'No scored zones around Jyväskylä yet',
+    );
     expect(screen.queryByTestId('zone-map-canvas')).not.toBeOnTheScreen();
   });
 });
