@@ -720,7 +720,13 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": {
+                    reason?: string;
+                };
+            };
+        };
         responses: {
             /** @description The new or already-queued job */
             202: {
@@ -1005,6 +1011,7 @@ export interface operations {
                     zone_id?: string;
                     /** @description Only with zone_id */
                     species?: string;
+                    reason?: string;
                 };
             };
         };

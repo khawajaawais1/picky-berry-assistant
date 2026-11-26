@@ -283,7 +283,12 @@ export function AuditPage() {
           title={`${formatNumber(data.total)} ${data.total === 1 ? "entry" : "entries"}`}
           subtitle="Newest first. The actor's email is joined on read; detail keeps its recorded shape."
         >
-          <div className="table-wrap">
+          <div
+            className="table-wrap"
+            role="region"
+            aria-label="Admin audit entries"
+            tabIndex={0}
+          >
             <table>
               <caption className="sr-only">Admin audit entries</caption>
               <thead>

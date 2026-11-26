@@ -191,6 +191,14 @@ paths:
             required: true,
             schema: { type: integer, minimum: 1 },
           }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string, minLength: 3, maxLength: 500 }
       responses:
         '202':
           description: The new or already-queued job
@@ -504,6 +512,7 @@ paths:
               properties:
                 zone_id: { type: string, format: uuid }
                 species: { type: string, description: Only with zone_id }
+                reason: { type: string, minLength: 3, maxLength: 500 }
       responses:
         '202':
           description: The queued job

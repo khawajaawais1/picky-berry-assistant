@@ -238,7 +238,12 @@ export function ModerationPage() {
           subtitle={`${activeFilters === 0 ? 'No filters' : `${activeFilters} filter${activeFilters === 1 ? '' : 's'}`} · newest evidence first by default.`}
           actions={selected ? <Badge tone="accent">Detail open</Badge> : null}
         >
-          <div className="table-wrap">
+          <div
+            className="table-wrap"
+            role="region"
+            aria-label="Reports matching the moderation filters"
+            tabIndex={0}
+          >
             <table>
               <caption className="sr-only">
                 Reports matching the moderation filters

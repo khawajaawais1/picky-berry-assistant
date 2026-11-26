@@ -645,6 +645,54 @@ describe('Admin API against PostGIS (integration)', () => {
     });
   });
 
+  it('trims the operator’s reason when a retry is queued', async () => {
+    await request(app.getHttpServer())
+      .post(`/api/v1/admin/jobs/${fixtures.failedJobId}/retry`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ reason: '  stuck job  ' })
+      .expect(202);
+
+    const audit = await database.pool.query<AuditIntegrityRow>(
+      `SELECT actor_id, reason, before_data, after_data, outcome, detail, request_id
+       FROM audit_log
+       WHERE action = 'job.retry' AND target_id = $1`,
+      [String(fixtures.failedJobId)],
+    );
+    expect(audit.rows).toHaveLength(1);
+    expect(audit.rows[0]).toMatchObject({
+      actor_id: fixtures.adminId,
+      reason: 'stuck job',
+      outcome: 'success',
+    });
+  });
+
+  it('rejects a retry reason that is too short after trimming', async () => {
+    const jobsBefore = await database.pool.query<{ count: number }>(
+      'SELECT count(*)::int AS count FROM jobs',
+    );
+    const auditBefore = await database.pool.query<{ count: number }>(
+      'SELECT count(*)::int AS count FROM audit_log',
+    );
+
+    const response = await request(app.getHttpServer())
+      .post(`/api/v1/admin/jobs/${fixtures.failedJobId}/retry`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ reason: ' ab ' })
+      .expect(422);
+
+    expect((response.body as ProblemResponse).error.code).toBe(
+      'VALIDATION_ERROR',
+    );
+    const jobsAfter = await database.pool.query<{ count: number }>(
+      'SELECT count(*)::int AS count FROM jobs',
+    );
+    const auditAfter = await database.pool.query<{ count: number }>(
+      'SELECT count(*)::int AS count FROM audit_log',
+    );
+    expect(jobsAfter.rows[0].count).toBe(jobsBefore.rows[0].count);
+    expect(auditAfter.rows[0].count).toBe(auditBefore.rows[0].count);
+  });
+
   it('records explicit before/after evidence when a recompute is queued', async () => {
     const response = await request(app.getHttpServer())
       .post('/api/v1/admin/scores/recompute')
@@ -679,6 +727,69 @@ describe('Admin API against PostGIS (integration)', () => {
         job_id: jobId,
       },
     });
+  });
+
+  it('records the operator’s reason when a recompute is queued', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/admin/scores/recompute')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        zone_id: fixtures.zoneId,
+        species: 'bilberry',
+        reason: 'nightly refresh',
+      })
+      .expect(202);
+    const jobId = (response.body as RetryResponse).job_id;
+
+    const audit = await database.pool.query<AuditIntegrityRow>(
+      `SELECT actor_id, reason, before_data, after_data, outcome, detail, request_id
+       FROM audit_log
+       WHERE action = 'scores.recompute' AND target_id = $1`,
+      [fixtures.zoneId],
+    );
+    expect(audit.rows).toHaveLength(1);
+    expect(audit.rows[0]).toMatchObject({
+      actor_id: fixtures.adminId,
+      reason: 'nightly refresh',
+      outcome: 'success',
+      after_data: {
+        status: 'queued',
+        job_id: jobId,
+        deduplicated: false,
+      },
+      detail: {
+        zone_id: fixtures.zoneId,
+        species: 'bilberry',
+        job_id: jobId,
+      },
+    });
+  });
+
+  it('rejects a blank recompute reason before writing a job or audit', async () => {
+    const jobsBefore = await database.pool.query<{ count: number }>(
+      'SELECT count(*)::int AS count FROM jobs',
+    );
+    const auditBefore = await database.pool.query<{ count: number }>(
+      'SELECT count(*)::int AS count FROM audit_log',
+    );
+
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/admin/scores/recompute')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ reason: '   ' })
+      .expect(422);
+
+    expect((response.body as ProblemResponse).error.code).toBe(
+      'VALIDATION_ERROR',
+    );
+    const jobsAfter = await database.pool.query<{ count: number }>(
+      'SELECT count(*)::int AS count FROM jobs',
+    );
+    const auditAfter = await database.pool.query<{ count: number }>(
+      'SELECT count(*)::int AS count FROM audit_log',
+    );
+    expect(jobsAfter.rows[0].count).toBe(jobsBefore.rows[0].count);
+    expect(auditAfter.rows[0].count).toBe(auditBefore.rows[0].count);
   });
 
   it('refuses to retry running, queued or missing jobs', async () => {

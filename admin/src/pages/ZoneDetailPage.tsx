@@ -173,7 +173,12 @@ export function ZoneDetailPage() {
             Recompute the zone to ask the worker for a score row.
           </EmptyState>
         ) : (
-          <div className="table-wrap">
+          <div
+            className="table-wrap"
+            role="region"
+            aria-label="Current score for each species"
+            tabIndex={0}
+          >
             <table>
               <caption className="sr-only">Current score for each species</caption>
               <thead>
@@ -322,7 +327,12 @@ export function ZoneDetailPage() {
           {data.species_fit.length === 0 ? (
             <EmptyState title="No zone_species rows" />
           ) : (
-            <div className="table-wrap">
+            <div
+              className="table-wrap"
+              role="region"
+              aria-label="Species suitability per zone"
+              tabIndex={0}
+            >
               <table>
                 <caption className="sr-only">Species suitability per zone</caption>
                 <thead>
@@ -369,7 +379,12 @@ export function ZoneDetailPage() {
           {data.reports.length === 0 ? (
             <EmptyState title="No reports for this zone yet" />
           ) : (
-            <div className="table-wrap">
+            <div
+              className="table-wrap"
+              role="region"
+              aria-label="Recent reports for this zone"
+              tabIndex={0}
+            >
               <table>
                 <caption className="sr-only">Recent reports for this zone</caption>
                 <thead>
@@ -413,7 +428,12 @@ export function ZoneDetailPage() {
           {data.visits.length === 0 ? (
             <EmptyState title="No visits recorded for this zone" />
           ) : (
-            <div className="table-wrap">
+            <div
+              className="table-wrap"
+              role="region"
+              aria-label="Recent visits to this zone"
+              tabIndex={0}
+            >
               <table>
                 <caption className="sr-only">Recent visits to this zone</caption>
                 <thead>
@@ -454,7 +474,12 @@ export function ZoneDetailPage() {
               Recompute the zone to create one.
             </EmptyState>
           ) : (
-            <div className="table-wrap">
+            <div
+              className="table-wrap"
+              role="region"
+              aria-label="Recent jobs for this zone"
+              tabIndex={0}
+            >
               <table>
                 <caption className="sr-only">Recent jobs for this zone</caption>
                 <thead>
