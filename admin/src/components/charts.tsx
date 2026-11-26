@@ -1,5 +1,7 @@
+import { useRef, useState, useEffect } from 'react';
 import type { DailyCount, DailyJobs, DistributionBucket } from '../api/types';
 import { formatNumber, formatShortDate } from '../lib/format';
+import { chartWidth } from '../lib/chart';
 
 export function LineChart({
   data,
@@ -16,9 +18,25 @@ export function LineChart({
   /** Describe a count total, or the latest point of a time series. */
   summary?: 'total' | 'latest';
 }) {
+  const figureRef = useRef<HTMLElement>(null);
+  const [measured, setMeasured] = useState(0);
+  useEffect(() => {
+    const node = figureRef.current;
+    if (!node) return;
+    const update = () => setMeasured(node.clientWidth);
+    update();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', update);
+      return () => window.removeEventListener('resize', update);
+    }
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
   if (data.length === 0) return <p className="muted">No data in this range.</p>;
 
-  const width = 720;
+  const width = chartWidth(measured);
   const height = 200;
   const padX = 38;
   const padTop = 18;
@@ -52,7 +70,7 @@ export function LineChart({
       : `${formatNumber(total)} total`;
 
   return (
-    <figure className="chart-figure">
+    <figure className="chart-figure" ref={figureRef}>
       <svg
         viewBox={`0 0 ${width} ${height}`}
         className="chart"
