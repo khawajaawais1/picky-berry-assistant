@@ -64,16 +64,33 @@ describe('ZoneMap', () => {
     expect(screen.getByText('1 zone')).toBeOnTheScreen();
   });
 
-  it('says it is still loading rather than drawing an empty map', async () => {
+  it('keeps the street map on screen while it loads, with the loading line over it', async () => {
     await render(<ZoneMap status="loading" zones={[]} />);
 
     expect(screen.getByTestId('zone-map-status')).toHaveTextContent('Loading zones…');
-    expect(screen.queryByTestId('zone-map-drawing')).not.toBeOnTheScreen();
+    // A blank tint in place of the map reads as a broken screen; the basemap is drawn either way.
+    expect(screen.getByTestId('zone-map-drawing')).toBeOnTheScreen();
+  });
+
+  it('frames the pilot area when there are no zones to fit, instead of the whole world', async () => {
+    await render(<ZoneMap status="ready" zones={[]} />);
+
+    expect(screen.getByTestId('zone-map-drawing')).toBeOnTheScreen();
+    expect(screen.getByTestId('zone-map-camera').props.bounds).toEqual([25.5, 62.15, 25.9, 62.35]);
+    // Nothing to fit back to, and no count to claim.
+    expect(screen.queryByTestId('zone-map-recentre')).not.toBeOnTheScreen();
+    expect(screen.queryByText('0 zones')).not.toBeOnTheScreen();
   });
 
   it('distinguishes a source that returned nothing from one that failed', async () => {
     const empty = await render(<ZoneMap status="ready" zones={[]} />);
-    expect(screen.getByTestId('zone-map-status')).toHaveTextContent('No zones to show');
+    // Says where, and what the picker can do, rather than a bare "nothing".
+    expect(screen.getByTestId('zone-map-status')).toHaveTextContent(
+      'No scored zones around Jyväskylä yet',
+    );
+    expect(screen.getByTestId('zone-map-status-hint')).toHaveTextContent(
+      'Check back later, or try another berry.',
+    );
 
     const failed = await render(<ZoneMap status="error" zones={[]} />);
     expect(screen.getByTestId('zone-map-status')).toHaveTextContent('Zones could not be read');
@@ -81,6 +98,21 @@ describe('ZoneMap', () => {
     // The two states are different sentences, which is the point: a failed read is not an
     // empty world.
     expect(empty.toJSON()).not.toEqual(failed.toJSON());
+  });
+
+  it('names the bundled area when the stub answered nothing', async () => {
+    await render(<ZoneMap demo status="ready" zones={[]} />);
+
+    expect(screen.getByTestId('zone-map-status')).toHaveTextContent(
+      'No scored zones around Laajavuori yet',
+    );
+  });
+
+  it('leaves an empty search to the search line instead of calling the area empty', async () => {
+    await render(<ZoneMap filtered status="ready" zones={[]} />);
+
+    expect(screen.queryByTestId('zone-map-status')).not.toBeOnTheScreen();
+    expect(screen.getByTestId('zone-map-drawing')).toBeOnTheScreen();
   });
 
   it('offers a retry only when its caller has somewhere to send the press', async () => {

@@ -191,7 +191,8 @@ export const en = {
   'discover.map.updated': 'Last updated {date}',
   'discover.map.loading': 'Loading zones…',
   'discover.map.unavailable': 'Zones could not be read',
-  'discover.map.empty': 'No zones to show',
+  'discover.map.empty': 'No scored zones around {place} yet',
+  'discover.map.emptyHint': 'Check back later, or try another berry.',
   // The retry the error line owes the picker: waiting is not the only option when the source
   // failed once (frontend review, 2026-10-25).
   'discover.map.retry': 'Try again',

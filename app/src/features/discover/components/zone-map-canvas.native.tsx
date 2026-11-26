@@ -23,6 +23,7 @@ import {
 } from '../domain/zone-score-band';
 import { zoneBounds } from '../domain/zone-map-projection';
 import { zoneFeatureCollection } from '../domain/zone-source';
+import { PILOT_BBOX } from '../services/api-zone-source';
 
 import { loadMapLibre } from './map-libre';
 import type { ZoneMapCanvasProps } from './zone-map-canvas-props';
@@ -39,9 +40,19 @@ const FULLSCREEN_CAMERA_PADDING = { top: 160, right: 56, bottom: 220, left: 24 }
 /** The native package is absent from Expo Go; see `map-libre.ts` for why this is not an import. */
 const mapLibre = loadMapLibre();
 
+/**
+ * Whether this build draws a street basemap of its own. When it does, the map stays on screen
+ * with no zones on it (loading, empty or failed) and the reason is laid over it; a tinted blank
+ * where the map should be reads as a broken screen rather than as "nothing here yet".
+ */
+export const ZONE_MAP_HAS_BASEMAP = mapLibre !== null;
+
 /** OpenFreeMap's outdoor-readable OSM style; UI overlays still follow the app's colour scheme. */
 const BASEMAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
 const SELECTED_ZONE_OPACITY = 0.92;
+
+/** The pilot area as a camera frame: one stable array, so an empty answer does not re-fit the map. */
+const PILOT_FRAME: [number, number, number, number] = [...PILOT_BBOX];
 
 /** How far the picker may zoom: out to the region, in to a few streets. */
 const MIN_ZOOM = 8;
@@ -184,22 +195,23 @@ function MapLibreCanvas({
       }) as NonNullable<CircleLayerSpecification['paint']>,
     [colors],
   );
-  const framedBounds = useMemo<[number, number, number, number] | null>(() => {
+  const zonesBounds = useMemo<[number, number, number, number] | null>(() => {
     const bounds = zoneBounds(zones.map((zone) => zone.ring));
 
     return bounds === null ? null : [bounds[0], bounds[1], bounds[2], bounds[3]];
   }, [zones]);
+  // With nothing to fit, the camera frames the pilot area the zones are read from, so an empty
+  // answer still shows the picker where the zones will be rather than a zoomed-out world.
+  const framedBounds = zonesBounds ?? PILOT_FRAME;
 
   const recentre = useCallback(() => {
     setFollowingPosition(false);
-    if (framedBounds) {
-      const camera = cameraRef.current;
-      if (typeof camera?.fitBounds === 'function') {
-        camera.fitBounds(framedBounds, {
-          padding: cameraPadding,
-          duration: motion.mapFit,
-        });
-      }
+    const camera = cameraRef.current;
+    if (typeof camera?.fitBounds === 'function') {
+      camera.fitBounds(framedBounds, {
+        padding: cameraPadding,
+        duration: motion.mapFit,
+      });
     }
   }, [cameraPadding, framedBounds]);
 
@@ -265,16 +277,14 @@ function MapLibreCanvas({
         touchPitch={false}
         touchRotate={false}
       >
-        {framedBounds ? (
-          <Camera
-            bounds={framedBounds}
-            maxZoom={MAX_ZOOM}
-            minZoom={MIN_ZOOM}
-            padding={cameraPadding}
-            ref={cameraRef}
-            testID="zone-map-camera"
-          />
-        ) : null}
+        <Camera
+          bounds={framedBounds}
+          maxZoom={MAX_ZOOM}
+          minZoom={MIN_ZOOM}
+          padding={cameraPadding}
+          ref={cameraRef}
+          testID="zone-map-camera"
+        />
 
         <GeoJSONSource data={data} id="pilot-zones" onPress={selectZone} testID="zone-map-source">
           <Layer id="zone-fill" paint={fill} source="pilot-zones" type="fill" />
@@ -347,7 +357,7 @@ function MapLibreCanvas({
           </Pressable>
         ) : null}
 
-        {framedBounds ? (
+        {zonesBounds ? (
           <Pressable
             accessibilityLabel={t('discover.map.recentre')}
             accessibilityRole="button"

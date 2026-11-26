@@ -171,7 +171,8 @@ export const fi: Record<TranslationKey, string> = {
   'discover.map.updated': 'Päivitetty {date}',
   'discover.map.loading': 'Ladataan alueita…',
   'discover.map.unavailable': 'Alueita ei voitu lukea',
-  'discover.map.empty': 'Ei näytettäviä alueita',
+  'discover.map.empty': 'Ei vielä pisteytettyjä alueita: {place}',
+  'discover.map.emptyHint': 'Katso myöhemmin uudelleen tai kokeile toista marjaa.',
   'discover.map.retry': 'Yritä uudelleen',
   // Expo Go does not contain MapLibre's native binary, so the map explains the build it needs
   // rather than taking the app down at import time.
