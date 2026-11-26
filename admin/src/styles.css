@@ -1457,11 +1457,19 @@ th.numeric {
   background: #120f19;
 }
 
-.kv span {
+.kv span,
+.kv dt {
   color: var(--muted);
   font-size: 0.66rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
+}
+
+.kv dd {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .kv strong {

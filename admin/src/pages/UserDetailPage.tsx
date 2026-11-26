@@ -189,24 +189,32 @@ export function UserDetailPage() {
         >
           <dl className="kv-grid">
             <div className="kv">
-              <span>Language</span>
-              <strong>{data.lang.toUpperCase()}</strong>
-              <small>field app preference</small>
+              <dt>Language</dt>
+              <dd>
+                <strong>{data.lang.toUpperCase()}</strong>
+                <small>field app preference</small>
+              </dd>
             </div>
             <div className="kv">
-              <span>Privacy level</span>
-              <strong>{titleCase(data.privacy_level)}</strong>
-              <small>who may see shared spots</small>
+              <dt>Privacy level</dt>
+              <dd>
+                <strong>{titleCase(data.privacy_level)}</strong>
+                <small>who may see shared spots</small>
+              </dd>
             </div>
             <div className="kv">
-              <span>Background location</span>
-              <strong>{data.background_location ? 'Enabled' : 'Off'}</strong>
-              <small>consent is recorded separately</small>
+              <dt>Background location</dt>
+              <dd>
+                <strong>{data.background_location ? 'Enabled' : 'Off'}</strong>
+                <small>consent is recorded separately</small>
+              </dd>
             </div>
             <div className="kv">
-              <span>Alert radius</span>
-              <strong>{data.alert_radius_km} km</strong>
-              <small>species interest: {data.species_interest.join(', ') || 'none'}</small>
+              <dt>Alert radius</dt>
+              <dd>
+                <strong>{data.alert_radius_km} km</strong>
+                <small>species interest: {data.species_interest.join(', ') || 'none'}</small>
+              </dd>
             </div>
           </dl>
           <div className="notice">
