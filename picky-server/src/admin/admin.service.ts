@@ -913,6 +913,7 @@ export class AdminService {
     requestId: string,
     ip: string | null = null,
     userAgent: string | null = null,
+    reason: string | null = null,
   ): Promise<Record<string, unknown>> {
     const client = await this.database.pool.connect();
     try {
@@ -960,6 +961,7 @@ export class AdminService {
           },
           ip,
           userAgent,
+          reason,
         },
       );
       await client.query('COMMIT');
@@ -1544,6 +1546,7 @@ export class AdminService {
         },
         ip,
         userAgent,
+        input.reason?.trim() || null,
       );
     }
     return this.enqueueWithAudit(
@@ -1555,6 +1558,7 @@ export class AdminService {
       {},
       ip,
       userAgent,
+      input.reason?.trim() || null,
     );
   }
 
@@ -1567,6 +1571,7 @@ export class AdminService {
     detail: Record<string, unknown>,
     ip: string | null,
     userAgent: string | null,
+    reason: string | null = null,
   ): Promise<EnqueueResult> {
     const client = await this.database.pool.connect();
     try {
@@ -1591,6 +1596,7 @@ export class AdminService {
           },
           ip,
           userAgent,
+          reason,
         },
       );
       await client.query('COMMIT');

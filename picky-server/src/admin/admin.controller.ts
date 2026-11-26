@@ -25,6 +25,7 @@ import { AuditQueryDto } from './dto/audit-query.dto';
 import { JobsQueryDto } from './dto/jobs-query.dto';
 import { MapQueryDto } from './dto/map-query.dto';
 import { RecomputeDto } from './dto/recompute.dto';
+import { RetryJobDto } from './dto/retry-job.dto';
 import { ReportsQueryDto } from './dto/reports-query.dto';
 import { RevokeSessionsDto } from './dto/revoke-sessions.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
@@ -109,6 +110,7 @@ export class AdminController {
   retryJob(
     @Param('id', new ParseIntPipe({ errorHttpStatusCode: 422 }))
     jobId: number,
+    @Body() body: RetryJobDto = new RetryJobDto(),
     @Req() request: AdminRequest,
   ): Promise<Record<string, unknown>> {
     const meta = requestMetaOf(request);
@@ -118,6 +120,7 @@ export class AdminController {
       requestIdOf(request),
       meta.ip,
       meta.userAgent,
+      body.reason?.trim() || null,
     );
   }
 
