@@ -13,6 +13,7 @@ import {
   useToast,
   type Tone,
 } from '../components/ui';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { errorMessage } from '../lib/errors';
 import {
   formatDuration,
@@ -47,6 +48,7 @@ export function JobsPage() {
   const [page, setPage] = useState(1);
   const [live, setLive] = useState(false);
   const [retrying, setRetrying] = useState<number | null>(null);
+  const [retryConfirm, setRetryConfirm] = useState<number | null>(null);
   const toast = useToast();
 
   useEffect(() => {
@@ -71,9 +73,6 @@ export function JobsPage() {
   }, [live, reload]);
 
   const retry = async (jobId: number) => {
-    if (!window.confirm(`Requeue job #${jobId} with the same type and payload?`)) {
-      return;
-    }
     setRetrying(jobId);
     try {
       const result = await api<EnqueueResult>(`/admin/jobs/${jobId}/retry`, {
@@ -294,7 +293,7 @@ export function JobsPage() {
                         <Button
                           className="small ghost"
                           loading={retrying === job.id}
-                          onClick={() => void retry(job.id)}
+                          onClick={() => setRetryConfirm(job.id)}
                         >
                           Retry
                         </Button>
@@ -315,6 +314,19 @@ export function JobsPage() {
           />
         </Card>
       )}
+      <ConfirmDialog
+        open={retryConfirm !== null}
+        title={`Requeue job #${retryConfirm ?? ''}`}
+        consequence="A copy of the job is enqueued with the same type and payload. The original is left untouched."
+        confirmLabel="Requeue"
+        busy={retryConfirm !== null && retrying === retryConfirm}
+        onClose={() => setRetryConfirm(null)}
+        onConfirm={() => {
+          const id = retryConfirm;
+          setRetryConfirm(null);
+          if (id !== null) void retry(id);
+        }}
+      />
     </div>
   );
 }

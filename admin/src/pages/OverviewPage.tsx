@@ -13,6 +13,7 @@ import {
   StatCard,
   useToast,
 } from '../components/ui';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { errorMessage } from '../lib/errors';
 import {
   formatDate,
@@ -26,9 +27,9 @@ export function OverviewPage() {
   const { data, error, loading, reload } = useApi<Overview>('/admin/overview');
   const toast = useToast();
   const [recomputing, setRecomputing] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const recomputeAll = async () => {
-    if (!window.confirm('Queue a recomputation of every zone score?')) return;
     setRecomputing(true);
     try {
       const result = await api<EnqueueResult>('/admin/scores/recompute', {
@@ -67,7 +68,7 @@ export function OverviewPage() {
             <Button
               variant="primary"
               loading={recomputing}
-              onClick={() => void recomputeAll()}
+              onClick={() => setConfirmOpen(true)}
             >
               Recompute all scores
             </Button>
@@ -242,6 +243,18 @@ export function OverviewPage() {
           </ul>
         )}
       </Card>
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Recompute all scores"
+        consequence="Every zone score is requeued for the worker. The API deduplicates the request, so clicking twice is safe."
+        confirmLabel="Recompute all scores"
+        busy={recomputing}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={() => {
+          setConfirmOpen(false);
+          void recomputeAll();
+        }}
+      />
     </div>
   );
 }

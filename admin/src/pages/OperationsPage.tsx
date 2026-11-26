@@ -20,6 +20,7 @@ import {
   useToast,
   type Tone,
 } from '../components/ui';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { errorMessage } from '../lib/errors';
 import {
   formatDate,
@@ -101,6 +102,7 @@ export function OperationsPage() {
   );
   const toast = useToast();
   const [recomputing, setRecomputing] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const checks = health.data?.checks ?? [];
   const status: HealthStatus = health.data?.status ?? 'unknown';
@@ -115,7 +117,6 @@ export function OperationsPage() {
   };
 
   const recomputeAll = async () => {
-    if (!window.confirm('Queue a recomputation of every zone score?')) return;
     setRecomputing(true);
     try {
       const result = await api<EnqueueResult>('/admin/scores/recompute', {
@@ -163,7 +164,7 @@ export function OperationsPage() {
             <Button
               variant="primary"
               loading={recomputing}
-              onClick={() => void recomputeAll()}
+              onClick={() => setConfirmOpen(true)}
             >
               Recompute all scores
             </Button>
@@ -410,6 +411,18 @@ export function OperationsPage() {
         the current tables. The worker owns claims and heartbeats; this panel
         only reads their evidence.
       </p>
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Recompute all scores"
+        consequence="Every zone score is requeued for the worker. The API deduplicates the request, so clicking twice is safe."
+        confirmLabel="Recompute all scores"
+        busy={recomputing}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={() => {
+          setConfirmOpen(false);
+          void recomputeAll();
+        }}
+      />
     </div>
   );
 }
