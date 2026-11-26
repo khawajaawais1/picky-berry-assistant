@@ -1,6 +1,7 @@
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/atoms';
+import { Feather } from '@/components/atoms/app-icon';
 import { GlassSurface } from '@/components/molecules';
 import { layout, spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -75,19 +76,30 @@ export function SpeciesChips({
         key={species}
         onPress={() => onToggle(species)}
         style={{
-          // A lit chip is the accent fill; an unlit one on the map is glass, and in the
-          // document reading it is the design's surface.
-          backgroundColor: on ? colors.accent : glass ? 'transparent' : colors.surface,
+          // A lit chip is the soft accent tint with an accent stroke, not a solid fill: every
+          // berry is lit when the map opens, and four solid accent pills outweighed the map they
+          // filter. An unlit one on the map is glass, and in the document reading the surface.
+          backgroundColor: on ? colors.accentMuted : glass ? 'transparent' : colors.surface,
           borderColor: on ? colors.accent : colors.border,
           // The design's chips carry a 1 px stroke in either state.
           borderWidth: 1,
+          gap: spacing.sm,
           overflow: 'hidden',
         }}
         testID={`species-chip-${species}`}
       >
         {!on && glass ? <GlassSurface style={StyleSheet.absoluteFill} /> : null}
+        {on ? (
+          // The check says "on" without leaning on the tint alone (WCAG 1.4.1).
+          <Feather
+            color={colors.accent}
+            name="check"
+            size={14}
+            testID={`species-chip-${species}-check`}
+          />
+        ) : null}
         <AppText
-          style={{ color: on ? colors.onAccent : colors.textMuted, fontWeight: '600' }}
+          style={{ color: on ? colors.accent : colors.textMuted, fontWeight: '600' }}
           variant="label"
         >
           {label}

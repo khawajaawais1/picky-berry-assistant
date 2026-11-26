@@ -158,6 +158,13 @@ describe('DiscoverScreen', () => {
         checked: true,
       });
     }
+    // A lit chip is a soft tint with a check mark, not a solid accent pill: four solid pills
+    // outweighed the map, and the check says "on" without leaning on colour alone.
+    expect(screen.getByTestId('species-chip-bilberry')).toHaveStyle({
+      backgroundColor: themes.light.colors.accentMuted,
+      borderColor: themes.light.colors.accent,
+    });
+    expect(screen.getByTestId('species-chip-bilberry-check')).toBeOnTheScreen();
     expect(screen.getByTestId('zone-map')).toBeOnTheScreen();
     expect(screen.getByTestId('zone-score-legend')).toBeOnTheScreen();
     expect(screen.getByTestId('zone-card')).toBeOnTheScreen();
