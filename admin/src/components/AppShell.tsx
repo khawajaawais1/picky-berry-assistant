@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { API_BASE } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
@@ -132,7 +132,7 @@ const NAV = [
   },
 ];
 
-function pageMeta(pathname: string): { title: string; description: string } {
+export function pageMeta(pathname: string): { title: string; description: string } {
   if (pathname === '/') {
     return {
       title: 'Overview',
@@ -212,6 +212,22 @@ export function AppShell() {
   const { session, signOut } = useAuth();
   const location = useLocation();
   const meta = pageMeta(location.pathname);
+  const mainRef = useRef<HTMLElement>(null);
+  const firstRender = useRef(true);
+
+  useEffect(() => {
+    document.title = `${meta.title} · Picky operator console`;
+  }, [meta.title]);
+
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    const heading = mainRef.current?.querySelector('h1');
+    if (heading instanceof HTMLElement) heading.focus();
+    else mainRef.current?.focus();
+  }, [location.pathname]);
   const initials = (session?.user.nickname ?? session?.user.email ?? '?')
     .trim()
     .slice(0, 2)
@@ -282,7 +298,7 @@ export function AppShell() {
           </div>
         </header>
 
-        <main id="main" className="page">
+        <main id="main" className="page" ref={mainRef} tabIndex={-1}>
           <Outlet />
         </main>
       </div>
