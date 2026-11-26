@@ -69,11 +69,12 @@ export function JobsPage() {
 
   usePolling(reload, 5000, live);
 
-  const retry = async (jobId: number) => {
+  const retry = async (jobId: number, reason: string) => {
     setRetrying(jobId);
     try {
       const result = await api<EnqueueResult>(`/admin/jobs/${jobId}/retry`, {
         method: 'POST',
+        body: { reason },
       });
       toast(
         'good',
@@ -318,10 +319,10 @@ export function JobsPage() {
         confirmLabel="Requeue"
         busy={retryConfirm !== null && retrying === retryConfirm}
         onClose={() => setRetryConfirm(null)}
-        onConfirm={() => {
+        onConfirm={(reason) => {
           const id = retryConfirm;
           setRetryConfirm(null);
-          if (id !== null) void retry(id);
+          if (id !== null) void retry(id, reason);
         }}
       />
     </div>

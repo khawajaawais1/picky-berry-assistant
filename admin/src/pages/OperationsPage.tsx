@@ -21,6 +21,7 @@ import {
   type Tone,
 } from '../components/ui';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { RelativeTime } from '../components/RelativeTime';
 import { errorMessage } from '../lib/errors';
 import {
   formatDate,
@@ -116,12 +117,12 @@ export function OperationsPage() {
     running.reload();
   };
 
-  const recomputeAll = async () => {
+  const recomputeAll = async (reason: string) => {
     setRecomputing(true);
     try {
       const result = await api<EnqueueResult>('/admin/scores/recompute', {
         method: 'POST',
-        body: {},
+        body: { reason },
       });
       toast(
         'good',
@@ -220,7 +221,7 @@ export function OperationsPage() {
         />
         <StatCard
           label="Freshness"
-          value={formatRelative(data.zones.latest_score_at)}
+          value={<RelativeTime value={data.zones.latest_score_at} />}
           hint={`${formatNumber(data.zones.stale_scores)} stale score rows`}
           tone={data.zones.stale_scores === 0 ? 'good' : 'warn'}
         />
@@ -418,9 +419,9 @@ export function OperationsPage() {
         confirmLabel="Recompute all scores"
         busy={recomputing}
         onClose={() => setConfirmOpen(false)}
-        onConfirm={() => {
+        onConfirm={(reason) => {
           setConfirmOpen(false);
-          void recomputeAll();
+          void recomputeAll(reason);
         }}
       />
     </div>

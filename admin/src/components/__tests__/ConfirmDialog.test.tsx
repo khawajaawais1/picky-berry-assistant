@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ConfirmDialog } from '../ConfirmDialog';
 
 describe('ConfirmDialog', () => {
-  it('confirms immediately without asking for a reason', async () => {
+  it('requires a reason before confirming', async () => {
     const user = userEvent.setup();
     const onConfirm = vi.fn();
     const onClose = vi.fn();
@@ -20,11 +20,12 @@ describe('ConfirmDialog', () => {
       />,
     );
 
-    expect(screen.queryByLabelText(/reason/i)).not.toBeInTheDocument();
     const confirm = screen.getByRole('button', { name: 'Recompute' });
+    expect(confirm).toBeDisabled();
+    await user.type(screen.getByLabelText(/reason/i), 'nightly refresh');
     expect(confirm).toBeEnabled();
     await user.click(confirm);
-    expect(onConfirm).toHaveBeenCalledOnce();
+    expect(onConfirm).toHaveBeenCalledWith('nightly refresh');
     expect(onClose).not.toHaveBeenCalled();
   });
 

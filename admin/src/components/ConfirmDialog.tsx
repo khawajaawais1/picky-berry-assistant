@@ -7,6 +7,7 @@ export function ConfirmDialog({
   confirmLabel,
   busy = false,
   error = null,
+  tone = 'default',
   onClose,
   onConfirm,
 }: {
@@ -16,8 +17,9 @@ export function ConfirmDialog({
   confirmLabel: string;
   busy?: boolean;
   error?: string | null;
+  tone?: 'danger' | 'primary' | 'default';
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (reason: string) => void;
 }) {
   return (
     <ActionDialog
@@ -27,10 +29,9 @@ export function ConfirmDialog({
       confirmLabel={confirmLabel}
       busy={busy}
       error={error}
-      requireReason={false}
-      tone="danger"
+      tone={tone}
       onClose={onClose}
-      onConfirm={() => onConfirm()}
+      onConfirm={onConfirm}
     />
   );
 }

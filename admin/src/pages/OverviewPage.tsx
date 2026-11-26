@@ -14,6 +14,7 @@ import {
   useToast,
 } from '../components/ui';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { RelativeTime } from '../components/RelativeTime';
 import { errorMessage } from '../lib/errors';
 import {
   formatDate,
@@ -29,12 +30,12 @@ export function OverviewPage() {
   const [recomputing, setRecomputing] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const recomputeAll = async () => {
+  const recomputeAll = async (reason: string) => {
     setRecomputing(true);
     try {
       const result = await api<EnqueueResult>('/admin/scores/recompute', {
         method: 'POST',
-        body: {},
+        body: { reason },
       });
       toast(
         'good',
@@ -117,7 +118,7 @@ export function OverviewPage() {
           <div className="kv-grid">
             <div className="kv">
               <span>Newest score</span>
-              <strong>{formatRelative(data.zones.latest_score_at)}</strong>
+              <strong><RelativeTime value={data.zones.latest_score_at} /></strong>
               <small>{formatDate(data.zones.latest_score_at)}</small>
             </div>
             <div className="kv">
@@ -250,9 +251,9 @@ export function OverviewPage() {
         confirmLabel="Recompute all scores"
         busy={recomputing}
         onClose={() => setConfirmOpen(false)}
-        onConfirm={() => {
+        onConfirm={(reason) => {
           setConfirmOpen(false);
-          void recomputeAll();
+          void recomputeAll(reason);
         }}
       />
     </div>

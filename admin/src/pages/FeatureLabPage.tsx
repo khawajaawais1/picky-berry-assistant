@@ -112,12 +112,12 @@ export function FeatureLabPage() {
     }
   };
 
-  const recomputeAll = async () => {
+  const recomputeAll = async (reason: string) => {
     setBusyAction('all');
     try {
       const response = await api<EnqueueResult>('/admin/scores/recompute', {
         method: 'POST',
-        body: {},
+        body: { reason },
       });
       toast(
         'good',
@@ -420,9 +420,9 @@ export function FeatureLabPage() {
         confirmLabel="Recompute all scores"
         busy={busyAction === 'all'}
         onClose={() => setConfirmOpen(false)}
-        onConfirm={() => {
+        onConfirm={(reason) => {
           setConfirmOpen(false);
-          void recomputeAll();
+          void recomputeAll(reason);
         }}
       />
     </div>
