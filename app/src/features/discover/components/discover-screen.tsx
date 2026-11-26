@@ -242,19 +242,23 @@ export function DiscoverScreen({
         </SafeAreaView>
 
         <View pointerEvents="box-none" style={styles.bottomControls}>
-          <GlassSurface
-            pointerEvents="none"
-            style={[styles.legendPanel, { borderColor: colors.border, borderWidth: 1 }]}
-          >
-            <ZoneScoreLegend />
-            {updatedAt && matches.length > 0 ? (
-              <AppText testID="discover-updated" tone="muted" variant="metadata">
-                {interpolate(t('discover.map.updated'), {
-                  date: formatLongDate(updatedAt, locale),
-                })}
-              </AppText>
-            ) : null}
-          </GlassSurface>
+          {/* The key is hidden only when the answer itself has no zones: an empty search keeps
+              it, because the map the picker is looking at is still painted in those colours. */}
+          {zones.length > 0 ? (
+            <GlassSurface
+              pointerEvents="none"
+              style={[styles.legendPanel, { borderColor: colors.border, borderWidth: 1 }]}
+            >
+              <ZoneScoreLegend />
+              {updatedAt && matches.length > 0 ? (
+                <AppText testID="discover-updated" tone="muted" variant="metadata">
+                  {interpolate(t('discover.map.updated'), {
+                    date: formatLongDate(updatedAt, locale),
+                  })}
+                </AppText>
+              ) : null}
+            </GlassSurface>
+          ) : null}
 
           {cardZone ? (
             <ZoneCard

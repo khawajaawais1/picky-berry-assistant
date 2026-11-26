@@ -368,6 +368,8 @@ describe('DiscoverScreen', () => {
 
     expect(await screen.findByText('No scored zones around Jyväskylä yet')).toBeOnTheScreen();
     expect(screen.queryByTestId('zone-card')).not.toBeOnTheScreen();
+    // A key to colours nothing on the map is painted in only crowds the empty state.
+    expect(screen.queryByTestId('zone-score-legend')).not.toBeOnTheScreen();
   });
 
   it('lists the same zones, each under the berry whose score it prints', async () => {
