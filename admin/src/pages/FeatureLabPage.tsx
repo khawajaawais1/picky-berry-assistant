@@ -11,6 +11,7 @@ import {
   useToast,
   type Tone,
 } from '../components/ui';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { errorMessage } from '../lib/errors';
 import { formatNumber } from '../lib/format';
 
@@ -75,6 +76,7 @@ export function FeatureLabPage() {
   const [sending, setSending] = useState(false);
 
   const [busyAction, setBusyAction] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [zoneId, setZoneId] = useState('');
   const [species, setSpecies] = useState('');
   const [jobId, setJobId] = useState('');
@@ -110,13 +112,12 @@ export function FeatureLabPage() {
     }
   };
 
-  const recomputeAll = async () => {
-    if (!window.confirm('Queue a recomputation of every zone score?')) return;
+  const recomputeAll = async (reason: string) => {
     setBusyAction('all');
     try {
       const response = await api<EnqueueResult>('/admin/scores/recompute', {
         method: 'POST',
-        body: {},
+        body: { reason },
       });
       toast(
         'good',
@@ -300,7 +301,7 @@ export function FeatureLabPage() {
             subtitle="Each action is the same request the console uses."
           >
             <div className="stack-tight">
-              <Button loading={busyAction === 'all'} onClick={() => void recomputeAll()}>
+              <Button loading={busyAction === 'all'} onClick={() => setConfirmOpen(true)}>
                 Recompute all scores
               </Button>
 
@@ -412,6 +413,18 @@ export function FeatureLabPage() {
           ))}
         </ul>
       </Card>
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Recompute all scores"
+        consequence="Every zone score is requeued for the worker. The API deduplicates the request, so clicking twice is safe."
+        confirmLabel="Recompute all scores"
+        busy={busyAction === 'all'}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={(reason) => {
+          setConfirmOpen(false);
+          void recomputeAll(reason);
+        }}
+      />
     </div>
   );
 }

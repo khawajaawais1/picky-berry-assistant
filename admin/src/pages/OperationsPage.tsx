@@ -20,6 +20,8 @@ import {
   useToast,
   type Tone,
 } from '../components/ui';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { RelativeTime } from '../components/RelativeTime';
 import { errorMessage } from '../lib/errors';
 import {
   formatDate,
@@ -101,6 +103,7 @@ export function OperationsPage() {
   );
   const toast = useToast();
   const [recomputing, setRecomputing] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const checks = health.data?.checks ?? [];
   const status: HealthStatus = health.data?.status ?? 'unknown';
@@ -114,13 +117,12 @@ export function OperationsPage() {
     running.reload();
   };
 
-  const recomputeAll = async () => {
-    if (!window.confirm('Queue a recomputation of every zone score?')) return;
+  const recomputeAll = async (reason: string) => {
     setRecomputing(true);
     try {
       const result = await api<EnqueueResult>('/admin/scores/recompute', {
         method: 'POST',
-        body: {},
+        body: { reason },
       });
       toast(
         'good',
@@ -163,7 +165,7 @@ export function OperationsPage() {
             <Button
               variant="primary"
               loading={recomputing}
-              onClick={() => void recomputeAll()}
+              onClick={() => setConfirmOpen(true)}
             >
               Recompute all scores
             </Button>
@@ -219,7 +221,7 @@ export function OperationsPage() {
         />
         <StatCard
           label="Freshness"
-          value={formatRelative(data.zones.latest_score_at)}
+          value={<RelativeTime value={data.zones.latest_score_at} />}
           hint={`${formatNumber(data.zones.stale_scores)} stale score rows`}
           tone={data.zones.stale_scores === 0 ? 'good' : 'warn'}
         />
@@ -410,6 +412,18 @@ export function OperationsPage() {
         the current tables. The worker owns claims and heartbeats; this panel
         only reads their evidence.
       </p>
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Recompute all scores"
+        consequence="Every zone score is requeued for the worker. The API deduplicates the request, so clicking twice is safe."
+        confirmLabel="Recompute all scores"
+        busy={recomputing}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={(reason) => {
+          setConfirmOpen(false);
+          void recomputeAll(reason);
+        }}
+      />
     </div>
   );
 }

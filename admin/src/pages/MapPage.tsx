@@ -13,7 +13,8 @@ import {
   PageHeader,
   StatCard,
 } from '../components/ui';
-import { formatNumber, formatRelative } from '../lib/format';
+import { formatNumber } from '../lib/format';
+import { RelativeTime } from '../components/RelativeTime';
 import { useApi } from '../lib/useApi';
 
 /** Finland, until the API tells us where the spots are. */
@@ -215,7 +216,7 @@ export function MapPage() {
           />
           <StatCard
             label="Read"
-            value={formatRelative(data.generated_at)}
+            value={<RelativeTime value={data.generated_at} />}
             hint="from the live database"
           />
         </div>
