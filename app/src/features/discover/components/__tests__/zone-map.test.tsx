@@ -64,11 +64,22 @@ describe('ZoneMap', () => {
     expect(screen.getByText('1 zone')).toBeOnTheScreen();
   });
 
-  it('says it is still loading rather than drawing an empty map', async () => {
+  it('keeps the street map on screen while it loads, with the loading line over it', async () => {
     await render(<ZoneMap status="loading" zones={[]} />);
 
     expect(screen.getByTestId('zone-map-status')).toHaveTextContent('Loading zones…');
-    expect(screen.queryByTestId('zone-map-drawing')).not.toBeOnTheScreen();
+    // A blank tint in place of the map reads as a broken screen; the basemap is drawn either way.
+    expect(screen.getByTestId('zone-map-drawing')).toBeOnTheScreen();
+  });
+
+  it('frames the pilot area when there are no zones to fit, instead of the whole world', async () => {
+    await render(<ZoneMap status="ready" zones={[]} />);
+
+    expect(screen.getByTestId('zone-map-drawing')).toBeOnTheScreen();
+    expect(screen.getByTestId('zone-map-camera').props.bounds).toEqual([25.5, 62.15, 25.9, 62.35]);
+    // Nothing to fit back to, and no count to claim.
+    expect(screen.queryByTestId('zone-map-recentre')).not.toBeOnTheScreen();
+    expect(screen.queryByText('0 zones')).not.toBeOnTheScreen();
   });
 
   it('distinguishes a source that returned nothing from one that failed', async () => {

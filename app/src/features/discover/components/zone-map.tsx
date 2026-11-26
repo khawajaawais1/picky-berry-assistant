@@ -10,7 +10,9 @@ import type { PositionFix } from '@/services/location';
 
 import type { ZonesStatus } from '../hooks/use-zones';
 import type { Zone } from '../domain/zone-source';
-import { ZoneMapCanvas } from './zone-map-canvas';
+import { ZONE_MAP_HAS_BASEMAP, ZoneMapCanvas } from './zone-map-canvas';
+
+const NO_ZONES: readonly Zone[] = [];
 
 export type ZoneMapProps = {
   /** Whether the zones are the bundled stand-in; only then does the label say “test data”. */
@@ -59,6 +61,9 @@ export function ZoneMap({
   const window = useWindowDimensions();
 
   const hasZones = status === 'ready' && zones.length > 0;
+  // A build with a street basemap keeps it on screen whatever the zones' state, and lays the
+  // reason there are none over it; the SVG fallback has nothing to draw without zones.
+  const drawsMap = hasZones || ZONE_MAP_HAS_BASEMAP;
   const statusLine =
     status === 'loading'
       ? t('discover.map.loading')
@@ -78,7 +83,7 @@ export function ZoneMap({
       testID="zone-map"
     >
       <View style={{ flex: 1 }}>
-        {hasZones ? (
+        {drawsMap ? (
           <ZoneMapCanvas
             fullscreen={fullscreen}
             height={fullscreen ? window.height : height}
@@ -88,20 +93,47 @@ export function ZoneMap({
             position={position}
             positionStatus={positionStatus}
             selectedZoneId={selectedZoneId}
-            zones={zones}
+            zones={hasZones ? zones : NO_ZONES}
           />
-        ) : (
-          <View className="flex-1 items-center justify-center gap-gap px-section">
-            <StatusMessage testID="zone-map-status" tone="muted" variant="bodySmall">
-              {statusLine}
-            </StatusMessage>
-            {status === 'error' && onRetry ? (
-              <TextAction
-                label={t('discover.map.retry')}
-                onPress={onRetry}
-                testID="zone-map-retry"
-              />
-            ) : null}
+        ) : null}
+
+        {hasZones ? null : (
+          <View
+            // Over the basemap this is a card in the middle of the map; without one it is the
+            // whole canvas. `box-none` lets a pan on the basemap pass around the card.
+            pointerEvents="box-none"
+            style={{
+              alignItems: 'center',
+              bottom: 0,
+              justifyContent: 'center',
+              left: 0,
+              paddingHorizontal: spacing.section,
+              position: 'absolute',
+              right: 0,
+              top: 0,
+            }}
+          >
+            <View
+              style={{
+                alignItems: 'center',
+                backgroundColor: drawsMap ? colors.surface : undefined,
+                borderRadius: radii.md,
+                gap: spacing.gap,
+                paddingHorizontal: spacing.section,
+                paddingVertical: spacing.gap,
+              }}
+            >
+              <StatusMessage testID="zone-map-status" tone="muted" variant="bodySmall">
+                {statusLine}
+              </StatusMessage>
+              {status === 'error' && onRetry ? (
+                <TextAction
+                  label={t('discover.map.retry')}
+                  onPress={onRetry}
+                  testID="zone-map-retry"
+                />
+              ) : null}
+            </View>
           </View>
         )}
       </View>

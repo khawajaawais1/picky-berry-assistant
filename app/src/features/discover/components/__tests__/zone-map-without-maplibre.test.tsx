@@ -47,4 +47,11 @@ describe('ZoneMap without MapLibre', () => {
     expect(screen.getByTestId('zone-map-canvas')).toBeOnTheScreen();
     expect(screen.getByText('1 zone')).toBeOnTheScreen();
   });
+
+  it('says why there is no map when it has neither zones nor a basemap to draw', async () => {
+    await render(<ZoneMap status="ready" zones={[]} />);
+
+    expect(screen.getByTestId('zone-map-status')).toHaveTextContent('No zones to show');
+    expect(screen.queryByTestId('zone-map-canvas')).not.toBeOnTheScreen();
+  });
 });
