@@ -15,6 +15,7 @@ import {
 } from '../components/ui';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { errorMessage } from '../lib/errors';
+import { usePolling } from '../lib/usePolling';
 import {
   formatDuration,
   formatNumber,
@@ -66,11 +67,7 @@ export function JobsPage() {
     `/admin/jobs?${params.toString()}`,
   );
 
-  useEffect(() => {
-    if (!live) return;
-    const timer = window.setInterval(reload, 5000);
-    return () => window.clearInterval(timer);
-  }, [live, reload]);
+  usePolling(reload, 5000, live);
 
   const retry = async (jobId: number) => {
     setRetrying(jobId);
