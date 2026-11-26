@@ -368,6 +368,7 @@ button {
 }
 
 .panel {
+  min-width: 0;
   padding: 18px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -1946,12 +1947,15 @@ th.numeric {
 }
 
 @media (max-width: 1000px) {
+  /* minmax(0, 1fr), not 1fr: a grid track sizes to the widest nav group's
+     min-content otherwise, which pushed every page wider than the viewport. */
   .app {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .sidebar {
     position: static;
+    min-width: 0;
     height: auto;
     flex-direction: row;
     flex-wrap: wrap;
@@ -1963,6 +1967,7 @@ th.numeric {
   }
 
   .nav {
+    min-width: 0;
     flex: 1 1 100%;
     flex-direction: row;
     flex-wrap: wrap;
@@ -1973,6 +1978,7 @@ th.numeric {
   .nav-group {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 6px;
   }
 
