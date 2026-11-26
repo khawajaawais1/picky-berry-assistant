@@ -130,7 +130,12 @@ export function AnalyticsPage() {
             {data.species_stats.length === 0 ? (
               <EmptyState title="No species rows in the database" />
             ) : (
-              <div className="table-wrap">
+              <div
+                className="table-wrap"
+                role="region"
+                aria-label="Per-species coverage and score summary"
+                tabIndex={0}
+              >
                 <table>
                   <caption className="sr-only">Per-species coverage and score summary</caption>
                   <thead>

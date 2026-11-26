@@ -110,7 +110,12 @@ export function ZonesPage() {
             loading ? <span className="muted small">Refreshing…</span> : null
           }
         >
-          <div className="table-wrap">
+          <div
+            className="table-wrap"
+            role="region"
+            aria-label="Zones matching the current search and filters"
+            tabIndex={0}
+          >
             <table>
               <caption className="sr-only">
                 Zones matching the current search and filters

@@ -227,7 +227,12 @@ export function UserDetailPage() {
               This account has not submitted a report.
             </EmptyState>
           ) : (
-            <div className="table-wrap">
+            <div
+              className="table-wrap"
+              role="region"
+              aria-label="Recent reports by this account"
+              tabIndex={0}
+            >
               <table>
                 <caption className="sr-only">Recent reports by this account</caption>
                 <thead>
@@ -276,7 +281,12 @@ export function UserDetailPage() {
               This account has no recorded visits.
             </EmptyState>
           ) : (
-            <div className="table-wrap">
+            <div
+              className="table-wrap"
+              role="region"
+              aria-label="Recent visits by this account"
+              tabIndex={0}
+            >
               <table>
                 <caption className="sr-only">Recent visits by this account</caption>
                 <thead>
@@ -335,7 +345,12 @@ export function UserDetailPage() {
             A role change or session revocation will appear here.
           </EmptyState>
         ) : (
-          <div className="table-wrap">
+          <div
+            className="table-wrap"
+            role="region"
+            aria-label="Audit entries for this account"
+            tabIndex={0}
+          >
             <table>
               <caption className="sr-only">Audit entries for this account</caption>
               <thead>

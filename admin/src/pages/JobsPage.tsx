@@ -173,7 +173,12 @@ export function JobsPage() {
             </>
           }
         >
-          <div className="table-wrap">
+          <div
+            className="table-wrap"
+            role="region"
+            aria-label="Jobs matching the current filter"
+            tabIndex={0}
+          >
             <table>
               <caption className="sr-only">Jobs matching the current filter</caption>
               <thead>

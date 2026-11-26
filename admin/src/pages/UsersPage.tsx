@@ -154,7 +154,12 @@ export function UsersPage() {
           title={`${formatNumber(data.total)} ${data.total === 1 ? 'account' : 'accounts'}`}
           subtitle="Trust is read-only until feature 6.5 exposes its rule engine."
         >
-          <div className="table-wrap">
+          <div
+            className="table-wrap"
+            role="region"
+            aria-label="Accounts matching the search"
+            tabIndex={0}
+          >
             <table>
               <caption className="sr-only">Accounts matching the search</caption>
               <thead>

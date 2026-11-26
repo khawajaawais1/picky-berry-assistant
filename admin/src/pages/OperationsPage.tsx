@@ -293,7 +293,12 @@ export function OperationsPage() {
               The worker is idle. Queued work will appear in the queue.
             </EmptyState>
           ) : (
-            <div className="table-wrap">
+            <div
+              className="table-wrap"
+              role="region"
+              aria-label="Currently running jobs"
+              tabIndex={0}
+            >
               <table>
                 <caption className="sr-only">Currently running jobs</caption>
                 <thead>
