@@ -114,7 +114,7 @@ module.exports = {
       priceTotal: ['26px', { lineHeight: '31px', fontWeight: '400' }],
       listingHeading: ['26px', { lineHeight: '36px', fontWeight: '400' }],
       mapLabel: ['12px', { lineHeight: '15px', fontWeight: '500' }],
-      mapAnnotation: ['10px', { lineHeight: '12px', fontWeight: '400' }],
+      mapAnnotation: ['12px', { lineHeight: '16px', fontWeight: '400' }],
       label: ['13px', { lineHeight: '16px', fontWeight: '600' }],
       metadata: ['12px', { lineHeight: '17px', fontWeight: '400' }],
       chip: ['10px', { lineHeight: '14px', fontWeight: '600' }],

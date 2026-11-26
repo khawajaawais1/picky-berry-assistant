@@ -552,11 +552,11 @@ export const typography = {
    */
   mapLabel: { fontSize: 12, lineHeight: 15, fontWeight: '500' },
   /**
-   * The map's smallest annotations (10/12): the lake's name, the scale line and the legend
-   * labels. The frame sets the lake's name one pixel smaller (9/11); the app keeps one
-   * token for the three of them, which is the smallest departure that keeps them legible.
+   * The map's smallest annotations (12/16): the legend labels, the OpenStreetMap credit and
+   * the count line. The frame drew them at 10/12 (the lake's name at 9/11); the app raises them
+   * to 12, the smallest size a picker reads at arm's length outdoors.
    */
-  mapAnnotation: { fontSize: 10, lineHeight: 12, fontWeight: '400' },
+  mapAnnotation: { fontSize: 12, lineHeight: 16, fontWeight: '400' },
   label: { fontSize: 13, lineHeight: 16, fontWeight: '600' },
   /**
    * The value at the end of a settings row, where the frame sets it semibold in the accent colour

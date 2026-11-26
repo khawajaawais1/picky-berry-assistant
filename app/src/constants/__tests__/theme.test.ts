@@ -159,6 +159,13 @@ describe('design-sourced tokens (Figma file “Picky”, extracted 2026-10-08)',
     expect(spacing.tight).toBe(3);
   });
 
+  it('sets nothing on the map smaller than 12 pt, because it is read outdoors', () => {
+    // The legend, the OpenStreetMap credit and the map's count line were 10 pt: below what a
+    // picker can read at arm's length in daylight.
+    expect(typography.mapAnnotation.fontSize).toBeGreaterThanOrEqual(12);
+    expect(typography.mapLabel.fontSize).toBeGreaterThanOrEqual(12);
+  });
+
   it('carries screen 05’s card title metrics and card gap', () => {
     // Frame 05 (Onboarding · Location consent, node 5:22885): the row titles inside its
     // benefits card are 15/21 semibold, and the card's two rows sit 10 px apart.
@@ -222,7 +229,7 @@ describe('design-sourced tokens (Figma file “Picky”, extracted 2026-10-08)',
     expect(typography.cardHeading).toMatchObject({ fontSize: 19, lineHeight: 27 });
     expect(typography.input).toMatchObject({ fontSize: 15, lineHeight: 21 });
     expect(typography.mapLabel).toMatchObject({ fontSize: 12, lineHeight: 15 });
-    expect(typography.mapAnnotation).toMatchObject({ fontSize: 10, lineHeight: 12 });
+    expect(typography.mapAnnotation).toMatchObject({ fontSize: 12, lineHeight: 16 });
   });
 
   it('carries frame 07’s hero metric, section heading and photograph height', () => {
