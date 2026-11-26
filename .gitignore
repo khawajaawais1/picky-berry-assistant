@@ -38,6 +38,9 @@ data/cache/
 Thumbs.db
 desktop.ini
 
+# Playwright MCP audit artefacts (screenshots, axe, temp scripts)
+.playwright-mcp/
+
 # the app commits its recommended VS Code settings (app/.vscode/)
 !app/.vscode/
 !app/.vscode/**
