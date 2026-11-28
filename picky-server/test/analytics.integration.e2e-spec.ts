@@ -266,7 +266,9 @@ describe('Analytics API against PostGIS (integration)', () => {
     const now = new Date();
     const year = now.getUTCFullYear();
     const autumnSunday = new Date(Date.UTC(year, 9, 31));
-    autumnSunday.setUTCDate(autumnSunday.getUTCDate() - autumnSunday.getUTCDay());
+    autumnSunday.setUTCDate(
+      autumnSunday.getUTCDate() - autumnSunday.getUTCDay(),
+    );
     if (autumnSunday.getTime() > now.getTime()) {
       autumnSunday.setUTCFullYear(year - 1);
     }
@@ -275,11 +277,7 @@ describe('Analytics API against PostGIS (integration)', () => {
       autumnSunday.getUTCDate(),
     ).padStart(2, '0')}`;
     const nextDate = new Date(
-      Date.UTC(
-        autumnSunday.getUTCFullYear(),
-        9,
-        autumnSunday.getUTCDate() + 1,
-      ),
+      Date.UTC(autumnSunday.getUTCFullYear(), 9, autumnSunday.getUTCDate() + 1),
     )
       .toISOString()
       .slice(0, 10);
@@ -418,7 +416,9 @@ describe('Analytics API against PostGIS (integration)', () => {
     }
     await insertVisit(null, ZONE_ID, recent, 60);
     await insertReport(null, 'lingonberry', 1);
-    await insertReport(ADMIN_ID, 'lingonberry', 1, new Date(), ['flagged_test']);
+    await insertReport(ADMIN_ID, 'lingonberry', 1, new Date(), [
+      'flagged_test',
+    ]);
 
     const before = await request(app.getHttpServer())
       .get(`/api/v1/analytics/zones/${ZONE_ID}`)
