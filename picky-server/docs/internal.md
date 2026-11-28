@@ -13,7 +13,7 @@ The runner uses PostgreSQL's lease-aware `claim_job`, `complete_job`, and
 with the job ID and type, but never job payloads or stack traces. Failures are
 also logged with job context. Do not send either token to the app or log it.
 
-For the temporary cron test, Vercel calls the route daily at 12:25 UTC (14:25
+For the temporary cron test, Vercel calls the route daily at 13:30 UTC (15:30
 Finland time on November 28). Restore the normal 03:00 UTC schedule after
 verification; that is 05:00 in Finland during standard time and 06:00 during
 daylight-saving time.

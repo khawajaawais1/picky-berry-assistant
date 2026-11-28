@@ -133,7 +133,7 @@ operations health fails on an expired lease and warns when a live lease misses i
 
 Vercel runs this API as a serverless function and detects NestJS from `src/main.ts`. The deployed
 API is `https://picky-berry-assistant.vercel.app` (Swagger at `/docs`). For a temporary cron test,
-`vercel.json` schedules `/api/v1/internal/jobs/cron` daily at 12:25 UTC (14:25 Finland time on
+`vercel.json` schedules `/api/v1/internal/jobs/cron` daily at 13:30 UTC (15:30 Finland time on
 November 28); restore the normal 03:00 UTC schedule after verification.
 
 One-time project setup:

@@ -505,19 +505,22 @@ paths:
       operationId: recomputeAdminScores
       tags: [admin]
       summary: Enqueue a score recomputation
-      description: With no body, enqueues today's `score_zones_daily`; with `zone_id` and `species`, enqueues that zone/species recomputation. Repeats are deduplicated while a job is queued.
+      description: With neither `zone_id` nor `species`, enqueues today's `score_zones_daily`; supply both fields to enqueue a zone/species recomputation. An optional `reason` is recorded for the audit entry. Repeats are deduplicated while a job is queued.
       requestBody:
         required: false
         content:
           application/json:
             schema:
               type: object
-              required: [zone_id, species]
               properties:
                 zone_id: { type: string, format: uuid }
                 species:
                   type: string
                   enum: [bilberry, lingonberry, cloudberry, crowberry]
+                reason:
+                  type: string
+                  minLength: 3
+                  maxLength: 500
       responses:
         '202':
           description: The queued job
