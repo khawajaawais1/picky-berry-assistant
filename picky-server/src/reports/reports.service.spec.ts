@@ -1,11 +1,11 @@
-import { ConflictException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { DbService } from '../db/db.service';
 import { JobsService } from '../jobs/jobs.service';
 import { ReportsService } from './reports.service';
 
 const USER = '00000000-0000-4000-8000-000000000001';
 const ZONE = '00000000-0000-4000-8000-000000000002';
-const CLIENT_ID = '00000000-0000-4000-8000-000000000003';
+const SUBMISSION_ID = '00000000-0000-4000-8000-000000000003';
 
 function service(query: jest.Mock, clientQuery = jest.fn()) {
   const client = { query: clientQuery, release: jest.fn() };
@@ -14,86 +14,115 @@ function service(query: jest.Mock, clientQuery = jest.fn()) {
   } as unknown as DbService;
   const enqueue = jest.fn().mockResolvedValue({ status: 'queued' });
   const jobs = { enqueue } as unknown as JobsService;
-  return { reports: new ReportsService(database, jobs), enqueue, client };
+  const config = {
+    get: (_key: string, defaultValue: unknown) => defaultValue,
+  } as unknown as ConfigService;
+  return {
+    reports: new ReportsService(database, jobs, config),
+    enqueue,
+    client,
+  };
 }
 
 const input = {
-  client_id: CLIENT_ID,
+  submission_id: SUBMISSION_ID,
   zone_id: ZONE,
-  species: 'bilberry',
-  rating: 4,
-  amount_kg: 1.3,
-  minutes: 52,
-  recorded_at: new Date(Date.now() - 60_000).toISOString(),
+  ratings: [{ species: 'bilberry', rating: 4, amount_l: 3 }],
 };
 
 describe('ReportsService', () => {
-  it('stores a new report and asks for the zone score to be recomputed', async () => {
+  it('stores a report, hides flags, and enqueues trust processing', async () => {
     const clientQuery = jest.fn().mockImplementation((sql: string) => {
-      if (sql.includes('WHERE r.client_id'))
+      if (sql.includes('SELECT r.*, z.name AS zone_name')) {
         return Promise.resolve({ rows: [], rowCount: 0 });
-      if (sql.includes('SELECT name FROM zones'))
+      }
+      if (sql.includes('SELECT DISTINCT user_id FROM photos')) {
+        return Promise.resolve({ rows: [], rowCount: 0 });
+      }
+      if (sql.includes('SELECT name FROM zones')) {
         return Promise.resolve({
           rows: [{ name: 'Laajavuori 1' }],
           rowCount: 1,
         });
-      if (sql.includes('INSERT INTO reports'))
+      }
+      if (sql.includes('count(DISTINCT submission_id)')) {
+        return Promise.resolve({ rows: [{ count: 0 }], rowCount: 1 });
+      }
+      if (sql.includes('INSERT INTO reports')) {
         return Promise.resolve({
           rows: [
             {
-              id: 'r1',
-              client_id: CLIENT_ID,
+              id: 'report-1',
               user_id: USER,
               zone_id: ZONE,
               species: 'bilberry',
               rating: 4,
-              amount_kg: '1.30',
-              minutes: 52,
-              visit_id: null,
-              recorded_at: new Date(input.recorded_at),
-              created_at: new Date(),
+              amount_l: 3,
+              created_at: new Date('2026-08-20T10:00:00Z'),
+              flags: ['hidden-from-response'],
             },
           ],
           rowCount: 1,
         });
+      }
       return Promise.resolve({ rows: [], rowCount: 0 });
     });
     const { reports, enqueue } = service(jest.fn(), clientQuery);
 
-    const result = await reports.create(USER, input);
+    const result = await reports.submit(USER, null, input);
 
     expect(result.statusCode).toBe(201);
     expect(result.body).toMatchObject({
-      amount_kg: 1.3,
-      zone_name: 'Laajavuori 1',
-      idempotent_replay: false,
+      submission_id: SUBMISSION_ID,
+      reports: [
+        {
+          id: 'report-1',
+          species: 'bilberry',
+          rating: 4,
+          amount_l: 3,
+        },
+      ],
     });
+    expect(JSON.stringify(result.body)).not.toContain('hidden-from-response');
     expect(enqueue).toHaveBeenCalledWith(
-      'recompute_zone_score',
-      { zone_id: ZONE },
-      `recompute:${ZONE}`,
+      'process_report',
+      { report_id: 'report-1' },
+      'process:report-1',
       expect.anything(),
     );
   });
 
-  it("refuses a client id that already belongs to someone else's report", async () => {
+  it('replays a submission for its owner without enqueuing duplicate jobs', async () => {
     const clientQuery = jest.fn().mockImplementation((sql: string) =>
-      sql.includes('WHERE r.client_id')
+      sql.includes('SELECT r.*, z.name AS zone_name')
         ? Promise.resolve({
-            rows: [{ user_id: 'someone-else', zone_id: ZONE }],
+            rows: [
+              {
+                id: 'report-1',
+                user_id: USER,
+                species: 'bilberry',
+                rating: 4,
+                amount_l: null,
+                created_at: new Date('2026-08-20T10:00:00Z'),
+              },
+            ],
             rowCount: 1,
           })
         : Promise.resolve({ rows: [], rowCount: 0 }),
     );
-    const { reports, client } = service(jest.fn(), clientQuery);
+    const { reports, enqueue } = service(jest.fn(), clientQuery);
 
-    await expect(reports.create(USER, input)).rejects.toBeInstanceOf(
-      ConflictException,
-    );
-    expect(client.query).toHaveBeenCalledWith('ROLLBACK');
+    const result = await reports.submit(USER, null, input);
+
+    expect(result.statusCode).toBe(200);
+    expect(result.body).toMatchObject({
+      submission_id: SUBMISSION_ID,
+      idempotent_replay: true,
+    });
+    expect(enqueue).not.toHaveBeenCalled();
   });
 
-  it('sums the season from accepted visits and reported harvests', async () => {
+  it('sums the season from accepted visits and unflagged harvest reports', async () => {
     const query = jest.fn().mockImplementation((sql: string) =>
       sql.includes('FROM visits')
         ? Promise.resolve({

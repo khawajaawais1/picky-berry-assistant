@@ -12,6 +12,7 @@ import { AnalyticsQueryDto } from './dto/analytics-query.dto';
 import { AuditQueryDto } from './dto/audit-query.dto';
 import { JobsQueryDto } from './dto/jobs-query.dto';
 import { RecomputeDto } from './dto/recompute.dto';
+import { todayInHelsinki } from '../common/dates';
 import { ReportsQueryDto } from './dto/reports-query.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { UsersQueryDto } from './dto/users-query.dto';
@@ -702,7 +703,8 @@ export class AdminService {
                 count(c.species)::int AS species_scored,
                 max(c.score)::int AS best_score,
                 max(c.computed_at) AS latest_computed_at,
-                (SELECT count(*) FROM reports r WHERE r.zone_id = z.id)::int AS reports_total
+                (SELECT count(*) FROM reports r
+                 WHERE r.zone_id = z.id AND cardinality(r.flags) = 0)::int AS reports_total
          FROM zones z
          LEFT JOIN zone_scores_current c
            ON c.zone_id = z.id AND ($2::text IS NULL OR c.species = $2)
@@ -1345,6 +1347,7 @@ export class AdminService {
                   WHERE c.species = s.code AND c.confidence = 'high')::int AS high_confidence,
                 (SELECT count(*) FROM reports r
                   WHERE r.species = s.code
+                    AND cardinality(r.flags) = 0
                     AND r.created_at >= now() - interval '7 days')::int AS reports_7d
          FROM species s ORDER BY s.code`,
       ),
@@ -1360,6 +1363,7 @@ export class AdminService {
                 round(avg(r.rating)::numeric, 1) AS avg_rating
          FROM reports r JOIN zones z ON z.id = r.zone_id
          WHERE r.created_at >= now() - interval '7 days'
+           AND cardinality(r.flags) = 0
          GROUP BY z.id
          ORDER BY reports_7d DESC, avg_rating DESC
          LIMIT 5`,
@@ -1517,12 +1521,17 @@ export class AdminService {
     ip: string | null = null,
     userAgent: string | null = null,
   ): Promise<EnqueueResult> {
-    if (input.species && !input.zone_id) {
+    if (Boolean(input.species) !== Boolean(input.zone_id)) {
       throw new UnprocessableEntityException(
-        'species can only be supplied with zone_id.',
+        'zone_id and species must be supplied together.',
       );
     }
     if (input.zone_id) {
+      if (!input.species) {
+        throw new UnprocessableEntityException(
+          'zone_id and species must be supplied together.',
+        );
+      }
       const zone = await this.database.pool.query(
         'SELECT 1 FROM zones WHERE id = $1',
         [input.zone_id],
@@ -1533,26 +1542,25 @@ export class AdminService {
         'recompute_zone_score',
         {
           zone_id: input.zone_id,
-          ...(input.species ? { species: input.species } : {}),
+          species: input.species,
         },
-        input.species
-          ? `recompute:${input.zone_id}:${input.species}`
-          : `recompute:${input.zone_id}`,
+        `recompute:${input.zone_id}:${input.species}`,
         actorId,
         requestId,
         {
           zone_id: input.zone_id,
-          species: input.species ?? null,
+          species: input.species,
         },
         ip,
         userAgent,
         input.reason?.trim() || null,
       );
     }
+    const date = todayInHelsinki();
     return this.enqueueWithAudit(
-      'recompute_all',
-      {},
-      'recompute_all',
+      'score_zones_daily',
+      { date, offset: 0 },
+      `daily:${date}:0`,
       actorId,
       requestId,
       {},

@@ -28,6 +28,27 @@ const schema = Joi.object({
   MAX_BBOX_KM_GROUPED: Joi.number().positive().default(150),
   MAX_BBOX_KM_SNAPSHOT: Joi.number().positive().default(60),
   MIN_REPORTERS_FOR_AVERAGE: Joi.number().integer().min(1).default(3),
+  ML_SERVICE_URL: Joi.string()
+    .uri({ scheme: ['http', 'https'] })
+    .default('https://picky-berry-assistant.onrender.com'),
+  ML_API_KEY: Joi.string().allow('').default(''),
+  ML_MODE: Joi.string().valid('live', 'mock').default('mock'),
+  ML_TIMEOUT_PHOTO_MS: Joi.number().integer().min(1000).default(60_000),
+  ML_TIMEOUT_MS: Joi.number().integer().min(1000).default(20_000),
+  ML_BATCH_SIZE: Joi.number().integer().min(1).max(5000).default(1500),
+  JOBS_RUN_TOKEN: Joi.string().allow('').default(''),
+  CRON_SECRET: Joi.string().allow('').default(''),
+  JOBS_RUN_BUDGET_MS: Joi.number().integer().min(1000).default(40_000),
+  MAX_PHOTO_BYTES: Joi.number()
+    .integer()
+    .min(1)
+    .max(4_000_000)
+    .default(4_000_000),
+  MAX_PHOTOS_PER_SUBMISSION: Joi.number().integer().min(1).max(5).default(5),
+  REPORT_WINDOW_DAYS: Joi.number().integer().min(1).default(28),
+  MAX_REPORTS_PER_DAY: Joi.number().integer().min(1).default(10),
+  MAX_KM_FROM_LAST_VISIT: Joi.number().positive().default(50),
+  CONSENSUS_MIN_USERS: Joi.number().integer().min(1).default(3),
 }).unknown(true);
 
 interface ValidatedEnvironment extends Record<string, unknown> {
@@ -49,6 +70,22 @@ export function validateEnvironment(
   }
   if (value.NODE_ENV === 'production' && value.DEV_AUTH_BYPASS === true) {
     throw new Error('DEV_AUTH_BYPASS must be disabled in production.');
+  }
+  if (value.NODE_ENV === 'production') {
+    const required = ['ML_API_KEY', 'JOBS_RUN_TOKEN', 'CRON_SECRET'];
+    const missing = required.filter(
+      (key) =>
+        typeof environment[key] !== 'string' ||
+        environment[key].trim().length === 0,
+    );
+    if (missing.length) {
+      throw new Error(
+        `Missing production environment configuration: ${missing.join(', ')}.`,
+      );
+    }
+    if (value.ML_MODE !== 'live') {
+      throw new Error('ML_MODE must be live in production.');
+    }
   }
   return value;
 }

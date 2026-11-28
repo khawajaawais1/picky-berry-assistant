@@ -2,6 +2,9 @@ openapi: 3.0.3
 info:
   title: Picky Admin API
   version: 1.0.0
+  license:
+    name: UNLICENSED
+    url: https://choosealicense.com/no-permission/
   description: |
     The operator surface's API. Every route requires a Bearer access token whose `role` claim is
     `admin`; a picker or buyer token gets `403` and an absent token gets `401`. Responses are
@@ -502,7 +505,7 @@ paths:
       operationId: recomputeAdminScores
       tags: [admin]
       summary: Enqueue a score recomputation
-      description: With no body, enqueues `recompute_all`; with `zone_id`, enqueues `recompute_zone_score`. Repeats are deduplicated per zone, and per species when `species` is supplied, while a job is queued.
+      description: With neither `zone_id` nor `species`, enqueues today's `score_zones_daily`; supply both fields to enqueue a zone/species recomputation. An optional `reason` is recorded for the audit entry. Repeats are deduplicated while a job is queued.
       requestBody:
         required: false
         content:
@@ -511,8 +514,13 @@ paths:
               type: object
               properties:
                 zone_id: { type: string, format: uuid }
-                species: { type: string, description: Only with zone_id }
-                reason: { type: string, minLength: 3, maxLength: 500 }
+                species:
+                  type: string
+                  enum: [bilberry, lingonberry, cloudberry, crowberry]
+                reason:
+                  type: string
+                  minLength: 3
+                  maxLength: 500
       responses:
         '202':
           description: The queued job
@@ -548,8 +556,18 @@ components:
       type: object
       additionalProperties: false
       required:
-        [id, h3, name, forest_type, lat, lng, best_score, species_scored,
-         reports_total, latest_computed_at]
+        [
+          id,
+          h3,
+          name,
+          forest_type,
+          lat,
+          lng,
+          best_score,
+          species_scored,
+          reports_total,
+          latest_computed_at,
+        ]
       properties:
         id: { type: string, format: uuid }
         h3: { type: string }
@@ -729,8 +747,7 @@ components:
         reason: { type: string, nullable: true }
         before_data:
           { type: object, additionalProperties: true, nullable: true }
-        after_data:
-          { type: object, additionalProperties: true, nullable: true }
+        after_data: { type: object, additionalProperties: true, nullable: true }
         outcome: { type: string, enum: [success, failure] }
         ip: { type: string, nullable: true }
         user_agent: { type: string, nullable: true }

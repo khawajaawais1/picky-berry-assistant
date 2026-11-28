@@ -1,0 +1,211 @@
+{
+  "case": "zone_with_reports",
+  "description": "Ripe bilberry zone with two reports: a visit-backed photo report today and a rating-only report from 3 days ago without a visit.",
+  "grid_version": "zone-grid-jkl60-v2",
+  "rules_version": "zone-score-rules-v2",
+  "species": "bilberry",
+  "steps": [
+    {
+      "endpoint": "POST /api/v1/ml/zone-scores",
+      "function": "ZoneGrid.score_points",
+      "request": {
+        "date": "2026-07-25",
+        "points": [
+          {
+            "id": "zone-laajavuori",
+            "h3": "881126d2c3fffff",
+            "lat": 62.2595,
+            "lon": 25.688
+          }
+        ]
+      },
+      "response": {
+        "date": "2026-07-25",
+        "model_version": "zone-grid-jkl60-v2",
+        "rules_version": "zone-score-rules-v2",
+        "results": [
+          {
+            "id": "zone-laajavuori",
+            "h3": "881126d2c3fffff",
+            "lat": 62.2595,
+            "lon": 25.688,
+            "coverage": "grid",
+            "cells": 8,
+            "forest_share": 0.625,
+            "scores": {
+              "bilberry": {
+                "score": 31,
+                "confidence": "medium",
+                "ripeness": "ripe",
+                "explanation": {
+                  "model_version": "zone-grid-jkl60-v2",
+                  "rules_version": "zone-score-rules-v2",
+                  "reasons": [
+                    "in_ripe_window",
+                    "moderate_site",
+                    "no_reports_baseline"
+                  ],
+                  "inputs": {
+                    "site_class": "moderate",
+                    "site_potential": 0.394,
+                    "window_start": "2026-07-10",
+                    "window_end": "2026-08-29",
+                    "year_index": 1.0,
+                    "forest_share": 0.625,
+                    "reports_used": 0,
+                    "evidence_weight": 0.0
+                  }
+                }
+              },
+              "lingonberry": {
+                "score": 0,
+                "confidence": "low",
+                "ripeness": "unripe",
+                "explanation": {
+                  "model_version": "zone-grid-jkl60-v2",
+                  "rules_version": "zone-score-rules-v2",
+                  "reasons": [
+                    "before_window",
+                    "moderate_site",
+                    "no_reports_baseline"
+                  ],
+                  "inputs": {
+                    "site_class": "moderate",
+                    "site_potential": 0.345,
+                    "window_start": "2026-08-14",
+                    "window_end": "2026-10-08",
+                    "year_index": 1.0,
+                    "forest_share": 0.625,
+                    "reports_used": 0,
+                    "evidence_weight": 0.0
+                  }
+                }
+              },
+              "cloudberry": {
+                "score": 1,
+                "confidence": "medium",
+                "ripeness": "ripe",
+                "explanation": {
+                  "model_version": "zone-grid-jkl60-v2",
+                  "rules_version": "zone-score-rules-v2",
+                  "reasons": [
+                    "in_ripe_window",
+                    "poor_site",
+                    "no_reports_baseline"
+                  ],
+                  "inputs": {
+                    "site_class": "poor",
+                    "site_potential": 0.012,
+                    "window_start": "2026-07-05",
+                    "window_end": "2026-08-04",
+                    "year_index": 1.0,
+                    "forest_share": 0.625,
+                    "reports_used": 0,
+                    "evidence_weight": 0.0
+                  }
+                }
+              },
+              "crowberry": {
+                "score": 13,
+                "confidence": "low",
+                "ripeness": "ripe",
+                "explanation": {
+                  "model_version": "zone-grid-jkl60-v2",
+                  "rules_version": "zone-score-rules-v2",
+                  "reasons": [
+                    "in_ripe_window",
+                    "poor_site",
+                    "no_reports_baseline",
+                    "low_confidence_species"
+                  ],
+                  "inputs": {
+                    "site_class": "poor",
+                    "site_potential": 0.164,
+                    "window_start": "2026-07-20",
+                    "window_end": "2026-09-18",
+                    "year_index": 1.0,
+                    "forest_share": 0.625,
+                    "reports_used": 0,
+                    "evidence_weight": 0.0
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "endpoint": "POST /api/v1/ml/score-updates",
+      "function": "update_zone_score",
+      "request": {
+        "map_score": 31,
+        "map_confidence": "medium",
+        "map_explanation": {
+          "model_version": "zone-grid-jkl60-v2",
+          "rules_version": "zone-score-rules-v2",
+          "reasons": [
+            "in_ripe_window",
+            "moderate_site",
+            "no_reports_baseline"
+          ],
+          "inputs": {
+            "site_class": "moderate",
+            "site_potential": 0.394,
+            "window_start": "2026-07-10",
+            "window_end": "2026-08-29",
+            "year_index": 1.0,
+            "forest_share": 0.625,
+            "reports_used": 0,
+            "evidence_weight": 0.0
+          }
+        },
+        "reports": [
+          {
+            "created_at": "2026-07-25T09:30:00Z",
+            "rating": 4,
+            "photo_count": 26,
+            "reporter_trust": 0.8,
+            "visit_backed": true
+          },
+          {
+            "created_at": "2026-07-22T15:00:00Z",
+            "rating": 2,
+            "photo_count": null,
+            "reporter_trust": 0.5,
+            "visit_backed": false
+          }
+        ],
+        "now": "2026-07-25T12:00:00Z"
+      },
+      "response": {
+        "score": 53,
+        "confidence": "medium",
+        "s_model": 31,
+        "s_feedback": 74.8,
+        "evidence_weight": 0.98,
+        "reports_used": 2,
+        "explanation": {
+          "model_version": "zone-grid-jkl60-v2",
+          "rules_version": "zone-score-rules-v2",
+          "reasons": [
+            "in_ripe_window",
+            "moderate_site",
+            "recent_reports_high",
+            "photo_confirms_species"
+          ],
+          "inputs": {
+            "site_class": "moderate",
+            "site_potential": 0.394,
+            "window_start": "2026-07-10",
+            "window_end": "2026-08-29",
+            "year_index": 1.0,
+            "forest_share": 0.625,
+            "reports_used": 2,
+            "evidence_weight": 0.98
+          }
+        }
+      }
+    }
+  ]
+}

@@ -12,6 +12,8 @@ export const TARGET_ID = '00000000-0000-4000-8000-0000000000c1';
 export const ZONE_ID = '41d28714-df79-4218-bb99-308bca35cd6c';
 export const LOW_REPORT_ID = '10000000-0000-4000-8000-000000000001';
 export const HIGH_REPORT_ID = '10000000-0000-4000-8000-000000000002';
+export const LOW_SUBMISSION_ID = '20000000-0000-4000-8000-000000000001';
+export const HIGH_SUBMISSION_ID = '20000000-0000-4000-8000-000000000002';
 
 export interface AdminFixtures {
   adminId: string;
@@ -166,11 +168,20 @@ export async function resetAdminFixtures(pool: Pool): Promise<AdminFixtures> {
   );
 
   await pool.query(
-    `INSERT INTO reports (id, user_id, zone_id, species, rating, created_at)
+    `INSERT INTO reports
+       (id, submission_id, user_id, zone_id, species, rating, created_at)
      VALUES
-       ($1, $2, $4, 'bilberry', 2, now() - interval '1 day'),
-       ($3, $5, $4, 'lingonberry', 5, now() - interval '2 days')`,
-    [LOW_REPORT_ID, PICKER_ID, HIGH_REPORT_ID, ZONE_ID, TARGET_ID],
+       ($1, $2, $3, $7, 'bilberry', 2, now() - interval '1 day'),
+       ($4, $5, $6, $7, 'lingonberry', 5, now() - interval '2 days')`,
+    [
+      LOW_REPORT_ID,
+      LOW_SUBMISSION_ID,
+      PICKER_ID,
+      HIGH_REPORT_ID,
+      HIGH_SUBMISSION_ID,
+      TARGET_ID,
+      ZONE_ID,
+    ],
   );
 
   const failedJob = await pool.query<{ id: string }>(

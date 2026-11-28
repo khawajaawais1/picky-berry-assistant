@@ -17,8 +17,8 @@ import { HealthService } from './health/health.service';
 import { ReportsModule } from './reports/reports.module';
 import { ApiThrottlerGuard } from './auth/api-throttler.guard';
 import { VisitsModule } from './visits/visits.module';
-import { AlertsModule } from './alerts/alerts.module';
-import { MarketModule } from './market/market.module';
+import { JobsModule } from './jobs/jobs.module';
+import { MediaModule } from './media/media.module';
 import { IncomingMessage, ServerResponse } from 'node:http';
 
 function requestPath(url: string | undefined): string {
@@ -96,8 +96,8 @@ function requestPath(url: string | undefined): string {
     AdminModule,
     ReportsModule,
     VisitsModule,
-    AlertsModule,
-    MarketModule,
+    JobsModule,
+    MediaModule,
   ],
   controllers: [AppController],
   providers: [

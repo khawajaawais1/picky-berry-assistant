@@ -268,7 +268,7 @@ export interface paths {
         put?: never;
         /**
          * Enqueue a score recomputation
-         * @description With no body, enqueues `recompute_all`; with `zone_id`, enqueues `recompute_zone_score`. Repeats are deduplicated per zone, and per species when `species` is supplied, while a job is queued.
+         * @description With neither `zone_id` nor `species`, enqueues today's `score_zones_daily`; supply both fields to enqueue a zone/species recomputation. An optional `reason` is recorded for the audit entry. Repeats are deduplicated while a job is queued.
          */
         post: operations["recomputeAdminScores"];
         delete?: never;
@@ -1009,8 +1009,8 @@ export interface operations {
                 "application/json": {
                     /** Format: uuid */
                     zone_id?: string;
-                    /** @description Only with zone_id */
-                    species?: string;
+                    /** @enum {string} */
+                    species?: "bilberry" | "lingonberry" | "cloudberry" | "crowberry";
                     reason?: string;
                 };
             };

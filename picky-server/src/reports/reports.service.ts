@@ -4,9 +4,14 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { DbService } from '../db/db.service';
 import { JobsService } from '../jobs/jobs.service';
-import { CreateReportDto } from './dto/create-report.dto';
+import { helsinkiDayBounds } from '../common/dates';
+import {
+  CreateZoneFeedbackDto,
+  FeedbackSubmissionDto,
+} from './dto/feedback.dto';
 
 interface ReportRow {
   id: string;
@@ -21,11 +26,13 @@ interface ReportRow {
   visit_id: string | null;
   recorded_at: Date | null;
   created_at: Date;
+  submission_id?: string;
+  amount_l?: number | string | null;
+  flags?: string[];
 }
 
 /** Reporters whose trust is at or above this are labelled trusted in a zone's list. */
 const TRUSTED_AT = 0.6;
-const FUTURE_TOLERANCE_MS = 5 * 60_000;
 
 function kilograms(value: string | null): number | null {
   return value === null ? null : Number(value);
@@ -49,95 +56,202 @@ export class ReportsService {
   constructor(
     private readonly database: DbService,
     private readonly jobs: JobsService,
+    private readonly config: ConfigService,
   ) {}
 
-  async create(
+  async submit(
     userId: string,
-    input: CreateReportDto,
+    visitId: string | null,
+    input: FeedbackSubmissionDto | CreateZoneFeedbackDto,
   ): Promise<{ statusCode: 200 | 201; body: Record<string, unknown> }> {
-    if (Date.parse(input.recorded_at) > Date.now() + FUTURE_TOLERANCE_MS) {
+    const species = input.ratings.map((rating) => rating.species);
+    if (new Set(species).size !== species.length) {
       throw new UnprocessableEntityException({
-        error: 'REPORT_IN_FUTURE',
-        message: 'recorded_at is in the future.',
+        error: 'DUPLICATE_SPECIES',
+        message: 'Each species may appear only once per submission.',
       });
     }
-
     const client = await this.database.pool.connect();
     try {
       await client.query('BEGIN');
+      await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [
+        userId,
+      ]);
+
       const existing = await client.query<ReportRow>(
         `SELECT r.*, z.name AS zone_name FROM reports r
-         JOIN zones z ON z.id = r.zone_id WHERE r.client_id = $1`,
-        [input.client_id],
+         JOIN zones z ON z.id = r.zone_id WHERE r.submission_id = $1`,
+        [input.submission_id],
       );
-      const replay = existing.rows[0];
-      if (replay) {
-        if (replay.user_id !== userId) {
+      if (existing.rows.length) {
+        if (existing.rows.some((row) => row.user_id !== userId)) {
           throw new ConflictException({
-            error: 'REPORT_ID_CONFLICT',
-            message: 'Report identifier is already in use.',
+            error: 'SUBMISSION_CONFLICT',
+            message: 'Submission identifier is already in use.',
           });
         }
         await client.query('COMMIT');
         return {
           statusCode: 200,
-          body: { ...this.toOwnReport(replay), idempotent_replay: true },
+          body: {
+            submission_id: input.submission_id,
+            reports: existing.rows.map((row) => this.toFeedbackReport(row)),
+            idempotent_replay: true,
+          },
         };
+      }
+
+      const linkedPhotos = await client.query<{ user_id: string | null }>(
+        'SELECT DISTINCT user_id FROM photos WHERE submission_id = $1',
+        [input.submission_id],
+      );
+      if (linkedPhotos.rows.some((photo) => photo.user_id !== userId)) {
+        throw new ConflictException({
+          error: 'SUBMISSION_CONFLICT',
+          message: 'Submission identifier is already in use.',
+        });
+      }
+
+      let zoneId = 'zone_id' in input ? input.zone_id : null;
+      if (visitId) {
+        const visit = await client.query<{
+          id: string;
+          zone_id: string;
+          status: string;
+        }>(
+          `SELECT id, zone_id, status FROM visits
+           WHERE id = $1 AND user_id = $2`,
+          [visitId, userId],
+        );
+        if (!visit.rows[0]) {
+          throw new NotFoundException({
+            error: 'VISIT_NOT_FOUND',
+            message: 'The visit was not found.',
+          });
+        }
+        if (visit.rows[0].status !== 'accepted') {
+          throw new UnprocessableEntityException({
+            error: 'VISIT_NOT_ELIGIBLE',
+            message: 'Feedback requires an accepted visit.',
+          });
+        }
+        zoneId = visit.rows[0].zone_id;
       }
 
       const zone = await client.query<{ name: string | null }>(
         'SELECT name FROM zones WHERE id = $1',
-        [input.zone_id],
+        [zoneId],
       );
       if (!zone.rowCount) {
-        throw new UnprocessableEntityException({
+        throw new NotFoundException({
           error: 'ZONE_NOT_FOUND',
-          message: 'The zone does not exist.',
+          message: 'The zone was not found.',
         });
       }
 
-      // A visit is linked only when it is the reporter's own.
-      let visitId: string | null = null;
-      if (input.visit_id) {
-        const visit = await client.query(
-          'SELECT 1 FROM visits WHERE id = $1 AND user_id = $2',
-          [input.visit_id, userId],
-        );
-        visitId = visit.rowCount ? input.visit_id : null;
-      }
+      const { start, end } = helsinkiDayBounds();
+      const daily = await client.query<{ count: number }>(
+        `SELECT count(DISTINCT submission_id)::int AS count
+         FROM reports
+         WHERE user_id = $1 AND created_at >= $2 AND created_at < $3`,
+        [userId, start, end],
+      );
+      const flags =
+        Number(daily.rows[0]?.count ?? 0) >=
+        this.config.get<number>('MAX_REPORTS_PER_DAY', 10)
+          ? ['rate_limit_day']
+          : [];
+      const results: ReportRow[] = [];
+      for (const rating of input.ratings) {
+        const reportFlags = [...flags];
+        if (visitId) {
+          const duplicate = await client.query(
+            `SELECT 1 FROM reports
+             WHERE user_id = $1 AND visit_id IS NOT NULL
+               AND zone_id = $2 AND species = $3
+               AND cardinality(flags) = 0
+               AND created_at >= $4 AND created_at < $5
+             LIMIT 1`,
+            [userId, zoneId, rating.species, start, end],
+          );
+          if (duplicate.rowCount) reportFlags.push('duplicate_day');
+        }
 
-      const inserted = await client.query<ReportRow>(
-        `INSERT INTO reports
-           (client_id, user_id, zone_id, species, rating, amount_kg, minutes, visit_id, recorded_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-         RETURNING *`,
-        [
-          input.client_id,
-          userId,
-          input.zone_id,
-          input.species,
-          input.rating,
-          input.amount_kg ?? null,
-          input.minutes ?? null,
-          visitId,
-          input.recorded_at,
-        ],
-      );
-      await this.jobs.enqueue(
-        'recompute_zone_score',
-        { zone_id: input.zone_id },
-        `recompute:${input.zone_id}`,
-        client,
-      );
+        const previousVisitAt = visitId
+          ? (
+              await client.query<{ started_at: Date }>(
+                'SELECT started_at FROM visits WHERE id = $1',
+                [visitId],
+              )
+            ).rows[0]?.started_at
+          : new Date();
+        const distant = await client.query<{ km: number | null }>(
+          `SELECT ST_Distance(target.centroid::geography, previous.centroid::geography)
+                    / 1000.0 AS km
+           FROM zones target
+           CROSS JOIN LATERAL (
+             SELECT z.centroid
+             FROM visits v JOIN zones z ON z.id = v.zone_id
+             WHERE v.user_id = $1 AND v.status = 'accepted'
+               AND v.started_at < $2
+             ORDER BY v.started_at DESC LIMIT 1
+           ) previous
+           WHERE target.id = $3`,
+          [userId, previousVisitAt ?? new Date(), zoneId],
+        );
+        if (
+          distant.rows[0]?.km !== null &&
+          distant.rows[0]?.km !== undefined &&
+          Number(distant.rows[0].km) >
+            this.config.get<number>('MAX_KM_FROM_LAST_VISIT', 50)
+        ) {
+          reportFlags.push('far_from_last_visit');
+        }
+
+        const inserted = await client.query<ReportRow>(
+          `INSERT INTO reports
+             (user_id, zone_id, species, rating, visit_id, submission_id,
+              amount_l, flags, recorded_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now())
+           ON CONFLICT DO NOTHING
+           RETURNING id, user_id, zone_id, species, rating, visit_id,
+                     submission_id, amount_l, created_at, recorded_at`,
+          [
+            userId,
+            zoneId,
+            rating.species,
+            rating.rating,
+            visitId,
+            input.submission_id,
+            rating.amount_l ?? null,
+            reportFlags,
+          ],
+        );
+        if (!inserted.rows[0]) {
+          throw new ConflictException({
+            error: 'SUBMISSION_CONFLICT',
+            message: 'A report already exists for this visit and species.',
+          });
+        }
+        results.push(inserted.rows[0]);
+        await this.jobs.enqueue(
+          'process_report',
+          { report_id: inserted.rows[0].id },
+          `process:${inserted.rows[0].id}`,
+          client,
+        );
+      }
       await client.query('COMMIT');
       return {
         statusCode: 201,
         body: {
-          ...this.toOwnReport({
-            ...inserted.rows[0],
-            zone_name: zone.rows[0].name,
-          }),
-          idempotent_replay: false,
+          submission_id: input.submission_id,
+          reports: results.map((row) =>
+            this.toFeedbackReport({
+              ...row,
+              zone_name: zone.rows[0].name,
+            }),
+          ),
         },
       };
     } catch (error) {
@@ -170,19 +284,20 @@ export class ReportsService {
 
     const [rows, week] = await Promise.all([
       this.database.pool.query<ReportRow & { trust: number | null }>(
-        `SELECT r.id, r.species, r.rating, r.amount_kg, r.minutes,
+        `SELECT r.id, r.species, r.rating, r.amount_kg, r.amount_l, r.minutes,
                 coalesce(r.recorded_at, r.created_at) AS recorded_at, r.created_at,
                 t.trust
          FROM reports r
          LEFT JOIN user_trust t ON t.user_id = r.user_id
-         WHERE r.zone_id = $1 ${speciesFilter}
+         WHERE r.zone_id = $1 AND cardinality(r.flags) = 0 ${speciesFilter}
          ORDER BY coalesce(r.recorded_at, r.created_at) DESC
          LIMIT $2`,
         params,
       ),
       this.database.pool.query<{ count: number }>(
         `SELECT count(*)::int AS count FROM reports r
-         WHERE r.zone_id = $1 AND r.created_at >= now() - interval '7 days'
+        WHERE r.zone_id = $1 AND cardinality(r.flags) = 0
+          AND r.created_at >= now() - interval '7 days'
          ${species ? 'AND r.species = $2' : ''}`,
         species ? [zoneId, species] : [zoneId],
       ),
@@ -197,6 +312,7 @@ export class ReportsService {
         species: row.species,
         rating: Number(row.rating),
         amount_kg: kilograms(row.amount_kg),
+        amount_l: row.amount_l === null ? null : Number(row.amount_l),
         minutes: row.minutes,
         trust:
           row.trust !== null && Number(row.trust) >= TRUSTED_AT
@@ -243,6 +359,7 @@ export class ReportsService {
         `SELECT r.*, z.name AS zone_name FROM reports r
          JOIN zones z ON z.id = r.zone_id
          WHERE r.user_id = $1
+           AND cardinality(r.flags) = 0
            AND extract(year FROM coalesce(r.recorded_at, r.created_at)
                        AT TIME ZONE 'Europe/Helsinki') = $2
          ORDER BY coalesce(r.recorded_at, r.created_at)`,
@@ -297,9 +414,20 @@ export class ReportsService {
       species: row.species,
       rating: Number(row.rating),
       amount_kg: kilograms(row.amount_kg),
+      amount_l: row.amount_l == null ? null : Number(row.amount_l),
       minutes: row.minutes,
       visit_id: row.visit_id,
       recorded_at: new Date(row.recorded_at ?? row.created_at).toISOString(),
+    };
+  }
+
+  private toFeedbackReport(row: ReportRow): Record<string, unknown> {
+    return {
+      id: row.id,
+      species: row.species,
+      rating: Number(row.rating),
+      amount_l: row.amount_l == null ? null : Number(row.amount_l),
+      created_at: new Date(row.created_at).toISOString(),
     };
   }
 }

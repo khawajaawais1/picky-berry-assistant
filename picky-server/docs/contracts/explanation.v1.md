@@ -1,30 +1,29 @@
-# Explanation contract, version 1
+# Explanation contract, version 1 (ML rules v2)
 
-The scoring worker stores structured inputs and stable reason codes in the
-`explanation` JSON column. It never stores localized sentences. The API owns
-localization in one service so other backend features can reuse the same
-translations.
+The ML scoring service returns this structured object. The backend stores it
+without translating or renaming fields, then renders the reason codes in
+Finnish or English. Localized sentences are never stored.
 
 ```json
 {
-  "version": 1,
+  "model_version": "zone-grid-jkl60-v2",
+  "rules_version": "zone-score-rules-v2",
+  "reasons": ["in_ripe_window", "good_site", "no_reports_baseline"],
   "inputs": {
-    "gdd_since_apr1": 812,
-    "gdd_ripe": 780,
-    "ndvi_anomaly": 0.04,
-    "reports_7d": 4,
-    "avg_rating_7d": 4.2,
-    "n_eff": 2.6,
-    "suitability": 0.9,
-    "s_model": 66,
-    "s_reports": 84,
-    "alpha": 0.46
-  },
-  "reasons": ["ripe_by_gdd", "recent_reports_high", "good_habitat"],
-  "model_version": "baseline-0.1"
+    "site_class": "good",
+    "site_potential": 0.6,
+    "window_start": "2026-07-10",
+    "window_end": "2026-08-29",
+    "year_index": 1.0,
+    "forest_share": 0.984,
+    "reports_used": 0,
+    "evidence_weight": 0.0
+  }
 }
 ```
 
-Changing the structure or reason-code catalogue requires a version bump and
-agreement with the scoring-worker owner. See the backend API brief's section
-7.7 for the current Finnish and English templates.
+`model_version` and `rules_version` identify the map and report-scoring
+versions. Reasons are stable codes from `ml/API.md` §3, not user-facing copy.
+The backend owns Finnish and English templates. Changes to the JSON shape or
+reason catalogue require coordination with the ML service and a contract
+version update.

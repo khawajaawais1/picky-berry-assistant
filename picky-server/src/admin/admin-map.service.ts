@@ -64,7 +64,8 @@ export class AdminMapService {
               ST_Y(z.centroid)::float8 AS lat, ST_X(z.centroid)::float8 AS lng,
               max(c.score)::int AS best_score,
               count(c.species)::int AS species_scored,
-              (SELECT count(*) FROM reports r WHERE r.zone_id = z.id)::int AS reports_total,
+              (SELECT count(*) FROM reports r
+               WHERE r.zone_id = z.id AND cardinality(r.flags) = 0)::int AS reports_total,
               max(c.computed_at) AS latest_computed_at,
               count(*) OVER ()::int AS total
        FROM zones z

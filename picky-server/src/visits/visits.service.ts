@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import { PoolClient, QueryResultRow } from 'pg';
 import { DbService } from '../db/db.service';
-import { JobsService } from '../jobs/jobs.service';
 import {
   FUTURE_TOLERANCE_S,
   MAX_VISIT_S,
@@ -75,10 +74,7 @@ export function getVisitRejectReason(
 
 @Injectable()
 export class VisitsService {
-  constructor(
-    private readonly database: DbService,
-    private readonly jobs: JobsService,
-  ) {}
+  constructor(private readonly database: DbService) {}
 
   async create(
     userId: string,
@@ -176,14 +172,6 @@ export class VisitsService {
         };
       }
 
-      if (!rejectReason && zoneId) {
-        await this.jobs.enqueue(
-          'recompute_zone_score',
-          { zone_id: zoneId },
-          `recompute:${zoneId}`,
-          client,
-        );
-      }
       await client.query('COMMIT');
       return {
         statusCode: 201,

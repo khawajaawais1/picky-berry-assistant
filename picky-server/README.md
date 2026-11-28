@@ -75,28 +75,30 @@ The link points at `APP_PUBLIC_URL/reset-password?token=…`. External mail deli
 included: console mail mode (`MAIL_MODE=console`) records that a verification or reset message
 was requested and deliberately does not log tokens, links or email addresses.
 
-## Picker feeds (reports, season, alerts, marketplace)
+## Picker feeds (reports, season)
 
-The mobile app reads every picker-facing screen from these routes (contract:
-[`docs/openapi/feeds.yaml`](./docs/openapi/feeds.yaml)); all need a signed-in account.
+The mobile app reads every picker-facing screen from these routes (contracts:
+[`docs/openapi/feeds.yaml`](./docs/openapi/feeds.yaml) and
+[`docs/openapi/feedback.yaml`](./docs/openapi/feedback.yaml)); all need a signed-in account.
 
 | Route | What it serves |
 |-------|----------------|
-| `POST /reports` | a post-visit report; idempotent on `client_id` |
+| `POST /visits/:id/feedback`, `POST /reports` | per-species feedback; idempotent on `submission_id` |
+| `POST /media/analyze` | transient photo analysis; only detector counts and metadata are retained |
 | `GET /zones/:id/reports` | a zone's recent reports, anonymous, with a trust label |
 | `GET /me/reports`, `GET /me/season` | the picker's own reports and season totals |
-| `GET /alerts?lat&lng` | the reasoning job's latest alert per zone × species, filtered to the picker's species and radius |
-| `/market/listings`, `/market/listings/:id/messages`, `/market/orders` | listings, the buyer–seller thread, orders that reserve stock |
 
-Migration `0012_picker_feeds.sql` adds the report details and the market tables.
-`npm run seed:feeds` fills development alerts (from the current scores) and three listings by
-`seller@example.com`; it refuses to run in production.
+Migration `0012_picker_feeds.sql` adds report details.
+Migrations `0013_feedback_trust_prediction.sql` and `0014_remove_seed_scores.sql`
+add the ML baseline, count-only photo results, feedback flags, and trust processing.
+Photo bytes are held in memory only for inference; they are never written to disk,
+the database, or logs. Feedback processing and zone-score updates run through the
+PostgreSQL jobs queue.
 
 ### Running the API in local Docker
 
 ```bash
 npm run db:migrate          # add --no-check-order if your local history was applied out of order
-npm run seed:feeds
 API_DATABASE_URL=postgresql://postgres:postgres@host.docker.internal:5432/picky \
   docker compose -f docker-compose.dev.yml --profile api up -d --build api
 curl localhost:3000/api/v1/health
@@ -120,18 +122,19 @@ The audit table is migration `0007_admin_audit.sql`, extended by `0008_audit_int
 database level with a trigger that rejects `UPDATE` and `DELETE`. The web client lives in
 [`../admin`](../admin/README.md).
 
-The job queue is lease-based as of `0009_job_leases.sql`. The worker contract is in
+The job queue is lease-based as of `0009_job_leases.sql`. The runner contract is in
 [`docs/contracts/job-types.md`](./docs/contracts/job-types.md): `claim_job()` establishes a
-five-minute lease, `heartbeat_job()` extends a live lease, `complete_job()` / `fail_job()` fence a
-worker to its own claim, and `reap_stale_jobs()` requeues expired claims before the next claim.
+five-minute lease, `complete_job()` fences completion to the current worker, and
+`reap_stale_jobs()` requeues expired claims before the next claim.
 The admin queue exposes the lease, heartbeat, worker id, recovery count and a derived stuck state;
 operations health fails on an expired lease and warns when a live lease misses its heartbeat.
 
 ## Deploying to Vercel
 
-Vercel runs this API as a serverless function with zero configuration: it detects NestJS from
-`src/main.ts`; no `vercel.json` is needed. The deployed API is
-`https://picky-berry-assistant.vercel.app` (Swagger at `/docs`).
+Vercel runs this API as a serverless function and detects NestJS from `src/main.ts`. The deployed
+API is `https://picky-berry-assistant.vercel.app` (Swagger at `/docs`). For a temporary cron test,
+`vercel.json` schedules `/api/v1/internal/jobs/cron` daily at 13:30 UTC (15:30 Finland time on
+November 28); restore the normal 03:00 UTC schedule after verification.
 
 One-time project setup:
 
@@ -147,6 +150,11 @@ One-time project setup:
    | `JWT_SECRET` | 32+ random characters (`openssl rand -hex 32`) |
    | `CORS_ORIGINS` | the admin console's origin, e.g. `https://picky-admin.vercel.app` |
    | `APP_PUBLIC_URL` | the app's public origin (used in emails) |
+   | `ML_MODE` | `live` |
+   | `ML_SERVICE_URL` | ML API origin |
+   | `ML_API_KEY` | server-only ML API key |
+   | `JOBS_RUN_TOKEN` | secret for manual internal queue runs |
+   | `CRON_SECRET` | Vercel Cron bearer secret |
 
    `DEV_AUTH_BYPASS` must be unset or `false`; the API refuses to start in production with it
    on. Without `CORS_ORIGINS` the API allows only the localhost development origins, so the

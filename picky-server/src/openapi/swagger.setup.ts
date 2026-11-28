@@ -51,13 +51,14 @@ const docsInitializer = `window.onload = function () {
  */
 export function setupSwagger(
   app: INestApplication,
-  openapiDir: string = resolve(__dirname, '../../docs/openapi'),
+  openapiDir: string = resolve(process.cwd(), 'docs/openapi'),
 ): boolean {
   let zones: OpenAPIObject;
   let auth: OpenAPIObject;
   let visits: OpenAPIObject;
   let admin: OpenAPIObject;
   let feeds: OpenAPIObject | undefined;
+  let feedback: OpenAPIObject;
   try {
     const read = (name: string) =>
       load(readFileSync(resolve(openapiDir, name), 'utf8')) as OpenAPIObject;
@@ -65,6 +66,7 @@ export function setupSwagger(
     auth = read('auth.yaml');
     visits = read('visits.yaml');
     admin = read('admin.yaml');
+    feedback = read('feedback.yaml');
     try {
       feeds = read('feeds.yaml');
     } catch {
@@ -87,6 +89,7 @@ export function setupSwagger(
       ...visits.paths,
       ...admin.paths,
       ...feeds?.paths,
+      ...feedback.paths,
     },
     components: {
       ...zones.components,
@@ -97,24 +100,32 @@ export function setupSwagger(
         ...auth.components?.securitySchemes,
         ...visits.components?.securitySchemes,
         ...admin.components?.securitySchemes,
+        ...feeds?.components?.securitySchemes,
+        ...feedback.components?.securitySchemes,
       },
       parameters: {
         ...zones.components?.parameters,
         ...auth.components?.parameters,
         ...visits.components?.parameters,
         ...admin.components?.parameters,
+        ...feeds?.components?.parameters,
+        ...feedback.components?.parameters,
       },
       responses: {
         ...zones.components?.responses,
         ...auth.components?.responses,
         ...visits.components?.responses,
         ...admin.components?.responses,
+        ...feeds?.components?.responses,
+        ...feedback.components?.responses,
       },
       schemas: {
         ...zones.components?.schemas,
         ...auth.components?.schemas,
         ...visits.components?.schemas,
         ...admin.components?.schemas,
+        ...feeds?.components?.schemas,
+        ...feedback.components?.schemas,
       },
     },
   };
