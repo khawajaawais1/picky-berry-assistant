@@ -51,7 +51,7 @@ const docsInitializer = `window.onload = function () {
  */
 export function setupSwagger(
   app: INestApplication,
-  openapiDir: string = resolve(process.cwd(), 'docs/openapi'),
+  openapiDir: string = resolve(__dirname, '../../docs/openapi'),
 ): boolean {
   let zones: OpenAPIObject;
   let auth: OpenAPIObject;
