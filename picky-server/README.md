@@ -95,6 +95,23 @@ Photo bytes are held in memory only for inference; they are never written to dis
 the database, or logs. Feedback processing and zone-score updates run through the
 PostgreSQL jobs queue.
 
+## Analytics (Feature 6.8)
+
+The authenticated `GET /api/v1/me/analytics` endpoint reads the caller's own
+accepted visits and all their reports live. `GET /api/v1/analytics/zones/:id`
+combines a live summary with a daily series from `mv_zone_daily`; visit and
+report groups are independently suppressed until at least
+`ANALYTICS_MIN_USERS` distinct, non-anonymized users contribute. Private users
+count in anonymous aggregates, and no user identifiers are returned.
+
+Migration `0015_analytics.sql` creates the daily materialized view and its
+refresh marker. The existing job runner enqueues `refresh_analytics` after daily
+score finalization and when a runner starts with stale analytics. Admins can
+request a deduplicated, audited refresh with `POST /api/v1/admin/analytics/refresh`.
+The contracts are in [`docs/openapi/analytics.yaml`](./docs/openapi/analytics.yaml)
+and [`docs/openapi/admin.yaml`](./docs/openapi/admin.yaml). The design brief is
+[`docs/backend-analytics-brief.md`](./docs/backend-analytics-brief.md).
+
 ### Running the API in local Docker
 
 ```bash
@@ -153,6 +170,8 @@ One-time project setup:
    | `ML_MODE` | `live` |
    | `ML_SERVICE_URL` | ML API origin |
    | `ML_API_KEY` | server-only ML API key |
+   | `ANALYTICS_MIN_USERS` | `3` — distinct contributors required for zone aggregates |
+   | `ANALYTICS_REFRESH_MINUTES` | `60` — lazy refresh interval |
    | `JOBS_RUN_TOKEN` | secret for manual internal queue runs |
    | `CRON_SECRET` | Vercel Cron bearer secret |
 
@@ -188,8 +207,9 @@ npm run db:check-a2
 ```
 
 `npm run test:e2e` starts a throwaway PostGIS container, applies the test baseline and every
-API migration, and covers the admin authorization matrix, moderation reads, session revocation
-job retry failures, the worker claim/heartbeat/complete contract and stale-lease recovery. On
+API migration, and covers analytics privacy/refresh behavior plus the admin authorization matrix,
+moderation reads, session revocation, job retries, the worker claim/heartbeat/complete contract
+and stale-lease recovery. On
 Apple Silicon it uses `imresamu/postgis:17-3.5`; x86 uses
 `postgis/postgis:17-3.5`. Set `POSTGIS_TEST_IMAGE` to pin another compatible image. The test
 baseline uses text H3 values because the PostGIS image does not ship h3-pg. Docker must be

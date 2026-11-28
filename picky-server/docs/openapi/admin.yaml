@@ -531,6 +531,20 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { $ref: '#/components/responses/Validation' }
+  /admin/analytics/refresh:
+    post:
+      operationId: refreshAdminAnalytics
+      tags: [admin]
+      summary: Enqueue a materialized analytics refresh
+      description: Enqueues refresh_analytics; repeated requests are deduplicated while a job is queued and audited.
+      responses:
+        '202':
+          description: The queued refresh job
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EnqueueResult' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
 components:
   securitySchemes:
     bearerAuth:

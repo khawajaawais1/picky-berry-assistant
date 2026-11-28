@@ -1,0 +1,228 @@
+openapi: 3.1.0
+info:
+  title: Berry Picker Analytics API
+  version: 1.0.0
+  license:
+    name: UNLICENSED
+    url: https://choosealicense.com/no-permission/
+  description: Authenticated personal analytics and anonymous, privacy-suppressed zone trends.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+tags:
+  - name: analytics
+    description: Personal statistics and privacy-preserving zone analytics.
+paths:
+  /me/analytics:
+    get:
+      operationId: getMyAnalytics
+      tags: [analytics]
+      summary: Read the caller's rolling activity statistics
+      parameters:
+        - name: days
+          in: query
+          description: Number of Helsinki calendar days, including today.
+          schema: { type: integer, minimum: 1, maximum: 365, default: 30 }
+        - name: top
+          in: query
+          description: Maximum number of visited zones to return.
+          schema: { type: integer, minimum: 1, maximum: 20, default: 5 }
+      responses:
+        '200':
+          description: The caller's statistics, including one zero-filled entry per day.
+          headers:
+            Cache-Control:
+              schema: { type: string, const: 'private, max-age=60' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MyAnalytics' }
+        '401': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /analytics/zones/{id}:
+    get:
+      operationId: getZoneAnalytics
+      tags: [analytics]
+      summary: Read privacy-preserving analytics for one zone
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: days
+          in: query
+          description: Number of Helsinki calendar days, including today.
+          schema: { type: integer, minimum: 1, maximum: 90, default: 30 }
+      responses:
+        '200':
+          description: Live summary and a daily series from the last materialized-view refresh.
+          headers:
+            Cache-Control:
+              schema: { type: string, const: 'private, max-age=300' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ZoneAnalytics' }
+        '401': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    Error:
+      description: Standard API error.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Window:
+      type: object
+      additionalProperties: false
+      required: [days, from, to, timezone]
+      properties:
+        days: { type: integer, minimum: 1 }
+        from: { type: string, format: date }
+        to: { type: string, format: date }
+        timezone: { type: string, const: Europe/Helsinki }
+    MyAnalytics:
+      type: object
+      additionalProperties: false
+      required: [window, visits, zones_visited, reports, daily]
+      properties:
+        window: { $ref: '#/components/schemas/Window' }
+        visits:
+          type: object
+          additionalProperties: false
+          required: [count, total_stay_min, median_stay_min, longest_stay_min]
+          properties:
+            count: { type: integer, minimum: 0 }
+            total_stay_min: { type: number, minimum: 0 }
+            median_stay_min: { type: [number, 'null'], minimum: 0 }
+            longest_stay_min: { type: [number, 'null'], minimum: 0 }
+        zones_visited:
+          type: object
+          additionalProperties: false
+          required: [count, top]
+          properties:
+            count: { type: integer, minimum: 0 }
+            top:
+              type: array
+              items: { $ref: '#/components/schemas/MyTopZone' }
+        reports:
+          type: object
+          additionalProperties: false
+          required: [count, by_species]
+          properties:
+            count: { type: integer, minimum: 0 }
+            by_species:
+              type: array
+              items: { $ref: '#/components/schemas/MySpeciesReports' }
+        daily:
+          type: array
+          items: { $ref: '#/components/schemas/MyDailyActivity' }
+    MyTopZone:
+      type: object
+      additionalProperties: false
+      required: [zone_id, zone_name, visits, median_stay_min, last_visit_at]
+      properties:
+        zone_id: { type: string, format: uuid }
+        zone_name: { type: [string, 'null'] }
+        visits: { type: integer, minimum: 1 }
+        median_stay_min: { type: number, minimum: 0 }
+        last_visit_at: { type: string, format: date-time }
+    MySpeciesReports:
+      type: object
+      additionalProperties: false
+      required: [species, count, avg_rating]
+      properties:
+        species: { type: string }
+        count: { type: integer, minimum: 1 }
+        avg_rating: { type: [number, 'null'], minimum: 0, maximum: 5 }
+    MyDailyActivity:
+      type: object
+      additionalProperties: false
+      required: [date, visits, stay_min, reports]
+      properties:
+        date: { type: string, format: date }
+        visits: { type: integer, minimum: 0 }
+        stay_min: { type: number, minimum: 0 }
+        reports: { type: integer, minimum: 0 }
+    ZoneAnalytics:
+      type: object
+      additionalProperties: false
+      required: [zone_id, zone_name, window, as_of, min_users, visits, reports, daily]
+      properties:
+        zone_id: { type: string, format: uuid }
+        zone_name: { type: [string, 'null'] }
+        window: { $ref: '#/components/schemas/Window' }
+        as_of: { type: string, format: date-time }
+        min_users: { type: integer, minimum: 1 }
+        visits: { $ref: '#/components/schemas/ZoneVisitStats' }
+        reports: { $ref: '#/components/schemas/ZoneReportStats' }
+        daily:
+          type: array
+          items: { $ref: '#/components/schemas/ZoneDailyActivity' }
+    ZoneVisitStats:
+      oneOf:
+        - type: object
+          additionalProperties: false
+          required: [suppressed]
+          properties:
+            suppressed: { type: boolean, const: true }
+        - type: object
+          additionalProperties: false
+          required: [suppressed, count, visitors, median_stay_min]
+          properties:
+            suppressed: { type: boolean, const: false }
+            count: { type: integer, minimum: 0 }
+            visitors: { type: integer, minimum: 1 }
+            median_stay_min: { type: [number, 'null'], minimum: 0 }
+    ZoneReportStats:
+      oneOf:
+        - type: object
+          additionalProperties: false
+          required: [suppressed]
+          properties:
+            suppressed: { type: boolean, const: true }
+        - type: object
+          additionalProperties: false
+          required: [suppressed, count, reporters, avg_rating, by_species]
+          properties:
+            suppressed: { type: boolean, const: false }
+            count: { type: integer, minimum: 0 }
+            reporters: { type: integer, minimum: 1 }
+            avg_rating: { type: [number, 'null'], minimum: 0, maximum: 5 }
+            by_species:
+              type: array
+              items: { $ref: '#/components/schemas/ZoneSpeciesReports' }
+    ZoneSpeciesReports:
+      type: object
+      additionalProperties: false
+      required: [species, reports, avg_rating]
+      properties:
+        species: { type: string }
+        reports: { type: integer, minimum: 1 }
+        avg_rating: { type: [number, 'null'], minimum: 0, maximum: 5 }
+    ZoneDailyActivity:
+      type: object
+      additionalProperties: false
+      required: [date, visits, reports]
+      properties:
+        date: { type: string, format: date }
+        visits: { type: [integer, 'null'], minimum: 0 }
+        reports: { type: [integer, 'null'], minimum: 0 }
+    Error:
+      type: object
+      required: [error, request_id]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: { type: object }
+        request_id: { type: string }

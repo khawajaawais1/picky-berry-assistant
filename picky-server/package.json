@@ -23,7 +23,7 @@
     "seed:zones": "ts-node -r tsconfig-paths/register scripts/seed-dev-zones.ts",
     "db:check-a2": "ts-node scripts/check-a2.ts",
     "db:types": "kysely-codegen --env-file .env --out-file src/db/db.types.ts",
-    "openapi:lint": "redocly lint docs/openapi/zones.yaml docs/openapi/auth.yaml docs/openapi/visits.yaml docs/openapi/admin.yaml docs/openapi/feeds.yaml docs/openapi/feedback.yaml",
+    "openapi:lint": "redocly lint docs/openapi/zones.yaml docs/openapi/auth.yaml docs/openapi/visits.yaml docs/openapi/admin.yaml docs/openapi/analytics.yaml docs/openapi/feeds.yaml docs/openapi/feedback.yaml",
     "seed:users": "ts-node -r tsconfig-paths/register scripts/seed-dev-users.ts",
     "make-admin": "ts-node -r tsconfig-paths/register scripts/make-admin.ts"
   },

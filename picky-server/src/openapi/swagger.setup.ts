@@ -57,6 +57,7 @@ export function setupSwagger(
   let auth: OpenAPIObject;
   let visits: OpenAPIObject;
   let admin: OpenAPIObject;
+  let analytics: OpenAPIObject;
   let feeds: OpenAPIObject | undefined;
   let feedback: OpenAPIObject;
   try {
@@ -66,6 +67,7 @@ export function setupSwagger(
     auth = read('auth.yaml');
     visits = read('visits.yaml');
     admin = read('admin.yaml');
+    analytics = read('analytics.yaml');
     feedback = read('feedback.yaml');
     try {
       feeds = read('feeds.yaml');
@@ -88,6 +90,7 @@ export function setupSwagger(
       ...auth.paths,
       ...visits.paths,
       ...admin.paths,
+      ...analytics.paths,
       ...feeds?.paths,
       ...feedback.paths,
     },
@@ -100,6 +103,7 @@ export function setupSwagger(
         ...auth.components?.securitySchemes,
         ...visits.components?.securitySchemes,
         ...admin.components?.securitySchemes,
+        ...analytics.components?.securitySchemes,
         ...feeds?.components?.securitySchemes,
         ...feedback.components?.securitySchemes,
       },
@@ -108,6 +112,7 @@ export function setupSwagger(
         ...auth.components?.parameters,
         ...visits.components?.parameters,
         ...admin.components?.parameters,
+        ...analytics.components?.parameters,
         ...feeds?.components?.parameters,
         ...feedback.components?.parameters,
       },
@@ -116,6 +121,7 @@ export function setupSwagger(
         ...auth.components?.responses,
         ...visits.components?.responses,
         ...admin.components?.responses,
+        ...analytics.components?.responses,
         ...feeds?.components?.responses,
         ...feedback.components?.responses,
       },
@@ -124,6 +130,7 @@ export function setupSwagger(
         ...auth.components?.schemas,
         ...visits.components?.schemas,
         ...admin.components?.schemas,
+        ...analytics.components?.schemas,
         ...feeds?.components?.schemas,
         ...feedback.components?.schemas,
       },

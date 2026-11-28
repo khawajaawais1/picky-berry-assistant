@@ -12,9 +12,16 @@ functions used by the runner.
 | `score_zones_daily`    | `{ "date": "YYYY-MM-DD", "offset": 0 }`        | `daily:<date>:<offset>`         |
 | `recompute_zone_score` | `{ "zone_id": "<uuid>", "species": "<code>" }` | `recompute:<zone_id>:<species>` |
 | `process_report`       | `{ "report_id": "<uuid>" }`                    | `process:<report_id>`           |
+| `refresh_analytics`    | `{}`                                           | `refresh_analytics`             |
 
 Queued jobs with the same non-null `dedupe_key` are unique. A contract change
 must update enqueueing code and the job handler together.
+
+The analytics refresh is enqueued after daily score finalization, and lazily when
+the runner starts and `mv_zone_daily` is older than `ANALYTICS_REFRESH_MINUTES`.
+`POST /api/v1/admin/analytics/refresh` also enqueues it. The materialized view
+refresh runs outside a transaction because PostgreSQL does not allow
+`REFRESH MATERIALIZED VIEW CONCURRENTLY` inside one.
 
 ## Lease and heartbeat
 

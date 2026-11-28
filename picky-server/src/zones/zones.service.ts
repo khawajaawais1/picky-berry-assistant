@@ -9,6 +9,7 @@ import { cellToBoundary } from 'h3-js';
 import { QueryResultRow } from 'pg';
 import { DbService } from '../db/db.service';
 import { SpeciesService } from '../species/species.service';
+import { minimumAnalyticsUsers } from '../common/minimum-analytics-users';
 import { bboxKm, Bbox } from '../common/utils/bbox';
 import { buildEtag, matchesEtag } from '../common/utils/etag';
 import { ExplanationService } from './explanation/explanation.service';
@@ -386,7 +387,7 @@ export class ZonesService {
          WHERE zone_id = $1 AND created_at >= now() - interval '7 days'
            AND cardinality(flags) = 0
          GROUP BY species ORDER BY species`,
-        [zoneId, this.config.get<number>('MIN_REPORTERS_FOR_AVERAGE', 3)],
+        [zoneId, minimumAnalyticsUsers(this.config)],
       ),
     ]);
 

@@ -8,7 +8,7 @@
 
 ## 1. Scope, constraints and principles
 
-We build the MVP as a React Native (Expo) app talking to one FastAPI modular monolith backed by PostgreSQL + PostGIS, with the ontology, YOLO and yield models running inside that same backend. Everything fits on one small EU-hosted VM and is ready for the final demo on 17 Dec 2026.
+The current MVP uses a React Native (Expo) app, a NestJS/TypeScript core API, a separate Python ML API, and PostgreSQL + PostGIS. The core API is deployed to Vercel, the database is managed by Supabase, and the ML API is hosted separately. The original single-VM proposal below is historical where it conflicts with the current implementation.
 
 **In scope (designed in full) – the 9 core features:**
 
@@ -41,13 +41,13 @@ Out of scope for this document: the 4 desired extras (video analysis & fraud che
 - **Postgres does the heavy lifting.** Spatial queries, the job queue, analytics views and the model registry all live in one database. Fewer moving parts, one backup.
 - **Offline-first app.** The phone works in the forest without signal and syncs when it can. Every write carries a client-generated UUID so retries are safe.
 - **Explainable by design.** Every score and alert stores why (inputs + rule fired), so the app can show the reason in plain words.
-- **Contract-first API.** FastAPI generates OpenAPI; the app's TypeScript client is generated from it, so frontend and backend never drift.
+- **Contract-first API.** The NestJS core API serves committed OpenAPI contracts; client types are generated from those contracts.
 
 ---
 
 ## 2. System overview
 
-Read it top down: the phone does detection and offline work, one FastAPI image does all server logic, Postgres + PostGIS holds the data, and free external services supply weather, satellite, maps and push. Two shortcuts not drawn: the app uploads photos and downloads map tiles straight to/from object storage with presigned URLs, and FCM delivers alerts straight to the phone.
+Read it top down: the phone does detection and offline work, the NestJS core API serves application routes, a separate Python service handles ML requests, and Postgres + PostGIS holds shared data. The app uploads photos and downloads map tiles directly from object storage; FCM delivers alerts to the phone.
 
 *(Diagram not included in the pasted text.)*
 
@@ -55,7 +55,7 @@ Read it top down: the phone does detection and offline work, one FastAPI image d
 
 ## 3. Preferred tech stack
 
-The stack keeps every team decision (React Native, FastAPI, PostGIS, rdflib, YOLO, gradient boosting, FCM, one Docker image) and fills the gaps with free, boring, well-documented tools. Pin exact versions in sprint 1 and record them in `docs/versions.md`.
+The current stack uses React Native, NestJS, PostgreSQL/PostGIS, a separate Python ML service, YOLO, gradient boosting, and FCM.
 
 | Layer | Choice | Why this one |
 |---|---|---|
@@ -66,9 +66,9 @@ The stack keeps every team decision (React Native, FastAPI, PostGIS, rdflib, YOL
 | App local DB | expo-sqlite + Drizzle ORM | Outbox queue, cached zones and visits for offline use |
 | Forms / validation | react-hook-form + zod | Same validation rules on every screen |
 | Push | Firebase Cloud Messaging via @react-native-firebase/messaging (FCM token on both iOS and Android) | Free; team decision; backend sends with Firebase Admin SDK |
-| Backend language | Python 3.12 | Same language as ML, data and rdflib; whole backend team already uses Python |
-| API framework | FastAPI + Pydantic v2 | Auto OpenAPI docs, async, fast to learn |
-| ORM / migrations | SQLAlchemy 2.0 (async) + GeoAlchemy2 + Alembic, asyncpg driver | Typed models, PostGIS types, versioned schema changes |
+| Core API language | TypeScript on Node.js 24 | Matches the implemented NestJS service and admin client |
+| Core API framework | NestJS | Modular API, validation, and dependency injection |
+| Database access / migrations | `pg` + Kysely and `node-pg-migrate` SQL migrations | Typed queries and versioned SQL changes |
 | Database | PostgreSQL 17 + PostGIS 3.5 (+ h3 extension) | Spatial queries, job queue, analytics views in one engine |
 | Background jobs | APScheduler (schedules) + Postgres job table with SKIP LOCKED (work queue) | No Redis, no Celery: one less service to run |
 | Auth | JWT access token (15 min) + rotating refresh token (30 days), passwords hashed with Argon2 (pwdlib) | Standard, stateless, works offline until expiry |
@@ -78,7 +78,7 @@ The stack keeps every team decision (React Native, FastAPI, PostGIS, rdflib, YOL
 | Training compute | Google Colab / Kaggle free GPU (or JYU resources) | Free; only the exported model file reaches the server |
 | Data pipelines | fmiopendata (FMI WFS), Copernicus Data Space Sentinel Hub Statistical API, geopandas, h3 | Zone-level weather and NDVI with a few hundred lines of Python |
 | Media storage | S3-compatible object storage (MinIO in dev, provider bucket in prod) via boto3 presigned URLs | Photos never pass through the API process; cheap |
-| Packaging | Docker (one backend image) + docker compose (backend, Postgres, Caddy) | One command to run everything locally and in the cloud |
+| Packaging | Vercel for the core API; Docker Compose for local PostGIS development | Matches current deployment while retaining a reproducible local setup |
 | Reverse proxy / TLS | Caddy | Automatic HTTPS with one config file |
 | Hosting | One EU VM in Finland (e.g. Hetzner Helsinki or CSC cPouta if the course qualifies) | Data stays in the EU; fits the ≈ €360/yr cloud budget |
 | CI/CD | GitHub Actions → image to GHCR → SSH deploy; EAS Build for app binaries | Free for a student repo |
@@ -147,33 +147,27 @@ Thresholds (10 min, 5 min, 2 km) are config values, tuned in user tests.
 
 ---
 
-## 5. Backend (FastAPI modular monolith)
+## 5. Backend (NestJS core API)
 
-One Python package, one Docker image, ten modules. Each module owns its tables and exposes a `service.py`; other modules call that service, never its tables directly. Owner: Hassan (API, DB, auth, visits, trust) with module co-owners below.
+The core API is a NestJS application with feature modules and a shared Postgres database. Python is used by the separately deployed ML service.
 
-### Folder layout (`backend/`)
+### Folder layout (`picky-server/`)
 
 ```
-backend/
-  app/
-    main.py            # FastAPI app, routers, middleware
-    core/              # config, db session, security, logging, errors
-    modules/
-      accounts/        # router.py, service.py, models.py, schemas.py
-      zones/
-      visits/
-      feedback/
-      trust/
-      prediction/
-      reasoning/
-      analytics/
-      ingest/          # FMI, Sentinel-2, tiles (Awais)
-      media/
-    jobs/              # scheduler + queue worker
-  ml/                  # inference wrappers (YOLO ONNX, XGBoost)
-  ontology/            # .ttl files, SPARQL rules (mirrors /ontology repo dir)
-  migrations/          # Alembic
-  tests/
+picky-server/
+  src/
+    main.ts            # NestJS app bootstrap
+    auth/              # JWT authentication and roles
+    zones/             # zone queries, details, scores
+    visits/            # accepted/rejected visit records
+    reports/           # feedback and reports
+    analytics/         # personal and anonymous analytics
+    jobs/              # PostgreSQL queue runner
+    admin/             # audited operator endpoints
+  migrations/          # node-pg-migrate SQL
+  docs/openapi/        # committed API contracts
+  test/                # PostGIS integration tests
+ml/                    # separate Python inference API
 ```
 
 ### Modules
@@ -187,16 +181,16 @@ backend/
 | trust | User trust score, report weights, consensus per zone | user_trust, report_weights | Hassan |
 | prediction | Feature building, XGBoost inference, score fusion, model registry | zone_features, predictions, model_versions | Remon |
 | reasoning | Load ontology, run rules, create alerts with explanation, send push | alerts, alert_rules_log | Asmer |
-| analytics | Median stay time, visits per day, trends (materialised views) | mv_zone_daily, mv_user_stats | Hassan / Sayeem |
+| analytics | Live personal stats and privacy-suppressed zone trends | mv_zone_daily, analytics_refresh | Hassan / Sayeem |
 | ingest | Pull FMI weather and Sentinel-2 NDVI per zone, keep raw + aggregated | weather_daily, ndvi_obs, ingest_runs | Awais |
 | media | Presigned upload / download URLs, thumbnails | photos (shared) | Sabih |
 
-Request path: Caddy (TLS) → Uvicorn (2 workers) → FastAPI router → Pydantic validation → service → SQLAlchemy → Postgres. Errors return RFC 9457 problem JSON.
+Request path: Vercel → NestJS routing and validation → feature service → `pg`/Kysely → PostgreSQL. Errors use the API's standard error envelope.
 
 ### Background work – no Redis, no Celery
 
-- **Scheduler:** APScheduler runs inside the app. A Postgres advisory lock makes sure only one worker runs each scheduled job.
-- **Work queue:** a `jobs` table (type, payload, status, attempts, run_after). A worker loop takes jobs with `SELECT … FOR UPDATE SKIP LOCKED`. Failed jobs retry 3 times with backoff, then go to status `dead` for a human to look at.
+- **Trigger:** the existing Vercel cron calls the internal runner; no in-process scheduler is used.
+- **Work queue:** PostgreSQL's `jobs` table and lease-aware `claim_job()` coordinate work. Failed jobs retry with backoff and eventually become failed for an operator to inspect.
 
 | Job | Trigger | What it does |
 |---|---|---|
@@ -206,7 +200,7 @@ Request path: Caddy (TLS) → Uvicorn (2 workers) → FastAPI router → Pydanti
 | ingest_ndvi | Daily 06:00 (skips cloudy scenes) | Sentinel-2 NDVI mean per zone |
 | predict_yield | Daily 07:00 | Build features, run XGBoost for every zone × species |
 | run_reasoning | After predict_yield, and after each new score | Rules → alerts → FCM push |
-| refresh_analytics | Hourly | `REFRESH MATERIALIZED VIEW CONCURRENTLY` |
+| refresh_analytics | After daily score finalization; lazily when the runner sees stale data | Refreshes `mv_zone_daily` concurrently |
 | purge_personal_data | Nightly | Delete expired tokens, apply retention rules, finish account deletions |
 
 If one day the queue gets heavy, the same image can run a second container with `ROLE=worker`. No code change needed.
@@ -263,9 +257,10 @@ Each feature below names the screens, the backend module, the data it touches an
 
 ### 6.8 Analytics
 
-- Materialised views: visits and median stay time per zone per day, report counts, score history.
-- Shown in the app ("My stats", zone trends) and in a simple admin page (FastAPI + Jinja or the OpenAPI docs) for the team.
-- Median stay time uses `percentile_cont(0.5)` over visit durations.
+- `GET /me/analytics` reads personal visits and reports live; `GET /analytics/zones/{id}` combines a live summary with a daily series from `mv_zone_daily`.
+- Zone visit and report aggregates are independently hidden until at least three distinct, non-anonymized users contribute. Private users count; no identifiers are returned.
+- `mv_zone_daily` stores daily visit/report counts and an internal median; daily median is never exposed. The existing `GET /admin/analytics` remains the admin overview.
+- One materialized view is sufficient: per-user statistics are queried live, so `mv_user_stats` is not needed unless measured query latency justifies it.
 
 ### 6.9 Offline mode and privacy
 
@@ -508,8 +503,9 @@ All endpoints live under `/api/v1`, speak JSON (GeoJSON for map data, JSON-LD on
 | `POST /media/upload-url` | user | Presigned PUT URL for a photo |
 | `POST /media/{id}/complete` | user | Photo uploaded → start YOLO job |
 | `GET /alerts` | user | My alerts with explanations |
-| `GET /me/analytics` | user | My visits, median stay, zones |
-| `GET /analytics/zones/{id}` | user | Zone trends, median stay time |
+| `GET /me/analytics` | user | Rolling personal visits, reports, and daily activity |
+| `GET /analytics/zones/{id}` | user | Zone trends with independent minimum-user suppression |
+| `POST /admin/analytics/refresh` | admin | Audited, deduplicated materialized-view refresh |
 | `GET /admin/jobs` · `/admin/ingest-runs` · `/admin/models` | admin | Ops views; activate a model version |
 | `GET /health` | none | Liveness + DB check |
 
@@ -546,7 +542,7 @@ Location history is sensitive personal data, so the core privacy move is archite
 | Authorisation | Role check dependency on every router; users can only read/write their own visits, reports, alerts (checked in the service, tested) |
 | Tokens on device | Stored in expo-secure-store (Keychain / Keystore), never in AsyncStorage |
 | Secrets | `.env` on the server only (never in git), GitHub Actions secrets for CI; rotate on team changes |
-| Input | Pydantic validation, SQLAlchemy parameters (no string SQL), upload size ≤ 10 MB, image MIME check, EXIF GPS stripped from photos |
+| Input | NestJS DTO validation, parameterized database queries, upload size limits, image MIME check, EXIF GPS stripped from photos |
 | Data location | VM, database and bucket in the EU (Finland); Firebase used only for push tokens |
 | Backups | Nightly `pg_dump` to object storage, 14 days kept, restore tested once per sprint |
 | Dependencies | Dependabot + pip-audit / npm audit in CI |
@@ -566,7 +562,7 @@ Location history is sensitive personal data, so the core privacy move is archite
 
 ## 14. Deployment, DevOps and cost
 
-Production is one Linux VM running docker compose with three containers: our backend image, Postgres/PostGIS, and Caddy. Photos, tiles, models and backups go to an S3-compatible bucket. Owner: Sabih (Docker, cloud, push), Sayeem (repo, CI).
+The core API runs on Vercel, PostgreSQL/PostGIS is managed by Supabase, and the Python ML API is deployed separately. Photos and other object assets use external object storage.
 
 ### `docker-compose.yml` (production, simplified)
 
@@ -605,7 +601,7 @@ One cloud environment is enough for a course MVP; a separate staging VM is added
 ### CI/CD pipeline (GitHub Actions)
 
 - On every pull request: ruff, mypy, pytest (with a PostGIS service container), ESLint, Jest, OpenAPI client regenerated and diff-checked.
-- On merge to `main`: build the backend image, push to GHCR, SSH to the VM, `docker compose pull && up -d`, run `alembic upgrade head`, hit `/health`.
+- Production schema changes are applied with the API's `node-pg-migrate` SQL migrations; Vercel deploys the NestJS core API and the ML service is deployed independently.
 - On tag `app-v*`: `eas build` for iOS + Android, submit to internal tracks.
 - Branch rule: `main` protected, 1 review required, CI must pass.
 
@@ -676,7 +672,7 @@ None of these are built in the MVP; the design only leaves a door open for each,
 |---|---|---|
 | Sayeem | Repo, CI, integration, test plan, demo, reports | Repo + board, test plan v1 |
 | Salman (Prottoy) | React Native app (section 4) | Expo skeleton, MapLibre map with test zones |
-| Hassan | FastAPI core, DB schema, accounts, zones, visits, feedback, trust (5, 7) | Schema + login + `POST /visits` running locally |
+| Hassan | NestJS core API, DB schema, accounts, zones, visits, feedback, trust (5, 7) | Schema + login + `POST /visits` running locally |
 | Remon | YOLO + yield model + model store (9) | WildBe downloaded, first YOLO run with mAP |
 | Awais | Ingest pipelines, zones from H3 + forest mask, tiles (10) | Weather + NDVI for Central Finland in the DB |
 | Asmer | Ontology, rules, reasoning module (8) | Ontology v1 + 3 rules as `.rq` files |

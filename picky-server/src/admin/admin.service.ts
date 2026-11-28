@@ -1570,6 +1570,52 @@ export class AdminService {
     );
   }
 
+  async enqueueAnalyticsRefresh(
+    actorId: string,
+    requestId: string,
+    ip: string | null = null,
+    userAgent: string | null = null,
+  ): Promise<EnqueueResult> {
+    const client = await this.database.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const result = await this.jobs.enqueue(
+        'refresh_analytics',
+        {},
+        'refresh_analytics',
+        client,
+      );
+      await this.recordAudit(
+        client,
+        actorId,
+        'analytics.refresh',
+        'analytics',
+        'mv_zone_daily',
+        { job_id: result.job_id, deduplicated: result.deduplicated },
+        requestId,
+        {
+          before: result.deduplicated
+            ? { status: 'queued', job_id: result.job_id }
+            : { status: 'none', job_id: null },
+          after: {
+            status: 'queued',
+            job_id: result.job_id,
+            deduplicated: result.deduplicated,
+          },
+          ip,
+          userAgent,
+        },
+      );
+      await client.query('COMMIT');
+      return result;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
   private async enqueueWithAudit(
     type: string,
     payload: Record<string, unknown>,

@@ -5,6 +5,45 @@ import { MlClientService } from '../ml/ml-client.service';
 import { MlJobsService } from './ml-jobs.service';
 
 describe('MlJobsService report trust processing', () => {
+  it('enqueues an analytics refresh after daily score finalization', async () => {
+    const clientQuery = jest.fn().mockResolvedValue({ rows: [] });
+    const poolQuery = jest
+      .fn()
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [{ count: 0 }] });
+    const client = { query: clientQuery, release: jest.fn() };
+    const jobs = { enqueue: jest.fn().mockResolvedValue(undefined) };
+    const service = new MlJobsService(
+      {
+        pool: {
+          query: poolQuery,
+          connect: jest.fn().mockResolvedValue(client),
+        },
+      } as unknown as DbService,
+      jobs as unknown as JobsService,
+      {
+        health: jest.fn().mockResolvedValue({ status: 'ok' }),
+      } as unknown as MlClientService,
+      {
+        get: (_key: string, defaultValue: unknown) => defaultValue,
+      } as unknown as ConfigService,
+    );
+
+    await service.handle('score_zones_daily', {
+      date: '2026-11-28',
+      offset: 0,
+    });
+
+    expect(jobs.enqueue).toHaveBeenCalledWith(
+      'refresh_analytics',
+      {},
+      'refresh_analytics',
+      client,
+    );
+    expect(clientQuery).toHaveBeenCalledWith('COMMIT');
+    expect(client.release).toHaveBeenCalled();
+  });
+
   it('uses the report timestamp as a timestamptz for the weekly consensus window', async () => {
     const reportId = 'c0a80101-0000-4000-8000-000000000001';
     const createdAt = new Date('2026-11-28T00:00:00.000Z');
@@ -70,5 +109,38 @@ describe('MlJobsService report trust processing', () => {
       expect.objectContaining({ zone_consensus: null }),
     );
     expect(jobs.enqueue).toHaveBeenCalled();
+  });
+
+  it('refreshes analytics outside a transaction and advances its marker', async () => {
+    const query = jest.fn().mockResolvedValue({ rows: [] });
+    const service = new MlJobsService(
+      { pool: { query } } as unknown as DbService,
+      { enqueue: jest.fn() } as unknown as JobsService,
+      {} as MlClientService,
+      {
+        get: (_key: string, defaultValue: unknown) => defaultValue,
+      } as unknown as ConfigService,
+    );
+
+    await service.handle('refresh_analytics', {});
+    await service.handle('refresh_analytics', {});
+
+    expect(query).toHaveBeenNthCalledWith(
+      1,
+      'REFRESH MATERIALIZED VIEW CONCURRENTLY mv_zone_daily',
+    );
+    expect(query).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining('INSERT INTO analytics_refresh'),
+    );
+    expect(query).toHaveBeenNthCalledWith(
+      3,
+      'REFRESH MATERIALIZED VIEW CONCURRENTLY mv_zone_daily',
+    );
+    expect(query).toHaveBeenNthCalledWith(
+      4,
+      expect.stringContaining('INSERT INTO analytics_refresh'),
+    );
+    expect(query).not.toHaveBeenCalledWith('BEGIN');
   });
 });

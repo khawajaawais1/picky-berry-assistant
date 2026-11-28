@@ -28,6 +28,33 @@ export function helsinkiDayBounds(now = new Date()): {
   };
 }
 
+export function helsinkiWindowBounds(
+  days: number,
+  now = new Date(),
+): {
+  fromDay: string;
+  toDay: string;
+  start: Date;
+  end: Date;
+} {
+  const toDay = todayInHelsinki(now);
+  const fromDay = shiftDate(toDay, 1 - days);
+  return {
+    fromDay,
+    toDay,
+    start: localMidnightAsUtc(fromDay),
+    end: localMidnightAsUtc(shiftDate(toDay, 1)),
+  };
+}
+
+function shiftDate(date: string, days: number): string {
+  const [year, month, day] = date.split('-').map(Number);
+  const shifted = new Date(Date.UTC(year, month - 1, day + days));
+  return `${shifted.getUTCFullYear()}-${String(
+    shifted.getUTCMonth() + 1,
+  ).padStart(2, '0')}-${String(shifted.getUTCDate()).padStart(2, '0')}`;
+}
+
 function localMidnightAsUtc(date: string): Date {
   const noonUtc = new Date(`${date}T12:00:00Z`);
   const parts = Object.fromEntries(
