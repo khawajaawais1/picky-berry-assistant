@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
-import { JobsService } from '../jobs/jobs.service';
+import { JobsModule } from '../jobs/jobs.module';
+import { MlModule } from '../ml/ml.module';
 import { SpeciesModule } from '../species/species.module';
 import { AdminController } from './admin.controller';
 import { AdminMapService } from './admin-map.service';
 import { AdminService } from './admin.service';
 
 @Module({
-  imports: [SpeciesModule],
+  imports: [SpeciesModule, JobsModule, MlModule],
   controllers: [AdminController],
-  providers: [AdminService, AdminMapService, JobsService],
+  providers: [AdminService, AdminMapService],
 })
 export class AdminModule {}

@@ -1,0 +1,195 @@
+{
+  "case": "off_season_zone",
+  "description": "Bilberry in mid-January: score 0, ripeness unripe, reason off_season.",
+  "grid_version": "zone-grid-jkl60-v2",
+  "rules_version": "zone-score-rules-v2",
+  "species": "bilberry",
+  "steps": [
+    {
+      "endpoint": "POST /api/v1/ml/zone-scores",
+      "function": "ZoneGrid.score_points",
+      "request": {
+        "date": "2026-01-15",
+        "points": [
+          {
+            "id": "zone-off-season",
+            "h3": "881126d2d1fffff",
+            "lat": 62.3,
+            "lon": 25.6
+          }
+        ]
+      },
+      "response": {
+        "date": "2026-01-15",
+        "model_version": "zone-grid-jkl60-v2",
+        "rules_version": "zone-score-rules-v2",
+        "results": [
+          {
+            "id": "zone-off-season",
+            "h3": "881126d2d1fffff",
+            "lat": 62.3,
+            "lon": 25.6,
+            "coverage": "grid",
+            "cells": 7,
+            "forest_share": 0.984,
+            "scores": {
+              "bilberry": {
+                "score": 0,
+                "confidence": "low",
+                "ripeness": "unripe",
+                "explanation": {
+                  "model_version": "zone-grid-jkl60-v2",
+                  "rules_version": "zone-score-rules-v2",
+                  "reasons": [
+                    "off_season",
+                    "moderate_site",
+                    "no_reports_baseline"
+                  ],
+                  "inputs": {
+                    "site_class": "moderate",
+                    "site_potential": 0.597,
+                    "window_start": "2026-07-10",
+                    "window_end": "2026-08-29",
+                    "year_index": 1.0,
+                    "forest_share": 0.984,
+                    "reports_used": 0,
+                    "evidence_weight": 0.0
+                  }
+                }
+              },
+              "lingonberry": {
+                "score": 0,
+                "confidence": "low",
+                "ripeness": "unripe",
+                "explanation": {
+                  "model_version": "zone-grid-jkl60-v2",
+                  "rules_version": "zone-score-rules-v2",
+                  "reasons": [
+                    "off_season",
+                    "poor_site",
+                    "no_reports_baseline"
+                  ],
+                  "inputs": {
+                    "site_class": "poor",
+                    "site_potential": 0.282,
+                    "window_start": "2026-08-14",
+                    "window_end": "2026-10-08",
+                    "year_index": 1.0,
+                    "forest_share": 0.984,
+                    "reports_used": 0,
+                    "evidence_weight": 0.0
+                  }
+                }
+              },
+              "cloudberry": {
+                "score": 0,
+                "confidence": "low",
+                "ripeness": "unripe",
+                "explanation": {
+                  "model_version": "zone-grid-jkl60-v2",
+                  "rules_version": "zone-score-rules-v2",
+                  "reasons": [
+                    "off_season",
+                    "poor_site",
+                    "no_reports_baseline"
+                  ],
+                  "inputs": {
+                    "site_class": "poor",
+                    "site_potential": 0.075,
+                    "window_start": "2026-07-05",
+                    "window_end": "2026-08-04",
+                    "year_index": 1.0,
+                    "forest_share": 0.984,
+                    "reports_used": 0,
+                    "evidence_weight": 0.0
+                  }
+                }
+              },
+              "crowberry": {
+                "score": 0,
+                "confidence": "low",
+                "ripeness": "unripe",
+                "explanation": {
+                  "model_version": "zone-grid-jkl60-v2",
+                  "rules_version": "zone-score-rules-v2",
+                  "reasons": [
+                    "off_season",
+                    "poor_site",
+                    "no_reports_baseline",
+                    "low_confidence_species"
+                  ],
+                  "inputs": {
+                    "site_class": "poor",
+                    "site_potential": 0.162,
+                    "window_start": "2026-07-20",
+                    "window_end": "2026-09-18",
+                    "year_index": 1.0,
+                    "forest_share": 0.984,
+                    "reports_used": 0,
+                    "evidence_weight": 0.0
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "endpoint": "POST /api/v1/ml/score-updates",
+      "function": "update_zone_score",
+      "request": {
+        "map_score": 0,
+        "map_confidence": "low",
+        "map_explanation": {
+          "model_version": "zone-grid-jkl60-v2",
+          "rules_version": "zone-score-rules-v2",
+          "reasons": [
+            "off_season",
+            "moderate_site",
+            "no_reports_baseline"
+          ],
+          "inputs": {
+            "site_class": "moderate",
+            "site_potential": 0.597,
+            "window_start": "2026-07-10",
+            "window_end": "2026-08-29",
+            "year_index": 1.0,
+            "forest_share": 0.984,
+            "reports_used": 0,
+            "evidence_weight": 0.0
+          }
+        },
+        "reports": [],
+        "now": "2026-01-15T12:00:00Z"
+      },
+      "response": {
+        "score": 0,
+        "confidence": "low",
+        "s_model": 0,
+        "s_feedback": null,
+        "evidence_weight": 0.0,
+        "reports_used": 0,
+        "explanation": {
+          "model_version": "zone-grid-jkl60-v2",
+          "rules_version": "zone-score-rules-v2",
+          "reasons": [
+            "off_season",
+            "moderate_site",
+            "no_reports_baseline"
+          ],
+          "inputs": {
+            "site_class": "moderate",
+            "site_potential": 0.597,
+            "window_start": "2026-07-10",
+            "window_end": "2026-08-29",
+            "year_index": 1.0,
+            "forest_share": 0.984,
+            "reports_used": 0,
+            "evidence_weight": 0.0
+          }
+        }
+      }
+    }
+  ]
+}

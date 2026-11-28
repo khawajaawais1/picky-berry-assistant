@@ -47,7 +47,7 @@ CREATE TABLE users (
   email text NOT NULL,
   password_hash text NOT NULL,
   nickname text,
-  role text NOT NULL DEFAULT 'picker' CHECK (role IN ('picker','admin','buyer')),   -- buyer unused until marketplace
+  role text NOT NULL DEFAULT 'picker' CHECK (role IN ('picker','admin','buyer')),   -- buyer is currently unused
   privacy_level text NOT NULL DEFAULT 'private' CHECK (privacy_level IN ('private','shared','public')),
   background_location boolean NOT NULL DEFAULT false,
   alert_radius_km int NOT NULL DEFAULT 10 CHECK (alert_radius_km BETWEEN 1 AND 100),

@@ -2,6 +2,7 @@ import { UnprocessableEntityException } from '@nestjs/common';
 import { DbService } from '../db/db.service';
 import { JobsService } from '../jobs/jobs.service';
 import { SpeciesService } from '../species/species.service';
+import { todayInHelsinki } from '../common/dates';
 import { AdminService } from './admin.service';
 
 describe('AdminService recompute de-duplication', () => {
@@ -67,16 +68,18 @@ describe('AdminService recompute de-duplication', () => {
     });
   });
 
-  it('keeps the zone-wide key used by the visits service stable', async () => {
-    await service.recompute({ zone_id: zoneId }, actorId, 'req-zone');
+  it('enqueues a daily score job when recompute has no body', async () => {
+    const date = todayInHelsinki();
+    await service.recompute({}, actorId, 'req-daily');
 
     const calls = enqueue.mock.calls as [
       string,
       Record<string, unknown>,
       string,
     ][];
-    expect(calls[0][2]).toBe(`recompute:${zoneId}`);
-    expect(calls[0][1]).toEqual({ zone_id: zoneId });
+    expect(calls[0][0]).toBe('score_zones_daily');
+    expect(calls[0][2]).toBe(`daily:${date}:0`);
+    expect(calls[0][1]).toEqual({ date, offset: 0 });
   });
 
   it('rejects a species without a zone', async () => {

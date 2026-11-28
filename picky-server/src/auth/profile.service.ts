@@ -171,7 +171,7 @@ export class ProfileService {
     );
     if (!profile.rows[0]) throw new NotFoundException('User not found.');
 
-    const [consents, devices, visits, reports] = await Promise.all([
+    const [consents, devices, visits, reports, photos] = await Promise.all([
       this.database.pool.query(
         `SELECT kind, version, granted, created_at
          FROM consents WHERE user_id = $1 ORDER BY created_at`,
@@ -194,6 +194,12 @@ export class ProfileService {
          FROM reports WHERE user_id = $1 ORDER BY created_at DESC, id DESC`,
         [userId],
       ),
+      this.database.pool.query(
+        `SELECT id, submission_id, counts, total, model_version,
+                image_width, image_height, created_at
+         FROM photos WHERE user_id = $1 ORDER BY created_at DESC, id DESC`,
+        [userId],
+      ),
     ]);
     return {
       profile: this.toProfile(profile.rows[0]),
@@ -201,6 +207,7 @@ export class ProfileService {
       devices: devices.rows,
       visits: visits.rows,
       reports: reports.rows,
+      photos: photos.rows,
     };
   }
 

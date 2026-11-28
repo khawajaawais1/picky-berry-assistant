@@ -1,0 +1,247 @@
+openapi: 3.0.3
+info:
+  title: Berry Picker Feedback and Media API
+  version: 1.0.0
+  license:
+    name: UNLICENSED
+    url: https://choosealicense.com/no-permission/
+  description: Feedback submissions, synchronous photo analysis, and ML health.
+servers:
+  - url: /api/v1
+security:
+  - feedbackBearerAuth: []
+paths:
+  /media/analyze:
+    post:
+      operationId: analyzeFeedbackPhoto
+      summary: Analyze a photo without storing the image
+      description: Accepts JPEG, PNG, or WebP bytes in memory, forwards them to ML, and stores only counts and image metadata.
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: { type: string, format: uuid }
+        - in: query
+          name: submission_id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [photo]
+              properties:
+                photo: { type: string, format: binary }
+      responses:
+        '201':
+          description: Photo analysis saved; no photo bytes are persisted.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PhotoAnalysis' }
+        '200':
+          description: Idempotent replay of the saved analysis; no ML call.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PhotoAnalysis' }
+        '409': { $ref: '#/components/responses/FeedbackConflict' }
+        '413': { $ref: '#/components/responses/PhotoTooLarge' }
+        '422': { $ref: '#/components/responses/FeedbackValidation' }
+        '502': { $ref: '#/components/responses/MlRejected' }
+        '503': { $ref: '#/components/responses/MlUnavailable' }
+        '401': { $ref: '#/components/responses/FeedbackUnauthorized' }
+  /visits/{id}/feedback:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      operationId: submitVisitFeedback
+      summary: Submit per-species feedback for an accepted visit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FeedbackSubmission' }
+      responses:
+        '201':
+          description: Feedback stored and report jobs queued.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FeedbackResponse' }
+        '200':
+          description: Idempotent replay of stored feedback.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FeedbackResponse' }
+        '404': { $ref: '#/components/responses/FeedbackNotFound' }
+        '409': { $ref: '#/components/responses/FeedbackConflict' }
+        '422': { $ref: '#/components/responses/FeedbackValidation' }
+        '401': { $ref: '#/components/responses/FeedbackUnauthorized' }
+  /reports:
+    post:
+      operationId: submitZoneFeedback
+      summary: Submit feedback without a visit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ZoneFeedbackSubmission'
+      responses:
+        '201':
+          description: Feedback stored and report jobs queued.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FeedbackResponse' }
+        '200':
+          description: Idempotent replay of stored feedback.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FeedbackResponse' }
+        '404': { $ref: '#/components/responses/FeedbackNotFound' }
+        '409': { $ref: '#/components/responses/FeedbackConflict' }
+        '422': { $ref: '#/components/responses/FeedbackValidation' }
+        '401': { $ref: '#/components/responses/FeedbackUnauthorized' }
+  /admin/ml/health:
+    get:
+      operationId: getMlServiceHealth
+      summary: Wake and inspect the ML service
+      description: Admin-only health check; uses the long cold-start timeout.
+      security:
+        - feedbackBearerAuth: []
+      responses:
+        '200':
+          description: ML model versions.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, models]
+                properties:
+                  status: { type: string, enum: [ok] }
+                  models:
+                    type: object
+                    required: [detector, zone_grid, yield, score_rules]
+                    properties:
+                      detector: { type: string }
+                      zone_grid: { type: string }
+                      yield: { type: string }
+                      score_rules: { type: string }
+        '401': { $ref: '#/components/responses/FeedbackUnauthorized' }
+        '403': { $ref: '#/components/responses/FeedbackForbidden' }
+        '503': { $ref: '#/components/responses/MlUnavailable' }
+components:
+  securitySchemes:
+    feedbackBearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    FeedbackRating:
+      type: object
+      additionalProperties: false
+      required: [species, rating]
+      properties:
+        species:
+          type: string
+          enum: [bilberry, lingonberry, cloudberry, crowberry]
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        amount_l: { type: number, minimum: 0, maximum: 200 }
+    FeedbackSubmission:
+      type: object
+      additionalProperties: false
+      required: [submission_id, ratings]
+      properties:
+        submission_id: { type: string, format: uuid }
+        ratings:
+          type: array
+          minItems: 1
+          maxItems: 4
+          items: { $ref: '#/components/schemas/FeedbackRating' }
+    ZoneFeedbackSubmission:
+      type: object
+      additionalProperties: false
+      required: [submission_id, zone_id, ratings]
+      properties:
+        submission_id: { type: string, format: uuid }
+        zone_id: { type: string, format: uuid }
+        ratings:
+          type: array
+          minItems: 1
+          maxItems: 4
+          items: { $ref: '#/components/schemas/FeedbackRating' }
+    FeedbackReport:
+      type: object
+      required: [id, species, rating, amount_l, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        species: { type: string }
+        rating: { type: integer }
+        amount_l: { type: number, nullable: true }
+        created_at: { type: string, format: date-time }
+    FeedbackResponse:
+      type: object
+      required: [submission_id, reports]
+      properties:
+        submission_id: { type: string, format: uuid }
+        reports:
+          type: array
+          items: { $ref: '#/components/schemas/FeedbackReport' }
+        idempotent_replay: { type: boolean }
+    PhotoAnalysis:
+      type: object
+      additionalProperties: false
+      required: [photo_id, submission_id, counts, total, model_version]
+      properties:
+        photo_id: { type: string, format: uuid }
+        submission_id: { type: string, format: uuid }
+        counts:
+          type: object
+          additionalProperties: { type: integer, minimum: 0 }
+        total: { type: integer, minimum: 0 }
+        model_version: { type: string }
+  responses:
+    FeedbackUnauthorized:
+      description: Authentication required.
+      content:
+        application/json:
+          schema: { type: object }
+    FeedbackForbidden:
+      description: Admin role required.
+      content:
+        application/json:
+          schema: { type: object }
+    FeedbackNotFound:
+      description: Resource not found.
+      content:
+        application/json:
+          schema: { type: object }
+    FeedbackConflict:
+      description: Submission or visit/species conflict.
+      content:
+        application/json:
+          schema: { type: object }
+    FeedbackValidation:
+      description: Invalid input.
+      content:
+        application/json:
+          schema: { type: object }
+    PhotoTooLarge:
+      description: Photo exceeds the configured request limit.
+      content:
+        application/json:
+          schema: { type: object }
+    MlRejected:
+      description: ML service rejected the request.
+      content:
+        application/json:
+          schema: { type: object }
+    MlUnavailable:
+      description: ML service timed out or is unavailable.
+      content:
+        application/json:
+          schema: { type: object }

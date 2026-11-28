@@ -1,37 +1,38 @@
 # Scoring job contract
 
-The API and the scoring worker communicate through PostgreSQL's `jobs` table.
-The API only inserts queued jobs; the Python worker owns claiming, processing,
-heartbeats, retries, and completion. Migration `0009_job_leases.sql` is the
-schema and SQL-function half of this contract; the worker must use it in the
-same change as the schema.
+The API and the NestJS job runner communicate through PostgreSQL's `jobs` table.
+User requests enqueue jobs; the internal runner claims, processes, retries, and
+completes them. Migration `0009_job_leases.sql` supplies the lease-aware queue
+functions used by the runner.
 
 ## Job types
 
-| `type` | `payload` | `dedupe_key` |
-|---|---|---|
-| `recompute_zone_score` | `{ "zone_id": "<uuid>", "species": "<code>?" }` | `recompute:<zone_id>` for all species · `recompute:<zone_id>:<species>` for one |
-| `recompute_all` | `{}` | `recompute_all` |
-| `validate_report` | `{ "report_id": "<uuid>" }` | `validate:<report_id>` |
+| `type`                 | `payload`                                      | `dedupe_key`                    |
+| ---------------------- | ---------------------------------------------- | ------------------------------- |
+| `score_zones_daily`    | `{ "date": "YYYY-MM-DD", "offset": 0 }`        | `daily:<date>:<offset>`         |
+| `recompute_zone_score` | `{ "zone_id": "<uuid>", "species": "<code>" }` | `recompute:<zone_id>:<species>` |
+| `process_report`       | `{ "report_id": "<uuid>" }`                    | `process:<report_id>`           |
 
 Queued jobs with the same non-null `dedupe_key` are unique. A contract change
-must be coordinated with the worker in the same change.
+must update enqueueing code and the job handler together.
 
 ## Lease and heartbeat
 
 Every claim establishes worker ownership and a lease:
 
-| Column | Meaning |
-|---|---|
-| `worker_id` | The process that owns the current claim. Use a unique value such as `<host>:<pid>:<uuid>`; a restarted worker must not reuse an old id. |
-| `heartbeat_at` | When the owner last proved it was alive. |
-| `lease_expires_at` | The claim is valid only before this instant. Default lease: **5 minutes**. |
-| `recovered_at` | When the reaper last touched this row. |
-| `recovery_count` | How many times an expired claim has been recovered. |
+| Column             | Meaning                                                                                                                                 |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `worker_id`        | The process that owns the current claim. Use a unique value such as `<host>:<pid>:<uuid>`; a restarted worker must not reuse an old id. |
+| `heartbeat_at`     | When the owner last proved it was alive.                                                                                                |
+| `lease_expires_at` | The claim is valid only before this instant. Default lease: **5 minutes**.                                                              |
+| `recovered_at`     | When the reaper last touched this row.                                                                                                  |
+| `recovery_count`   | How many times an expired claim has been recovered.                                                                                     |
 
-The worker **must** heartbeat every **30 seconds** while it works. The database
-accepts `heartbeat_job(job_id, worker_id, lease_seconds)` only while the lease
-is live and the worker still owns the row:
+The current internal runner has a 40-second budget, below the five-minute job
+lease, so its handlers do not heartbeat. If a handler can exceed its lease, split
+the work into pages or add periodic `heartbeat_job(job_id, worker_id, lease_seconds)`
+calls. The database accepts a heartbeat only while the lease is live and the
+worker still owns the row:
 
 ```sql
 SELECT heartbeat_job($1, $2, 300) AS still_owned;
@@ -43,7 +44,7 @@ The lease is not revived if it has already expired.
 
 ## Claim
 
-The worker calls `claim_job()` before each unit of work:
+The runner calls `claim_job()` before each unit of work:
 
 ```sql
 SELECT * FROM claim_job('<host>:<pid>:<uuid>', 300);
@@ -56,7 +57,7 @@ The function:
 3. sets `status = 'running'`, increments `attempts`, records `worker_id`,
    `heartbeat_at`, `locked_at`, and `lease_expires_at`.
 
-No row means the queue is empty. The worker must not claim a row with its own
+No row means the queue is empty. The runner must not claim a row with its own
 SQL; use this function so reaping and lease setup happen atomically.
 
 ## Completion and failure
@@ -85,7 +86,7 @@ running row with no lease falls back to `locked_at + 5 minutes`, then
   `failed` instead, so `jobs_dedupe_ix` is never violated. Its `last_error`
   names the newer queued job.
 
-`claim_job()` reaps before claiming, so the normal worker loop recovers stale
+`claim_job()` reaps before claiming, so the internal runner recovers stale
 rows without a separate scheduler. An operator can see the same contract in
 `GET /api/v1/admin/jobs`; the API never claims or reaps.
 
@@ -93,13 +94,13 @@ rows without a separate scheduler. An operator can see the same contract in
 
 The admin queue derives these from the raw columns; they are not stored:
 
-| Field | Meaning |
-|---|---|
-| `lease_expired` | A running job whose lease deadline has passed. |
-| `heartbeat_age_seconds` | Seconds since the last heartbeat, or `null`. |
-| `stuck` | Running and without a heartbeat in 2 minutes, or with an expired lease. |
-| `stuck_for_seconds` | How long the current stuck condition has lasted, or `null`. |
+| Field                   | Meaning                                                                 |
+| ----------------------- | ----------------------------------------------------------------------- |
+| `lease_expired`         | A running job whose lease deadline has passed.                          |
+| `heartbeat_age_seconds` | Seconds since the last heartbeat, or `null`.                            |
+| `stuck`                 | Running and without a heartbeat in 2 minutes, or with an expired lease. |
+| `stuck_for_seconds`     | How long the current stuck condition has lasted, or `null`.             |
 
 The operations health check fails on any expired lease and warns on a live
-lease with a heartbeat older than 2 minutes. A broken worker therefore shows up
+lease with a heartbeat older than 2 minutes. A broken runner therefore shows up
 before the 5-minute lease expires, while the reaper handles the eventual expiry.

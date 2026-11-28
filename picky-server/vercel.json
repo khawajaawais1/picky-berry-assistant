@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/v1/internal/jobs/cron",
+      "schedule": "25 12 * * *"
+    }
+  ]
+}

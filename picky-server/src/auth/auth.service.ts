@@ -436,6 +436,10 @@ export class AuthService {
         [userId],
       );
       await client.query(
+        'UPDATE photos SET user_id = NULL WHERE user_id = $1',
+        [userId],
+      );
+      await client.query(
         `UPDATE users
          SET deleted_at = now(), email = $2, nickname = NULL,
              password_hash = '', species_interest = '{}'

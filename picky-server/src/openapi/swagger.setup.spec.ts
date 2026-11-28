@@ -34,6 +34,12 @@ describe('setupSwagger', () => {
       expect(spec.status).toBe(200);
       expect(spec.text).toContain('"/auth/login"');
       expect(spec.text).toContain('"/visits"');
+      expect(spec.text).toContain('"/visits/{id}/feedback"');
+      expect(spec.text).toContain('"/media/analyze"');
+      expect(spec.text).toContain('"/admin/ml/health"');
+      expect(spec.text).toContain('"/reports"');
+      expect(spec.text).not.toContain('"/alerts"');
+      expect(spec.text).not.toContain('"/internal/jobs/cron"');
       expect(spec.text).toContain('"/zones"');
       expect(spec.text).toContain(
         'https://picky-berry-assistant.vercel.app/api/v1',

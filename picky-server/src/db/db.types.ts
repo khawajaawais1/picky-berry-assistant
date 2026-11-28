@@ -43,6 +43,31 @@ export interface ZoneScoresCurrentTable {
   computed_at: Timestamp;
 }
 
+export interface ZoneModelScoresTable {
+  zone_id: string;
+  species: string;
+  score: number;
+  confidence: string;
+  ripeness: string;
+  explanation: Json;
+  score_date: ColumnType<Date, Date | string, Date | string>;
+  model_version: string;
+  rules_version: string;
+  computed_at: Timestamp;
+}
+
+export interface PhotosTable {
+  id: string;
+  user_id: string | null;
+  submission_id: string;
+  counts: Json;
+  total: number;
+  model_version: string;
+  image_width: number | null;
+  image_height: number | null;
+  created_at: Timestamp;
+}
+
 export interface UsersTable {
   id: Generated<string>;
   email: string;
@@ -113,11 +138,19 @@ export interface VisitsTable {
 
 export interface ReportsTable {
   id: Generated<string>;
+  client_id: string | null;
   user_id: string | null;
   zone_id: string;
   species: string;
   rating: number;
+  amount_kg: string | null;
+  amount_l: number | null;
+  minutes: number | null;
   visit_id: string | null;
+  submission_id: string;
+  flags: string[];
+  trust_processed_at: Timestamp | null;
+  recorded_at: Timestamp | null;
   created_at: Timestamp;
 }
 
@@ -143,6 +176,7 @@ export interface JobsTable {
 export interface UserTrustTable {
   user_id: string;
   trust: number;
+  updated_at: Timestamp;
 }
 
 export interface AlertRulesLogTable {
@@ -183,6 +217,8 @@ export interface DbSchema {
   species: SpeciesTable;
   zones: ZonesTable;
   zone_scores_current: ZoneScoresCurrentTable;
+  zone_model_scores: ZoneModelScoresTable;
+  photos: PhotosTable;
   users: UsersTable;
   refresh_tokens: RefreshTokensTable;
   consents: ConsentsTable;

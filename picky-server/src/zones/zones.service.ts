@@ -347,6 +347,7 @@ export class ZonesService {
        LEFT JOIN zone_scores_current c ON c.zone_id = z.id
        LEFT JOIN reports r ON r.zone_id = z.id
          AND r.created_at >= now() - interval '7 days'
+         AND cardinality(r.flags) = 0
        WHERE z.id = $1
        GROUP BY z.id`,
       [zoneId],
@@ -383,6 +384,7 @@ export class ZonesService {
                 END AS avg_rating
          FROM reports
          WHERE zone_id = $1 AND created_at >= now() - interval '7 days'
+           AND cardinality(flags) = 0
          GROUP BY species ORDER BY species`,
         [zoneId, this.config.get<number>('MIN_REPORTERS_FOR_AVERAGE', 3)],
       ),

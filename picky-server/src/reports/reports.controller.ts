@@ -12,11 +12,11 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 import { AuthUser } from '../auth/auth-user.interface';
+import { SeasonQueryDto, ZoneReportsQueryDto } from './dto/create-report.dto';
 import {
-  CreateReportDto,
-  SeasonQueryDto,
-  ZoneReportsQueryDto,
-} from './dto/create-report.dto';
+  CreateZoneFeedbackDto,
+  FeedbackSubmissionDto,
+} from './dto/feedback.dto';
 import { ReportsService } from './reports.service';
 
 type AuthenticatedRequest = Request & { user: AuthUser };
@@ -25,15 +25,29 @@ type AuthenticatedRequest = Request & { user: AuthUser };
 export class ReportsController {
   constructor(private readonly reports: ReportsService) {}
 
-  /** Feature 6.4: the picker's post-visit report. Idempotent on `client_id`. */
+  /** Feature 6.4: feedback without a visit, idempotent on submission_id. */
   @Post('reports')
   @Throttle({ default: { limit: 60, ttl: 60_000 } })
-  async create(
-    @Body() input: CreateReportDto,
+  async submitWithoutVisit(
+    @Body() input: CreateZoneFeedbackDto,
     @Req() request: AuthenticatedRequest,
     @Res({ passthrough: true }) response: Response,
   ): Promise<Record<string, unknown>> {
-    const result = await this.reports.create(request.user.id, input);
+    const result = await this.reports.submit(request.user.id, null, input);
+    response.status(result.statusCode);
+    return result.body;
+  }
+
+  @Post('visits/:visitId/feedback')
+  @Throttle({ default: { limit: 60, ttl: 60_000 } })
+  async submitForVisit(
+    @Param('visitId', new ParseUUIDPipe({ errorHttpStatusCode: 422 }))
+    visitId: string,
+    @Body() input: FeedbackSubmissionDto,
+    @Req() request: AuthenticatedRequest,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<Record<string, unknown>> {
+    const result = await this.reports.submit(request.user.id, visitId, input);
     response.status(result.statusCode);
     return result.body;
   }

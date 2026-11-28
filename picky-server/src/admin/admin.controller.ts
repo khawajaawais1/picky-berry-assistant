@@ -32,6 +32,8 @@ import { UpdateRoleDto } from './dto/update-role.dto';
 import { UsersQueryDto } from './dto/users-query.dto';
 import type { OperationsHealth } from './operations-health';
 import { ZonesQueryDto } from './dto/zones-query.dto';
+import { MlClientService } from '../ml/ml-client.service';
+import { MlHealth } from '../ml/ml.types';
 
 type AdminRequest = Request & { user: AuthUser; id?: string };
 
@@ -62,6 +64,7 @@ export class AdminController {
   constructor(
     private readonly admin: AdminService,
     private readonly adminMap: AdminMapService,
+    private readonly ml: MlClientService,
   ) {}
 
   @Get('overview')
@@ -74,6 +77,12 @@ export class AdminController {
   @Header('Cache-Control', 'no-store')
   operationsHealth(): Promise<OperationsHealth> {
     return this.admin.operationsHealth();
+  }
+
+  @Get('ml/health')
+  @Header('Cache-Control', 'no-store')
+  mlHealth(): Promise<MlHealth> {
+    return this.ml.health();
   }
 
   @Get('map')

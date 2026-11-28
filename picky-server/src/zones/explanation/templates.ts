@@ -4,60 +4,58 @@ export interface ReasonTemplate {
 }
 
 export const REASON_TEMPLATES: Readonly<Record<string, ReasonTemplate>> = {
-  ripe_by_gdd: {
-    en: 'The season has been warm enough: berries are ripe here ({gdd_since_apr1} degree-days so far, ripe from {gdd_ripe}).',
-    fi: 'Kausi on ollut riittävän lämmin: marjat ovat kypsiä ({gdd_since_apr1} lämpösummayksikköä, kypsyys alkaa {gdd_ripe}).',
+  in_ripe_window: {
+    en: 'Berries are in their ripening season here (about {window_start} to {window_end}).',
+    fi: 'Marjat ovat kypsymisjaksollaan täällä (noin {window_start}–{window_end}).',
   },
-  ripening_by_gdd: {
-    en: 'Berries are ripening ({gdd_since_apr1} of {gdd_ripe} degree-days needed).',
-    fi: 'Marjat ovat kypsymässä ({gdd_since_apr1}/{gdd_ripe} tarvittavasta lämpösummasta).',
+  ripening_window: {
+    en: 'Ripening starts soon: from {window_start}.',
+    fi: 'Kypsyminen alkaa pian: {window_start} alkaen.',
   },
-  unripe_by_gdd: {
-    en: 'Too early: berries are not ripe yet ({gdd_since_apr1} of {gdd_ripe} degree-days).',
-    fi: 'Liian aikaista: marjat eivät ole vielä kypsiä ({gdd_since_apr1}/{gdd_ripe} lämpösummasta).',
+  before_window: {
+    en: 'Too early: ripening starts around {window_start}.',
+    fi: 'Liian aikaista: kypsyminen alkaa noin {window_start}.',
   },
-  past_by_gdd: {
-    en: 'The season is past its peak here ({gdd_since_apr1} degree-days).',
-    fi: 'Sesongin huippu on ohi täällä ({gdd_since_apr1} lämpösummayksikköä).',
+  past_window: {
+    en: 'The season ended around {window_end}; few berries are left.',
+    fi: 'Sesonki päättyi noin {window_end}; marjoja on jäljellä vähän.',
   },
   off_season: {
     en: 'Out of season for this berry.',
     fi: 'Tämän marjan sesonki ei ole käynnissä.',
   },
-  recent_reports_high: {
-    en: '{reports_7d} pickers rated it {avg_rating_7d}★ this week.',
-    fi: '{reports_7d} poimijaa arvioi paikan tällä viikolla keskiarvolla {avg_rating_7d}★.',
+  good_site: {
+    en: 'The forest type here suits this berry well.',
+    fi: 'Metsätyyppi sopii tälle marjalle hyvin.',
   },
-  recent_reports_low: {
-    en: 'Recent reports are weak: {reports_7d} pickers rated it {avg_rating_7d}★ this week.',
-    fi: 'Tuoreet raportit ovat heikkoja: {reports_7d} poimijaa arvioi keskiarvolla {avg_rating_7d}★.',
+  moderate_site: {
+    en: 'The forest type here is fair for this berry.',
+    fi: 'Metsätyyppi sopii tälle marjalle kohtalaisesti.',
+  },
+  poor_site: {
+    en: 'The forest type here is poor for this berry.',
+    fi: 'Metsätyyppi sopii tälle marjalle huonosti.',
   },
   no_reports_baseline: {
-    en: 'No recent reports, so this score is an estimate from weather and habitat.',
-    fi: 'Tuoreita raportteja ei ole, joten pisteet perustuvat säähän ja kasvupaikkaan.',
+    en: 'No recent reports, so this is an estimate from the forest type and season.',
+    fi: 'Tuoreita raportteja ei ole, joten arvio perustuu metsätyyppiin ja vuodenaikaan.',
   },
-  good_habitat: {
-    en: 'Good habitat for this berry (habitat fit {suitability_pct}%).',
-    fi: 'Hyvä kasvupaikka tälle marjalle (sopivuus {suitability_pct} %).',
+  recent_reports_high: {
+    en: 'Recent reports from pickers are as good as or better than the estimate ({reports_used} reports).',
+    fi: 'Poimijoiden tuoreet raportit ovat vähintään arvion tasolla ({reports_used} raporttia).',
   },
-  moderate_habitat: {
-    en: 'Fair habitat for this berry (habitat fit {suitability_pct}%).',
-    fi: 'Kohtalainen kasvupaikka tälle marjalle (sopivuus {suitability_pct} %).',
+  recent_reports_low: {
+    en: 'Recent reports from pickers are lower than the estimate ({reports_used} reports).',
+    fi: 'Poimijoiden tuoreet raportit ovat arviota heikompia ({reports_used} raporttia).',
   },
-  poor_habitat: {
-    en: 'Weak habitat for this berry (habitat fit {suitability_pct}%).',
-    fi: 'Heikko kasvupaikka tälle marjalle (sopivuus {suitability_pct} %).',
+  photo_confirms_species: {
+    en: "A picker's photo confirms this berry grows here.",
+    fi: 'Poimijan kuva vahvistaa, että marjaa kasvaa täällä.',
   },
-  ndvi_good: {
-    en: 'Vegetation is greener than usual this year.',
-    fi: 'Kasvillisuus on tänä vuonna tavallista vehreämpää.',
-  },
-  ndvi_poor: {
-    en: 'Vegetation looks weaker than usual this year.',
-    fi: 'Kasvillisuus näyttää tänä vuonna tavallista heikommalta.',
-  },
-  weather_stale: {
-    en: 'Weather data is more than 7 days old, so confidence is lowered.',
-    fi: 'Säätiedot ovat yli 7 päivää vanhoja, joten luotettavuutta on laskettu.',
+  low_confidence_species: {
+    en: 'Confidence is kept low: little data for this berry, or little forest here.',
+    fi: 'Luotettavuus pidetään matalana: tästä marjasta on vähän tietoa tai alueella on vähän metsää.',
   },
 };
+
+export const ML_REASON_CODES = Object.keys(REASON_TEMPLATES);
