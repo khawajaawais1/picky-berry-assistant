@@ -28,6 +28,8 @@ const schema = Joi.object({
   MAX_BBOX_KM_GROUPED: Joi.number().positive().default(150),
   MAX_BBOX_KM_SNAPSHOT: Joi.number().positive().default(60),
   MIN_REPORTERS_FOR_AVERAGE: Joi.number().integer().min(1).default(3),
+  ANALYTICS_MIN_USERS: Joi.number().integer().min(1),
+  ANALYTICS_REFRESH_MINUTES: Joi.number().integer().min(1).default(60),
   ML_SERVICE_URL: Joi.string()
     .uri({ scheme: ['http', 'https'] })
     .default('https://picky-berry-assistant.onrender.com'),

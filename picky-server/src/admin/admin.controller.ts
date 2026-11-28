@@ -228,4 +228,18 @@ export class AdminController {
       meta.userAgent,
     );
   }
+
+  @Post('analytics/refresh')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @Header('Cache-Control', 'no-store')
+  @Throttle({ default: { limit: 60, ttl: 60_000 } })
+  refreshAnalytics(@Req() request: AdminRequest): Promise<EnqueueResult> {
+    const meta = requestMetaOf(request);
+    return this.admin.enqueueAnalyticsRefresh(
+      request.user.id,
+      requestIdOf(request),
+      meta.ip,
+      meta.userAgent,
+    );
+  }
 }

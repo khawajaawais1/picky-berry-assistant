@@ -19,6 +19,7 @@ import { ApiThrottlerGuard } from './auth/api-throttler.guard';
 import { VisitsModule } from './visits/visits.module';
 import { JobsModule } from './jobs/jobs.module';
 import { MediaModule } from './media/media.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 import { IncomingMessage, ServerResponse } from 'node:http';
 
 function requestPath(url: string | undefined): string {
@@ -98,6 +99,7 @@ function requestPath(url: string | undefined): string {
     VisitsModule,
     JobsModule,
     MediaModule,
+    AnalyticsModule,
   ],
   controllers: [AppController],
   providers: [

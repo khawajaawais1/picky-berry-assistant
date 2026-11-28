@@ -38,6 +38,9 @@ describe('setupSwagger', () => {
       expect(spec.text).toContain('"/media/analyze"');
       expect(spec.text).toContain('"/admin/ml/health"');
       expect(spec.text).toContain('"/reports"');
+      expect(spec.text).toContain('"/me/analytics"');
+      expect(spec.text).toContain('"/analytics/zones/{id}"');
+      expect(spec.text).toContain('"/admin/analytics/refresh"');
       expect(spec.text).not.toContain('"/alerts"');
       expect(spec.text).not.toContain('"/internal/jobs/cron"');
       expect(spec.text).toContain('"/zones"');

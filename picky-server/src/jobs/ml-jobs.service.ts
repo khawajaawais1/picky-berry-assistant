@@ -57,7 +57,23 @@ export class MlJobsService {
     if (type === 'process_report') {
       return this.processReport(payload);
     }
+    if (type === 'refresh_analytics') {
+      return this.refreshAnalytics();
+    }
     throw new Error(`Unsupported job type: ${type}`);
+  }
+
+  private async refreshAnalytics(): Promise<void> {
+    // CONCURRENTLY cannot run inside a transaction block.
+    await this.database.pool.query(
+      'REFRESH MATERIALIZED VIEW CONCURRENTLY mv_zone_daily',
+    );
+    await this.database.pool.query(
+      `INSERT INTO analytics_refresh (name, refreshed_at)
+       VALUES ('mv_zone_daily', now())
+       ON CONFLICT (name) DO UPDATE
+       SET refreshed_at = EXCLUDED.refreshed_at`,
+    );
   }
 
   private async scoreZonesDaily(payload: JobPayload): Promise<void> {
@@ -274,6 +290,12 @@ export class MlJobsService {
       );
       await client.query(
         `DELETE FROM zone_scores WHERE explanation->>'model_version' = 'seed-0'`,
+      );
+      await this.jobs.enqueue(
+        'refresh_analytics',
+        {},
+        'refresh_analytics',
+        client,
       );
       await client.query('COMMIT');
     } catch (error) {

@@ -56,6 +56,12 @@ interface RetryResponse {
   source_job_id?: number;
 }
 
+interface AnalyticsRefreshResponse {
+  job_id: number;
+  status: 'queued';
+  deduplicated: boolean;
+}
+
 interface JobListResponse {
   total: number;
   stuck_count: number;
@@ -129,6 +135,11 @@ describe('Admin API against PostGIS (integration)', () => {
       },
       { method: 'get', path: '/api/v1/admin/analytics', status: 200 },
       { method: 'get', path: '/api/v1/admin/audit', status: 200 },
+      {
+        method: 'post',
+        path: '/api/v1/admin/analytics/refresh',
+        status: 202,
+      },
       {
         method: 'post',
         path: `/api/v1/admin/jobs/${f.failedJobId}/retry`,
@@ -254,6 +265,50 @@ describe('Admin API against PostGIS (integration)', () => {
       expect(response.status).toBe(route.status);
       expect(response.headers['cache-control']).toBe('no-store');
     }
+  });
+
+  it('deduplicates and audits analytics refresh requests', async () => {
+    const first = await request(app.getHttpServer())
+      .post('/api/v1/admin/analytics/refresh')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .set('x-request-id', 'analytics-refresh-test')
+      .expect(202);
+    const second = await request(app.getHttpServer())
+      .post('/api/v1/admin/analytics/refresh')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(202);
+
+    const firstBody = first.body as AnalyticsRefreshResponse;
+    const secondBody = second.body as AnalyticsRefreshResponse;
+    expect(firstBody).toMatchObject({
+      status: 'queued',
+      deduplicated: false,
+    });
+    expect(secondBody).toMatchObject({
+      job_id: firstBody.job_id,
+      status: 'queued',
+      deduplicated: true,
+    });
+    const audit = await database.pool.query<AuditIntegrityRow>(
+      `SELECT actor_id, detail, request_id, outcome
+       FROM audit_log
+       WHERE action = 'analytics.refresh' AND target_id = 'mv_zone_daily'
+       ORDER BY created_at`,
+    );
+    expect(audit.rows).toHaveLength(2);
+    expect(audit.rows[0]).toMatchObject({
+      actor_id: fixtures.adminId,
+      request_id: 'analytics-refresh-test',
+      outcome: 'success',
+      detail: {
+        job_id: firstBody.job_id,
+        deduplicated: false,
+      },
+    });
+    expect(audit.rows[1].detail).toMatchObject({
+      job_id: firstBody.job_id,
+      deduplicated: true,
+    });
   });
 
   it('rejects malformed and expired tokens', async () => {

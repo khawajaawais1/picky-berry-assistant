@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { PinoLogger } from 'nestjs-pino';
 import { DbService } from '../db/db.service';
 import { MlJobsService } from './ml-jobs.service';
+import { JobsService } from './jobs.service';
 
 export interface JobRunFailure {
   job_id: string;
@@ -30,6 +31,7 @@ export class JobsRunnerService {
   constructor(
     private readonly database: DbService,
     private readonly handlers: MlJobsService,
+    private readonly jobs: JobsService,
     private readonly config: ConfigService,
     private readonly logger: PinoLogger,
   ) {
@@ -37,6 +39,7 @@ export class JobsRunnerService {
   }
 
   async run(): Promise<JobRunResult> {
+    await this.enqueueAnalyticsRefreshIfStale();
     const workerId = randomUUID();
     const stopAt =
       Date.now() + this.config.get<number>('JOBS_RUN_BUDGET_MS', 40_000);
@@ -96,6 +99,24 @@ export class JobsRunnerService {
       remaining: Number(remaining.rows[0]?.count ?? 0),
       errors,
     };
+  }
+
+  private async enqueueAnalyticsRefreshIfStale(): Promise<void> {
+    const refreshMinutes = this.config.get<number>(
+      'ANALYTICS_REFRESH_MINUTES',
+      60,
+    );
+    const result = await this.database.pool.query<{ stale: boolean }>(
+      `SELECT NOT EXISTS (
+         SELECT 1 FROM analytics_refresh
+         WHERE name = 'mv_zone_daily'
+           AND refreshed_at >= now() - make_interval(mins => $1)
+       ) AS stale`,
+      [refreshMinutes],
+    );
+    if (result.rows[0]?.stale) {
+      await this.jobs.enqueue('refresh_analytics', {}, 'refresh_analytics');
+    }
   }
 
   private async recordFailure(

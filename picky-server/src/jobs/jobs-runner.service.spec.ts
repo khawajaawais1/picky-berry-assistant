@@ -8,6 +8,7 @@ describe('JobsRunnerService', () => {
   it('logs and returns a bounded summary when a job handler throws', async () => {
     const query = jest
       .fn()
+      .mockResolvedValueOnce({ rows: [{ stale: false }] })
       .mockResolvedValueOnce({
         rows: [
           {
@@ -33,6 +34,7 @@ describe('JobsRunnerService', () => {
           .fn()
           .mockRejectedValue(new Error('Report zone is missing')),
       } as unknown as MlJobsService,
+      { enqueue: jest.fn() } as never,
       {
         get: (_key: string, defaultValue: unknown) => defaultValue,
       } as unknown as ConfigService,
@@ -71,6 +73,7 @@ describe('JobsRunnerService', () => {
   it('reports a lost lease as a warning rather than a handler error', async () => {
     const query = jest
       .fn()
+      .mockResolvedValueOnce({ rows: [{ stale: false }] })
       .mockResolvedValueOnce({
         rows: [
           {
@@ -92,6 +95,7 @@ describe('JobsRunnerService', () => {
     const runner = new JobsRunnerService(
       { pool: { query } } as unknown as DbService,
       { handle: jest.fn() } as unknown as MlJobsService,
+      { enqueue: jest.fn() } as never,
       {
         get: (_key: string, defaultValue: unknown) => defaultValue,
       } as unknown as ConfigService,
